@@ -12,9 +12,12 @@ const WIN_UNDERSTANDING := 0.80
 const WAIT_FULL_MS := 3000.0
 
 # Move menu: [display label, judge tag]. Order follows GAME_CONCEPT.md 3.4.
+# "Connect" (notice a student's asset, then bridge content to it) adds an asset-based,
+# funds-of-knowledge path alongside the discourse moves (QUALITATIVE_RESEARCH_AUDIT.md).
 const MOVES := [
 	["Elicit", "elicit"], ["Extend", "extend"], ["Revoice", "revoice"],
-	["Tell", "tell"], ["Praise", "praise"], ["Redirect", "redirect"], ["Wait", "wait"],
+	["Tell", "tell"], ["Praise", "praise"], ["Connect", "connect"],
+	["Redirect", "redirect"], ["Wait", "wait"],
 ]
 
 var persona_id := "noah_g5_fractions"
@@ -24,6 +27,13 @@ var opening_line := ""
 var win_line := "Oh... I think I get it now!"
 var target_badge := "echo"
 var win_moves: Array = ["elicit", "extend", "revoice", "wait"]  # moves that work for THIS student
+
+# Funds of knowledge / asset framing (Moll & Gonzalez): a student's real-world strengths.
+var assets: Array = []
+var asset_hint := ""
+var connect_line := ""
+var connect_resolves := false   # if true, connecting-to-an-asset is a second valid win path
+var _asset_learned := false     # the teacher has noticed/interpreted this student's asset
 
 # Class meters (0..100) and player HP.
 var engagement := 40.0
@@ -46,6 +56,8 @@ var _layer: Control
 var _dialogue: Label
 var _coach: Label
 var _wait_bar: ProgressBar
+var _bond_fill: ColorRect
+var _bond_label: Label
 var _bars: Dictionary = {}   # key -> ProgressBar
 var _buttons: Array = []
 
@@ -63,7 +75,20 @@ func setup(data: Dictionary) -> void:
 	_load_persona()
 	_apply_scenario_overrides()    # a custom (imported) lesson can rewrite lines/targets to its content
 	Game.note_visit(persona_id)    # equity: this student was called on
+	_apply_relationship_headstart()
 	_refresh_intro()
+	_refresh_bond()
+
+## Warm demander / care ethic: a relationship built in earlier periods carries over and
+## makes this student a little easier to reach (trust precedes risk-taking).
+func _apply_relationship_headstart() -> void:
+	var b := GameState.bond(persona_id)
+	if b <= 0.0:
+		return
+	understanding = clampf(understanding + b * 0.10, 0.0, 1.0)
+	engagement = clampf(engagement + b * 15.0, 0.0, 100.0)
+	rapport = clampf(rapport + b * 20.0, 0.0, 100.0)
+	_refresh_meters()
 
 ## Lesson-plan import / any scenario may override a persona's lines and targets for its
 ## content, via a "persona_overrides" map in the scenario JSON.
@@ -111,6 +136,10 @@ func _load_persona() -> void:
 	win_line = str(data.get("win_line", win_line))
 	target_badge = str(data.get("badge", target_badge))
 	win_moves = data.get("win_moves", win_moves)
+	assets = data.get("assets", assets)
+	asset_hint = str(data.get("asset_hint", asset_hint))
+	connect_line = str(data.get("connect_line", connect_line))
+	connect_resolves = bool(data.get("connect_resolves", connect_resolves))
 
 func _refresh_intro() -> void:
 	if _name_label != null:
@@ -163,6 +192,22 @@ func _build_ui() -> void:
 	_layer.add_child(_student_tex)
 
 	_make_label(display_name, Vector2(372, 108), 9, Color.WHITE)
+
+	# Persistent relationship (warm demander). Carries across periods, unlike the class meters.
+	# Drawn as ColorRects (like the gym bars) so the height is exactly controlled.
+	_bond_label = _make_label("Bond", Vector2(372, 122), 8, Color(0.96, 0.76, 0.86))
+	var bondbg := ColorRect.new()
+	bondbg.position = Vector2(372, 134)
+	bondbg.size = Vector2(84, 8)
+	bondbg.color = Color(0, 0, 0, 0.5)
+	bondbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(bondbg)
+	_bond_fill = ColorRect.new()
+	_bond_fill.position = Vector2(372, 134)
+	_bond_fill.size = Vector2(0, 8)
+	_bond_fill.color = Color(0.95, 0.55, 0.70)
+	_bond_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(_bond_fill)
 
 	# Overhead emote bubble reflecting the student's reaction.
 	_emote = TextureRect.new()
@@ -289,6 +334,11 @@ func _process(_delta: float) -> void:
 func _on_move(tag: String) -> void:
 	if _busy or _resolved:
 		return
+	# Connect is handled locally: it is deterministic asset/relationship state, not an
+	# LLM round-trip. First press NOTICES the asset (attend/interpret); the next CONNECTS.
+	if tag == "connect":
+		_do_connect()
+		return
 	_busy = true
 	var wait_ms := Time.get_ticks_msec() - _ready_at_ms
 	var payload := {
@@ -327,6 +377,12 @@ func _on_reply(resp: Dictionary) -> void:
 	var targets: bool = bool(judge.get("targets_misconception", false))
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
+	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
+	if targets:
+		GameState.add_bond(persona_id, 0.05)
+	elif "tell" in tags:
+		GameState.add_bond(persona_id, -0.04)
+	_refresh_bond()
 	_update_portrait(_affect_for(tags))
 
 	if composure <= 0.0:
@@ -334,9 +390,50 @@ func _on_reply(resp: Dictionary) -> void:
 		return
 
 	if _check_win(targets, tags):
-		_win()
+		_win("reasoning")
 		return
 
+	_arm_turn()
+
+## Connect: notice a student's funds of knowledge, then bridge the content to it.
+## A second, asset-based route to reaching some students (softens single-right-move).
+func _do_connect() -> void:
+	_busy = true
+	if not _asset_learned:
+		_asset_learned = true
+		rapport = clampf(rapport + 6.0, 0.0, 100.0)
+		engagement = clampf(engagement + 5.0, 0.0, 100.0)
+		GameState.add_bond(persona_id, 0.10)
+		_refresh_meters()
+		_refresh_bond()
+		var hint := asset_hint if asset_hint != "" else "You pause to learn what %s cares about beyond this task." % display_name
+		_set_dialogue("You take a beat to notice %s, not just the task." % display_name)
+		_set_coach("Coach Vee (notice): %s  Press Connect again to bridge the content to it." % hint)
+		_update_portrait("thinking")
+		_arm_turn()
+		return
+	# Bridge content to the now-known asset.
+	rapport = clampf(rapport + 10.0, 0.0, 100.0)
+	engagement = clampf(engagement + 12.0, 0.0, 100.0)
+	composure = clampf(composure + 3.0, 0.0, 100.0)
+	GameState.add_bond(persona_id, 0.18)
+	if connect_resolves:
+		# A landed asset-bridge is itself a valid route to the insight (the connect_line
+		# states the full understanding), so it crosses the win gate.
+		understanding = maxf(understanding, WIN_UNDERSTANDING + 0.05)
+	_refresh_meters()
+	_refresh_bond()
+	var line := connect_line if connect_line != "" else "Oh... when you put it in my world, it actually makes sense."
+	_set_dialogue("%s: \"%s\"" % [display_name, line])
+	Game.log_move("connect", false, connect_resolves)
+	_update_portrait("excited" if connect_resolves else "thinking")
+	if connect_resolves and understanding >= WIN_UNDERSTANDING:
+		_win("connect")
+		return
+	if connect_resolves:
+		_set_coach("Coach Vee: you connected it to %s's world (funds of knowledge). Keep going, they are with you." % display_name)
+	else:
+		_set_coach("Coach Vee: connecting built real trust (bond up). For %s the academic unlock is still the right move, but now they will let you lead." % display_name)
 	_arm_turn()
 
 func _check_win(targets: bool, tags: Array) -> bool:
@@ -349,15 +446,23 @@ func _check_win(targets: bool, tags: Array) -> bool:
 			return true
 	return false
 
-func _win() -> void:
+func _win(route: String = "reasoning") -> void:
 	_resolved = true
 	_busy = true
 	_disable_moves()
-	_set_dialogue("%s: \"%s\"" % [display_name, win_line])
-	_set_coach("Coach Vee: They reasoned to it themselves, you did not tell them. That is responsive teaching. Badge earned: %s." % target_badge.to_upper())
 	_update_portrait("excited")
 	GameState.award_badge(target_badge)
-	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding})
+	var warm := GameState.bond(persona_id) >= 0.4
+	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
+	if route == "connect":
+		# The connect_line is already shown as the resolving dialogue.
+		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
+	else:
+		_set_dialogue("%s: \"%s\"" % [display_name, win_line])
+		if warm:
+			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
+		else:
+			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
 	_return_to_overworld_after(3.2)
 
 func _force_recover() -> void:
@@ -382,6 +487,13 @@ func _refresh_meters() -> void:
 	_bars["order"].value = order
 	_bars["rapport"].value = rapport
 	_bars["composure"].value = composure
+
+func _refresh_bond() -> void:
+	var b := GameState.bond(persona_id)
+	if _bond_fill != null:
+		_bond_fill.size = Vector2(84.0 * clampf(b, 0.0, 1.0), 8.0)
+	if _bond_label != null:
+		_bond_label.text = "Bond %d%%" % int(round(b * 100.0))
 
 func _affect_for(tags: Array) -> String:
 	if "tell" in tags:

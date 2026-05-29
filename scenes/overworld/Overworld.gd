@@ -109,6 +109,7 @@ var _period_left := PERIOD_SECONDS
 var _next_interrupt := 9.0
 var _lesson_over := false
 var _overlay: Control = null
+var _pending_debrief := ""   # scored summary, shown after the reflection step
 
 func _ready() -> void:
 	var cfg := _load_scenario(Game.current_scenario_id)
@@ -621,8 +622,23 @@ func _end_lesson() -> void:
 		lines, stars, _objectives.size(), _debrief_note(attention)]
 	if _attempt > 1:
 		summary += "\n\n(Replay #%d - the room drifts faster each attempt.)" % _attempt
+	_pending_debrief = summary
 	Game.clear_lesson()
-	_show_overlay(summary, [
+	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
+	_show_overlay("REFLECT\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks (reflection-on-action, Schon 1983).", [
+		{"label": "Who I did not reach", "_reflect": "unreached"},
+		{"label": "A moment I would reframe", "_reflect": "reframe"},
+		{"label": "An asset I connected to", "_reflect": "asset"},
+	])
+
+func _on_reflect(opt: Dictionary) -> void:
+	GameState.log_reflection({
+		"scenario": Game.current_scenario_id,
+		"prompt": "what_stays_with_you",
+		"choice": str(opt.get("_reflect", "")),
+	})
+	_close_overlay()
+	_show_overlay(_pending_debrief, [
 		{"label": "Replay this lesson", "_action": "replay"},
 		{"label": "Choose another mission", "_action": "hub"},
 	])
@@ -642,6 +658,13 @@ func _waittime_count() -> int:
 			c += 1
 	return c
 
+func _connect_count() -> int:
+	var c := 0
+	for m in Game.lesson.get("moves", []):
+		if str(m.get("tag", "")) == "connect":
+			c += 1
+	return c
+
 func _objective_met(o: Dictionary, attention: float) -> bool:
 	var metric := str(o.get("metric", ""))
 	var target := float(o.get("target", 0))
@@ -656,6 +679,8 @@ func _objective_met(o: Dictionary, attention: float) -> bool:
 			return _engaged_count() >= int(target)
 		"waittime_min":
 			return _waittime_count() >= int(target)
+		"connect_min":
+			return _connect_count() >= int(target)
 	return false
 
 func _debrief_note(attention: float) -> String:
@@ -711,7 +736,9 @@ func _show_overlay(text: String, options: Array) -> void:
 		b.position = Vector2(px + 22, by + i * 44.0)
 		b.size = Vector2(pw - 44, 38)
 		b.add_theme_font_size_override("font_size", 14)
-		if opt.has("_action"):
+		if opt.has("_reflect"):
+			b.pressed.connect(_on_reflect.bind(opt))
+		elif opt.has("_action"):
 			var act := str(opt["_action"])
 			if act == "hub":
 				b.pressed.connect(_go_hub)

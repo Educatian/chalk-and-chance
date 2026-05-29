@@ -9,6 +9,25 @@ var badges: Array = []                 ## Array[String] of earned badge ids
 var student_progress: Dictionary = {}  ## persona_id -> { best_understanding, resolved, attempts }
 var attempts: Dictionary = {}          ## scenario_id -> times played (deliberate-practice fade)
 var settings: Dictionary = {}
+## Warm-demander: a per-student relationship (0..1) that PERSISTS across periods,
+## not reset each lesson (Bondy & Ross; care ethic). Built by connecting to a
+## student's assets and by appropriate demand; eroded by cold takeover (Tell).
+var relationships: Dictionary = {}     ## persona_id -> bond 0..1
+## Schon reflection-on-action: what the player chose to notice at each debrief.
+var reflections: Array = []            ## Array[{scenario, prompt, choice}]
+
+func bond(persona_id: String) -> float:
+	return clampf(float(relationships.get(persona_id, 0.0)), 0.0, 1.0)
+
+func add_bond(persona_id: String, amount: float) -> float:
+	var v := clampf(bond(persona_id) + amount, 0.0, 1.0)
+	relationships[persona_id] = v
+	save_game()
+	return v
+
+func log_reflection(entry: Dictionary) -> void:
+	reflections.append(entry)
+	save_game()
 
 func has_badge(id: String) -> bool:
 	return id in badges
@@ -38,6 +57,8 @@ func save_game() -> void:
 		"student_progress": student_progress,
 		"attempts": attempts,
 		"settings": settings,
+		"relationships": relationships,
+		"reflections": reflections,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
@@ -62,3 +83,5 @@ func load_game() -> void:
 	student_progress = parsed.get("student_progress", {})
 	attempts = parsed.get("attempts", {})
 	settings = parsed.get("settings", {})
+	relationships = parsed.get("relationships", {})
+	reflections = parsed.get("reflections", [])

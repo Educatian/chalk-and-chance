@@ -5,8 +5,15 @@
   "subject_context": "independent_work",
   "target_label": "Diagnose the function before responding",
   "badge": "insight",
-  "win_moves": ["elicit", "extend"],
-  "color": [0.58, 0.45, 0.80],
+  "win_moves": [
+    "elicit",
+    "extend"
+  ],
+  "color": [
+    0.58,
+    0.45,
+    0.8
+  ],
   "opening_line": "(pushes the worksheet away) I'm not doing this.",
   "win_line": "...it's not that I won't. I didn't get the first part and I felt dumb.",
   "hidden_need": "avoidance reads as defiance; the real issue is an unmet skill gap and fear of looking incapable",
@@ -14,5 +21,12 @@
     "target_concept": "behavior has a function; this refusal is escape from a too-hard task",
     "frozen_misconception": "refusing is safer than trying and failing"
   },
-  "answer_flip_policy": "Do not comply from a consequence or a power move; you only re-engage once the teacher diagnoses the real cause and lowers the entry point."
+  "answer_flip_policy": "Do not comply from a consequence or a power move; you only re-engage once the teacher diagnoses the real cause and lowers the entry point.",
+  "assets": [
+    "builds elaborate redstone machines in Minecraft",
+    "keeps a notebook of game strategies"
+  ],
+  "asset_hint": "Riley shrugs at the worksheet, but builds intricate redstone logic at home. So this is avoidance / fear of being wrong, NOT a thinking gap. Read the FUNCTION before you respond.",
+  "connect_line": "I mean... I do way harder logic in Minecraft. I guess I just didn't want to mess this up in front of everyone.",
+  "connect_resolves": true
 }

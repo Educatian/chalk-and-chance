@@ -5,8 +5,15 @@
   "subject_context": "independent_work",
   "target_label": "Affect-first de-escalation",
   "badge": "routine",
-  "win_moves": ["revoice", "wait"],
-  "color": [0.90, 0.40, 0.30],
+  "win_moves": [
+    "revoice",
+    "wait"
+  ],
+  "color": [
+    0.9,
+    0.4,
+    0.3
+  ],
   "opening_line": "(slams the pencil down) This is stupid, I can't do it!",
   "win_line": "...fine. Okay. Maybe just the first step. Don't make a big thing of it.",
   "hidden_need": "frustration spikes fast; needs calm, private, affect-first response, not a public power struggle",
@@ -14,5 +21,12 @@
     "target_concept": "regulate affect before cognition; de-escalate privately",
     "frozen_misconception": "if it's hard I blow up so I don't have to keep trying"
   },
-  "answer_flip_policy": "Do not calm down from a public reprimand (that escalates you); you de-escalate only with a calm, private, affect-first approach."
+  "answer_flip_policy": "Do not calm down from a public reprimand (that escalates you); you de-escalate only with a calm, private, affect-first approach.",
+  "assets": [
+    "makes beats on his phone",
+    "calms himself with a rhythm or a walk"
+  ],
+  "asset_hint": "Marcus is escalating. He grounds himself through music and rhythm. Connect to that to bring the temperature down before any academic demand.",
+  "connect_line": "...yeah. Music helps me chill. ...Okay. I'm good now. We can do the work.",
+  "connect_resolves": false
 }

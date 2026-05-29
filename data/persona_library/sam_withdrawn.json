@@ -5,8 +5,15 @@
   "subject_context": "whole_class_question",
   "target_label": "Re-engaging a withdrawn student",
   "badge": "balance",
-  "win_moves": ["wait", "elicit"],
-  "color": [0.45, 0.52, 0.62],
+  "win_moves": [
+    "wait",
+    "elicit"
+  ],
+  "color": [
+    0.45,
+    0.52,
+    0.62
+  ],
   "opening_line": "(looking down at the desk, not raising a hand)",
   "win_line": "...okay. I think... maybe it's the one with the smaller bottom number?",
   "hidden_need": "fears being wrong in public; needs a warm, low-pressure invitation and wait time",
@@ -14,5 +21,12 @@
     "target_concept": "participating when it feels safe",
     "frozen_misconception": "if I stay quiet no one will call on me and I can't be wrong"
   },
-  "answer_flip_policy": "Do not suddenly participate from a cold call; you only open up after a warm, advance-notice invitation and real wait time."
+  "answer_flip_policy": "Do not suddenly participate from a cold call; you only open up after a warm, advance-notice invitation and real wait time.",
+  "assets": [
+    "sketches characters in the margins",
+    "knows every fact about deep-sea creatures"
+  ],
+  "asset_hint": "Sam has gone quiet, but the margins are full of drawings. There's a door in there - an interest you can open before you ask for thinking.",
+  "connect_line": "...you saw my drawings? I could draw the problem instead of writing it... yeah. Okay. I can try that.",
+  "connect_resolves": true
 }

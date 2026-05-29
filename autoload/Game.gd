@@ -52,5 +52,6 @@ const SCENARIOS := [
 	"independent_fractions",
 	"reading_main_idea",
 	"science_force_motion",
+	"culturally_responsive_intro",
 	"gym_capstone",
 ]

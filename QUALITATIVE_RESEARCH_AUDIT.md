@@ -70,6 +70,23 @@ hypothesis. To match the *qualitative* teacher-education literature it should ad
 **cultural, relational, asset-based, and interpretive** dimensions, and soften the
 single-right-answer mechanic, which is currently its sharpest mismatch with that literature.
 
+## Addressed in build (2026-05-29)
+
+The high- and medium-priority gaps above are now implemented as mechanics, not just docs:
+
+| Gap (was) | Now in game |
+|---|---|
+| Asset framing & funds of knowledge (**Missing**) | Every persona has an `assets` / `asset_hint` field; a new **Connect** move *notices* a student's real-world strength then *bridges* the content to it (Moll & Gonzalez). |
+| Interpretive judgment / one-right-move (**At-risk**) | Connect-resolvable students (Noah, Jordan, Diego, Riley, Sam) now have **two defensible routes** - surface reasoning (discourse moves) **or** connect to an asset - so the game no longer trains "guess the single key." |
+| Professional noticing ATTEND-INTERPRET-DECIDE (**Partial**) | Connect's first press is an explicit **notice/interpret beat** that surfaces the student's asset (and, for Riley, reframes the *function* of the behavior) before you decide. |
+| Culturally responsive management (**Missing**) | New scenario `culturally_responsive_intro` (Weinstein et al. 2004) assembles asset-rich students with a **`connect_min` objective** that forces you to learn each student's funds of knowledge and check your assumption before correcting. |
+| Warm demander / relationships over time (**Missing/thin**) | A persistent per-student **Bond** meter (GameState.relationships) **carries across periods**, is built by connecting + appropriate demand, eroded by cold takeover (Tell), and gives a trust head-start next period. Wins are framed as warm-demander when the bond is also high. |
+| Care ethic; relationships over time (**Missing**) | Same persistent Bond - the classroom is no longer memoryless between periods. |
+| Reflection-on/in-action (**Partial/shallow**) | The debrief now opens with a **reflection-on-action** prompt (Schon 1983): the player names what stays with them (who I didn't reach / a moment I'd reframe / an asset I connected to) before any score; choices are logged. |
+| Student voice / co-construction (**Missing**) | Connect resolutions are voiced in the student's *own world* (their `connect_line`), i.e. co-constructed meaning rather than compliance. |
+
+Verified by `scenes/dev/QualTest` (12 checks). Still open / future: families & community-context NPCs, emotion/identity depth beyond Composure, and a real (non-stub) LLM to make interpretation genuinely ambiguous rather than scripted.
+
 ## Sources
 
 - Weinstein, Tomlinson-Clarke & Curran (2004). Toward a Conception of Culturally Responsive
