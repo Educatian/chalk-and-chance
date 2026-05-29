@@ -1,0 +1,61 @@
+{
+  "id": "custom_comparing_decimals",
+  "title": "Comparing Decimals  -  Discussion (U-shape)",
+  "format": "discussion",
+  "arrangement": "ushape",
+  "period_seconds": 120,
+  "offtask_rise": 8.0,
+  "roster": [
+    {"id": "talia_dominator", "name": "Talia", "seat": 0},
+    {"id": "sam_withdrawn", "name": "Sam", "seat": 1},
+    {"id": "diego_ell", "name": "Diego", "seat": 2},
+    {"id": "jordan_skeptic", "name": "Jordan", "seat": 4},
+    {"id": "priya_quiet", "name": "Priya", "seat": 6},
+    {"id": "noah_g5_fractions", "name": "Noah", "seat": 8}
+  ],
+  "objectives": [
+    {"id": "attn", "label": "Keep class attention >= 65%", "metric": "attention_min", "target": 65},
+    {"id": "comp", "label": "Finish with composure >= 50%", "metric": "composure_min", "target": 50},
+    {"id": "eq", "label": "Every student contributes once", "metric": "engaged_min", "target": 6},
+    {"id": "wt", "label": "Use wait time at least 3 times", "metric": "waittime_min", "target": 3}
+  ],
+  "badge": "echo",
+  "persona_overrides": {
+    "talia_dominator": {
+      "target_label": "Revoice and redirect decimal reasoning",
+      "opening_line": "It is 0.45. Forty-five is bigger than five, so 0.45 has to be greater than 0.5.",
+      "win_line": "I hear it now: 0.5 is 0.50, so five tenths is greater than forty-five hundredths.",
+      "win_moves": ["revoice", "redirect"]
+    },
+    "sam_withdrawn": {
+      "target_label": "Wait, then elicit a place-value idea",
+      "opening_line": "I am not sure. The extra digit in 0.45 makes me think it might be bigger.",
+      "win_line": "When I line them up as hundredths, 0.50 is more than 0.45.",
+      "win_moves": ["wait", "elicit"]
+    },
+    "diego_ell": {
+      "target_label": "Wait and revoice tenths versus hundredths",
+      "opening_line": "I think 0.45, because I see forty-five. But maybe tenths and hundredths are different.",
+      "win_line": "So 0.5 means five tenths, the same as fifty hundredths, and fifty hundredths is larger.",
+      "win_moves": ["wait", "revoice"]
+    },
+    "jordan_skeptic": {
+      "target_label": "Revoice, then extend to money or place value",
+      "opening_line": "This feels like a trick. If 45 is bigger than 5, why would 0.45 be smaller?",
+      "win_line": "Okay, like money: 50 cents is more than 45 cents, so 0.50 is greater than 0.45.",
+      "win_moves": ["revoice", "extend"]
+    },
+    "priya_quiet": {
+      "target_label": "Elicit with wait time",
+      "opening_line": "I was thinking 0.5, but I do not want to say it wrong.",
+      "win_line": "0.5 is bigger because it is five tenths, and 0.45 is four tenths and five hundredths.",
+      "win_moves": ["elicit", "wait"]
+    },
+    "noah_g5_fractions": {
+      "target_label": "Elicit and extend Noah's comparison model",
+      "opening_line": "I think 0.45 is greater because 45 is more than 5, but decimals confuse me.",
+      "win_line": "If I write 0.5 as 0.50, then I can compare hundredths: 50 hundredths is greater than 45 hundredths.",
+      "win_moves": ["elicit", "extend"]
+    }
+  }
+}

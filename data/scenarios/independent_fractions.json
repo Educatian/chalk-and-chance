@@ -1,0 +1,26 @@
+{
+  "id": "independent_fractions",
+  "title": "Practice Set  -  Independent Work (rows)",
+  "format": "independent",
+  "arrangement": "rows",
+  "requires": "routine",
+  "period_seconds": 120,
+  "offtask_rise": 8.0,
+  "roster": [
+    {"id": "riley_avoidant", "name": "Riley", "seat": 1},
+    {"id": "marcus_volatile", "name": "Marcus", "seat": 3},
+    {"id": "deshawn_offtask", "name": "Deshawn", "seat": 5},
+    {"id": "noah_g5_fractions", "name": "Noah", "seat": 7},
+    {"id": "meilin_anxious", "name": "Mei-Lin", "seat": 8},
+    {"id": "sam_withdrawn", "name": "Sam", "seat": 10},
+    {"id": "diego_ell", "name": "Diego", "seat": 12},
+    {"id": "priya_quiet", "name": "Priya", "seat": 14}
+  ],
+  "objectives": [
+    {"id": "attn", "label": "Hold on-task >= 70% (circulate and confer)", "metric": "attention_min", "target": 70},
+    {"id": "dis", "label": "At most 1 disruption", "metric": "disruptions_max", "target": 1},
+    {"id": "comp", "label": "Composure >= 60%", "metric": "composure_min", "target": 60},
+    {"id": "eq", "label": "Confer with every student (8)", "metric": "engaged_min", "target": 8}
+  ],
+  "badge": "routine"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "gym_capstone",
+  "title": "Capstone: The Lesson That Went Sideways",
+  "format": "discussion",
+  "arrangement": "ushape",
+  "mode": "gym",
+  "requires": "balance",
+  "period_seconds": 0,
+  "badge": "insight",
+  "roster": [
+    {"id": "noah_g5_fractions", "name": "Noah", "seat": 0},
+    {"id": "deshawn_offtask", "name": "Deshawn", "seat": 1},
+    {"id": "marcus_volatile", "name": "Marcus", "seat": 2},
+    {"id": "priya_quiet", "name": "Priya", "seat": 3}
+  ],
+  "objectives": [],
+  "persona_overrides": {
+    "noah_g5_fractions": {
+      "target_label": "Elicit + extend (surface the reasoning)",
+      "win_line": "Oh, I see it now, I had the idea backwards!",
+      "win_moves": ["elicit", "extend"]
+    },
+    "deshawn_offtask": {
+      "target_label": "Least-intrusive redirect + BSP",
+      "win_line": "Alright, I'm back on it.",
+      "win_moves": ["redirect", "praise"]
+    },
+    "marcus_volatile": {
+      "target_label": "Affect-first: revoice + wait",
+      "win_line": "...okay. I'll try the first step.",
+      "win_moves": ["revoice", "wait"]
+    },
+    "priya_quiet": {
+      "target_label": "Deliberately invite + wait",
+      "win_line": "Yes! I had that, thanks for asking me.",
+      "win_moves": ["elicit", "wait"]
+    }
+  }
+}

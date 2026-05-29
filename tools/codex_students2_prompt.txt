@@ -1,0 +1,49 @@
+You are generating HIGH-RESOLUTION pixel-art game assets for a Godot game in this working
+directory (C:\Users\jewoo\Projects\teachersim). Use your image generation tool, post-process
+each to the EXACT target pixel size, save to the EXACT paths, overwriting if present. Work
+autonomously; do not ask questions.
+
+GLOBAL STYLE: high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) quality,
+top-down RPG overworld, warm palette, crisp 1px outlines, no anti-aliasing, flat cel
+shading, fully TRANSPARENT background (alpha).
+
+POST-PROCESSING (Python + Pillow, installed): generate large, crop, resize with
+NEAREST-neighbor to the exact target size, preserve alpha, save PNG. Never bilinear/bicubic.
+
+WALK-CYCLE SHEETS: each EXACTLY 96x256 px = a strict 3-column x 4-row grid of 32x64 cells
+(no gaps). ROWS top->bottom = facing DOWN, LEFT, RIGHT, UP. COLUMNS = left-foot-forward,
+standing, right-foot-forward. Same kid in all 12 cells; only facing and step pose change;
+feet at the bottom of each cell.
+
+PORTRAITS: each 128x128 px, head-and-shoulders, soft warm key light from the left,
+deep-navy vignette. Keep each kid's design identical across their 3 portraits; change only
+the expression (neutral / thinking / excited).
+
+Six grade-5 students (all distinct from each other):
+
+1. SAM (shy, withdrawn boy): grey hoodie with hood partly up, dark hair, eyes down.
+   assets/sprites/sam_withdrawn_walk.png  (96x256)
+   assets/portraits/sam_withdrawn_neutral.png / _thinking.png / _excited.png  (128 each)
+
+2. DIEGO (boy, English learner, friendly): short black hair, red soccer jersey.
+   assets/sprites/diego_ell_walk.png
+   assets/portraits/diego_ell_neutral.png / _thinking.png / _excited.png
+
+3. RILEY (avoidant kid): oversized purple sweater, baseball cap, arms crossed, guarded.
+   assets/sprites/riley_avoidant_walk.png
+   assets/portraits/riley_avoidant_neutral.png / _thinking.png / _excited.png
+
+4. JORDAN (skeptical boy): green flannel shirt, slouchy posture, one eyebrow raised.
+   assets/sprites/jordan_skeptic_walk.png
+   assets/portraits/jordan_skeptic_neutral.png / _thinking.png / _excited.png
+
+5. PRIYA (quiet, competent girl): long dark braid, round glasses, indigo top, calm.
+   assets/sprites/priya_quiet_walk.png
+   assets/portraits/priya_quiet_neutral.png / _thinking.png / _excited.png
+
+6. MARCUS (easily-frustrated boy): bright orange t-shirt, short hair, tense brow.
+   assets/sprites/marcus_volatile_walk.png
+   assets/portraits/marcus_volatile_neutral.png / _thinking.png / _excited.png
+
+When done, print a checklist of every file written with its final pixel dimensions, and note
+any that failed.

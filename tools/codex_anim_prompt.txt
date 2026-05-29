@@ -1,0 +1,42 @@
+You are generating pixel-art game assets for a Godot game in this working directory
+(C:\Users\jewoo\Projects\teachersim). Read ASSET_PROMPTS.md for the art direction. Use your
+image generation tool to create the PNGs below, post-process each to the EXACT target pixel
+size, and save to the EXACT paths. Work autonomously; do not ask questions.
+
+GLOBAL STYLE: 16-bit pixel art, Pokemon Gen-4 (Nintendo DS) style, top-down RPG overworld
+view, clean limited warm palette, crisp 1px outlines, no anti-aliasing, flat cel shading,
+fully TRANSPARENT background (alpha).
+
+POST-PROCESSING (Python + Pillow, already installed): generate large, crop, then resize
+with NEAREST-neighbor to the EXACT target size, preserve alpha, save PNG at the path. Do
+NOT use bilinear/bicubic.
+
+=== WALK-CYCLE SHEETS (the important part) ===
+Each is a single sprite sheet, EXACTLY 48x128 px, laid out as a strict grid of 3 COLUMNS by
+4 ROWS of 16x32 cells (no padding, no gaps; cell width 16, cell height 32).
+- ROWS top to bottom = facing DOWN (toward viewer), facing LEFT, facing RIGHT, facing UP
+  (back of head).
+- COLUMNS left to right = LEFT-foot-forward step, STANDING idle, RIGHT-foot-forward step.
+- Same character in all 12 cells; only the facing and the leg/arm step pose change. Feet at
+  the bottom of each cell. This must tile cleanly into 12 equal 16x32 frames.
+
+1. assets/sprites/teacher_walk.png          -> 48x128. The friendly early-career teacher
+   (cardigan, slacks, short hair) as the 4-direction 3-frame walk grid described above.
+2. assets/sprites/noah_g5_fractions_walk.png -> 48x128. The shy 10-year-old boy (striped
+   shirt, brown hair) as the same 4-direction 3-frame walk grid.
+
+=== SPEECH BUBBLE ===
+3. assets/ui/bubble_9slice.png -> 48x48. A rounded-rectangle speech bubble frame for 9-slice
+   scaling: near-white (cream) fill, 2px dark-navy rounded border, UNIFORM corners and even
+   borders about 14px on each side so it 9-slices cleanly. No tail in this image.
+4. assets/ui/bubble_tail.png   -> 12x12. A small speech-bubble tail: a little cream triangle
+   with a dark-navy outline, pointing down and to the left, transparent elsewhere.
+
+=== EMOTE BUBBLES (small overhead reaction bubbles) ===
+Each 24x24, transparent, a tiny white speech bubble containing the symbol:
+5. assets/ui/emote_exclaim.png  -> a bold "!" (surprise / aha / talk-to-me).
+6. assets/ui/emote_question.png -> a "?" (confused).
+7. assets/ui/emote_dots.png     -> "..." three dots (thinking / withdrawn / silence).
+
+When done, print a checklist of every file written with its final pixel dimensions, and note
+any that failed.

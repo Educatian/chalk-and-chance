@@ -1,0 +1,32 @@
+You are REGENERATING 6 character walk-cycle sprite sheets for a Godot game in this working
+directory (C:\Users\jewoo\Projects\teachersim). The current versions have figures that are
+too THIN/SMALL within the cell, so they look squished next to the other characters. Redraw
+them STURDY and FULL-BODIED so the figure fills the cell consistently. Overwrite the exact
+paths. Work autonomously; do not ask questions.
+
+STYLE: high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) overworld style,
+top-down RPG, crisp 1px outlines, no anti-aliasing, flat cel shading, fully TRANSPARENT
+background.
+
+PROPORTION REQUIREMENT (critical - this is the fix):
+- Each sheet is EXACTLY 96x256 px = a strict 3-column x 4-row grid of 32x64 cells.
+- The standing figure in EACH 32x64 cell must FILL the cell: roughly 24-28 px WIDE (about
+  80% of the 32px cell width) and 56-60 px TALL (about 90% of the 64px cell height), feet at
+  the bottom edge, head near the top. A sturdy chibi child body (head about 1/3 of height),
+  NOT a thin/small figure. Make every one of the six the SAME build/scale as each other.
+- ROWS top->bottom = facing DOWN, LEFT, RIGHT, UP. COLUMNS = left-foot-forward, standing,
+  right-foot-forward. Same kid in all 12 cells; only facing and step pose change.
+
+POST-PROCESSING (Python + Pillow): generate large, crop, resize with NEAREST-neighbor to
+EXACTLY 96x256, preserve alpha, save PNG (overwrite).
+
+The six (keep each kid's existing look, just make them full-bodied and uniform in size):
+1. assets/sprites/diego_ell_walk.png        -> boy, short black hair, red soccer jersey.
+2. assets/sprites/jordan_skeptic_walk.png    -> boy, green flannel shirt, casual.
+3. assets/sprites/marcus_volatile_walk.png   -> boy, bright orange t-shirt, short hair.
+4. assets/sprites/priya_quiet_walk.png        -> girl, long dark braid, round glasses, indigo top.
+5. assets/sprites/riley_avoidant_walk.png     -> kid, oversized purple sweater, baseball cap.
+6. assets/sprites/sam_withdrawn_walk.png      -> boy, grey hoodie (hood partly up), dark hair.
+
+When done, print a checklist of each file with its final pixel dimensions, and note any that
+failed.

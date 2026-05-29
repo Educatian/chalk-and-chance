@@ -1,0 +1,26 @@
+{
+  "id": "group_work_fractions",
+  "title": "Group Investigation  -  Group Work (clusters)",
+  "format": "group_work",
+  "arrangement": "clusters",
+  "requires": "echo",
+  "period_seconds": 120,
+  "offtask_rise": 12.0,
+  "roster": [
+    {"id": "talia_dominator", "name": "Talia", "seat": 0},
+    {"id": "noah_g5_fractions", "name": "Noah", "seat": 1},
+    {"id": "meilin_anxious", "name": "Mei-Lin", "seat": 4},
+    {"id": "diego_ell", "name": "Diego", "seat": 5},
+    {"id": "deshawn_offtask", "name": "Deshawn", "seat": 8},
+    {"id": "marcus_volatile", "name": "Marcus", "seat": 9},
+    {"id": "priya_quiet", "name": "Priya", "seat": 12},
+    {"id": "sam_withdrawn", "name": "Sam", "seat": 13}
+  ],
+  "objectives": [
+    {"id": "attn", "label": "Keep attention >= 60% (groups drift faster)", "metric": "attention_min", "target": 60},
+    {"id": "dis", "label": "At most 3 disruptions", "metric": "disruptions_max", "target": 3},
+    {"id": "comp", "label": "Composure >= 50%", "metric": "composure_min", "target": 50},
+    {"id": "eq", "label": "Visit every group member (8)", "metric": "engaged_min", "target": 8}
+  ],
+  "badge": "balance"
+}

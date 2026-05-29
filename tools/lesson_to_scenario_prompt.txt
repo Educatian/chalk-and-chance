@@ -1,0 +1,46 @@
+You convert a teacher's LESSON PLAN into ONE Chalk & Chance scenario JSON so the teacher can
+mentally rehearse that exact lesson. Read tools/sample_lesson_plan.md in this working
+directory (C:\Users\jewoo\Projects\teachersim). Then WRITE a single valid JSON file to
+data/scenarios/custom_<shortslug>.json (slug from the topic, lowercase, underscores). Do not
+ask questions; just produce the file and print the path.
+
+SCHEMA (must match exactly; the game loads this):
+{
+  "id": "custom_<slug>",                 // same as filename without .json
+  "title": "<short title>  -  <Format> (<arrangement>)",
+  "format": "discussion|lecture|group_work|independent",
+  "arrangement": "ushape|rows|clusters|pairs",
+  "period_seconds": <int 90..180>,        // scale the lesson minutes down to a short round
+  "offtask_rise": <float 7..12>,          // higher for lecture/group work
+  "roster": [ {"id": <persona_id>, "name": <display>, "seat": <int>}, ... ],
+  "objectives": [ {"id": <short>, "label": <text>, "metric": <metric>, "target": <num>}, ... ],
+  "badge": "routine|echo|balance|mirror|insight",
+  "persona_overrides": { "<persona_id>": {"target_label": "...","opening_line":"...","win_line":"...","win_moves":[...]}, ... }
+}
+
+MAPPING RULES (grounded in the seating + practice literature):
+- Activity format -> arrangement: discussion/number-talk/Socratic -> "ushape";
+  lecture/direct-instruction -> "rows"; group/collaborative/stations -> "clusters";
+  independent/seatwork/practice -> "rows" (format "independent").
+- period_seconds: scale lesson minutes to ~2-3 min of game time (e.g., 45 min -> 120).
+- badge: discussion/questioning -> "echo"; management/independent -> "routine"; equity focus
+  -> "balance"; feedback focus -> "mirror"; diagnosis focus -> "insight".
+
+ALLOWED persona ids (reuse these 10; pick 4-8 that fit the lesson):
+  noah_g5_fractions, talia_dominator, meilin_anxious, deshawn_offtask, sam_withdrawn,
+  diego_ell, riley_avoidant, jordan_skeptic, priya_quiet, marcus_volatile
+
+SEAT INDEX RANGES by arrangement (0-based; pick distinct, spread-out seats):
+  ushape: 0..8   rows: 0..14   clusters: 0..15   pairs: 0..11
+
+ALLOWED objective metrics (use 3-4): attention_min, disruptions_max, composure_min,
+  engaged_min (set target = number of students), waittime_min.
+
+persona_overrides: rewrite each rostered student's opening_line and win_line to THIS lesson's
+  CONTENT and anticipated misconception (e.g., decimals place-value), and set target_label to
+  the move that works. Keep win_moves consistent with the persona's strength
+  (Noah elicit/extend, Talia revoice/redirect, Mei-Lin praise/extend, Deshawn redirect/praise,
+  Sam wait/elicit, Diego wait/revoice, Riley elicit/extend, Jordan revoice/extend,
+  Priya elicit/wait, Marcus revoice/wait). Make the dialogue specific to the lesson topic.
+
+Output ONLY the JSON file (valid JSON, no comments). Then print "WROTE <path>".

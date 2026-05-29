@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chalk &amp; Chance — a teacher-simulation you can rehearse in</title>
+<meta name="description" content="A Pokemon-style 2D teacher-simulation for deliberate mental rehearsal. Manage a living classroom and surface student thinking in dialogue with LLM-driven students. Every mechanic grounded in high-impact education research." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#0e1326; --panel:#12172a; --panel2:#1a2138; --cream:#f2efd9;
+    --muted:#9fb0cf; --green:#4fae5f; --amber:#f0b132; --red:#cc4748; --blue:#4d8cf0;
+    --line:#28304e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--navy);color:var(--cream);
+    font-family:Inter,system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+  img{max-width:100%;display:block}
+  .pixel{image-rendering:pixelated;image-rendering:crisp-edges}
+  a{color:var(--blue);text-decoration:none}
+  h1,h2,h3,.mono{font-family:"Press Start 2P",monospace;line-height:1.4}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  .accent-green{color:var(--green)} .accent-amber{color:var(--amber)} .accent-red{color:var(--red)}
+
+  /* top bar */
+  .nav{position:sticky;top:0;z-index:20;background:rgba(14,19,38,.85);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+  .brand{font-family:"Press Start 2P";font-size:13px;color:var(--cream)}
+  .brand b{color:var(--green)}
+  .nav a.link{color:var(--muted);font-size:14px;margin-left:20px}
+  .nav a.link:hover{color:var(--cream)}
+  @media(max-width:680px){.nav a.link{display:none}}
+
+  /* hero */
+  .hero{position:relative;padding:70px 0 50px;
+    background:radial-gradient(1200px 500px at 50% -10%, #1c2747 0, transparent 60%),
+      linear-gradient(180deg,#10162e,#0e1326)}
+  .hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center}
+  @media(max-width:900px){.hero .wrap{grid-template-columns:1fr;text-align:center}}
+  .tagline{display:inline-block;font-size:12px;letter-spacing:.5px;color:var(--amber);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;margin-bottom:18px}
+  .hero h1{font-size:34px;margin:0 0 16px;color:var(--cream);text-shadow:0 3px 0 #00000055}
+  @media(max-width:900px){.hero h1{font-size:26px}}
+  .hero p.lead{font-size:18px;color:var(--muted);margin:0 0 26px}
+  .cta{display:flex;gap:14px;flex-wrap:wrap}
+  @media(max-width:900px){.cta{justify-content:center}}
+  .btn{font-family:"Press Start 2P";font-size:12px;padding:14px 18px;border-radius:10px;
+    border:2px solid #000;cursor:pointer;transition:transform .08s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.primary{background:var(--green);color:#06210d;box-shadow:0 4px 0 #2c7a3a}
+  .btn.ghost{background:var(--panel2);color:var(--cream);box-shadow:0 4px 0 #0b1022}
+  .shot-frame{border:3px solid #000;border-radius:12px;overflow:hidden;
+    box-shadow:0 16px 40px #00000066, inset 0 0 0 2px #2a3050}
+  .shot-frame img{width:100%}
+
+  /* generic section */
+  section{padding:62px 0;border-top:1px solid var(--line)}
+  .eyebrow{font-family:"Press Start 2P";font-size:11px;color:var(--green);margin:0 0 10px}
+  .sec-title{font-size:22px;margin:0 0 10px}
+  .sec-sub{color:var(--muted);max-width:760px;margin:0 0 34px}
+
+  /* feature cards */
+  .grid{display:grid;gap:18px}
+  .grid.f3{grid-template-columns:repeat(3,1fr)}
+  .grid.f4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:900px){.grid.f3,.grid.f4{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.grid.f3,.grid.f4{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card h3{font-size:13px;margin:0 0 10px;color:var(--cream)}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .card .ico{font-size:22px;margin-bottom:10px}
+
+  /* gallery */
+  .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:760px){.gallery{grid-template-columns:1fr}}
+  .gcap{font-size:13px;color:var(--muted);padding:10px 4px 0}
+  .gcap b{color:var(--cream)}
+
+  /* evidence */
+  .evi{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .evi table{width:100%;border-collapse:collapse;font-size:14px}
+  .evi th,.evi td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .evi th{font-size:12px;color:var(--amber);text-transform:uppercase;letter-spacing:.5px}
+  .evi td b{color:var(--cream)}
+  .evi .cites{color:var(--green);font-weight:800}
+  .evi tr:last-child td{border-bottom:0}
+  @media(max-width:680px){.evi .hideMob{display:none}}
+
+  /* roster */
+  .roster{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  @media(max-width:760px){.roster{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:480px){.roster{grid-template-columns:repeat(2,1fr)}}
+  .pc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .pc img{width:84px;height:84px;margin:0 auto 8px;border-radius:8px;background:#0c1124}
+  .pc .nm{font-size:13px;color:var(--cream);font-weight:700}
+  .pc .rl{font-size:12px;color:var(--muted)}
+
+  /* scenes */
+  .scene{display:flex;gap:14px;align-items:flex-start;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;padding:16px}
+  .scene .tag{font-family:"Press Start 2P";font-size:10px;padding:6px 9px;border-radius:7px;white-space:nowrap}
+  .footer{padding:40px 0;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line)}
+  .note{font-size:12.5px;color:#7e8db0;margin-top:18px}
+</style>
+</head>
+<body>
+
+<div class="nav"><div class="wrap">
+  <div class="brand">CHALK <b>&amp;</b> CHANCE</div>
+  <nav>
+    <a class="link" href="#features">Features</a>
+    <a class="link" href="#scenes">Scenes</a>
+    <a class="link" href="#research">Research</a>
+    <a class="link" href="#students">Students</a>
+    <a class="link" href="#play">Play</a>
+  </nav>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <div>
+    <span class="tagline">▶ Pixel teacher-sim for deliberate practice</span>
+    <h1>Rehearse teaching,<br /><span class="accent-green">one classroom at a time.</span></h1>
+    <p class="lead">A Pokemon-style 2D simulation where you manage a living classroom and surface
+      student thinking in dialogue with LLM-driven students. Every mechanic is grounded in
+      high-impact education research, so what you practice is what the evidence says matters.</p>
+    <div class="cta">
+      <a class="btn primary" href="#play">Play the build</a>
+      <a class="btn ghost" href="#research">See the research</a>
+    </div>
+  </div>
+  <div class="shot-frame"><img class="pixel" src="img/shot_encounter.png" alt="Encounter screen: meters, speech bubble, teaching moves" /></div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <p class="eyebrow">WHAT YOU DO</p>
+  <h2 class="sec-title">Not a chat tree. A classroom you orchestrate.</h2>
+  <p class="sec-sub">Walk the room, read what's happening, and decide who needs you and when, while the
+    period clock runs and interruptions keep coming.</p>
+  <div class="grid f3">
+    <div class="card"><div class="ico">🧠</div><h3>LLM-driven students</h3>
+      <p>Each student is a frozen persona who won't simply agree. You "solve" a moment by surfacing
+      their reasoning, not by lecturing the answer.</p></div>
+    <div class="card"><div class="ico">🚶</div><h3>Proximity &amp; withitness</h3>
+      <p>Attention drifts when you're far away or facing the board. Circulating and scanning the room
+      is itself a move (Kounin's withitness, made playable).</p></div>
+    <div class="card"><div class="ico">⏱️</div><h3>Lesson under pressure</h3>
+      <p>A period clock, a Composure meter, and interruptions (intercom, a knock, a late student) you
+      must triage with the least-intrusive response.</p></div>
+    <div class="card"><div class="ico">🪑</div><h3>Seating by task</h3>
+      <p>Discussion uses a U-shape, lecture uses rows, group work uses clusters, because the research
+      says the task should dictate the arrangement.</p></div>
+    <div class="card"><div class="ico">🎯</div><h3>Scored debrief + badges</h3>
+      <p>Every period ends in a coached debrief scored against named objectives, with gym-style badges
+      for each competency you master.</p></div>
+    <div class="card"><div class="ico">💬</div><h3>The seven teaching moves</h3>
+      <p>Elicit, Extend, Revoice, Tell/Model, Praise, Redirect, Wait, each tagged and scored, with a
+      wait-time ring that rewards a real pause.</p></div>
+  </div>
+</div></section>
+
+<section id="gallery"><div class="wrap">
+  <p class="eyebrow">SCREENS</p>
+  <h2 class="sec-title">A whole school day, in pixels</h2>
+  <div class="gallery">
+    <figure style="margin:0"><div class="shot-frame"><img class="pixel" src="img/shot_hub.png" alt="Mission hub" /></div>
+      <div class="gcap"><b>Mission hub.</b> Choose a lesson; the format sets the room and the goals.</div></figure>
+    <figure style="margin:0"><div class="shot-frame"><img class="pixel" src="img/shot_overworld.png" alt="Group discussion U-shape" /></div>
+      <div class="gcap"><b>Group discussion (U-shape).</b> Live attention &amp; a coach watching your withitness.</div></figure>
+    <figure style="margin:0"><div class="shot-frame"><img class="pixel" src="img/shot_groupwork.png" alt="Group work clusters" /></div>
+      <div class="gcap"><b>Group work (clusters).</b> Monitor every pod; groups drift faster.</div></figure>
+    <figure style="margin:0"><div class="shot-frame"><img class="pixel" src="img/shot_interrupt.png" alt="Interrupt event" /></div>
+      <div class="gcap"><b>Interruptions.</b> A knock at the door: triage it, spend your composure wisely.</div></figure>
+  </div>
+</div></section>
+
+<section id="scenes"><div class="wrap">
+  <p class="eyebrow">SCENES = MISSIONS</p>
+  <h2 class="sec-title">Each format rehearses a different teaching context</h2>
+  <p class="sec-sub">A scene is one data-driven config: it sets the seating arrangement, the roster, and
+    the objectives, so adding a lesson is a single file.</p>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+    <div class="scene"><span class="tag" style="background:#1d3a2a;color:var(--green)">U-SHAPE</span>
+      <div><b>Group Discussion.</b><div style="color:var(--muted);font-size:14px">Elicit, extend, revoice; keep turns equitable. Semicircles raise student question-asking.</div></div></div>
+    <div class="scene"><span class="tag" style="background:#3a3320;color:var(--amber)">ROWS</span>
+      <div><b>Lecture.</b><div style="color:var(--muted);font-size:14px">Hold attention and momentum during direct instruction. Rows favor on-task behavior.</div></div></div>
+    <div class="scene"><span class="tag" style="background:#26304e;color:var(--blue)">CLUSTERS</span>
+      <div><b>Group Work.</b><div style="color:var(--muted);font-size:14px">Circulate and monitor every pod; re-engage off-task groups without taking over.</div></div></div>
+    <div class="scene"><span class="tag" style="background:#3a2230;color:#e07ba0">ROWS</span>
+      <div><b>Independent Work.</b><div style="color:var(--muted);font-size:14px">Confer one-to-one and keep the room on-task with least-intrusive redirects.</div></div></div>
+  </div>
+</div></section>
+
+<section id="research"><div class="wrap">
+  <p class="eyebrow">WHY IT'S DIFFERENT</p>
+  <h2 class="sec-title">Grounded in the highest-impact education research</h2>
+  <p class="sec-sub">Personas and mechanics are anchored to seminal, heavily-cited work, prioritized by
+    impact. Two of the anchors are among the most-cited papers in all of education.</p>
+  <div class="evi"><table>
+    <tr><th>In-game</th><th>Teaches</th><th>Anchor</th><th class="hideMob">Citations</th></tr>
+    <tr><td><b>Feedback meter</b></td><td>Process-focused feedback, not person-praise</td><td>Hattie &amp; Timperley, <i>The Power of Feedback</i> (2007)</td><td class="cites">11,900+</td></tr>
+    <tr><td><b>Re-engaging Sam</b></td><td>Behavioral / emotional engagement</td><td>Fredricks, Blumenfeld &amp; Paris, <i>School Engagement</i> (2004)</td><td class="cites">11,600+</td></tr>
+    <tr><td><b>Diagnosis (Insight)</b></td><td>Attend &middot; interpret &middot; decide</td><td>Jacobs, Lamb &amp; Philipp, <i>Professional Noticing</i> (2010)</td><td class="cites">1,300+</td></tr>
+    <tr><td><b>Redirect ladder</b></td><td>Least-to-most-intrusive management</td><td>Simonsen et al., <i>Evidence-based Classroom Management</i> (2008)</td><td class="cites">900+</td></tr>
+    <tr><td><b>Wait-Time ring</b></td><td>3–5s pause after a question</td><td>Rowe, <i>Wait Time</i> (1986)</td><td class="cites">canonical</td></tr>
+    <tr><td><b>Seating by task</b></td><td>Rows vs U-shape vs clusters</td><td>Wannarka &amp; Ruhl (2008); Marx et al. (1999)</td><td class="cites">canonical</td></tr>
+  </table></div>
+  <p class="note">Citation counts via OpenAlex. Canonical anchors are verified against Crossref/OpenAlex
+    before any publication-facing use. Full mapping in the project's PERSONAS_EVIDENCE.md and GAME_CONCEPT.md.</p>
+</div></section>
+
+<section id="students"><div class="wrap">
+  <p class="eyebrow">THE CLASS</p>
+  <h2 class="sec-title">Ten students, each a different challenge</h2>
+  <p class="sec-sub">Every persona maps to a distinct high-leverage practice and the move that works.</p>
+  <div class="roster">
+    <div class="pc"><img class="pixel" src="img/portraits/noah_g5_fractions.png" alt="Noah"/><div class="nm">Noah</div><div class="rl">Misconception</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/talia_dominator.png" alt="Talia"/><div class="nm">Talia</div><div class="rl">Dominates airtime</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/meilin_anxious.png" alt="Mei-Lin"/><div class="nm">Mei-Lin</div><div class="rl">Anxious achiever</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/deshawn_offtask.png" alt="Deshawn"/><div class="nm">Deshawn</div><div class="rl">Off-task</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/sam_withdrawn.png" alt="Sam"/><div class="nm">Sam</div><div class="rl">Withdrawn</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/diego_ell.png" alt="Diego"/><div class="nm">Diego</div><div class="rl">Language learner</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/riley_avoidant.png" alt="Riley"/><div class="nm">Riley</div><div class="rl">Avoidance</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/jordan_skeptic.png" alt="Jordan"/><div class="nm">Jordan</div><div class="rl">"Why learn this?"</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/priya_quiet.png" alt="Priya"/><div class="nm">Priya</div><div class="rl">Quiet, overlooked</div></div>
+    <div class="pc"><img class="pixel" src="img/portraits/marcus_volatile.png" alt="Marcus"/><div class="nm">Marcus</div><div class="rl">Volatile</div></div>
+  </div>
+</div></section>
+
+<section id="play"><div class="wrap" style="text-align:center">
+  <p class="eyebrow">PLAY</p>
+  <h2 class="sec-title">Built in Godot 4. Runs on your machine.</h2>
+  <p class="sec-sub" style="margin-left:auto;margin-right:auto">Arrow keys to move, Z to talk to a student,
+    Esc for the mission hub. The in-browser / desktop build uses an on-device or cloud LLM for the students.</p>
+  <div class="cta" style="justify-content:center">
+    <a class="btn primary" href="https://educatian.github.io/chalk-and-chance-play/">Play in browser</a>
+    <a class="btn ghost" href="#features">Read the features</a>
+  </div>
+  <p class="note">A teacher-preparation mental-rehearsal tool and a research artifact. Concept stage.</p>
+</div></section>
+
+<div class="footer"><div class="wrap">
+  CHALK &amp; CHANCE &mdash; a Pokemon-style teacher-simulation. Made with Godot 4.
+  Mechanics grounded in education research; see GAME_CONCEPT.md.
+</div></div>
+
+</body>
+</html>

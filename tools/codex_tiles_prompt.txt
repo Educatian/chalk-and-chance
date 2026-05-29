@@ -1,0 +1,38 @@
+You are generating pixel-art game assets for a Godot game in this working directory
+(C:\Users\jewoo\Projects\teachersim). Read ASSET_PROMPTS.md for the art direction, then
+use your image generation tool to create the PNGs below, post-process each to the EXACT
+target pixel size, and save to the EXACT paths. Work autonomously; do not ask questions.
+
+GLOBAL STYLE: 16-bit pixel art, Pokemon Gen-4 (Nintendo DS) style, top-down RPG view,
+clean limited warm institutional palette (oak/amber wood, cream walls, chalk-green board,
+locker blue, desaturated teal-grey), crisp 1px outlines, no anti-aliasing, flat cel
+shading.
+
+POST-PROCESSING (Python + Pillow, already installed): for each asset, crop to the subject
+then resize with NEAREST-neighbor down to the exact target size, save as PNG at the path.
+Do NOT use bilinear/bicubic. Tiles must be OPAQUE (full RGBA, no transparent areas) and
+visually SEAMLESS/tileable when repeated on a grid. Badges must have a TRANSPARENT
+background.
+
+TILES (16x16 px each, top-down floor/wall view, seamless):
+1. assets/tiles/floor.png  -> warm oak wooden classroom floor plank, tileable.
+2. assets/tiles/wall.png   -> cream painted classroom wall block, tileable, with a subtle
+   top edge highlight.
+3. assets/tiles/desk.png   -> a single wooden student desk seen from top-down (desk surface
+   with a thin notebook), fills the tile.
+4. assets/tiles/board.png  -> a chalk-green chalkboard segment with a wooden frame edge,
+   tileable horizontally (for the front wall).
+5. assets/tiles/door.png   -> a closed wooden classroom door seen from the front/top, fills
+   the tile.
+6. assets/tiles/window.png -> a window with blue daylight and a sill, fills the tile.
+
+BADGES (32x32 px each, transparent background, gym-badge shape with metallic rim, one clear
+emblem):
+7.  assets/ui/badge_routine.png  -> emblem: a small clock / checklist (Classroom Management).
+8.  assets/ui/badge_echo.png     -> emblem: a speech bubble (Questioning).
+9.  assets/ui/badge_balance.png  -> emblem: a pair of scales (Equity).
+10. assets/ui/badge_mirror.png   -> emblem: a hand mirror (Feedback).
+11. assets/ui/badge_insight.png  -> emblem: an eye with a small lightbulb (Diagnosis).
+
+When done, print a checklist of every file written with its final pixel dimensions, and
+note any that failed.

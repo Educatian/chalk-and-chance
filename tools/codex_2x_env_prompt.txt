@@ -1,0 +1,40 @@
+You are generating HIGH-RESOLUTION pixel-art assets for a Godot game in this working
+directory (C:\Users\jewoo\Projects\teachersim). These REPLACE earlier lower-res versions.
+Use your image generation tool, post-process to the EXACT target pixel size, and save to
+the EXACT paths, OVERWRITING existing files. Work autonomously; do not ask questions.
+
+GLOBAL STYLE: high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) quality,
+top-down RPG view, warm institutional palette (oak/amber wood, cream walls, chalk-green
+board, locker blue), crisp 1px outlines, no anti-aliasing, flat cel shading.
+
+POST-PROCESSING (Python + Pillow, installed): generate large, crop, resize with
+NEAREST-neighbor to the EXACT target size, preserve alpha, save PNG. Never bilinear/bicubic.
+Tiles must be OPAQUE and seamlessly tileable; badges/bubbles/emotes TRANSPARENT.
+
+TILES (32x32 px, top-down, seamless):
+1. assets/tiles/floor.png  -> warm oak wooden classroom floor plank, tileable.
+2. assets/tiles/wall.png   -> cream painted classroom wall block with subtle top highlight.
+3. assets/tiles/desk.png   -> single wooden student desk seen top-down with a thin notebook.
+4. assets/tiles/board.png  -> chalk-green chalkboard segment with wooden frame, tileable horizontally.
+5. assets/tiles/door.png   -> closed wooden classroom door, front/top.
+6. assets/tiles/window.png -> window with blue daylight and a sill.
+
+BADGES (64x64 px, transparent, gym-badge shape, metallic rim, one clear emblem):
+7.  assets/ui/badge_routine.png  -> clock / checklist (Classroom Management).
+8.  assets/ui/badge_echo.png     -> speech bubble (Questioning).
+9.  assets/ui/badge_balance.png  -> a pair of scales (Equity).
+10. assets/ui/badge_mirror.png   -> hand mirror (Feedback).
+11. assets/ui/badge_insight.png  -> eye with a small lightbulb (Diagnosis).
+
+SPEECH BUBBLE + EMOTES (transparent):
+12. assets/ui/bubble_9slice.png -> 96x96. Rounded-rectangle speech bubble for 9-slice:
+    near-white cream fill, 3px dark-navy rounded border, uniform corners and even borders
+    about 28px each side. No tail.
+13. assets/ui/bubble_tail.png   -> 24x24. Small cream triangle tail with dark-navy outline,
+    pointing down-left, transparent elsewhere.
+14. assets/ui/emote_exclaim.png  -> 48x48. Tiny white speech bubble with a bold "!".
+15. assets/ui/emote_question.png -> 48x48. Tiny white speech bubble with a "?".
+16. assets/ui/emote_dots.png     -> 48x48. Tiny white speech bubble with "...".
+
+When done, print a checklist of every file written with its final pixel dimensions, and note
+any that failed.

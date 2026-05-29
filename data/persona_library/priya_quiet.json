@@ -1,0 +1,18 @@
+{
+  "persona_id": "priya_quiet",
+  "display_name": "Priya",
+  "grade_band": "grade_5",
+  "subject_context": "whole_class_question",
+  "target_label": "Equitable participation (the easily-overlooked student)",
+  "badge": "balance",
+  "win_moves": ["elicit", "wait"],
+  "color": [0.85, 0.45, 0.70],
+  "opening_line": "(has the right answer ready, but quietly waits and is rarely called on)",
+  "win_line": "Yes! I had that. Thanks for asking me.",
+  "hidden_need": "competent and willing but overlooked; needs the teacher to distribute attention deliberately",
+  "knowledge_state": {
+    "target_concept": "attention equity; quiet competence is easy to skip",
+    "frozen_misconception": "the teacher will just call on the loud kids, so why bother volunteering"
+  },
+  "answer_flip_policy": "You participate readily once deliberately and warmly invited; if ignored you stay quiet rather than pushing in."
+}

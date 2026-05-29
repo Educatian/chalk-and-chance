@@ -1,0 +1,28 @@
+{
+  "id": "lecture_fractions",
+  "title": "Intro to Fractions  -  Lecture (rows)",
+  "format": "lecture",
+  "mode": "lecture",
+  "arrangement": "rows",
+  "requires": "",
+  "period_seconds": 120,
+  "offtask_rise": 11.0,
+  "roster": [
+    {"id": "talia_dominator", "name": "Talia", "seat": 0},
+    {"id": "diego_ell", "name": "Diego", "seat": 2},
+    {"id": "jordan_skeptic", "name": "Jordan", "seat": 4},
+    {"id": "marcus_volatile", "name": "Marcus", "seat": 5},
+    {"id": "priya_quiet", "name": "Priya", "seat": 7},
+    {"id": "meilin_anxious", "name": "Mei-Lin", "seat": 9},
+    {"id": "deshawn_offtask", "name": "Deshawn", "seat": 11},
+    {"id": "noah_g5_fractions", "name": "Noah", "seat": 13}
+  ],
+  "objectives": [
+    {"id": "attn", "label": "Hold attention >= 70% (rows favor on-task)", "metric": "attention_min", "target": 70},
+    {"id": "dis", "label": "At most 1 disruption", "metric": "disruptions_max", "target": 1},
+    {"id": "comp", "label": "Composure >= 60%", "metric": "composure_min", "target": 60},
+    {"id": "eq", "label": "Reach every student (8)", "metric": "engaged_min", "target": 8},
+    {"id": "wt", "label": "Use wait time at least 2 times", "metric": "waittime_min", "target": 2}
+  ],
+  "badge": "routine"
+}

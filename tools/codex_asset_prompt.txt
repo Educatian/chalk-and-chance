@@ -1,0 +1,40 @@
+You are generating pixel-art game assets for a Godot game in this working directory
+(C:\Users\jewoo\Projects\teachersim). First read ASSET_PROMPTS.md for the full art
+direction. Then use your image generation tool to create the 8 priority-1 PNGs listed
+below, post-process each to the exact target pixel size, and save them to the exact
+paths. Work autonomously; do not ask questions.
+
+GLOBAL STYLE (apply to every image): 16-bit pixel art, Pokemon Gen-4 (Nintendo DS) style,
+clean limited palette, crisp 1px outlines, no anti-aliasing, flat cel shading, fully
+TRANSPARENT background (alpha, not white). Keep the boy "Noah" character design identical
+across all six portraits; change only the facial expression.
+
+POST-PROCESSING (do this for every asset, in Python with Pillow; pip install pillow if
+missing): take the generated image, crop to the subject, then resize with NEAREST-neighbor
+resampling down to the exact target size below, preserve alpha transparency, save as PNG
+at the exact path. Do NOT use bilinear/bicubic resampling.
+
+ASSETS:
+1. assets/sprites/teacher_ow.png  -> 16x32 px. Front-facing top-down RPG overworld sprite
+   of a friendly early-career schoolteacher (cardigan, slacks, short hair, warm face),
+   full body, standing idle.
+2. assets/sprites/noah_g5_fractions_ow.png -> 16x32 px. Front-facing top-down RPG overworld
+   sprite of a shy 10-year-old boy (striped t-shirt, slightly hunched guarded posture),
+   full body.
+3. assets/portraits/noah_g5_fractions_neutral.png   -> 64x64 px. Head-and-shoulders portrait
+   of the shy 10-year-old boy (short brown hair, striped shirt), GUARDED neutral expression,
+   mouth flat, looking slightly away, soft warm key light from the left, deep-navy vignette.
+4. assets/portraits/noah_g5_fractions_confused.png  -> 64x64 px. Same boy/design, CONFUSED:
+   brow furrowed, head tilted, puzzled.
+5. assets/portraits/noah_g5_fractions_thinking.png  -> 64x64 px. Same boy/design, THINKING:
+   eyes up, finger near chin, working it out.
+6. assets/portraits/noah_g5_fractions_frustrated.png-> 64x64 px. Same boy/design, FRUSTRATED:
+   tense, looking down.
+7. assets/portraits/noah_g5_fractions_withdrawn.png -> 64x64 px. Same boy/design, WITHDRAWN:
+   shrinking back, eyes down, shut-down.
+8. assets/portraits/noah_g5_fractions_excited.png   -> 64x64 px. Same boy/design, EXCITED:
+   bright eyes, small open-mouth "aha" smile.
+
+Generate the neutral portrait first and reuse its character design for the other five
+portraits so the face stays consistent. When done, print a checklist of which files were
+written with their final pixel dimensions, and note any that failed.

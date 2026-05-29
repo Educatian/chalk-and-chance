@@ -1,0 +1,16 @@
+# Godot
+.godot/
+*.tmp
+
+# Build output / deploy artifacts (hosted separately)
+dist_web/
+landing/_dist/
+landing/preview.png
+landing/preview_hero.png
+
+# Large downloads / logs
+tools/templates.tpz
+tools/*.log
+tools/*.output
+smoketest.log
+st.log

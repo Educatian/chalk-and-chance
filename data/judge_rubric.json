@@ -1,0 +1,22 @@
+{
+  "_comment": "Fixed tag -> meter delta table (GAME_CONCEPT.md 7.4). understanding rises only on moves the judge flags targets_misconception. Tunable without re-prompting the model.",
+  "deltas": {
+    "elicit":      { "understanding": 0.12, "trust": 0.02, "engagement": 0.06, "order": 0.00, "composure": 0.02, "targets_misconception": true,  "feedback_type": "process" },
+    "extend":      { "understanding": 0.10, "trust": 0.00, "engagement": 0.04, "order": 0.00, "composure": 0.00, "targets_misconception": true,  "feedback_type": "process" },
+    "revoice":     { "understanding": 0.04, "trust": 0.10, "engagement": 0.05, "order": 0.00, "composure": 0.00, "targets_misconception": false, "feedback_type": "none" },
+    "tell":        { "understanding": 0.00, "trust": -0.05, "engagement": -0.10, "order": 0.02, "composure": -0.05, "targets_misconception": false, "feedback_type": "none" },
+    "praise":      { "understanding": 0.00, "trust": 0.08, "engagement": 0.02, "order": 0.05, "composure": 0.02, "targets_misconception": false, "feedback_type": "self" },
+    "redirect":    { "understanding": 0.00, "trust": -0.02, "engagement": 0.00, "order": 0.06, "composure": 0.00, "targets_misconception": false, "feedback_type": "none" }
+  },
+  "wait": {
+    "met":    { "understanding": 0.05, "trust": 0.04, "engagement": 0.06, "order": 0.00, "composure": 0.03, "targets_misconception": true },
+    "missed": { "understanding": 0.00, "trust": -0.05, "engagement": -0.02, "order": 0.00, "composure": -0.02, "targets_misconception": false },
+    "threshold_ms": 3000
+  },
+  "win_condition": {
+    "understanding_min": 0.80,
+    "require_targets_misconception": true,
+    "resolving_tags": ["elicit", "extend", "revoice", "wait"],
+    "badge": "echo"
+  }
+}

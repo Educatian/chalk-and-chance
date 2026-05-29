@@ -1,0 +1,54 @@
+You are generating HIGH-RESOLUTION pixel-art game assets for a Godot game in this working
+directory (C:\Users\jewoo\Projects\teachersim). These REPLACE earlier lower-res versions.
+Use your image generation tool, post-process each to the EXACT target pixel size, and save
+to the EXACT paths, OVERWRITING any existing file. Work autonomously; do not ask questions.
+
+GLOBAL STYLE: high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) quality,
+top-down RPG overworld, warm institutional palette, crisp 1px outlines, no anti-aliasing,
+flat cel shading, fully TRANSPARENT background (alpha).
+
+POST-PROCESSING (Python + Pillow, installed): generate large, crop, resize with
+NEAREST-neighbor to the EXACT target size, preserve alpha, save PNG at the path. Never
+bilinear/bicubic.
+
+=== WALK-CYCLE SHEETS: each EXACTLY 96x256 px = a strict 3-column x 4-row grid of 32x64
+cells (no gaps). ROWS top->bottom = facing DOWN, LEFT, RIGHT, UP. COLUMNS left->right =
+left-foot-forward, standing, right-foot-forward. Same character in all 12 cells; only
+facing and step pose change; feet at the bottom of each cell. Must slice into 12 equal
+32x64 frames. ===
+1. assets/sprites/teacher_walk.png           -> 96x256. Friendly early-career teacher,
+   cardigan + slacks, short hair, warm face.
+2. assets/sprites/noah_g5_fractions_walk.png -> 96x256. Shy 10-year-old boy, short brown
+   hair, blue-and-cream striped t-shirt, slightly hunched.
+3. assets/sprites/talia_dominator_walk.png   -> 96x256. Confident 10-year-old girl, high
+   ponytail, bright magenta top, lively eager posture.
+4. assets/sprites/meilin_anxious_walk.png    -> 96x256. Anxious 10-year-old girl, glasses,
+   neat dark bob, teal cardigan, arms close to body.
+5. assets/sprites/deshawn_offtask_walk.png   -> 96x256. Relaxed 10-year-old boy, short
+   coily hair, green hoodie, casual.
+
+=== PORTRAITS: each 128x128 px, head-and-shoulders, soft warm key light from the left,
+deep-navy vignette background. Keep each character's design identical across their own set;
+only the expression changes. ===
+Noah (short brown hair, striped shirt) -- SIX expressions:
+6.  assets/portraits/noah_g5_fractions_neutral.png    -> guarded neutral, looking slightly away
+7.  assets/portraits/noah_g5_fractions_confused.png   -> brow furrowed, puzzled
+8.  assets/portraits/noah_g5_fractions_thinking.png   -> eyes up, finger near chin
+9.  assets/portraits/noah_g5_fractions_frustrated.png -> tense, looking down
+10. assets/portraits/noah_g5_fractions_withdrawn.png  -> shrinking back, eyes down
+11. assets/portraits/noah_g5_fractions_excited.png    -> bright eyes, small "aha" smile
+Talia (ponytail, magenta top) -- THREE:
+12. assets/portraits/talia_dominator_neutral.png  -> eager, hand half-raised
+13. assets/portraits/talia_dominator_thinking.png -> considering, looking up
+14. assets/portraits/talia_dominator_excited.png  -> big confident grin
+Mei-Lin (glasses, dark bob, teal cardigan) -- THREE:
+15. assets/portraits/meilin_anxious_neutral.png  -> worried, looking down
+16. assets/portraits/meilin_anxious_thinking.png -> cautious, considering
+17. assets/portraits/meilin_anxious_excited.png  -> relieved small smile
+Deshawn (coily hair, green hoodie) -- THREE:
+18. assets/portraits/deshawn_offtask_neutral.png  -> distracted, looking to the side
+19. assets/portraits/deshawn_offtask_thinking.png -> reluctantly engaging
+20. assets/portraits/deshawn_offtask_excited.png  -> easy grin, back on task
+
+When done, print a checklist of every file written with its final pixel dimensions, and
+note any that failed.
