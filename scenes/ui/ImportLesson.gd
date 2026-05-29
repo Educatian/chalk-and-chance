@@ -36,9 +36,9 @@ func _build() -> void:
 	add_child(title)
 
 	var sub := Label.new()
-	sub.text = "Paste your plan (or load a .txt/.md). The activity format sets seating; duration sets the period; objectives become goals. 'AI' also rewrites student dialogue to your content."
+	sub.text = "Paste your plan (or load a .txt/.md). Activity format sets seating; duration sets the period.\nObjectives become goals, and 'AI' rewrites student dialogue to match your content."
 	sub.position = Vector2(42, 66)
-	sub.size = Vector2(vp.x - 84, 40)
+	sub.size = Vector2(vp.x - 84, 44)
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub.add_theme_font_size_override("font_size", 14)
 	sub.add_theme_color_override("font_color", Color(0.7, 0.85, 0.95))
