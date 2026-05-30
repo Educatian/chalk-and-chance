@@ -7,11 +7,12 @@ extends Node
 signal reply_ready(response: Dictionary)
 signal request_failed(message: String)
 
-@export var endpoint: String = "http://127.0.0.1:8000/turn"
-@export var use_stub: bool = true
+@export var endpoint: String = "http://127.0.0.1:8008/turn"
+@export var use_stub: bool = false
 @export var timeout_seconds: float = 12.0
 
 var _http: HTTPRequest
+var _last_payload: Dictionary = {}
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
@@ -21,6 +22,7 @@ func _ready() -> void:
 
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:
+	_last_payload = payload
 	if use_stub:
 		call_deferred("_emit_stub", payload)
 		return
@@ -33,11 +35,15 @@ func send_move(payload: Dictionary) -> void:
 
 func _on_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+		push_warning("LLMClient: backend error (result %d, code %d), falling back to stub" % [result, response_code])
 		request_failed.emit("backend error (result %d, code %d)" % [result, response_code])
+		_emit_stub(_last_payload)
 		return
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(parsed) != TYPE_DICTIONARY:
+		push_warning("LLMClient: malformed JSON, falling back to stub")
 		request_failed.emit("backend returned malformed JSON")
+		_emit_stub(_last_payload)
 		return
 	reply_ready.emit(parsed)
 

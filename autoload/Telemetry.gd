@@ -1,0 +1,99 @@
+extends Node
+## Structured input<->output logging for analysis (ties into the PlayTrace / OGD line).
+## Every encounter turn is recorded as one JSONL line (raw fields + an xAPI-style
+## statement) under user://telemetry/<session>.jsonl. Deterministic-safe: no network
+## needed; writing failures never interrupt play.
+
+var session_id: String = ""
+var _path: String = ""
+var _f: FileAccess = null
+var enabled: bool = true
+
+func _ready() -> void:
+	session_id = "sess_%d_%d" % [int(Time.get_unix_time_from_system()), (Time.get_ticks_usec() % 100000)]
+	DirAccess.make_dir_recursive_absolute("user://telemetry")
+	_path = "user://telemetry/%s.jsonl" % session_id
+	_f = FileAccess.open(_path, FileAccess.WRITE)
+	log_event({"event": "session_start", "engine": Engine.get_version_info().get("string", "")})
+
+func _write(d: Dictionary) -> void:
+	if not enabled or _f == null:
+		return
+	_f.store_line(JSON.stringify(d))
+	_f.flush()
+
+var _buffer: Array = []   # events pending upload to the learner's cloud account
+
+## Generic event line (session_start/resolve/fail/etc.).
+func log_event(d: Dictionary) -> void:
+	d["session_id"] = session_id
+	d["t_ms"] = Time.get_ticks_msec()
+	d["unix"] = Time.get_unix_time_from_system()
+	# Stamp the learner identity so the cloud row attributes to the right person.
+	if Auth.signed_in():
+		d["user_id"] = Auth.user_id
+		d["learner"] = Auth.display_name
+		d["class_code"] = Auth.class_code
+	_write(d)
+	if Auth.signed_in():
+		_buffer.append(d)
+		if _buffer.size() >= 8:
+			flush()
+
+## Upload buffered events under the signed-in learner (no-op offline). Call at lesson end.
+func flush() -> void:
+	if not Auth.signed_in() or _buffer.is_empty():
+		return
+	Auth.post_authed("/telemetry", {"events": _buffer.duplicate()})
+	_buffer.clear()
+
+## Push the current ECD competency estimate to the learner's account.
+func upload_competency() -> void:
+	if not Auth.signed_in():
+		return
+	var skills: Array = []
+	for r in Competency.summary():
+		if r["n"] > 0:
+			skills.append({"skill": r["skill"], "theta": Competency.theta.get(r["skill"], 0.0),
+				"prob": r["prob"], "n": r["n"]})
+	if not skills.is_empty():
+		Auth.post_authed("/competency", {"skills": skills})
+
+## One teacher-move turn: the player INPUT, the judge/meter OUTPUT, and the student's
+## generated reaction. `e` carries scenario_id/persona_id/turn/move/judge/deltas/meters/
+## emotion_shown/student_text/resolved. We also emit a compact xAPI statement.
+# move tag -> the competency construct it provides evidence for (mirrors
+# data/competency_model.json evidence_rules; OGD/construct-aware telemetry).
+const TAG_CONSTRUCT := {
+	"elicit": "elicit_reasoning", "extend": "extend_thinking", "revoice": "revoicing",
+	"wait": "wait_time", "redirect": "behavior_mgmt", "tell": "restraint",
+	"praise": "behavior_specific_praise", "connect": "funds_of_knowledge",
+}
+
+func log_turn(e: Dictionary) -> void:
+	var move: Dictionary = e.get("move", {})
+	var judge: Dictionary = e.get("judge", {})
+	var tag: String = str(move.get("tag", ""))
+	e["construct_id"] = TAG_CONSTRUCT.get(tag, "")
+	var verb: String = {
+		"elicit": "elicited", "extend": "extended", "revoice": "revoiced",
+		"tell": "told", "praise": "praised", "redirect": "redirected",
+		"wait": "waited", "connect": "connected",
+	}.get(tag, "acted")
+	e["xapi"] = {
+		"actor": {"name": "teacher", "session": session_id},
+		"verb": verb,
+		"object": {"persona_id": e.get("persona_id", ""), "scenario_id": e.get("scenario_id", "")},
+		"result": {
+			"success": bool(judge.get("targets", false)),
+			"response": str(e.get("emotion_shown", "")),
+			"extensions": {
+				"wait_time_ms": int(move.get("wait_ms", 0)),
+				"wait_ok": bool(judge.get("wait_ok", false)),
+				"understanding": e.get("meters", {}).get("understanding", 0.0),
+			},
+		},
+		"context": {"turn": e.get("turn", 0), "input_mode": str(move.get("input_mode", "menu"))},
+	}
+	e["event"] = "turn"
+	log_event(e)

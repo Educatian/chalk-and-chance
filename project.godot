@@ -18,6 +18,10 @@ GameState="*res://autoload/GameState.gd"
 Game="*res://autoload/Game.gd"
 SceneRouter="*res://autoload/SceneRouter.gd"
 LLMClient="*res://autoload/LLMClient.gd"
+TTSClient="*res://autoload/TTSClient.gd"
+Auth="*res://autoload/Auth.gd"
+Telemetry="*res://autoload/Telemetry.gd"
+Competency="*res://autoload/Competency.gd"
 
 [gui]
 

@@ -16,7 +16,9 @@ Then set LLMClient.use_stub = false in Godot.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
+import re
 from typing import Any
 
 try:
@@ -29,6 +31,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 RUBRIC = json.loads((ROOT / "data" / "judge_rubric.json").read_text(encoding="utf-8"))
 
 app = FastAPI(title="Chalk & Chance backend", version="0.1")
+
+try:
+    from fastapi.middleware.cors import CORSMiddleware
+    app.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
+    )
+except Exception:  # pragma: no cover
+    pass
 
 
 class TeacherMove(BaseModel):
@@ -46,36 +56,44 @@ class TurnRequest(BaseModel):
     runtime_state: dict[str, Any] = {}
     teacher_move: TeacherMove
     dialogue_tail: list[dict[str, str]] = []
+    move_history: list[dict[str, Any]] = []  # recent [{tag, targets}] for adaptive/fading coach
+    win_moves: list[str] = []          # moves that actually unlock THIS student (differentiated)
+    frozen_persona: dict[str, Any] = {}  # optional; backend loads from disk if absent
     model_profile: str = "stub"
 
 
-def judge(move: TeacherMove) -> dict[str, Any]:
+def judge(move: TeacherMove, win_moves: list[str]) -> dict[str, Any]:
     """Rule layer: menu moves carry their tag, so no LLM is needed here.
-    For free-typed text you would add one cheap schema-constrained classifier call."""
+    For free-typed text you would add one cheap schema-constrained classifier call.
+
+    Differentiated gate (parity with the Godot stub): a move only counts as
+    targets_misconception (and only then can understanding rise) if it is in THIS
+    student's win_moves. So elicit unlocks Noah but not a student who needs de-escalation."""
     tag = (move.menu_tag or "").strip()
     wait_ok = move.wait_time_ms >= RUBRIC["wait"]["threshold_ms"]
     if tag == "wait":
-        row = RUBRIC["wait"]["met"] if wait_ok else RUBRIC["wait"]["missed"]
+        row = dict(RUBRIC["wait"]["met"] if wait_ok else RUBRIC["wait"]["missed"])
     else:
-        row = RUBRIC["deltas"].get(tag, {})
+        row = dict(RUBRIC["deltas"].get(tag, {}))
+
+    targets = bool(row.get("targets_misconception", False))
+    if win_moves and tag and tag not in win_moves:
+        # not the move that unlocks THIS student: no understanding gain, not a resolving move
+        targets = False
+        row["understanding"] = 0.0
+    row["targets_misconception"] = targets
     return {
         "move_tags": [tag] if tag else [],
-        "targets_misconception": bool(row.get("targets_misconception", False)),
+        "targets_misconception": targets,
         "feedback_type": row.get("feedback_type", "none"),
         "wait_time_ok": wait_ok,
         "_row": row,
     }
 
 
-def _generate_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, str]:
-    """STUB student generator. Replace with a frozen-persona LLM call.
-
-    Guardrails to enforce in the real version (GAME_CONCEPT.md 7.5):
-      - restate answer_flip_policy verbatim; never reveal the answer until resolved
-      - re-send the frozen persona every turn (bounded drift); history is last-N only
-      - post-gen validator: reject if it volunteers correct reasoning while unresolved,
-        or exceeds the grade-band vocabulary; clamp emotion to one step per turn.
-    """
+def _canned_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, str]:
+    """Deterministic fallback student generator (used when no LLM is configured or
+    the OpenRouter call / validator fails). Keeps the game running with zero deps."""
     tag = verdict["move_tags"][0] if verdict["move_tags"] else ""
     canned = {
         "elicit": "Um... 8 pieces is more than 4, so I drew 8 little boxes. But they look skinnier?",
@@ -89,9 +107,281 @@ def _generate_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, st
     return {"speaker": "Noah", "text": canned.get(tag, "...")}
 
 
+# --- free-text move classifier (GAME_CONCEPT 7.4 LLM classifier layer) -------
+# Menu moves carry their tag (no LLM). For a TYPED teacher utterance we classify it
+# into exactly one move tag, then the SAME deterministic judge/rubric applies.
+
+CLASSIFIER_MODEL = os.environ.get("OPENROUTER_CLASSIFIER_MODEL", "google/gemini-2.5-flash-lite")
+_MOVE_TAGS = ["elicit", "extend", "revoice", "tell", "praise", "redirect", "wait", "connect"]
+_CLASSIFY_SYS = (
+    "You label a teacher's utterance to a student with EXACTLY ONE move tag.\n"
+    "elicit = asks the student to explain HOW/WHY they think (surfaces reasoning).\n"
+    "extend = pushes the student's own idea further with a follow-up.\n"
+    "revoice = restates/affirms the student's thinking back to them.\n"
+    "tell = states the answer or explains the concept directly (takes over).\n"
+    "praise = praises the student.\n"
+    "redirect = manages behavior / refocuses attention.\n"
+    "wait = silence / giving think time (no real content).\n"
+    "connect = asks about the student's life/interests/strengths outside the task.\n"
+    'Return ONLY JSON: {"tag":"<one tag>"}.'
+)
+
+
+def _heuristic_classify(text: str) -> str:
+    t = text.lower().strip()
+    if not t:
+        return "wait"
+    if any(k in t for k in ("how did you", "why do you", "can you show me", "what makes you", "how do you")):
+        return "elicit"
+    if "?" in t and any(k in t for k in ("what if", "what about", "and then", "so what", "what else")):
+        return "extend"
+    if t.startswith(("so you", "so what you", "you're saying", "what i hear")):
+        return "revoice"
+    if any(k in t for k in ("good job", "nice work", "i like how", "well done", "great")):
+        return "praise"
+    if any(k in t for k in ("settle", "focus", "quiet", "back to", "stop", "eyes up")):
+        return "redirect"
+    if any(k in t for k in ("tell you about", "what do you like", "outside class", "good at")):
+        return "connect"
+    if any(k in t for k in ("the answer is", "actually it", "here's how", "let me show", "because the")):
+        return "tell"
+    return "elicit"
+
+
+def classify_move(text: str) -> str:
+    key = _openrouter_key()
+    if not key:
+        return _heuristic_classify(text)
+    try:
+        msgs = [{"role": "system", "content": _CLASSIFY_SYS},
+                {"role": "user", "content": text[:500]}]
+        body = json.dumps({"model": CLASSIFIER_MODEL, "messages": msgs, "temperature": 0.0,
+                           "max_tokens": 20, "response_format": {"type": "json_object"}}).encode()
+        rq = urllib.request.Request(OPENROUTER_URL, data=body, method="POST", headers={
+            "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        raw = json.loads(urllib.request.urlopen(rq, timeout=12).read())["choices"][0]["message"]["content"]
+        tag = str(json.loads(raw[raw.find("{"): raw.rfind("}") + 1]).get("tag", "")).strip().lower()
+        return tag if tag in _MOVE_TAGS else _heuristic_classify(text)
+    except Exception as exc:
+        print(f"[classify] fallback ({exc})")
+        return _heuristic_classify(text)
+
+
+# --- OpenRouter (Gemini) student generator -----------------------------------
+# Frozen-persona, anti-sycophancy student utterance. Dev path; key never ships to
+# the client. Set OPENROUTER_API_KEY (or drop the key in OPENROUTER_API_KEY_FILE).
+
+import urllib.request
+import urllib.error
+
+PERSONA_DIR = ROOT / "data" / "persona_library"
+PROMPT_TEMPLATE = (ROOT / "tools" / "student_prompt.txt").read_text(encoding="utf-8")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+STUDENT_MODEL = os.environ.get("OPENROUTER_STUDENT_MODEL", "google/gemini-2.5-flash-lite")
+
+
+def _openrouter_key() -> str | None:
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if key:
+        return key
+    # dev convenience: read a key file if pointed at one
+    path = os.environ.get("OPENROUTER_API_KEY_FILE", "").strip()
+    if path and pathlib.Path(path).is_file():
+        return pathlib.Path(path).read_text(encoding="utf-8").strip()
+    return None
+
+
+def _load_persona(req: TurnRequest) -> dict[str, Any]:
+    if req.frozen_persona:
+        return req.frozen_persona
+    p = PERSONA_DIR / f"{req.active_persona_id}.json"
+    if p.is_file():
+        return json.loads(p.read_text(encoding="utf-8"))
+    return {}
+
+
+def _build_messages(req: TurnRequest, persona: dict[str, Any], verdict: dict[str, Any]) -> list[dict[str, str]]:
+    ks = persona.get("knowledge_state", {})
+    bt = persona.get("behavior_tendencies", {})
+    rs = req.runtime_state
+    tag = verdict["move_tags"][0] if verdict["move_tags"] else ""
+    tail = "\n".join(f'{d.get("speaker","?")}: {d.get("text","")}' for d in req.dialogue_tail[-6:]) or "(start of conversation)"
+
+    def lst(v: Any) -> str:
+        return "; ".join(v) if isinstance(v, list) else str(v)
+
+    sys = PROMPT_TEMPLATE
+    repl = {
+        "[[PERSONA_JSON]]": json.dumps({k: persona.get(k) for k in (
+            "display_name", "grade_band", "subject_context", "traits", "behavior_tendencies")}, ensure_ascii=False, indent=2),
+        "[[FROZEN_MISCONCEPTION]]": str(ks.get("frozen_misconception", "")),
+        "[[FACTS_KNOWN]]": lst(ks.get("correct_facts_known", [])),
+        "[[FACTS_NOT_KNOWN]]": lst(ks.get("facts_NOT_known", [])),
+        "[[WILL_NOT_INVENT]]": str(ks.get("will_not_invent_beyond", "the lesson's grade level")),
+        "[[GRADE_BAND]]": str(persona.get("grade_band", "grade-level")),
+        "[[RESPONSE_LENGTH]]": str(bt.get("default_response_length", "1-2 sentences")),
+        "[[FLIP_POLICY]]": str(persona.get("answer_flip_policy", "Keep your stated understanding unless you reason it out yourself.")),
+        "[[RESOLVED]]": "true" if rs.get("misconception_resolved", False) else "false",
+        "[[EMOTION_BASELINE]]": str(persona.get("emotion_baseline", "neutral")),
+        "[[CURRENT_EMOTION]]": str(rs.get("emotion", persona.get("emotion_baseline", "neutral"))),
+        "[[ESCALATION]]": lst(persona.get("escalation_triggers", [])),
+        "[[DEESCALATION]]": lst(persona.get("deescalation_moves", [])),
+        "[[HIDDEN_NEED]]": str(persona.get("hidden_need", "")),
+        "[[UNDERSTANDING]]": str(round(float(rs.get("understanding", 0.15)), 2)),
+        "[[TRUST]]": str(round(float(rs.get("trust_in_teacher", 0.5)), 2)),
+        "[[ENGAGEMENT]]": str(round(float(rs.get("engagement", 0.4)), 2)),
+        "[[MOVE_TAG]]": tag or "(said something)",
+        "[[TARGETS]]": "IS" if verdict.get("targets_misconception") else "is NOT",
+        "[[WAIT_OK]]": "true" if verdict.get("wait_time_ok") else "false",
+        "[[DIALOGUE_TAIL]]": tail,
+    }
+    for k, v in repl.items():
+        sys = sys.replace(k, v)
+    return [{"role": "system", "content": sys},
+            {"role": "user", "content": "Respond now as the student, in character. JSON only."}]
+
+
+def _call_openrouter(messages: list[dict[str, str]], key: str, temperature: float) -> str:
+    body = json.dumps({
+        "model": STUDENT_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": 200,
+        "response_format": {"type": "json_object"},
+    }).encode("utf-8")
+    rq = urllib.request.Request(OPENROUTER_URL, data=body, method="POST", headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://chalk-and-chance.pages.dev",
+        "X-Title": "Chalk & Chance",
+    })
+    with urllib.request.urlopen(rq, timeout=15) as r:
+        data = json.loads(r.read().decode("utf-8"))
+    return data["choices"][0]["message"]["content"]
+
+
+def _parse_student(raw: str) -> dict[str, str]:
+    raw = raw.strip()
+    if "{" in raw and "}" in raw:
+        raw = raw[raw.find("{"): raw.rfind("}") + 1]
+    obj = json.loads(raw)
+    return {"text": str(obj.get("text", "")).strip(), "emotion_shown": str(obj.get("emotion_shown", "thinking")).strip()}
+
+
+# words that would mean the student leaked the resolution while unresolved
+_LEAK_PATTERNS = [
+    r"\bi (get|got) it now\b", r"\bnow i understand\b", r"\bso (it'?s|the answer is)\b",
+    r"\bsmaller (piece|share)s? .* (bigger|larger)\b", r"\b1/4 is (bigger|larger)\b",
+    r"\bmore pieces .* smaller\b", r"\byou'?re right\b", r"\bi was wrong\b",
+]
+
+
+def _validate_student(text: str, persona: dict[str, Any], resolved: bool, grade_band: str) -> tuple[bool, str]:
+    """Deterministic post-gen guardrail (GAME_CONCEPT 7.5 #6). Reject ->regenerate once."""
+    t = text.strip()
+    if not t:
+        return False, "empty"
+    # length cap by grade band (younger = shorter)
+    cap = 220 if "grade_5" in grade_band or "grade_4" in grade_band else 280
+    if len(t) > cap or t.count(".") + t.count("!") + t.count("?") > 3:
+        return False, "too long for grade band"
+    if not resolved:
+        low = t.lower()
+        win_line = str(persona.get("win_line", "")).lower()
+        for pat in _LEAK_PATTERNS:
+            if re.search(pat, low):
+                return False, f"leaked resolution while unresolved ({pat})"
+        # near-verbatim win line is also a leak
+        if win_line and len(win_line) > 20 and win_line[:25] in low:
+            return False, "echoed win_line while unresolved"
+    return True, "ok"
+
+
+# --- Adaptive LLM coach (Coach Vee) ------------------------------------------
+# Contingent, specific, FADING, next-step feedback generated from the live transcript
+# (the evidence-based driver of sim-to-classroom transfer). Falls back to the canned tip.
+
+COACH_TEMPLATE = (ROOT / "tools" / "coach_prompt.txt").read_text(encoding="utf-8")
+COACH_MODEL = os.environ.get("OPENROUTER_COACH_MODEL", "google/gemini-2.5-flash-lite")
+
+
+def _coach_messages(req: TurnRequest, persona: dict[str, Any], verdict: dict[str, Any]) -> list[dict[str, str]]:
+    rs = req.runtime_state
+    tag = verdict["move_tags"][0] if verdict["move_tags"] else ""
+    hist = "\n".join(
+        f'- {h.get("tag","?")}  [targets={"true" if h.get("targets") else "false"}]'
+        for h in req.move_history[-6:]) or "(this is the first move)"
+    tail = "\n".join(f'{d.get("speaker","?")}: {d.get("text","")}' for d in req.dialogue_tail[-6:]) or "(start of conversation)"
+    sys = COACH_TEMPLATE
+    repl = {
+        "[[TARGET_BEHAVIOR]]": str(req.target_behavior or persona.get("target_label", "the target teaching skill")),
+        "[[WIN_MOVES]]": ", ".join(req.win_moves) or ", ".join(persona.get("win_moves", [])),
+        "[[RESOLVED]]": "true" if rs.get("misconception_resolved", False) else "false",
+        "[[TURN]]": str(int(rs.get("turns_elapsed", len(req.move_history) + 1))),
+        "[[MOVE_TAG]]": tag or "(spoke)",
+        "[[TARGETS]]": "IS" if verdict.get("targets_misconception") else "is NOT",
+        "[[WAIT_OK]]": "true" if verdict.get("wait_time_ok") else "false",
+        "[[UNDERSTANDING]]": str(round(float(rs.get("understanding", 0.15)), 2)),
+        "[[MOVE_HISTORY]]": hist,
+        "[[DIALOGUE_TAIL]]": tail,
+    }
+    for k, v in repl.items():
+        sys = sys.replace(k, v)
+    return [{"role": "system", "content": sys},
+            {"role": "user", "content": "Give your one coaching note now. JSON only."}]
+
+
+def make_coach(req: TurnRequest, verdict: dict[str, Any], persona: dict[str, Any]) -> str:
+    key = _openrouter_key()
+    if not key or req.model_profile == "stub":
+        return _coach_tip(verdict)
+    try:
+        raw = _call_openrouter(_coach_messages(req, persona, verdict), key, 0.4)
+        raw = raw[raw.find("{"): raw.rfind("}") + 1]
+        tip = str(json.loads(raw).get("coach_tip", "")).strip()
+        return tip or _coach_tip(verdict)
+    except Exception as exc:
+        print(f"[coach] openrouter failed: {exc}")
+        return _coach_tip(verdict)
+
+
+def generate_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, str]:
+    """Dispatcher: OpenRouter/Gemini if a key is configured, else the canned fallback.
+    Re-rolls once (cooler) if the post-gen validator rejects the utterance."""
+    key = _openrouter_key()
+    if not key or req.model_profile == "stub":
+        return _canned_student(req, verdict)
+    persona = _load_persona(req)
+    name = persona.get("display_name", "Student")
+    resolved = bool(req.runtime_state.get("misconception_resolved", False))
+    grade = str(persona.get("grade_band", ""))
+    messages = _build_messages(req, persona, verdict)
+    for attempt, temp in enumerate((0.75, 0.4)):
+        try:
+            out = _parse_student(_call_openrouter(messages, key, temp))
+        except Exception as exc:  # network / parse / key error -> fall back
+            print(f"[student] openrouter attempt {attempt} failed: {exc}")
+            break
+        ok, why = _validate_student(out["text"], persona, resolved, grade)
+        if ok:
+            return {"speaker": name, "text": out["text"], "emotion_shown": out.get("emotion_shown", "thinking")}
+        print(f"[student] validator rejected (attempt {attempt}): {why}")
+        messages = messages + [{"role": "system", "content": f"That reply was rejected: {why}. Stay in your misconception, stay in grade-band, 1-2 short sentences. Try again, JSON only."}]
+    fb = _canned_student(req, verdict)
+    fb["speaker"] = name
+    return fb
+
+
 @app.post("/turn")
 def turn(req: TurnRequest) -> dict[str, Any]:
-    verdict = judge(req.teacher_move)
+    # Free-typed teacher talk: classify it to one move tag, then judge as usual.
+    classified = ""
+    if req.teacher_move.input_mode == "free_text" and (req.teacher_move.text or "").strip():
+        classified = classify_move(req.teacher_move.text)
+        req.teacher_move.menu_tag = classified
+    verdict = judge(req.teacher_move, req.win_moves)
+    if classified:
+        verdict["classified_tag"] = classified
     row = verdict.pop("_row")
     deltas = {
         "understanding": row.get("understanding", 0.0),
@@ -100,13 +390,21 @@ def turn(req: TurnRequest) -> dict[str, Any]:
         "order": row.get("order", 0.0),
         "composure": row.get("composure", 0.0),
     }
-    student = _generate_student(req, verdict)
+    # Student utterance and the adaptive coach note are independent LLM calls; run them
+    # concurrently so a turn costs ~one call of latency instead of two.
+    from concurrent.futures import ThreadPoolExecutor
+    persona = _load_persona(req)
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_student = ex.submit(generate_student, req, verdict)
+        f_coach = ex.submit(make_coach, req, verdict, persona)
+        student = f_student.result()
+        coach = f_coach.result()
     return {
         "session_id": req.session_id,
         "judge": verdict,
         "meter_deltas": deltas,
         "student_utterance": student,
-        "coach_tip": _coach_tip(verdict),
+        "coach_tip": coach,
     }
 
 
@@ -246,3 +544,75 @@ def lesson_to_scenario(req: LessonRequest) -> dict:
         return {"error": "empty plan"}
     scenario = llm_transform(plan) or heuristic(plan)
     return validate(scenario)
+
+
+# --- ElevenLabs TTS (child-ish per-persona voices) ---------------------------
+# Voice ids were created via Voice Design (tools, one-off) and stored in
+# data/voice_profiles.json: { persona_id: elevenlabs_voice_id }. /tts returns raw
+# mp3 bytes so Godot can play them directly via AudioStreamMP3.
+
+from fastapi.responses import Response
+
+_VOICE_PROFILES_PATH = ROOT / "data" / "voice_profiles.json"
+
+
+def _eleven_key() -> str | None:
+    key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    if key:
+        return key
+    for p in (os.environ.get("ELEVENLABS_API_KEY_FILE", ""),
+              str(pathlib.Path.home() / "Desktop" / "elevanlabs_API.txt"),
+              str(pathlib.Path.home() / "Desktop" / "elevenlabs_API.txt")):
+        if p and pathlib.Path(p).is_file():
+            return pathlib.Path(p).read_text(encoding="utf-8").strip()
+    return None
+
+
+def _voice_profiles() -> dict[str, str]:
+    try:
+        return json.loads(_VOICE_PROFILES_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+# emotion_shown -> (stability, style): lower stability + higher style = more expressive
+_EMO_SETTINGS = {
+    "neutral": (0.50, 0.30), "thinking": (0.50, 0.30), "curious": (0.42, 0.45),
+    "engaged": (0.40, 0.50), "excited": (0.30, 0.65), "proud": (0.38, 0.55),
+    "warming": (0.45, 0.45), "shy": (0.55, 0.30), "confused": (0.45, 0.40),
+    "anxious": (0.38, 0.45), "frustrated": (0.33, 0.55), "withdrawn": (0.58, 0.25),
+    # synonyms the model sometimes emits
+    "guarded": (0.58, 0.25), "nervous": (0.38, 0.45), "defiant": (0.33, 0.55),
+}
+
+
+class TTSRequest(BaseModel):
+    persona_id: str = ""
+    text: str = ""
+    emotion: str = "neutral"
+    model_id: str = "eleven_multilingual_v2"
+
+
+@app.post("/tts")
+def tts(req: TTSRequest):
+    key = _eleven_key()
+    voices = _voice_profiles()
+    vid = voices.get(req.persona_id)
+    if not key or not vid or not req.text.strip():
+        return Response(status_code=204)  # no audio available; game stays silent, never errors
+    stab, style = _EMO_SETTINGS.get(req.emotion.strip().lower(), (0.5, 0.35))
+    body = json.dumps({
+        "text": req.text,
+        "model_id": req.model_id,
+        "voice_settings": {"stability": stab, "similarity_boost": 0.75, "style": style, "use_speaker_boost": True},
+    }).encode()
+    rq = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{vid}?output_format=mp3_44100_128",
+        data=body, method="POST",
+        headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"})
+    try:
+        audio = urllib.request.urlopen(rq, timeout=30).read()
+        return Response(content=audio, media_type="audio/mpeg")
+    except Exception as exc:
+        print(f"[tts] elevenlabs failed: {exc}")
+        return Response(status_code=204)

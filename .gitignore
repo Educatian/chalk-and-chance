@@ -2,6 +2,15 @@
 .godot/
 *.tmp
 
+# Python / scratch
+__pycache__/
+*.pyc
+tmp/
+
+# Cloudflare wrangler local state (account cache, NOT for a public repo)
+.wrangler/
+cloudflare/.wrangler/
+
 # Build output / deploy artifacts (hosted separately)
 dist_web/
 landing/_dist/

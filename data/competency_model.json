@@ -1,0 +1,29 @@
+{
+  "_doc": "ECD competency model for Chalk & Chance (Mislevy/Almond/Steinberg). The PLAYER-teacher is the learner; theta is the competency vector estimated by the multivariate Elo (reuses ogd-p1-elo/src/elo.py, Ruiperez-Valiente et al. 2023). Evidence rules map each telemetry observable (a move + its judge verdict) to the competency it informs and a success signal y in {0,1}. Anchors are the OpenAlex-verified cites from PERSONAS_EVIDENCE.md.",
+  "skills": [
+    {"id": "elicit_reasoning", "label": "Eliciting student reasoning", "anchor": "Jacobs, Lamb & Philipp 2010 (professional noticing)"},
+    {"id": "extend_thinking", "label": "Extending student thinking", "anchor": "Cultivating Responsive Teaching, JMTE 2026"},
+    {"id": "revoicing", "label": "Revoicing / making thinking public", "anchor": "discourse moves (Chapin/O'Connor)"},
+    {"id": "wait_time", "label": "Productive wait time", "anchor": "Rowe 1986"},
+    {"id": "behavior_mgmt", "label": "Least-intrusive behavior management", "anchor": "Simonsen et al. 2008"},
+    {"id": "restraint", "label": "Restraint (not taking over the thinking)", "anchor": "Hattie & Timperley 2007; anti-take-over"},
+    {"id": "behavior_specific_praise", "label": "Behavior-specific praise", "anchor": "Reinke, Lewis-Palmer & Merrell 2008"},
+    {"id": "funds_of_knowledge", "label": "Connecting to student assets", "anchor": "Moll & Gonzalez; TeachingWorks HLP 12"}
+  ],
+  "evidence_rules": {
+    "_doc": "tag -> {skills tapped (Q-matrix row), y_from: how to read success from the telemetry turn}. y_from values: targets=judge.targets; wait_ok=judge.wait_ok; order_up/trust_up=delta>0; const1/const0=fixed.",
+    "elicit":   {"skills": ["elicit_reasoning"], "y_from": "targets"},
+    "extend":   {"skills": ["extend_thinking"], "y_from": "targets"},
+    "revoice":  {"skills": ["revoicing"], "y_from": "trust_up"},
+    "wait":     {"skills": ["wait_time"], "y_from": "wait_ok"},
+    "redirect": {"skills": ["behavior_mgmt"], "y_from": "order_up"},
+    "tell":     {"skills": ["restraint"], "y_from": "const0"},
+    "praise":   {"skills": ["behavior_specific_praise"], "y_from": "trust_up"},
+    "connect":  {"skills": ["funds_of_knowledge"], "y_from": "const1"}
+  },
+  "session_competencies": {
+    "_doc": "competencies measured at the session level (not per-move), computed in fit_competencies.py.",
+    "equitable_participation": {"metric": "1 - top_student_share", "anchor": "Cohen & Lotan (status); target top-share <= 0.60"}
+  },
+  "elo_params": {"a": 1.0, "b": 0.05, "_doc": "Pelanek uncertainty-aware step size; uncertainty per skill decays as a/(1+b*n)."}
+}

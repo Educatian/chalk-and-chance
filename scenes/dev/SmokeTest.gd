@@ -5,6 +5,11 @@ extends Node
 ## Run with scene = res://scenes/dev/SmokeTest.tscn.
 
 func _ready() -> void:
+	# CI must be deterministic and offline: force the in-engine stub rubric (not the
+	# live LLM backend) and disable audio so the headless run needs no network/key.
+	LLMClient.use_stub = true
+	TTSClient.enabled = false
+
 	# Start from a clean slate so a prior save does not mask the result.
 	GameState.badges = []
 	GameState.student_progress = {}

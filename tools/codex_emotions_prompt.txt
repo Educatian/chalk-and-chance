@@ -1,0 +1,68 @@
+You are generating HIGH-DETAIL pixel-art PORTRAIT assets for a Godot game in this working
+directory (C:\Users\jewoo\Projects\teachersim). Use your image generation tool (imagegen2).
+Generate large, then POST-PROCESS each with Python + Pillow: crop to square, resize with
+NEAREST-neighbor to EXACTLY 128x128 px, save PNG (RGBA) to the EXACT path, overwriting if
+present. Never bilinear/bicubic. Work fully autonomously; do not ask questions.
+
+GLOBAL STYLE (must match the existing portraits in assets/portraits/ exactly):
+- high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) quality, crisp 1px
+  outlines, flat cel shading, no anti-aliasing.
+- HEAD-AND-SHOULDERS down to mid-chest so HANDS CAN ENTER THE FRAME for gestures.
+- soft warm key light from the LEFT; deep-navy vignette background (NOT transparent).
+- one child, centered, facing roughly forward.
+
+IDENTITY LOCK: each child's face, hair, skin tone, and outfit are FIXED. They must look
+like the SAME person across all 12 of their portraits; ONLY the facial expression, head
+angle, and hand/body gesture change. Reference images of the 10 students' canonical look
+are attached in THIS ORDER -- match each student to their reference:
+  1 noah_g5_fractions  2 talia_dominator  3 sam_withdrawn  4 diego_ell  5 jordan_skeptic
+  6 priya_quiet  7 meilin_anxious  8 deshawn_offtask  9 riley_avoidant  10 marcus_volatile
+
+THE 12 EMOTION SPECTRUM (filename suffix -> expression + GESTURE; vary the hands, do not
+repeat the same pose). Read left(positive/open) to right(negative/closed):
+  neutral     -> calm baseline; relaxed shoulders, no hand raised, mouth at rest.
+  curious     -> head tilted, eyebrows up; ONE hand lifted with index finger raised, as if
+                 about to ask a question.
+  thinking    -> eyes up and to the side, lips pursed; knuckle or finger resting on the chin.
+  engaged     -> leaning slightly INTO frame, attentive bright eyes; both hands coming up
+                 open-palmed near chest, ready to participate.
+  excited     -> wide bright eyes, open "aha" smile; one hand HALF-RAISED high and eager
+                 (or a small fist-pump).
+  proud       -> chin up, confident closed-mouth smile; a clear THUMBS-UP or a hand flat on
+                 own chest.
+  warming     -> softening into a gentle small smile, shoulders dropping; a small friendly
+                 open-hand wave or relaxed open palm.
+  shy         -> looking away, faint blush, timid; a hand on the cheek or tugging the collar.
+  confused    -> brow furrowed, puzzled half-frown, head drawn back; one hand SCRATCHING the
+                 head or an upturned palm in a "huh?" shrug.
+  anxious     -> raised inner eyebrows, tight worried mouth, a single bead of sweat; a hand
+                 near the mouth (nail-biting) or wiping the brow.
+  frustrated  -> tense lowered brow, downturned mouth, looking down/away; a clenched fist or
+                 a hand pressed to the forehead (mild face-palm).
+  withdrawn   -> shrinking back, eyes down, nearly blank; arms hugging self / pulling hood or
+                 collar up, making themselves small.
+
+Adapt each gesture so it fits the student's own outfit and personality (e.g. Riley naturally
+crosses arms; Sam tugs the hoodie hood; Marcus clenches a fist; Talia's raised hand is bold;
+Mei-Lin's gestures are small and close to the body).
+
+THE 10 STUDENTS (locked design):
+ 1. noah_g5_fractions  -- shy 10y boy, short tousled brown hair, blue-and-cream HORIZONTAL
+    striped t-shirt, slightly hunched.
+ 2. talia_dominator    -- confident 10y girl, high ponytail, bright magenta top, lively.
+ 3. sam_withdrawn      -- shy boy, grey hoodie with hood partly up, dark hair, eyes low.
+ 4. diego_ell          -- friendly boy (English learner), short black hair, red soccer jersey.
+ 5. jordan_skeptic     -- skeptical boy, green flannel shirt, slouchy, one eyebrow raised.
+ 6. priya_quiet        -- quiet girl, long dark braid, round glasses, indigo top, calm.
+ 7. meilin_anxious     -- anxious girl, round glasses, neat dark bob, teal cardigan, arms close.
+ 8. deshawn_offtask    -- relaxed boy, short coily hair, green hoodie, casual.
+ 9. riley_avoidant     -- avoidant kid, oversized purple sweater, baseball cap, guarded.
+10. marcus_volatile    -- easily-frustrated boy, bright orange t-shirt, short hair, tense brow.
+
+OUTPUT PATHS: for every student S and every emotion E above, write
+  assets/portraits/<S>_<E>.png   (128x128)
+That is 10 students x 12 emotions = 120 files total. Overwrite any that already exist so the
+whole set is stylistically consistent.
+
+When done, print a checklist of every file written with its final pixel dimensions, and flag
+any that failed.

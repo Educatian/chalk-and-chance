@@ -1,0 +1,12 @@
+name = "chalk-and-chance-api"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# D1 database binding. Fill database_id after:  wrangler d1 create chalk_db
+[[d1_databases]]
+binding = "DB"
+database_name = "chalk_db"
+database_id = "9649ef4d-b263-4a97-987c-ac7391f4f243"
+
+# WORKER_SECRET (JWT signing key) is set as a secret, NOT here:
+#   wrangler secret put WORKER_SECRET

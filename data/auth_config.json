@@ -1,0 +1,4 @@
+{
+  "_doc": "Set api_base to your deployed Worker URL (cloudflare/SETUP.md). Empty = offline, no login screen, telemetry stays local.",
+  "api_base": "https://chalk-and-chance-api.jewoong-moon.workers.dev"
+}

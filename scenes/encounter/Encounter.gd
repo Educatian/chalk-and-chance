@@ -46,6 +46,11 @@ var understanding := 0.15
 var _resolved := false
 var _busy := false
 var _ready_at_ms := 0
+var _turns := 0
+var _transcript: Array = []     # running dialogue [{speaker, text}] for multi-turn coherence
+var _move_history: Array = []    # recent [{tag, targets}] so the coach can fade / avoid repeats
+var _port_tween: Tween = null    # portrait bounce on emotion change
+var _last_wait_ms: int = 0       # wait time of the move in flight (for telemetry)
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -60,6 +65,10 @@ var _bond_fill: ColorRect
 var _bond_label: Label
 var _bars: Dictionary = {}   # key -> ProgressBar
 var _buttons: Array = []
+var _text_input: LineEdit = null     # free-text teacher utterance box
+var _type_toggle: Button = null      # menu <-> type switch
+var _send_btn: Button = null
+var _type_mode: bool = false
 
 func _ready() -> void:
 	_build_ui()
@@ -239,9 +248,9 @@ func _build_ui() -> void:
 	_coach.size = Vector2(448, 40)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	# Move buttons row.
+	# Move buttons row (leave ~50px at the right for the Type/Menu toggle).
 	var n := MOVES.size()
-	var bw := 466.0 / float(n)
+	var bw := 414.0 / float(n)
 	for i in range(n):
 		var b := Button.new()
 		b.text = MOVES[i][0]
@@ -254,6 +263,47 @@ func _build_ui() -> void:
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus()
+
+	# Free-text input (hidden until the player toggles to Type mode), sharing the move row.
+	_text_input = LineEdit.new()
+	_text_input.position = Vector2(8, 224)
+	_text_input.size = Vector2(356, 40)
+	_text_input.placeholder_text = "Type what you say to the student, then Enter..."
+	_text_input.add_theme_font_size_override("font_size", 9)
+	_text_input.visible = false
+	_text_input.text_submitted.connect(func(_t): _on_type_submit())
+	_layer.add_child(_text_input)
+
+	_send_btn = Button.new()
+	_send_btn.text = "Say"
+	_send_btn.position = Vector2(366, 224)
+	_send_btn.size = Vector2(44, 40)
+	_send_btn.add_theme_font_size_override("font_size", 8)
+	_send_btn.visible = false
+	_send_btn.pressed.connect(func(): _on_type_submit())
+	_layer.add_child(_send_btn)
+
+	# Mode toggle (top of the move row, far right).
+	_type_toggle = Button.new()
+	_type_toggle.text = "Type"
+	_type_toggle.position = Vector2(424, 224)
+	_type_toggle.size = Vector2(48, 40)
+	_type_toggle.add_theme_font_size_override("font_size", 8)
+	_type_toggle.pressed.connect(_toggle_input_mode)
+	_layer.add_child(_type_toggle)
+
+func _toggle_input_mode() -> void:
+	_type_mode = not _type_mode
+	_type_toggle.text = "Menu" if _type_mode else "Type"
+	for b in _buttons:
+		b.visible = not _type_mode
+	if _text_input != null:
+		_text_input.visible = _type_mode
+		_send_btn.visible = _type_mode
+		if _type_mode:
+			_text_input.grab_focus()
+		elif not _buttons.is_empty():
+			_buttons[0].grab_focus()
 
 func _build_dialogue_box() -> void:
 	var bub := Art.tex("res://assets/ui/bubble_9slice.png")
@@ -339,8 +389,33 @@ func _on_move(tag: String) -> void:
 	if tag == "connect":
 		_do_connect()
 		return
+	_dispatch_move(tag, "")
+
+## Submit a TYPED teacher utterance (free-text mode). The backend classifies it to one
+## move tag via the LLM judge, then the SAME pipeline runs. The raw line is what the
+## student model and coach see, so it is what goes into the transcript.
+func _on_type_submit(text: String = "") -> void:
+	if _busy or _resolved:
+		return
+	var line := (text if text != "" else (_text_input.text if _text_input != null else "")).strip_edges()
+	if line == "":
+		return
+	if _text_input != null:
+		_text_input.clear()
+	_dispatch_move("", line)
+
+## Shared send path for both menu moves and free text.
+func _dispatch_move(tag: String, free_text: String) -> void:
 	_busy = true
+	_turns += 1
 	var wait_ms := Time.get_ticks_msec() - _ready_at_ms
+	_last_wait_ms = wait_ms
+	var is_free := free_text != ""
+	# The transcript holds the real teacher talk: the typed line, or a gloss of the menu move.
+	_transcript.append({"speaker": "teacher", "text": (free_text if is_free else _move_gloss(tag))})
+	var teacher_move: Dictionary = (
+		{"input_mode": "free_text", "text": free_text, "wait_time_ms": wait_ms} if is_free
+		else {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms})
 	var payload := {
 		"session_id": "m1",
 		"scenario_id": "questioning_forest_elicit",
@@ -350,10 +425,14 @@ func _on_move(tag: String) -> void:
 			"understanding": understanding,
 			"engagement": engagement / 100.0,
 			"trust_in_teacher": rapport / 100.0,
+			"misconception_resolved": understanding >= 0.8,
+			"turns_elapsed": _turns,
 		},
-		"teacher_move": {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms},
+		"teacher_move": teacher_move,
 		"win_moves": win_moves,
-		"model_profile": "stub",
+		"dialogue_tail": _transcript.slice(maxi(0, _transcript.size() - 6)),
+		"move_history": _move_history.slice(maxi(0, _move_history.size() - 6)),
+		"model_profile": "openrouter_gemini",
 	}
 	if not LLMClient.reply_ready.is_connected(_on_reply):
 		LLMClient.reply_ready.connect(_on_reply, CONNECT_ONE_SHOT)
@@ -377,13 +456,40 @@ func _on_reply(resp: Dictionary) -> void:
 	var targets: bool = bool(judge.get("targets_misconception", false))
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
+	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
+	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
+	_move_history.append({"tag": tag0, "targets": targets})
 	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
 	if targets:
 		GameState.add_bond(persona_id, 0.05)
 	elif "tell" in tags:
 		GameState.add_bond(persona_id, -0.04)
 	_refresh_bond()
-	_update_portrait(_affect_for(tags))
+	# Prefer the student model's own felt emotion; fall back to the move-derived affect.
+	var emo := _emotion_for(str(utter.get("emotion_shown", "")), tags)
+	_update_portrait(emo)
+	# Speak the line aloud in this student's voice (optional; silent if backend/TTS off).
+	TTSClient.speak(persona_id, str(utter.get("text", "")), emo)
+
+	# Record the full input->output turn for analysis (xAPI-style JSONL).
+	Telemetry.log_turn({
+		"scenario_id": str(Game.current_scenario_id) if "current_scenario_id" in Game else "",
+		"persona_id": persona_id,
+		"turn": _turns,
+		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": "menu"},
+		"judge": {"tags": tags, "targets": targets, "wait_ok": bool(judge.get("wait_time_ok", false))},
+		"deltas": deltas,
+		"meters": {
+			"understanding": understanding, "engagement": engagement, "order": order,
+			"rapport": rapport, "composure": composure, "bond": GameState.bond(persona_id),
+		},
+		"emotion_shown": emo,
+		"student_text": str(utter.get("text", "")),
+		"coach_tip": str(resp.get("coach_tip", "")),
+	})
+
+	# Live ECD competency estimate (in-engine multivariate Elo over the same evidence).
+	Competency.observe(tag0, persona_id, win_moves, judge, deltas)
 
 	if composure <= 0.0:
 		_force_recover()
@@ -451,6 +557,11 @@ func _win(route: String = "reasoning") -> void:
 	_busy = true
 	_disable_moves()
 	_update_portrait("excited")
+	Telemetry.log_event({"event": "resolve", "persona_id": persona_id, "route": route,
+		"turns": _turns, "understanding": understanding, "badge": target_badge,
+		"bond": GameState.bond(persona_id)})
+	Telemetry.upload_competency()
+	Telemetry.flush()   # push this lesson's events to the learner's cloud account
 	GameState.award_badge(target_badge)
 	var warm := GameState.bond(persona_id) >= 0.4
 	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
@@ -463,7 +574,50 @@ func _win(route: String = "reasoning") -> void:
 			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
 		else:
 			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
-	_return_to_overworld_after(3.2)
+	_show_competency_panel()
+	_return_to_overworld_after(4.6)
+
+## A compact end-of-lesson readout of the player's live ECD competency estimates
+## (in-engine multivariate Elo). Shows the skills with evidence this session as bars.
+func _show_competency_panel() -> void:
+	for b in _buttons:
+		b.visible = false
+	if _text_input != null:
+		_text_input.visible = false
+	if _send_btn != null:
+		_send_btn.visible = false
+	if _type_toggle != null:
+		_type_toggle.visible = false
+
+	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
+	if rows.is_empty():
+		return
+	rows = rows.slice(0, 4)
+	var panel := ColorRect.new()
+	panel.color = Color(0.05, 0.06, 0.10, 0.94)
+	panel.position = Vector2(40, 198)
+	panel.size = Vector2(400, 18 + rows.size() * 12)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(panel)
+	_make_label("Your teaching competencies this lesson", Vector2(50, 200), 8, Color(0.95, 0.85, 0.55)).size = Vector2(380, 12)
+	var y := 214
+	for r in rows:
+		_make_label(str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96)).size = Vector2(140, 11)
+		var bg := ColorRect.new()
+		bg.position = Vector2(196, y + 1)
+		bg.size = Vector2(160, 8)
+		bg.color = Color(0, 0, 0, 0.5)
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_layer.add_child(bg)
+		var fill := ColorRect.new()
+		fill.position = Vector2(196, y + 1)
+		var p: float = r["prob"]
+		fill.size = Vector2(maxf(2.0, 160.0 * p), 8)
+		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
+		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_layer.add_child(fill)
+		_make_label("n=%d" % int(r["n"]), Vector2(362, y), 7, Color(0.6, 0.66, 0.74)).size = Vector2(36, 11)
+		y += 12
 
 func _force_recover() -> void:
 	composure = 40.0
@@ -474,6 +628,12 @@ func _force_recover() -> void:
 func _disable_moves() -> void:
 	for b in _buttons:
 		b.disabled = true
+	if _text_input != null:
+		_text_input.editable = false
+	if _send_btn != null:
+		_send_btn.disabled = true
+	if _type_toggle != null:
+		_type_toggle.disabled = true
 
 func _return_to_overworld_after(seconds: float) -> void:
 	var t := get_tree().create_timer(seconds)
@@ -495,6 +655,61 @@ func _refresh_bond() -> void:
 	if _bond_label != null:
 		_bond_label.text = "Bond %d%%" % int(round(b * 100.0))
 
+# The 12-emotion spectrum (positive/open -> negative/closed). Filenames are
+# assets/portraits/<persona_id>_<emotion>.png. Each emotion degrades to the next
+# best AVAILABLE portrait so a missing file never renders as a broken/flat box.
+const EMOTION_FALLBACK := {
+	"neutral":    ["neutral", "thinking"],
+	"curious":    ["curious", "engaged", "thinking", "neutral"],
+	"thinking":   ["thinking", "neutral"],
+	"engaged":    ["engaged", "curious", "excited", "thinking", "neutral"],
+	"excited":    ["excited", "proud", "engaged", "thinking", "neutral"],
+	"proud":      ["proud", "excited", "warming", "neutral"],
+	"warming":    ["warming", "engaged", "neutral", "thinking"],
+	"shy":        ["shy", "withdrawn", "anxious", "neutral"],
+	"confused":   ["confused", "thinking", "anxious", "neutral"],
+	"anxious":    ["anxious", "shy", "confused", "withdrawn", "neutral"],
+	"frustrated": ["frustrated", "anxious", "withdrawn", "neutral"],
+	"withdrawn":  ["withdrawn", "shy", "frustrated", "neutral"],
+}
+
+## Map the student model's free-form emotion_shown (or a move-derived affect) onto one
+## of the 12 canonical emotion keys.
+func _emotion_for(emotion_shown: String, tags: Array) -> String:
+	var e := emotion_shown.strip_edges().to_lower()
+	var syn := {
+		"guarded": "withdrawn", "shutdown": "withdrawn", "shut_down": "withdrawn",
+		"defiant": "frustrated", "annoyed": "frustrated", "angry": "frustrated",
+		"nervous": "anxious", "worried": "anxious", "scared": "anxious",
+		"embarrassed": "shy", "timid": "shy", "bashful": "shy",
+		"interested": "curious", "wondering": "curious",
+		"happy": "warming", "relieved": "warming", "calm": "neutral", "warm": "warming",
+		"confident": "proud", "pleased": "proud",
+		"aha": "excited", "surprised": "excited", "delighted": "excited",
+		"attentive": "engaged", "focused": "engaged",
+		"puzzled": "confused", "unsure": "confused",
+		"pondering": "thinking",
+	}
+	if syn.has(e):
+		e = syn[e]
+	if EMOTION_FALLBACK.has(e):
+		return e
+	return _affect_for(tags)
+
+## A short readable paraphrase of a menu move, so the transcript the student model and
+## the coach see reads like real teacher talk (not bare tags).
+func _move_gloss(tag: String) -> String:
+	match tag:
+		"elicit": return "Can you walk me through how you got that?"
+		"extend": return "Okay, and what happens if you push that idea further?"
+		"revoice": return "So what you're saying is..."
+		"tell": return "Here's how it actually works: let me show you."
+		"praise": return "I like how you explained your thinking there."
+		"redirect": return "Let's bring our focus back to the problem."
+		"wait": return "(waits quietly, giving you time to think)"
+		"connect": return "Tell me about something you're really good at outside class."
+		_: return "(addresses the student)"
+
 func _affect_for(tags: Array) -> String:
 	if "tell" in tags:
 		return "withdrawn"
@@ -504,32 +719,52 @@ func _affect_for(tags: Array) -> String:
 		return "thinking"
 	if "redirect" in tags:
 		return "frustrated"
+	if "elicit" in tags or "extend" in tags:
+		return "engaged"
 	return "confused"
 
-## Swap to an imagegen2 portrait for the given affect if the PNG exists;
-## otherwise tint the placeholder rect so state is still legible.
-func _update_portrait(affect: String) -> void:
+## Swap to the best AVAILABLE imagegen2 portrait for the given emotion; if none of the
+## fallback chain exists yet, tint the placeholder rect so state is still legible.
+func _update_portrait(emotion: String) -> void:
 	if _student_tex == null:
 		return
-	var t := Art.tex("res://assets/portraits/%s_%s.png" % [persona_id, affect])
+	var chain: Array = EMOTION_FALLBACK.get(emotion, [emotion, "neutral", "thinking"])
+	var t: Texture2D = null
+	for affect in chain:
+		t = Art.tex("res://assets/portraits/%s_%s.png" % [persona_id, affect])
+		if t != null:
+			break
 	if t != null:
 		_student_tex.texture = t
 		_student_tex.visible = true
 		_student_rect.visible = false
+		_bounce_portrait()
 	else:
 		_student_tex.visible = false
 		_student_rect.visible = true
-		_student_rect.color = _affect_color(affect)
-	_update_emote(affect)
+		_student_rect.color = _affect_color(emotion)
+	_update_emote(emotion)
+
+## A quick squash-and-pop when the portrait/emotion changes, so reactions feel alive.
+func _bounce_portrait() -> void:
+	if _student_tex == null:
+		return
+	_student_tex.pivot_offset = _student_tex.size * 0.5
+	if _port_tween != null and _port_tween.is_valid():
+		_port_tween.kill()
+	_student_tex.scale = Vector2(0.82, 1.12)   # squash on impact
+	_port_tween = create_tween()
+	_port_tween.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_port_tween.tween_property(_student_tex, "scale", Vector2.ONE, 0.35)
 
 func _update_emote(affect: String) -> void:
 	if _emote == null:
 		return
 	var key := "dots"
 	match affect:
-		"excited", "frustrated":
+		"excited", "proud", "frustrated", "anxious":
 			key = "exclaim"
-		"confused":
+		"confused", "curious":
 			key = "question"
 		_:
 			key = "dots"
@@ -543,8 +778,15 @@ func _update_emote(affect: String) -> void:
 func _affect_color(affect: String) -> Color:
 	match affect:
 		"excited": return Color(0.35, 0.78, 0.42)
+		"proud": return Color(0.30, 0.72, 0.55)
+		"warming": return Color(0.55, 0.80, 0.50)
+		"engaged": return Color(0.45, 0.75, 0.40)
+		"curious": return Color(0.55, 0.72, 0.85)
 		"thinking": return Color(0.85, 0.70, 0.30)
+		"neutral": return Color(0.70, 0.70, 0.72)
+		"shy": return Color(0.78, 0.62, 0.72)
 		"withdrawn": return Color(0.45, 0.45, 0.55)
+		"anxious": return Color(0.80, 0.72, 0.40)
 		"frustrated": return Color(0.85, 0.35, 0.30)
 		"confused": return Color(0.78, 0.55, 0.30)
 		_: return Color(0.80, 0.28, 0.30)
