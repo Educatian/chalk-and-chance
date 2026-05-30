@@ -616,3 +616,130 @@ def tts(req: TTSRequest):
     except Exception as exc:
         print(f"[tts] elevenlabs failed: {exc}")
         return Response(status_code=204)
+
+
+# --- Group check-in (/group_turn): monitoring a POD by conversing -------------
+# A distinct mechanic from the 1:1 encounter: you sample a group, reveal its hidden
+# collective state, press its shared reasoning, and equalize participation. Breadth +
+# group dynamics, not a single-student misconception battle.
+
+GROUP_TEMPLATE = (ROOT / "tools" / "group_prompt.txt").read_text(encoding="utf-8")
+
+# monitoring move -> deterministic effects + the ECD competency it evidences
+GROUP_DELTAS = {
+    "observe":      {"understanding": 0.00, "participation": 0.00, "reveal": True,  "construct": "group_monitoring", "targets": True},
+    "probe":        {"understanding": 0.03, "participation": 0.00, "reveal": True,  "construct": "formative_check",  "targets": True},
+    "press":        {"understanding": 0.12, "participation": 0.00, "reveal": False, "construct": "group_monitoring", "targets": True, "needs_reveal": True},
+    "redistribute": {"understanding": 0.02, "participation": 0.20, "reveal": False, "construct": "status_treatment", "targets": True},
+    "move_on":      {"understanding": 0.00, "participation": 0.00, "reveal": False, "construct": "",                "targets": False},
+}
+GROUP_MOVE_DESC = {
+    "observe": "just listening to the group", "probe": "asked the group to show their thinking",
+    "press": "pushed the group's idea further", "redistribute": "pulled in a quieter member by name",
+    "move_on": "moving on to another group",
+}
+
+
+class GroupTurnRequest(BaseModel):
+    session_id: str = "grp"
+    members: list[dict[str, Any]] = []          # [{persona_id,name,talkativeness}]
+    shared_concept: str = ""
+    collective_status: str = "shared_misconception"
+    collective_reasoning: str = ""
+    group_state: dict[str, Any] = {}            # {understanding, participation_balance, revealed}
+    teacher_move: dict[str, Any] = {}           # {menu_tag}
+    model_profile: str = "openrouter_gemini"
+
+
+def group_judge(tag: str, revealed: bool) -> dict[str, Any]:
+    row = GROUP_DELTAS.get(tag, {})
+    du = float(row.get("understanding", 0.0))
+    targets = bool(row.get("targets", False))
+    if tag == "press" and not revealed:   # pressing a group whose thinking you haven't surfaced does little
+        du, targets = 0.0, False
+    return {"move_tag": tag, "understanding_delta": du, "participation_delta": float(row.get("participation", 0.0)),
+            "reveal": bool(row.get("reveal", False)), "construct": row.get("construct", ""), "targets": targets}
+
+
+def _group_speaker(members: list[dict[str, Any]], tag: str) -> str:
+    if not members:
+        return "The group"
+    if tag == "redistribute":   # the quietest member is invited in
+        m = min(members, key=lambda x: float(x.get("talkativeness", 0.5)))
+    else:                       # the dominant member answers for everyone
+        m = max(members, key=lambda x: float(x.get("talkativeness", 0.5)))
+    return str(m.get("name", "A student"))
+
+
+def _group_messages(req: GroupTurnRequest, tag: str, speaker: str) -> list[dict[str, str]]:
+    gs = req.group_state or {}
+    members = "\n".join(f"- {m.get('name','?')} (talkativeness {m.get('talkativeness',0.5)})" for m in req.members) or "- a few students"
+    sys = GROUP_TEMPLATE
+    repl = {
+        "[[MEMBERS]]": members,
+        "[[STATUS_DESC]]": f"{req.collective_status} (concept: {req.shared_concept})",
+        "[[COLLECTIVE_REASONING]]": req.collective_reasoning or "(they are still figuring it out)",
+        "[[REVEALED]]": "revealed" if gs.get("revealed", False) else "still hidden",
+        "[[PARTICIPATION]]": f"balance {round(float(gs.get('participation_balance', 0.4)), 2)} (lower = one student dominates)",
+        "[[SPEAKER_RULE]]": f"{speaker} speaks this turn.",
+        "[[MOVE_TAG]]": tag or "(observes)",
+        "[[MOVE_DESC]]": GROUP_MOVE_DESC.get(tag, "addresses the group"),
+    }
+    for k, v in repl.items():
+        sys = sys.replace(k, v)
+    return [{"role": "system", "content": sys},
+            {"role": "user", "content": "Respond now as the group member, in character. JSON only."}]
+
+
+def _canned_group(tag: str, speaker: str) -> dict[str, str]:
+    canned = {
+        "observe": "I think we should add them... wait, no, compare them first, right?",
+        "probe": "We said the bigger bottom number means the bigger fraction, so we picked 1/8.",
+        "press": "Hmm... if we cut it into more pieces, wouldn't each piece be smaller though?",
+        "redistribute": "...um, I actually thought 1/4 might be bigger, but I wasn't sure.",
+        "move_on": "Okay, we'll keep working.",
+    }
+    return {"speaker": speaker, "text": canned.get(tag, "We're still working on it."), "emotion_shown": "thinking"}
+
+
+def generate_group(req: GroupTurnRequest, tag: str, speaker: str) -> dict[str, str]:
+    key = _openrouter_key()
+    if not key or req.model_profile == "stub" or tag == "move_on":
+        return _canned_group(tag, speaker)
+    try:
+        raw = _call_openrouter(_group_messages(req, tag, speaker), key, 0.7)
+        raw = raw[raw.find("{"): raw.rfind("}") + 1]
+        o = json.loads(raw)
+        return {"speaker": str(o.get("speaker", speaker)).strip() or speaker,
+                "text": str(o.get("text", "")).strip() or _canned_group(tag, speaker)["text"],
+                "emotion_shown": str(o.get("emotion_shown", "thinking")).strip()}
+    except Exception as exc:
+        print(f"[group] fallback ({exc})")
+        return _canned_group(tag, speaker)
+
+
+def _group_coach(tag: str, revealed: bool) -> str:
+    tips = {
+        "observe": "Good - you listened first. Now you know where they are; surface it with a probe.",
+        "probe": "Nice formative check. Their thinking is on the table now - press the crack, don't correct it.",
+        "press": ("They are reasoning it through together. Keep pressing." if revealed
+                  else "You pressed before you surfaced their thinking. Probe first so you know what to press on."),
+        "redistribute": "Status move: you pulled in a quieter voice. That rebalances who gets to think.",
+        "move_on": "Triage is real - you can't camp on one group. But check the silent groups before they drift.",
+    }
+    return tips.get(tag, "Sample the group, then decide: surface, press, or rebalance.")
+
+
+@app.post("/group_turn")
+def group_turn(req: GroupTurnRequest) -> dict[str, Any]:
+    tag = str((req.teacher_move or {}).get("menu_tag", "")).strip()
+    revealed = bool((req.group_state or {}).get("revealed", False))
+    verdict = group_judge(tag, revealed)
+    speaker = _group_speaker(req.members, tag)
+    utter = generate_group(req, tag, speaker)
+    return {
+        "session_id": req.session_id,
+        "judge": verdict,
+        "group_utterance": utter,
+        "coach_tip": _group_coach(tag, revealed),
+    }

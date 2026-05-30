@@ -847,10 +847,44 @@ func start_encounter(npc: Dictionary) -> void:
 	if npc.is_empty():
 		return
 	_save_lesson_state()   # so the period/composure/off-task continue after the encounter
+	# Group work is monitored at the POD level (a distinct mechanic), not 1:1.
+	if _format == "group_work":
+		SceneRouter.change_scene("res://scenes/encounter/GroupCheckIn.tscn", {
+			"members": _build_pod(npc),
+			"shared_concept": _scenario_title,
+		})
+		return
 	SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {
 		"persona_id": npc.get("persona_id", ""),
 		"display_name": npc.get("display_name", "Student"),
 	})
+
+## The tapped student + the two nearest tablemates = the pod for a group check-in.
+func _build_pod(npc: Dictionary) -> Array:
+	var tapped_pid := str(npc.get("persona_id", ""))
+	var entries: Array = []
+	var tapped_tile := Vector2i.ZERO
+	for t in _npcs.keys():
+		var e: Dictionary = _npcs[t]
+		entries.append({"tile": t, "pid": e.get("persona_id", ""), "name": e.get("display_name", "Student")})
+		if str(e.get("persona_id", "")) == tapped_pid:
+			tapped_tile = t
+	entries.sort_custom(func(a, b): return tapped_tile.distance_squared_to(a["tile"]) < tapped_tile.distance_squared_to(b["tile"]))
+	var pod: Array = []
+	for e in entries.slice(0, 3):
+		pod.append({"persona_id": e["pid"], "name": e["name"], "talkativeness": _persona_talk(str(e["pid"]))})
+	return pod
+
+func _persona_talk(pid: String) -> float:
+	var p := "res://data/persona_library/%s.json" % pid
+	if FileAccess.file_exists(p):
+		var f := FileAccess.open(p, FileAccess.READ)
+		if f != null:
+			var d = JSON.parse_string(f.get_as_text())
+			f.close()
+			if typeof(d) == TYPE_DICTIONARY:
+				return float(d.get("traits", {}).get("talkativeness", 0.5))
+	return 0.5
 
 func _save_lesson_state() -> void:
 	if not Game.lesson.get("active", false):

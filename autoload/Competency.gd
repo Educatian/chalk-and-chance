@@ -9,11 +9,18 @@ extends Node
 ## task model: a move that is a win_move for THIS student starts easier than an off-target one.
 
 const SKILLS := ["elicit_reasoning", "extend_thinking", "revoicing", "wait_time",
-	"behavior_mgmt", "restraint", "behavior_specific_praise", "funds_of_knowledge"]
+	"behavior_mgmt", "restraint", "behavior_specific_praise", "funds_of_knowledge",
+	"group_monitoring", "formative_check", "status_treatment"]
 const LABELS := {
 	"elicit_reasoning": "Eliciting", "extend_thinking": "Extending", "revoicing": "Revoicing",
 	"wait_time": "Wait time", "behavior_mgmt": "Mgmt (least-intrusive)", "restraint": "Restraint",
 	"behavior_specific_praise": "Specific praise", "funds_of_knowledge": "Asset connect",
+	"group_monitoring": "Group monitoring", "formative_check": "Formative check", "status_treatment": "Status treatment",
+}
+# group check-in monitoring move -> the competency it evidences
+const GROUP_TAG_SKILL := {
+	"observe": "group_monitoring", "probe": "formative_check",
+	"press": "group_monitoring", "redistribute": "status_treatment",
 }
 const TAG_SKILL := {
 	"elicit": "elicit_reasoning", "extend": "extend_thinking", "revoice": "revoicing",
@@ -54,6 +61,27 @@ func observe(tag: String, persona_id: String, win_moves: Array, judge: Dictionar
 		beta[item] = -0.3 if (tag in win_moves) else 0.3   # task-model difficulty calibration
 		nb[item] = 0.0
 	var y := float(score_y(tag, judge, deltas))
+	var logit: float = theta[skill] - beta[item]
+	var p := 1.0 / (1.0 + exp(-clampf(logit, -32.0, 32.0)))
+	var err := y - p
+	var at := A / (1.0 + B * float(n[skill]))
+	var ab := A / (1.0 + B * float(nb[item]))
+	theta[skill] += at * err
+	beta[item] -= ab * err
+	n[skill] += 1.0
+	nb[item] += 1.0
+
+## Group check-in monitoring move -> Elo update on its group competency. item = the move
+## itself (no per-persona difficulty here); y = 1 if it was a productive monitoring move.
+func observe_group(tag: String, productive: bool) -> void:
+	var skill: String = GROUP_TAG_SKILL.get(tag, "")
+	if skill == "":
+		return
+	var item := "group::%s" % tag
+	if not beta.has(item):
+		beta[item] = 0.0
+		nb[item] = 0.0
+	var y := 1.0 if productive else 0.0
 	var logit: float = theta[skill] - beta[item]
 	var p := 1.0 / (1.0 + exp(-clampf(logit, -32.0, 32.0)))
 	var err := y - p
