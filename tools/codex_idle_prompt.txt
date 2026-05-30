@@ -1,0 +1,34 @@
+You are generating pixel-art IDLE-ANIMATION sprite strips for a Godot top-down RPG
+(C:\Users\jewoo\Projects\teachersim). Use your image generation tool (imagegen2). Generate
+large, then POST-PROCESS with Python + Pillow: assemble/crop to the EXACT layout, resize with
+NEAREST-neighbor to the EXACT pixel size, preserve alpha, save PNG. Never bilinear/bicubic.
+Work fully autonomously; do not ask questions.
+
+GOAL: each student currently shows ONE frozen standing frame in the classroom. Give each a
+short looping IDLE animation with a few distinct poses so the room feels alive (breathing,
+looking around, raising a hand, leaning in to work).
+
+STYLE: must match the existing walk sheets in assets/sprites/<persona>_walk.png EXACTLY —
+small chibi top-down RPG kid, FACING DOWN (toward the viewer), full body, brown-outline
+pixel art, flat cel shading, no anti-aliasing, FULLY TRANSPARENT background (alpha). The
+attached reference images are the 10 students' canonical walk sheets, in this order:
+  1 noah_g5_fractions  2 talia_dominator  3 sam_withdrawn  4 diego_ell  5 jordan_skeptic
+  6 priya_quiet  7 meilin_anxious  8 deshawn_offtask  9 riley_avoidant  10 marcus_volatile
+Use the DOWN-facing standing pose (top-row, middle cell) of each sheet as the identity anchor:
+same hair, same outfit, same colors, same proportions. Only the pose changes between frames.
+
+OUTPUT: for each student write  assets/sprites/<persona_id>_idle.png  — a single horizontal
+strip EXACTLY 192x64 px = 6 cells of 32x64 (no gaps), feet at the bottom of each cell, the
+figure centered, same scale/position as the walk-sheet down pose. The 6 frames, left to right:
+  0  NEUTRAL   : relaxed standing, arms at sides (matches the walk-sheet stand pose).
+  1  BREATHE   : the same, shoulders/head a touch higher (subtle inhale).
+  2  LOOK-LEFT : head turned to their left, eyes glancing aside.
+  3  LOOK-RIGHT: head turned to their right.
+  4  HAND-RAISE: one arm raised up (wants to answer / participate).
+  5  LEAN-WORK : leaning slightly forward and down as if writing / working at the desk.
+Keep the body footprint and height identical across all 6 frames (only arms/head/posture
+move) so the animation does not jitter. Adapt posture to personality (Talia's raise is bold;
+Sam/Mei-Lin small and timid; Marcus tense; Deshawn relaxed) but keep identity identical.
+
+10 students x one 192x64 strip = 10 files. Overwrite if present. When done, print a checklist
+of every file written with its final pixel dimensions, and flag any that failed.

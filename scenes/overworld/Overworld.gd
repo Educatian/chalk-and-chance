@@ -83,6 +83,7 @@ const COLOR_DESK := Color(0.55, 0.40, 0.22)
 
 # Which seat (col index, row index into SEAT_COLS/SEAT_ROWS) each student occupies.
 var _seats: Array = []        # seat tiles for the loaded arrangement
+var _format: String = ""      # scenario format (discussion/group_work/...) -> idle animation
 var _objectives: Array = []   # scenario objectives, scored at debrief
 var _offtask_rise := OFFTASK_RISE
 var _attempt := 1
@@ -114,6 +115,7 @@ var _pending_debrief := ""   # scored summary, shown after the reflection step
 func _ready() -> void:
 	var cfg := _load_scenario(Game.current_scenario_id)
 	_scenario_title = str(cfg.get("title", "Lesson"))
+	_format = str(cfg.get("format", ""))
 	_offtask_rise = float(cfg.get("offtask_rise", OFFTASK_RISE))
 	# Resume the in-progress period (returning from an encounter) or start a fresh one.
 	if Game.lesson_active(Game.current_scenario_id):
@@ -298,10 +300,59 @@ func _add_badge_strip() -> void:
 
 # --- actors ------------------------------------------------------------------
 
+## Build a looping idle AnimatedSprite2D from a 6-frame strip (<persona>_idle.png, 192x64:
+## neutral/breathe/look-left/look-right/hand-raise/lean-work). Returns null if the strip is
+## absent, so the caller falls back to the static stand frame. Animation + tempo + start
+## frame are picked by scenario format and randomized so the class is not in lockstep.
+func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
+	var sheet := Art.tex("res://assets/sprites/%s_idle.png" % persona_id)
+	if sheet == null:
+		return null
+	var fw := int(sheet.get_width() / 6.0)
+	var fh := int(sheet.get_height())
+	if fw < 8 or fh < 16:
+		return null
+	var b0 := Art.opaque_bounds(sheet, Rect2i(0, 0, fw, fh))
+	if b0.size.y <= 0:
+		return null
+	var sc := (STUDENT_TILES_TALL * TILE) / float(b0.size.y)
+	var frames := SpriteFrames.new()
+	var sets := {
+		"idle": [0, 1, 0, 2, 0, 3],
+		"discuss": [0, 1, 4, 0, 2, 1],
+		"work": [0, 5, 0, 1, 5, 0],
+	}
+	for anim_name in sets:
+		frames.add_animation(anim_name)
+		frames.set_animation_loop(anim_name, true)
+		frames.set_animation_speed(anim_name, 2.5)
+		for i in sets[anim_name]:
+			var at := AtlasTexture.new()
+			at.atlas = sheet
+			at.region = Rect2(int(i) * fw, 0, fw, fh)
+			frames.add_frame(anim_name, at)
+	frames.remove_animation("default")
+	var asp := AnimatedSprite2D.new()
+	asp.sprite_frames = frames
+	asp.centered = false
+	asp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	asp.scale = Vector2(sc, sc)
+	asp.position = Vector2(TILE / 2.0 - (float(b0.position.x) + float(b0.size.x) / 2.0) * sc, feety - float(b0.position.y + b0.size.y) * sc)
+	var anim := "idle"
+	if _format == "group_work":
+		anim = "work"
+	elif _format == "discussion":
+		anim = "discuss"
+	asp.play(anim)
+	asp.speed_scale = 0.7 + randf() * 0.6   # desync tempo per student
+	asp.frame = randi() % 6                  # desync starting frame
+	return asp
+
 func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> void:
 	var node := Node2D.new()
 	node.position = Vector2(tile.x * TILE, tile.y * TILE)
 	var head_y := 0.0
+	var char_spr: Node2D = null    # the character body, animated with an idle/gesture loop
 	var sheet := Art.tex("res://assets/sprites/%s_walk.png" % persona_id)
 	var t := Art.tex("res://assets/sprites/%s_ow.png" % persona_id)
 	# Desk at the seat tile, drawn FIRST so the student stands fully visible behind/above it
@@ -316,7 +367,12 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 		node.add_child(dk)
 	# Feet rest just inside the top of the desk tile; the whole figure shows above it.
 	var feety := TILE * 0.28
-	if sheet != null and sheet.get_width() >= 48 and sheet.get_height() >= 128:
+	var idle_anim := _build_idle_anim(persona_id, feety)
+	if idle_anim != null:
+		node.add_child(idle_anim)
+		char_spr = idle_anim
+		head_y = feety - STUDENT_TILES_TALL * TILE
+	elif sheet != null and sheet.get_width() >= 48 and sheet.get_height() >= 128:
 		# Normalize by the DRAWN figure (stand frame), not the cell, so all students match.
 		var cw := int(sheet.get_width() / 3.0)
 		var ch := int(sheet.get_height() / 4.0)
@@ -332,6 +388,7 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 		s.scale = Vector2(sc, sc)
 		s.position = Vector2(TILE / 2.0 - (float(b.position.x) + float(b.size.x) / 2.0) * sc, feety - float(b.position.y + b.size.y) * sc)
 		node.add_child(s)
+		char_spr = s
 		head_y = feety - STUDENT_TILES_TALL * TILE
 	elif t != null:
 		var tb := Art.opaque_bounds(t, Rect2i(0, 0, t.get_width(), t.get_height()))

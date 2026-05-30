@@ -5,6 +5,7 @@ extends Node
 const OUT_DIR := "res://tmp/"
 
 func _ready() -> void:
+	get_window().size = Vector2i(1920, 1080)   # real-play window so canvas_items text crispness shows
 	LLMClient.use_stub = true
 	TTSClient.enabled = false
 	Game.start_lesson("test", 120.0)
