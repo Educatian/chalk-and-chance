@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 CREATE INDEX IF NOT EXISTS tel_user_idx ON telemetry_events(user_id);
 CREATE INDEX IF NOT EXISTS tel_sess_idx ON telemetry_events(session_id);
 
+-- Per-IP rate limit counters for the paid endpoints (/turn, /tts cost guard).
+CREATE TABLE IF NOT EXISTS rate_limits (
+  k   TEXT PRIMARY KEY,
+  n   INTEGER NOT NULL DEFAULT 0,
+  exp INTEGER NOT NULL
+);
+
 -- Current ECD competency estimate (multivariate-Elo theta) per learner+skill.
 CREATE TABLE IF NOT EXISTS competency (
   user_id    TEXT NOT NULL REFERENCES learners(user_id),

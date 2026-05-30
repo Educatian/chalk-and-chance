@@ -63,6 +63,26 @@ function bearer(req) {
   return a.startsWith("Bearer ") ? a.slice(7) : "";
 }
 const uuid = () => crypto.randomUUID();
+const clientIp = (req) => req.headers.get("CF-Connecting-IP") || "anon";
+
+// Per-IP rate limit on the paid endpoints (OpenRouter + ElevenLabs cost guard).
+// Checks a per-minute burst cap and a per-hour sustained cap in D1. Returns false when
+// over limit; the game degrades gracefully (LLM->stub, TTS->silent) on the 429.
+async function rateLimit(env, ip, bucket) {
+  const windows = [[40, 60], [300, 3600]];   // [limit, seconds]
+  const now = Math.floor(Date.now() / 1000);
+  for (const [limit, win] of windows) {
+    const k = `${bucket}:${ip}:${win}:${Math.floor(now / win)}`;
+    const row = await env.DB.prepare(
+      "INSERT INTO rate_limits(k,n,exp) VALUES(?,1,?) ON CONFLICT(k) DO UPDATE SET n=n+1 RETURNING n")
+      .bind(k, now + win).first();
+    if (row && row.n > limit) return false;
+  }
+  if (Math.random() < 0.02) {
+    await env.DB.prepare("DELETE FROM rate_limits WHERE exp < ?").bind(now).run();
+  }
+  return true;
+}
 const slug = (s) => (s || "").trim().toLowerCase().replace(/\s+/g, "_").slice(0, 40);
 
 export default {
@@ -70,8 +90,14 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
     const url = new URL(req.url);
     try {
-      if (url.pathname === "/turn" && req.method === "POST") return json(await handleTurn(req, env));
-      if (url.pathname === "/tts" && req.method === "POST") return handleTts(req, env);
+      if (url.pathname === "/turn" && req.method === "POST") {
+        if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
+        return json(await handleTurn(req, env));
+      }
+      if (url.pathname === "/tts" && req.method === "POST") {
+        if (!(await rateLimit(env, clientIp(req), "tts"))) return new Response(null, { status: 429, headers: CORS });
+        return handleTts(req, env);
+      }
       if (url.pathname === "/auth/login" && req.method === "POST") return login(req, env);
       if (url.pathname === "/me" && req.method === "GET") return me(req, env);
       if (url.pathname === "/telemetry" && req.method === "POST") return telemetry(req, env);
