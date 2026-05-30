@@ -24,6 +24,16 @@ It's also a research artifact — each mechanic is anchored to the literature it
 
 ## Screenshots
 
+**New: live LLM students, your own dialogue, and a competency read-out.**
+
+| Sign in (or skip and play as guest) | One-on-one encounter (LLM student + adaptive coach) |
+|---|---|
+| ![login](docs/screenshots/login.png) | ![encounter](docs/screenshots/encounter.png) |
+
+| Type your own words (an LLM judge reads the move) | Your teaching competencies, estimated live |
+|---|---|
+| ![free text](docs/screenshots/freetext.png) | ![competency](docs/screenshots/competency.png) |
+
 | Mission hub (badge-gated campaign) | Lecture mode (reactive students) |
 |---|---|
 | ![hub](docs/screenshots/hub.png) | ![lecture](docs/screenshots/lecture.png) |
