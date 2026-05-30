@@ -19,12 +19,26 @@ func _ready() -> void:
 	_player = AudioStreamPlayer.new()
 	_player.bus = "Master"
 	add_child(_player)
+	# Web build speaks through the hosted Worker /tts (ElevenLabs proxy); desktop uses
+	# the local backend. Both return raw mp3 -> AudioStreamMP3.
+	if OS.has_feature("web"):
+		var base := _web_api_base()
+		if base != "":
+			endpoint = base + "/tts"
+		else:
+			enabled = false  # no hosted endpoint configured; stay silent
+
+func _web_api_base() -> String:
+	var f := FileAccess.open("res://data/auth_config.json", FileAccess.READ)
+	if f == null:
+		return ""
+	var cfg = JSON.parse_string(f.get_as_text())
+	f.close()
+	return str(cfg.get("api_base", "")).strip_edges().rstrip("/") if typeof(cfg) == TYPE_DICTIONARY else ""
 
 func speak(persona_id: String, text: String, emotion: String = "neutral") -> void:
 	if not enabled or text.strip_edges() == "":
 		return
-	if OS.has_feature("web"):
-		return  # deployed web build can't reach a local backend; skip TTS there
 	_http.cancel_request()
 	if _player.playing:
 		_player.stop()

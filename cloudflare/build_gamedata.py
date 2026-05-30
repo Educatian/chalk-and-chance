@@ -13,6 +13,8 @@ for p in sorted((ROOT / "data" / "persona_library").glob("*.json")):
     personas[d["persona_id"]] = d
 student_prompt = (ROOT / "tools" / "student_prompt.txt").read_text(encoding="utf-8")
 coach_prompt = (ROOT / "tools" / "coach_prompt.txt").read_text(encoding="utf-8")
+voice_path = ROOT / "data" / "voice_profiles.json"
+voice_profiles = json.loads(voice_path.read_text(encoding="utf-8")) if voice_path.is_file() else {}
 
 
 def tmpl(s: str) -> str:
@@ -24,5 +26,6 @@ out += "export const RUBRIC = " + json.dumps(rubric) + ";\n"
 out += "export const PERSONAS = " + json.dumps(personas, ensure_ascii=False) + ";\n"
 out += "export const STUDENT_PROMPT = " + tmpl(student_prompt) + ";\n"
 out += "export const COACH_PROMPT = " + tmpl(coach_prompt) + ";\n"
+out += "export const VOICE_PROFILES = " + json.dumps(voice_profiles) + ";\n"
 (ROOT / "cloudflare" / "gamedata.js").write_text(out, encoding="utf-8")
 print("wrote cloudflare/gamedata.js (%d personas, %d bytes)" % (len(personas), len(out)))

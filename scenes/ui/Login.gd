@@ -45,9 +45,15 @@ func _ready() -> void:
 	box.add_child(_btn)
 
 	var skip := Button.new()
-	skip.text = "Play offline (no account)"
+	skip.text = "Skip  -  play as guest  >"
+	skip.custom_minimum_size = Vector2(0, 36)
 	skip.pressed.connect(_go_hub)
 	box.add_child(skip)
+	var skip_hint := Label.new()
+	skip_hint.text = "(no class code / name / password needed to play)"
+	skip_hint.add_theme_font_size_override("font_size", 11)
+	skip_hint.add_theme_color_override("font_color", Color(0.6, 0.66, 0.74))
+	box.add_child(skip_hint)
 
 	_status = Label.new()
 	_status.add_theme_color_override("font_color", Color(0.95, 0.6, 0.55))

@@ -78,3 +78,4 @@ Recent dialogue (oldest first):
 Return ONLY JSON, no prose, no markdown fence:
 {"coach_tip": "<your one coaching note, max 2 sentences>"}
 `;
+export const VOICE_PROFILES = {"talia_dominator": "XCLNp1ZOl51Q2RkgcxLy", "diego_ell": "tyfT4lizc5lojG6CIxIt", "jordan_skeptic": "GQaReDNWcoBUdeMngcvj", "deshawn_offtask": "FWciDKlq5uKpZBSssykW", "noah_g5_fractions": "ttRWHXWM2pRDhcTVRRLu", "sam_withdrawn": "e6yjgVKOifblI4pO836k", "priya_quiet": "BXX9i235LT6VueVvuhHK", "meilin_anxious": "zcAUCwUtOi1xMf2RdUA1", "riley_avoidant": "CxUYyG0n18J0A5SRsyUB", "marcus_volatile": "ZiNrAMktfTcyul42rlsJ"};
