@@ -19,6 +19,20 @@ func _ready() -> void:
 	add_child(_http)
 	_http.timeout = timeout_seconds
 	_http.request_completed.connect(_on_request_completed)
+	# The web build can't reach the local FastAPI backend, so it talks to the hosted
+	# Cloudflare Worker /turn (real Gemini students). Desktop keeps the local backend.
+	if OS.has_feature("web"):
+		var base := _read_api_base()
+		if base != "":
+			endpoint = base.rstrip("/") + "/turn"
+
+func _read_api_base() -> String:
+	var f := FileAccess.open("res://data/auth_config.json", FileAccess.READ)
+	if f == null:
+		return ""
+	var cfg = JSON.parse_string(f.get_as_text())
+	f.close()
+	return str(cfg.get("api_base", "")).strip_edges() if typeof(cfg) == TYPE_DICTIONARY else ""
 
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:

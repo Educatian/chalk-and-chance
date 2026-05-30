@@ -10,6 +10,8 @@
 //   POST /telemetry    (Bearer) {events:[...]}      -> stores each event line
 //   POST /competency   (Bearer) {skills:[{skill,theta,prob,n}]} -> upsert
 
+import { handleTurn } from "./turn.js";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
@@ -67,6 +69,7 @@ export default {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
     const url = new URL(req.url);
     try {
+      if (url.pathname === "/turn" && req.method === "POST") return json(await handleTurn(req, env));
       if (url.pathname === "/auth/login" && req.method === "POST") return login(req, env);
       if (url.pathname === "/me" && req.method === "GET") return me(req, env);
       if (url.pathname === "/telemetry" && req.method === "POST") return telemetry(req, env);
