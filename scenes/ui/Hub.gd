@@ -393,9 +393,16 @@ func _open_items() -> void:
 	add_child(overlay)
 
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.66)
+	dim.color = Color(0, 0, 0, 0.74)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(dim)
+
+	var panel_bg := ColorRect.new()
+	panel_bg.position = Vector2(108, 48)
+	panel_bg.size = Vector2(744, 444)
+	panel_bg.color = Color(0.08, 0.10, 0.18, 0.98)
+	panel_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(panel_bg)
 
 	var panel := Panel.new()
 	panel.position = Vector2(108, 48)
@@ -424,11 +431,11 @@ func _open_items() -> void:
 	ids.sort()
 	for id in ids:
 		_add_item_row(overlay, str(id), 140.0, y)
-		y += 38.0
+		y += 37.0
 
 	var close := Button.new()
 	close.text = "Close"
-	close.position = Vector2(140, 446)
+	close.position = Vector2(140, 450)
 	close.size = Vector2(680, 34)
 	close.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
 	close.pressed.connect(func():
@@ -448,29 +455,29 @@ func _add_item_row(overlay: Control, id: String, x: float, y: float) -> void:
 		var icon := TextureRect.new()
 		icon.texture = tex
 		icon.position = Vector2(x, y)
-		icon.size = Vector2(24, 24)
+		icon.size = Vector2(28, 28)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		overlay.add_child(icon)
 	var label := Label.new()
 	label.text = "%s  x%d" % [Items.name_for(id), count]
-	label.position = Vector2(x + 36, y + 3)
-	label.size = Vector2(210, 24)
+	label.position = Vector2(x + 48, y + 3)
+	label.size = Vector2(196, 24)
 	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	label.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90) if count > 0 else Color(0.55, 0.60, 0.66))
 	overlay.add_child(label)
 	var desc := Label.new()
 	desc.text = Items.desc_for(id)
 	desc.position = Vector2(x + 250, y + 3)
-	desc.size = Vector2(300, 24)
+	desc.size = Vector2(302, 24)
 	desc.clip_text = true
 	desc.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
 	desc.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
 	overlay.add_child(desc)
 	var b := Button.new()
-	b.position = Vector2(x + 560, y - 2)
-	b.size = Vector2(120, 28)
+	b.position = Vector2(x + 566, y - 2)
+	b.size = Vector2(114, 28)
 	b.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
 	b.text = "Unequip" if equipped else "Equip"
 	b.disabled = count <= 0 or (not equipped and GameState.equipped_item_ids().size() >= Items.MAX_EQUIPPED)

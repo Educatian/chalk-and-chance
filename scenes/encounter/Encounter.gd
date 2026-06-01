@@ -424,25 +424,27 @@ func _use_item(id: String) -> void:
 		"breathing_reset":
 			composure = clampf(composure + 18.0, 0.0, GameState.max_composure())
 			_set_result("Breathing Reset used  |  Composure +18")
-			_set_coach("Coach Vee: you regulated before responding. That protects the next instructional choice.")
+			_set_coach("Coach Vee: regulated first. Now choose a smaller, cleaner next move.")
 		"student_profile_card":
 			_asset_learned = true
 			rapport = clampf(rapport + 4.0, 0.0, 100.0)
 			var hint := asset_hint if asset_hint != "" else "%s needs you to learn their thinking before correcting it." % display_name
+			if hint.length() > 72:
+				hint = hint.substr(0, 69) + "..."
 			_set_result("Student Profile Card used  |  Asset cue revealed")
-			_set_coach("Coach Vee: learner profile cue: %s" % hint)
+			_set_coach("Coach Vee: profile cue: %s" % hint)
 		"noticing_lens":
 			_set_result("Noticing Lens used  |  Look for %s" % ", ".join(win_moves))
-			_set_coach("Coach Vee: attend to the student's reasoning need before choosing. Useful moves here: %s." % ", ".join(win_moves))
+			_set_coach("Coach Vee: cue = reasoning need. Try: %s." % ", ".join(win_moves))
 		"wait_meter_pin":
 			_wait_item_ready = true
 			_set_result("Wait Meter Pin used  |  next move gets full wait-time credit")
-			_set_coach("Coach Vee: your next move will be treated as deliberate think time. Use it before pressing reasoning.")
+			_set_coach("Coach Vee: next move gets full think-time credit.")
 		"lesson_map":
 			understanding = clampf(understanding + 0.04, 0.0, 1.0)
 			composure = clampf(composure + 4.0, 0.0, GameState.max_composure())
 			_set_result("Lesson Map used  |  Understanding +4  |  Composure +4")
-			_set_coach("Coach Vee: you checked the lesson path before acting. Now choose the move that fits the learner.")
+			_set_coach("Coach Vee: lesson path checked. Now choose the learner-fit move.")
 		"practice_goal_card":
 			_practice_goal_active = true
 			_set_result("Practice Goal set  |  clear this encounter for bonus XP")
