@@ -47,11 +47,14 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 					msg = str(data.get("error", msg))
 				login_failed.emit(msg))
 
-## Fire-and-forget authenticated POST (used by Telemetry/Competency upload). Silent on error.
-func post_authed(path: String, body: Dictionary) -> void:
+## Authenticated POST (used by Telemetry/Competency upload). Silent by default,
+## but callers can pass a callback when they need retry-safe buffering.
+func post_authed(path: String, body: Dictionary, cb: Callable = Callable()) -> void:
 	if not signed_in():
 		return
-	_post(path, body, true, func(_ok, _data): pass)
+	_post(path, body, true, func(ok, data):
+		if cb.is_valid():
+			cb.call(ok, data))
 
 # --- internal: one fresh HTTPRequest per call (avoids busy conflicts) ---------
 func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:

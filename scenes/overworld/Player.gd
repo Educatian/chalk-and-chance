@@ -87,20 +87,20 @@ func _process(_delta: float) -> void:
 		_go_idle()
 		return
 	var dir := Vector2i.ZERO
-	if Input.is_action_pressed("ui_up"):
+	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
 		dir = Vector2i(0, -1)
-	elif Input.is_action_pressed("ui_down"):
+	elif Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
 		dir = Vector2i(0, 1)
-	elif Input.is_action_pressed("ui_left"):
+	elif Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
 		dir = Vector2i(-1, 0)
-	elif Input.is_action_pressed("ui_right"):
+	elif Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
 		dir = Vector2i(1, 0)
 
 	if dir != Vector2i.ZERO:
 		facing = dir
 		_start_walk()
 		_try_move(dir)
-	elif Input.is_action_just_pressed("ui_accept"):
+	elif Input.is_action_just_pressed("ui_accept") or Input.is_key_pressed(KEY_SPACE):
 		_try_interact()
 	else:
 		_go_idle()
@@ -134,20 +134,58 @@ func current_tile() -> Vector2i:
 	return Vector2i(roundi(position.x / float(tile)), roundi(position.y / float(tile)))
 
 func _try_move(dir: Vector2i) -> void:
-	var target := current_tile() + dir
+	var from_tile := current_tile()
+	var target := from_tile + dir
 	if overworld != null and not overworld.is_walkable(target):
+		Telemetry.log_player_movement("blocked", {
+			"from": _tile_dict(from_tile),
+			"to": _tile_dict(target),
+			"dir": _tile_dict(dir),
+			"position": {"x": position.x, "y": position.y},
+		})
 		_go_idle()
+		return
+	Telemetry.log_player_movement("step_start", {
+		"from": _tile_dict(from_tile),
+		"to": _tile_dict(target),
+		"dir": _tile_dict(dir),
+		"position": {"x": position.x, "y": position.y},
+	})
+	if bool(GameState.get_setting("reduced_motion", false)):
+		position = Vector2(target.x * tile, target.y * tile)
+		Telemetry.log_player_movement("step_end", {
+			"from": _tile_dict(from_tile),
+			"to": _tile_dict(target),
+			"dir": _tile_dict(dir),
+			"position": {"x": position.x, "y": position.y},
+		})
 		return
 	_moving = true
 	var tw := create_tween()
 	tw.tween_property(self, "position", Vector2(target.x * tile, target.y * tile), STEP_TIME)
 	await tw.finished
 	_moving = false
+	Telemetry.log_player_movement("step_end", {
+		"from": _tile_dict(from_tile),
+		"to": _tile_dict(target),
+		"dir": _tile_dict(dir),
+		"position": {"x": position.x, "y": position.y},
+	})
 
 func _try_interact() -> void:
 	if overworld == null:
 		return
 	var target := current_tile() + facing
 	var npc: Dictionary = overworld.npc_at(target)
+	Telemetry.log_player_movement("interact", {
+		"from": _tile_dict(current_tile()),
+		"to": _tile_dict(target),
+		"dir": _tile_dict(facing),
+		"hit_npc": not npc.is_empty(),
+		"persona_id": str(npc.get("persona_id", "")),
+	})
 	if not npc.is_empty():
 		overworld.start_encounter(npc)
+
+func _tile_dict(v: Vector2i) -> Dictionary:
+	return {"x": v.x, "y": v.y}

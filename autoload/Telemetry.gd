@@ -8,6 +8,11 @@ var session_id: String = ""
 var _path: String = ""
 var _f: FileAccess = null
 var enabled: bool = true
+var capture_raw_input: bool = true
+var capture_mouse_motion: bool = true
+var _last_button_scan_ms := 0
+var _last_mouse_motion_ms := 0
+var _last_mouse_pos := Vector2.INF
 
 func _ready() -> void:
 	session_id = "sess_%d_%d" % [int(Time.get_unix_time_from_system()), (Time.get_ticks_usec() % 100000)]
@@ -15,6 +20,82 @@ func _ready() -> void:
 	_path = "user://telemetry/%s.jsonl" % session_id
 	_f = FileAccess.open(_path, FileAccess.WRITE)
 	log_event({"event": "session_start", "engine": Engine.get_version_info().get("string", "")})
+	set_process_input(true)
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_button_scan_ms < 500:
+		return
+	_last_button_scan_ms = now
+	var root := get_tree().root
+	if root != null:
+		_scan_buttons(root)
+
+func _input(event: InputEvent) -> void:
+	if not capture_raw_input:
+		return
+	if event is InputEventKey:
+		var ev := event as InputEventKey
+		log_event({
+			"event": "input_key",
+			"pressed": ev.pressed,
+			"echo": ev.echo,
+			"keycode": ev.keycode,
+			"physical_keycode": ev.physical_keycode,
+			"key_label": OS.get_keycode_string(ev.keycode),
+			"unicode": ev.unicode,
+			"scene": _scene_name(),
+		})
+	elif event is InputEventMouseButton:
+		var evm := event as InputEventMouseButton
+		log_event({
+			"event": "input_mouse_button",
+			"pressed": evm.pressed,
+			"button_index": evm.button_index,
+			"position": _vec2_dict(evm.position),
+			"scene": _scene_name(),
+		})
+	elif event is InputEventMouseMotion and capture_mouse_motion:
+		var mov := event as InputEventMouseMotion
+		var now := Time.get_ticks_msec()
+		if now - _last_mouse_motion_ms >= 120 and (_last_mouse_pos == Vector2.INF or _last_mouse_pos.distance_to(mov.position) >= 8.0):
+			_last_mouse_motion_ms = now
+			_last_mouse_pos = mov.position
+			log_event({
+				"event": "input_mouse_motion",
+				"position": _vec2_dict(mov.position),
+				"relative": _vec2_dict(mov.relative),
+				"scene": _scene_name(),
+			})
+	elif event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		log_event({
+			"event": "input_touch",
+			"pressed": touch.pressed,
+			"index": touch.index,
+			"position": _vec2_dict(touch.position),
+			"scene": _scene_name(),
+		})
+	elif event is InputEventJoypadButton:
+		var joy := event as InputEventJoypadButton
+		log_event({
+			"event": "input_joy_button",
+			"pressed": joy.pressed,
+			"device": joy.device,
+			"button_index": joy.button_index,
+			"scene": _scene_name(),
+		})
+	elif event is InputEventJoypadMotion:
+		var axis := event as InputEventJoypadMotion
+		if absf(axis.axis_value) >= 0.25:
+			log_event({
+				"event": "input_joy_motion",
+				"device": axis.device,
+				"axis": axis.axis,
+				"value": axis.axis_value,
+				"scene": _scene_name(),
+			})
 
 func _write(d: Dictionary) -> void:
 	if not enabled or _f == null:
@@ -23,6 +104,7 @@ func _write(d: Dictionary) -> void:
 	_f.flush()
 
 var _buffer: Array = []   # events pending upload to the learner's cloud account
+var _flush_in_flight := false
 
 ## Generic event line (session_start/resolve/fail/etc.).
 func log_event(d: Dictionary) -> void:
@@ -40,12 +122,60 @@ func log_event(d: Dictionary) -> void:
 		if _buffer.size() >= 8:
 			flush()
 
+func log_player_movement(kind: String, data: Dictionary) -> void:
+	data["event"] = "player_movement"
+	data["kind"] = kind
+	data["scene"] = _scene_name()
+	log_event(data)
+
+func log_ui_button(button: Button) -> void:
+	if button == null or not is_instance_valid(button):
+		return
+	log_event({
+		"event": "ui_button_pressed",
+		"text": button.text,
+		"disabled": button.disabled,
+		"path": str(button.get_path()),
+		"scene": _scene_name(),
+	})
+
+func _scan_buttons(node: Node) -> void:
+	if node is Button:
+		var b := node as Button
+		if not bool(b.get_meta("_telemetry_connected", false)):
+			b.set_meta("_telemetry_connected", true)
+			b.pressed.connect(log_ui_button.bind(b))
+	for child in node.get_children():
+		_scan_buttons(child)
+
+func _scene_name() -> String:
+	if SceneRouter.has_method("active_scene_name"):
+		var routed := str(SceneRouter.active_scene_name())
+		if routed != "":
+			return routed
+	var current := get_tree().current_scene
+	if current != null:
+		return current.scene_file_path if current.scene_file_path != "" else current.name
+	return ""
+
+func _vec2_dict(v: Vector2) -> Dictionary:
+	return {"x": v.x, "y": v.y}
+
 ## Upload buffered events under the signed-in learner (no-op offline). Call at lesson end.
 func flush() -> void:
-	if not Auth.signed_in() or _buffer.is_empty():
+	if not Auth.signed_in() or _buffer.is_empty() or _flush_in_flight:
 		return
-	Auth.post_authed("/telemetry", {"events": _buffer.duplicate()})
-	_buffer.clear()
+	var payload := _buffer.duplicate()
+	_flush_in_flight = true
+	Auth.post_authed("/telemetry", {"events": payload}, func(ok: bool, _data):
+		_flush_in_flight = false
+		if not ok:
+			return
+		var sent_count := mini(payload.size(), _buffer.size())
+		for _i in range(sent_count):
+			_buffer.remove_at(0)
+		if _buffer.size() >= 8:
+			flush())
 
 ## Push the current ECD competency estimate to the learner's account.
 func upload_competency() -> void:
