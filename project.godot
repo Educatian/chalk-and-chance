@@ -14,6 +14,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Items="*res://autoload/Items.gd"
 GameState="*res://autoload/GameState.gd"
 Game="*res://autoload/Game.gd"
 SceneRouter="*res://autoload/SceneRouter.gd"
@@ -22,6 +23,8 @@ TTSClient="*res://autoload/TTSClient.gd"
 Auth="*res://autoload/Auth.gd"
 Telemetry="*res://autoload/Telemetry.gd"
 Competency="*res://autoload/Competency.gd"
+Sfx="*res://autoload/Sfx.gd"
+VoiceInput="*res://autoload/VoiceInput.gd"
 
 [gui]
 

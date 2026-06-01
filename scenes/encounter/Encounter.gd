@@ -19,6 +19,16 @@ const MOVES := [
 	["Tell", "tell"], ["Praise", "praise"], ["Connect", "connect"],
 	["Redirect", "redirect"], ["Wait", "wait"],
 ]
+const MOVE_HELP := {
+	"elicit": "Elicit: ask how the student got that answer.",
+	"extend": "Extend: press the idea one step further.",
+	"revoice": "Revoice: restate their thinking so it is public and checkable.",
+	"tell": "Tell: explain it directly. Useful sometimes, but it can take over their thinking.",
+	"praise": "Praise: name a specific useful behavior, not just 'good job'.",
+	"connect": "Connect: notice the student's world, then bridge the content to it.",
+	"redirect": "Redirect: bring attention back with the least-intrusive move that works.",
+	"wait": "Wait: hold silence until the Wait-Time bar turns green, then choose a move.",
+}
 
 var persona_id := "noah_g5_fractions"
 var display_name := "Noah"
@@ -34,6 +44,7 @@ var asset_hint := ""
 var connect_line := ""
 var connect_resolves := false   # if true, connecting-to-an-asset is a second valid win path
 var _asset_learned := false     # the teacher has noticed/interpreted this student's asset
+var _scenario_context: Dictionary = {}
 
 # Class meters (0..100) and player HP.
 var engagement := 40.0
@@ -51,15 +62,21 @@ var _transcript: Array = []     # running dialogue [{speaker, text}] for multi-t
 var _move_history: Array = []    # recent [{tag, targets}] so the coach can fade / avoid repeats
 var _port_tween: Tween = null    # portrait bounce on emotion change
 var _last_wait_ms: int = 0       # wait time of the move in flight (for telemetry)
+var _last_input_mode := "menu"
+var _last_free_text := ""
 
 # Node refs built in _ready().
 var _name_label: Label
+var _student_name_label: Label
 var _student_rect: ColorRect
 var _student_tex: TextureRect
 var _emote: TextureRect
 var _layer: Control
 var _dialogue: Label
 var _coach: Label
+var _result: Label
+var _dialogue_tween: Tween
+var _coach_tween: Tween
 var _wait_bar: ProgressBar
 var _bond_fill: ColorRect
 var _bond_label: Label
@@ -68,9 +85,15 @@ var _buttons: Array = []
 var _text_input: LineEdit = null     # free-text teacher utterance box
 var _type_toggle: Button = null      # menu <-> type switch
 var _send_btn: Button = null
+var _mic_btn: Button = null
+var _continue_btn: Button = null
 var _type_mode: bool = false
+var _item_buttons: Array = []
+var _wait_item_ready := false
+var _practice_goal_active := false
 
 func _ready() -> void:
+	_apply_upgrade_baselines()
 	_build_ui()
 	_refresh_meters()
 	_set_dialogue("You walk over to %s's desk." % display_name)
@@ -92,31 +115,44 @@ func setup(data: Dictionary) -> void:
 ## makes this student a little easier to reach (trust precedes risk-taking).
 func _apply_relationship_headstart() -> void:
 	var b := GameState.bond(persona_id)
+	var upgrade_bonus := GameState.relationship_start_bonus()
+	if upgrade_bonus > 0.0:
+		engagement = clampf(engagement + upgrade_bonus * 100.0, 0.0, 100.0)
+		rapport = clampf(rapport + upgrade_bonus * 100.0, 0.0, 100.0)
 	if b <= 0.0:
+		_refresh_meters()
 		return
 	understanding = clampf(understanding + b * 0.10, 0.0, 1.0)
 	engagement = clampf(engagement + b * 15.0, 0.0, 100.0)
 	rapport = clampf(rapport + b * 20.0, 0.0, 100.0)
 	_refresh_meters()
 
+func _apply_upgrade_baselines() -> void:
+	composure = GameState.max_composure()
+
 ## Lesson-plan import / any scenario may override a persona's lines and targets for its
 ## content, via a "persona_overrides" map in the scenario JSON.
 func _apply_scenario_overrides() -> void:
 	var path := Game.scenario_path(Game.current_scenario_id)
 	if not FileAccess.file_exists(path):
+		_scenario_context = _build_scenario_context({}, {})
 		return
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
+		_scenario_context = _build_scenario_context({}, {})
 		return
 	var d = JSON.parse_string(f.get_as_text())
 	f.close()
 	if typeof(d) != TYPE_DICTIONARY:
+		_scenario_context = _build_scenario_context({}, {})
 		return
 	var ov = d.get("persona_overrides", {})
 	if typeof(ov) != TYPE_DICTIONARY:
+		_scenario_context = _build_scenario_context(d, {})
 		return
 	var po = ov.get(persona_id, {})
 	if typeof(po) != TYPE_DICTIONARY:
+		_scenario_context = _build_scenario_context(d, {})
 		return
 	if po.has("target_label"):
 		target_concept = str(po["target_label"])
@@ -126,6 +162,28 @@ func _apply_scenario_overrides() -> void:
 		win_line = str(po["win_line"])
 	if po.has("win_moves"):
 		win_moves = po["win_moves"]
+	_scenario_context = _build_scenario_context(d, po)
+
+func _build_scenario_context(scenario: Dictionary, persona_override: Dictionary) -> Dictionary:
+	var objective_labels: Array = []
+	for o in scenario.get("objectives", []):
+		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
+			objective_labels.append(str(o.get("label", "")))
+	return {
+		"id": str(scenario.get("id", Game.current_scenario_id)),
+		"title": str(scenario.get("title", "Current lesson")),
+		"format": str(scenario.get("format", "")),
+		"arrangement": str(scenario.get("arrangement", "")),
+		"objectives": objective_labels,
+		"active_student": {
+			"persona_id": persona_id,
+			"name": display_name,
+			"target_label": str(persona_override.get("target_label", target_concept)),
+			"opening_line": str(persona_override.get("opening_line", opening_line)),
+			"win_moves": persona_override.get("win_moves", win_moves),
+			"asset_hint": asset_hint,
+		},
+	}
 
 ## Reads display fields from data/persona_library/<id>.json (falls back to defaults).
 func _load_persona() -> void:
@@ -153,8 +211,11 @@ func _load_persona() -> void:
 func _refresh_intro() -> void:
 	if _name_label != null:
 		_name_label.text = "ENCOUNTER  -  %s  (%s)" % [display_name, target_concept]
+	if _student_name_label != null:
+		_student_name_label.text = display_name
 	if opening_line != "":
 		_set_dialogue("%s: \"%s\"" % [display_name, opening_line])
+		TTSClient.speak(persona_id, opening_line, "neutral")
 	_update_portrait("neutral")
 
 # --- UI construction ---------------------------------------------------------
@@ -180,6 +241,7 @@ func _build_ui() -> void:
 	_bars["order"] = _make_meter("Order", 44, Color(0.35, 0.65, 0.95))
 	_bars["rapport"] = _make_meter("Rapport", 62, Color(0.95, 0.70, 0.30))
 	_bars["composure"] = _make_meter("Composure", 84, Color(0.90, 0.35, 0.45))
+	_bars["composure"].max_value = GameState.max_composure()
 
 	# Student sprite, top-right (placeholder; affect portrait swaps in later).
 	_student_rect = ColorRect.new()
@@ -200,7 +262,8 @@ func _build_ui() -> void:
 	_student_tex.visible = false
 	_layer.add_child(_student_tex)
 
-	_make_label(display_name, Vector2(372, 108), 9, Color.WHITE)
+	_student_name_label = _make_label(display_name, Vector2(372, 108), 9, Color.WHITE)
+	_student_name_label.size = Vector2(84, 12)
 
 	# Persistent relationship (warm demander). Carries across periods, unlike the class meters.
 	# Drawn as ColorRects (like the gym bars) so the height is exactly controlled.
@@ -230,35 +293,47 @@ func _build_ui() -> void:
 	_layer.add_child(_emote)
 
 	# Wait-Time Ring (a bar in M1).
-	_make_label("Wait-Time", Vector2(300, 26), 8, Color(0.8, 0.85, 0.95))
+	_make_label(_wait_label_text(false), Vector2(300, 26), 7, Color(0.8, 0.85, 0.95))
 	_wait_bar = ProgressBar.new()
 	_wait_bar.position = Vector2(300, 40)
 	_wait_bar.size = Vector2(60, 10)
 	_wait_bar.min_value = 0
-	_wait_bar.max_value = WAIT_FULL_MS
+	_wait_bar.max_value = GameState.wait_threshold_ms()
 	_wait_bar.value = 0
 	_wait_bar.show_percentage = false
+	_set_wait_bar_ready(false)
 	_layer.add_child(_wait_bar)
 
 	# Student utterance shown in a speech bubble (9-slice) when art is present.
 	_build_dialogue_box()
 
-	# Coach tip box.
-	_coach = _make_label("", Vector2(16, 174), 8, Color(0.70, 0.90, 0.75))
-	_coach.size = Vector2(448, 40)
+	# Result chip + coach tip box.
+	_result = _make_label("", Vector2(16, 162), 7, Color(0.96, 0.86, 0.50))
+	_result.size = Vector2(448, 12)
+	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_coach = _make_label("", Vector2(16, 174), 7, Color(0.70, 0.90, 0.75))
+	_coach.size = Vector2(448, 18)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	# Move buttons row (leave ~50px at the right for the Type/Menu toggle).
+	# Move buttons: two rows with enough theme-minimum height to avoid overlap.
 	var n := MOVES.size()
-	var bw := 414.0 / float(n)
+	var cols := 4
+	var bw := 88.0
+	var row_y := [194.0, 232.0]
+	var short_labels := {
+		"redirect": "Redir.",
+	}
 	for i in range(n):
 		var b := Button.new()
-		b.text = MOVES[i][0]
-		b.position = Vector2(8 + i * bw, 224)
-		b.size = Vector2(bw - 4, 40)
-		b.add_theme_font_size_override("font_size", 8)
 		var tag: String = MOVES[i][1]
+		b.text = str(short_labels.get(tag, MOVES[i][0]))
+		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
+		b.size = Vector2(bw, 36)
+		b.clip_text = true
+		b.add_theme_font_size_override("font_size", 7)
 		b.pressed.connect(_on_move.bind(tag))
+		b.mouse_entered.connect(_preview_move.bind(tag))
+		b.focus_entered.connect(_preview_move.bind(tag))
 		_layer.add_child(b)
 		_buttons.append(b)
 	if not _buttons.is_empty():
@@ -266,18 +341,29 @@ func _build_ui() -> void:
 
 	# Free-text input (hidden until the player toggles to Type mode), sharing the move row.
 	_text_input = LineEdit.new()
-	_text_input.position = Vector2(8, 224)
-	_text_input.size = Vector2(356, 40)
-	_text_input.placeholder_text = "Type what you say to the student, then Enter..."
-	_text_input.add_theme_font_size_override("font_size", 9)
+	_text_input.position = Vector2(8, 226)
+	_text_input.size = Vector2(274, 36)
+	_text_input.placeholder_text = "Type teacher talk..."
+	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
 	_text_input.text_submitted.connect(func(_t): _on_type_submit())
 	_layer.add_child(_text_input)
 
+	_mic_btn = Button.new()
+	_mic_btn.text = "Mic"
+	_mic_btn.position = Vector2(288, 226)
+	_mic_btn.size = Vector2(40, 36)
+	_mic_btn.add_theme_font_size_override("font_size", 7)
+	_mic_btn.visible = false
+	_mic_btn.disabled = not VoiceInput.is_supported()
+	_mic_btn.tooltip_text = "Speak teacher talk" if VoiceInput.is_supported() else "Voice input is not supported in this browser."
+	_mic_btn.pressed.connect(_start_voice_input)
+	_layer.add_child(_mic_btn)
+
 	_send_btn = Button.new()
 	_send_btn.text = "Say"
-	_send_btn.position = Vector2(366, 224)
-	_send_btn.size = Vector2(44, 40)
+	_send_btn.position = Vector2(332, 226)
+	_send_btn.size = Vector2(50, 36)
 	_send_btn.add_theme_font_size_override("font_size", 8)
 	_send_btn.visible = false
 	_send_btn.pressed.connect(func(): _on_type_submit())
@@ -286,11 +372,86 @@ func _build_ui() -> void:
 	# Mode toggle (top of the move row, far right).
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(424, 224)
-	_type_toggle.size = Vector2(48, 40)
+	_type_toggle.position = Vector2(388, 226)
+	_type_toggle.size = Vector2(76, 36)
 	_type_toggle.add_theme_font_size_override("font_size", 8)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
+
+	_build_item_row()
+
+func _build_item_row() -> void:
+	var x := 244.0
+	var y := 72.0
+	for id in GameState.equipped_item_ids():
+		var item_id := str(id)
+		var b := Button.new()
+		b.position = Vector2(x, y)
+		b.size = Vector2(28, 28)
+		b.set_meta("item_id", item_id)
+		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
+		b.disabled = not GameState.can_use_item(item_id, "encounter")
+		b.pressed.connect(_use_item.bind(item_id))
+		var tex := Art.tex(Items.icon_for(item_id))
+		if tex != null:
+			b.icon = tex
+			b.expand_icon = true
+		else:
+			b.text = Items.short_name_for(item_id)
+			b.add_theme_font_size_override("font_size", 6)
+		_layer.add_child(b)
+		_item_buttons.append(b)
+		x += 32.0
+
+func _refresh_item_buttons() -> void:
+	for b in _item_buttons:
+		var id := str(b.get_meta("item_id", ""))
+		if id != "":
+			b.disabled = not GameState.can_use_item(id, "encounter") or _busy or _resolved
+			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
+
+func _use_item(id: String) -> void:
+	if _busy or _resolved:
+		return
+	var result := GameState.use_item(id, "encounter", {"scenario_id": str(Game.current_scenario_id), "persona_id": persona_id, "turn": _turns})
+	Telemetry.log_event({"event": "item_used" if bool(result.get("ok", false)) else "item_blocked",
+		"item_id": id, "scope": "encounter", "persona_id": persona_id, "turn": _turns,
+		"remaining": int(result.get("remaining", GameState.item_count(id)))})
+	if not bool(result.get("ok", false)):
+		_set_result("Item unavailable.")
+		return
+	match id:
+		"breathing_reset":
+			composure = clampf(composure + 18.0, 0.0, GameState.max_composure())
+			_set_result("Breathing Reset used  |  Composure +18")
+			_set_coach("Coach Vee: you regulated before responding. That protects the next instructional choice.")
+		"student_profile_card":
+			_asset_learned = true
+			rapport = clampf(rapport + 4.0, 0.0, 100.0)
+			var hint := asset_hint if asset_hint != "" else "%s needs you to learn their thinking before correcting it." % display_name
+			_set_result("Student Profile Card used  |  Asset cue revealed")
+			_set_coach("Coach Vee: learner profile cue: %s" % hint)
+		"noticing_lens":
+			_set_result("Noticing Lens used  |  Look for %s" % ", ".join(win_moves))
+			_set_coach("Coach Vee: attend to the student's reasoning need before choosing. Useful moves here: %s." % ", ".join(win_moves))
+		"wait_meter_pin":
+			_wait_item_ready = true
+			_set_result("Wait Meter Pin used  |  next move gets full wait-time credit")
+			_set_coach("Coach Vee: your next move will be treated as deliberate think time. Use it before pressing reasoning.")
+		"lesson_map":
+			understanding = clampf(understanding + 0.04, 0.0, 1.0)
+			composure = clampf(composure + 4.0, 0.0, GameState.max_composure())
+			_set_result("Lesson Map used  |  Understanding +4  |  Composure +4")
+			_set_coach("Coach Vee: you checked the lesson path before acting. Now choose the move that fits the learner.")
+		"practice_goal_card":
+			_practice_goal_active = true
+			_set_result("Practice Goal set  |  clear this encounter for bonus XP")
+			_set_coach("Coach Vee: focus goal: make one evidence-rich move before resolving the misconception.")
+		_:
+			_set_result("%s cannot be used in this encounter." % Items.name_for(id))
+	_refresh_meters()
+	_refresh_bond()
+	_refresh_item_buttons()
 
 func _toggle_input_mode() -> void:
 	_type_mode = not _type_mode
@@ -300,10 +461,34 @@ func _toggle_input_mode() -> void:
 	if _text_input != null:
 		_text_input.visible = _type_mode
 		_send_btn.visible = _type_mode
+		if _mic_btn != null:
+			_mic_btn.visible = _type_mode
 		if _type_mode:
 			_text_input.grab_focus()
 		elif not _buttons.is_empty():
 			_buttons[0].grab_focus()
+	if _type_mode:
+		_set_result("Type mode: the offline demo classifies common teacher moves locally.")
+
+func _start_voice_input() -> void:
+	if _text_input == null:
+		return
+	if VoiceInput.start_for_line_edit(_text_input):
+		_set_result("Listening... speak your teacher talk.")
+	else:
+		_set_result("Voice input is not available in this browser.")
+
+func _preview_move(tag: String) -> void:
+	if _busy or _resolved:
+		return
+	_set_result(str(MOVE_HELP.get(tag, "")))
+
+func _set_wait_bar_ready(ready: bool) -> void:
+	if _wait_bar == null:
+		return
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
+	_wait_bar.add_theme_stylebox_override("fill", fill)
 
 func _build_dialogue_box() -> void:
 	var bub := Art.tex("res://assets/ui/bubble_9slice.png")
@@ -313,7 +498,7 @@ func _build_dialogue_box() -> void:
 		var np := NinePatchRect.new()
 		np.texture = bub
 		np.position = Vector2(10, 114)
-		np.size = Vector2(356, 54)
+		np.size = Vector2(356, 50)
 		np.patch_margin_left = 14
 		np.patch_margin_right = 14
 		np.patch_margin_top = 14
@@ -338,15 +523,15 @@ func _build_dialogue_box() -> void:
 		dbox.color = Color(0.12, 0.15, 0.26)
 		dbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_layer.add_child(dbox)
-	_dialogue = _make_label("", Vector2(20, 122), 9, text_color)
-	_dialogue.size = Vector2(w, 42)
+	_dialogue = _make_label("", Vector2(20, 121), 9, text_color)
+	_dialogue.size = Vector2(w, 38)
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = txt
 	l.position = pos
-	l.add_theme_font_size_override("font_size", font_size)
+	l.add_theme_font_size_override("font_size", font_size + GameState.ui_font_delta())
 	l.add_theme_color_override("font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _layer != null:
@@ -374,12 +559,19 @@ func _make_meter(name_txt: String, y: float, fill: Color) -> ProgressBar:
 func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
+	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
 	if _busy or _resolved:
 		return
 	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
-	_wait_bar.value = min(elapsed, WAIT_FULL_MS)
+	var threshold := float(GameState.wait_threshold_ms())
+	_wait_bar.value = min(elapsed, threshold)
+	_set_wait_bar_ready(elapsed >= threshold)
+
+func _wait_label_text(ready: bool) -> String:
+	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
+	return ("Wait %.2fs: READY" if ready else "Wait %.2fs before choosing") % seconds
 
 func _on_move(tag: String) -> void:
 	if _busy or _resolved:
@@ -407,18 +599,26 @@ func _on_type_submit(text: String = "") -> void:
 ## Shared send path for both menu moves and free text.
 func _dispatch_move(tag: String, free_text: String) -> void:
 	_busy = true
+	Sfx.play("click")
 	_turns += 1
-	var wait_ms := Time.get_ticks_msec() - _ready_at_ms
+	var raw_wait_ms := Time.get_ticks_msec() - _ready_at_ms
+	var wait_ms := GameState.effective_wait_ms(raw_wait_ms)
+	if _wait_item_ready:
+		wait_ms = max(wait_ms, GameState.wait_threshold_ms())
+		_wait_item_ready = false
 	_last_wait_ms = wait_ms
 	var is_free := free_text != ""
+	_last_input_mode = "free_text" if is_free else "menu"
+	_last_free_text = free_text
 	# The transcript holds the real teacher talk: the typed line, or a gloss of the menu move.
 	_transcript.append({"speaker": "teacher", "text": (free_text if is_free else _move_gloss(tag))})
 	var teacher_move: Dictionary = (
-		{"input_mode": "free_text", "text": free_text, "wait_time_ms": wait_ms} if is_free
-		else {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms})
+		{"input_mode": "free_text", "text": free_text, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms} if is_free
+		else {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms})
 	var payload := {
 		"session_id": "m1",
-		"scenario_id": "questioning_forest_elicit",
+		"scenario_id": str(Game.current_scenario_id),
+		"scenario_context": _scenario_context,
 		"target_behavior": "elicit_student_thinking",
 		"active_persona_id": persona_id,
 		"runtime_state": {
@@ -444,7 +644,7 @@ func _on_reply(resp: Dictionary) -> void:
 	engagement = clampf(engagement + float(deltas.get("engagement", 0.0)) * 100.0, 0.0, 100.0)
 	rapport = clampf(rapport + float(deltas.get("trust", 0.0)) * 100.0, 0.0, 100.0)
 	order = clampf(order + float(deltas.get("order", 0.0)) * 100.0, 0.0, 100.0)
-	composure = clampf(composure + float(deltas.get("composure", 0.0)) * 100.0, 0.0, 100.0)
+	composure = clampf(composure + float(deltas.get("composure", 0.0)) * 100.0, 0.0, GameState.max_composure())
 	_refresh_meters()
 
 	var utter: Dictionary = resp.get("student_utterance", {})
@@ -455,6 +655,8 @@ func _on_reply(resp: Dictionary) -> void:
 	var tags: Array = judge.get("move_tags", [])
 	var targets: bool = bool(judge.get("targets_misconception", false))
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
+	_set_result(_result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas))
+	Sfx.play("good" if targets else "bad")
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
 	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
 	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
@@ -476,7 +678,7 @@ func _on_reply(resp: Dictionary) -> void:
 		"scenario_id": str(Game.current_scenario_id) if "current_scenario_id" in Game else "",
 		"persona_id": persona_id,
 		"turn": _turns,
-		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": "menu"},
+		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text},
 		"judge": {"tags": tags, "targets": targets, "wait_ok": bool(judge.get("wait_time_ok", false))},
 		"deltas": deltas,
 		"meters": {
@@ -521,7 +723,7 @@ func _do_connect() -> void:
 	# Bridge content to the now-known asset.
 	rapport = clampf(rapport + 10.0, 0.0, 100.0)
 	engagement = clampf(engagement + 12.0, 0.0, 100.0)
-	composure = clampf(composure + 3.0, 0.0, 100.0)
+	composure = clampf(composure + 3.0, 0.0, GameState.max_composure())
 	GameState.add_bond(persona_id, 0.18)
 	if connect_resolves:
 		# A landed asset-bridge is itself a valid route to the insight (the connect_line
@@ -531,6 +733,7 @@ func _do_connect() -> void:
 	_refresh_bond()
 	var line := connect_line if connect_line != "" else "Oh... when you put it in my world, it actually makes sense."
 	_set_dialogue("%s: \"%s\"" % [display_name, line])
+	TTSClient.speak(persona_id, line, "excited" if connect_resolves else "thinking")
 	Game.log_move("connect", false, connect_resolves)
 	_update_portrait("excited" if connect_resolves else "thinking")
 	if connect_resolves and understanding >= WIN_UNDERSTANDING:
@@ -562,7 +765,11 @@ func _win(route: String = "reasoning") -> void:
 		"bond": GameState.bond(persona_id)})
 	Telemetry.upload_competency()
 	Telemetry.flush()   # push this lesson's events to the learner's cloud account
-	GameState.award_badge(target_badge)
+	var reward := GameState.award_badge(target_badge)
+	if _practice_goal_active:
+		GameState.add_teacher_xp(35, "practice_goal:%s" % str(Game.current_scenario_id))
+	Sfx.play("badge")
+	_show_badge_card(target_badge, reward)
 	var warm := GameState.bond(persona_id) >= 0.4
 	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
 	if route == "connect":
@@ -570,12 +777,13 @@ func _win(route: String = "reasoning") -> void:
 		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
 	else:
 		_set_dialogue("%s: \"%s\"" % [display_name, win_line])
+		TTSClient.speak(persona_id, win_line, "excited")
 		if warm:
 			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
 		else:
 			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
 	_show_competency_panel()
-	_return_to_overworld_after(4.6)
+	_show_continue_button()
 
 ## A compact end-of-lesson readout of the player's live ECD competency estimates
 ## (in-engine multivariate Elo). Shows the skills with evidence this session as bars.
@@ -586,8 +794,12 @@ func _show_competency_panel() -> void:
 		_text_input.visible = false
 	if _send_btn != null:
 		_send_btn.visible = false
+	if _mic_btn != null:
+		_mic_btn.visible = false
 	if _type_toggle != null:
 		_type_toggle.visible = false
+	for b in _item_buttons:
+		b.visible = false
 
 	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
 	if rows.is_empty():
@@ -595,12 +807,13 @@ func _show_competency_panel() -> void:
 	rows = rows.slice(0, 4)
 	var panel := ColorRect.new()
 	panel.color = Color(0.05, 0.06, 0.10, 0.94)
-	panel.position = Vector2(40, 198)
-	panel.size = Vector2(400, 18 + rows.size() * 12)
+	panel.position = Vector2(34, 194)
+	panel.size = Vector2(436, 68 + rows.size() * 14)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(panel)
-	_make_label("Your teaching competencies this lesson", Vector2(50, 200), 8, Color(0.95, 0.85, 0.55)).size = Vector2(380, 12)
-	var y := 214
+	_make_label("Your teaching competencies this lesson", Vector2(48, 198), 8, Color(0.95, 0.85, 0.55)).size = Vector2(390, 12)
+	_make_label("Bars are live practice estimates from moves you actually used. n = evidence count.", Vector2(48, 212), 7, Color(0.72, 0.78, 0.88)).size = Vector2(400, 20)
+	var y := 236
 	for r in rows:
 		_make_label(str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96)).size = Vector2(140, 11)
 		var bg := ColorRect.new()
@@ -617,13 +830,77 @@ func _show_competency_panel() -> void:
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_layer.add_child(fill)
 		_make_label("n=%d" % int(r["n"]), Vector2(362, y), 7, Color(0.6, 0.66, 0.74)).size = Vector2(36, 11)
-		y += 12
+		y += 14
+	_make_label(_competency_next_step(rows), Vector2(48, y + 2), 7, Color(0.72, 0.92, 0.78)).size = Vector2(404, 28)
+
+func _competency_next_step(rows: Array) -> String:
+	var lowest: Dictionary = rows[0]
+	for r in rows:
+		if float(r["prob"]) < float(lowest["prob"]):
+			lowest = r
+	return "Next practice focus: %s. Try one move that gives this bar cleaner evidence next time." % str(lowest["label"])
+
+func _show_continue_button() -> void:
+	_continue_btn = Button.new()
+	_continue_btn.text = "Continue"
+	_continue_btn.position = Vector2(372, 176)
+	_continue_btn.size = Vector2(92, 24)
+	_continue_btn.add_theme_font_size_override("font_size", 8)
+	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
+	_layer.add_child(_continue_btn)
+	_continue_btn.grab_focus()
+
+func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
+	if badge_id == "":
+		return
+	var card := Panel.new()
+	card.position = Vector2(292, 110)
+	card.size = Vector2(178, 78 if bool(reward.get("level_up", false)) else 62)
+	_layer.add_child(card)
+	var text := "BADGE UNLOCKED\n%s" % badge_id.to_upper()
+	if bool(reward.get("level_up", false)):
+		text += "\nLEVEL %d  +1 UPGRADE" % int(reward.get("level_after", GameState.teacher_level))
+	var lbl := _make_label(text, Vector2(306, 122), 8, Color(0.96, 0.86, 0.50))
+	lbl.size = Vector2(150, 58)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if not bool(GameState.get_setting("reduced_motion", false)):
+		card.scale = Vector2(0.88, 0.88)
+		card.pivot_offset = card.size / 2.0
+		var tw := create_tween()
+		tw.tween_property(card, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _force_recover() -> void:
-	composure = 40.0
+	composure = minf(40.0, GameState.max_composure())
 	_refresh_meters()
 	_set_coach("Coach Vee: Composure bottomed out. Take a breath. This is data, not failure. Re-attempt the segment.")
 	_arm_turn()
+
+func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary) -> String:
+	var parts: Array = []
+	var understanding_delta := int(round(float(deltas.get("understanding", 0.0)) * 100.0))
+	var engagement_delta := int(round(float(deltas.get("engagement", 0.0)) * 100.0))
+	var rapport_delta := int(round(float(deltas.get("trust", 0.0)) * 100.0))
+	var order_delta := int(round(float(deltas.get("order", 0.0)) * 100.0))
+	if understanding_delta != 0:
+		parts.append("Understanding %s" % _signed(understanding_delta))
+	if engagement_delta != 0:
+		parts.append("Engagement %s" % _signed(engagement_delta))
+	if rapport_delta != 0:
+		parts.append("Rapport %s" % _signed(rapport_delta))
+	if order_delta != 0:
+		parts.append("Order %s" % _signed(order_delta))
+	if tag == "wait" and not wait_ok:
+		parts.append("Too soon: hold the pause longer")
+	elif targets:
+		parts.append("This addressed %s's need" % display_name)
+	elif tag != "":
+		parts.append("Not the move %s needs yet" % display_name)
+	if _last_input_mode == "free_text":
+		parts.append("classified as %s" % tag.capitalize())
+	return "  |  ".join(parts)
+
+func _signed(n: int) -> String:
+	return "+%d" % n if n > 0 else str(n)
 
 func _disable_moves() -> void:
 	for b in _buttons:
@@ -632,8 +909,12 @@ func _disable_moves() -> void:
 		_text_input.editable = false
 	if _send_btn != null:
 		_send_btn.disabled = true
+	if _mic_btn != null:
+		_mic_btn.disabled = true
 	if _type_toggle != null:
 		_type_toggle.disabled = true
+	for b in _item_buttons:
+		b.disabled = true
 
 func _return_to_overworld_after(seconds: float) -> void:
 	var t := get_tree().create_timer(seconds)
@@ -793,8 +1074,29 @@ func _affect_color(affect: String) -> Color:
 
 func _set_dialogue(txt: String) -> void:
 	if _dialogue != null:
-		_dialogue.text = txt
+		_reveal_label(_dialogue, txt, true)
 
 func _set_coach(txt: String) -> void:
 	if _coach != null:
-		_coach.text = txt
+		_reveal_label(_coach, txt, false)
+
+func _reveal_label(label: Label, txt: String, is_dialogue: bool) -> void:
+	label.text = txt
+	if str(GameState.get_setting("text_reveal", "typewriter")) == "instant" or bool(GameState.get_setting("reduced_motion", false)):
+		label.visible_characters = -1
+		return
+	var tween_ref := _dialogue_tween if is_dialogue else _coach_tween
+	if tween_ref != null and tween_ref.is_valid():
+		tween_ref.kill()
+	label.visible_characters = 0
+	var duration := clampf(float(txt.length()) / 72.0, 0.18, 1.8)
+	tween_ref = create_tween()
+	tween_ref.tween_property(label, "visible_characters", txt.length(), duration)
+	if is_dialogue:
+		_dialogue_tween = tween_ref
+	else:
+		_coach_tween = tween_ref
+
+func _set_result(txt: String) -> void:
+	if _result != null:
+		_result.text = txt
