@@ -240,11 +240,11 @@ func _refresh_item_buttons() -> void:
 	for b in _item_buttons:
 		var id := str(b.get_meta("item_id", ""))
 		if id != "":
-			b.disabled = not GameState.can_use_item(id, "gym") or _over or _llm_busy
+			b.disabled = not GameState.can_use_item(id, "gym") or _over
 			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
 
 func _use_item(id: String) -> void:
-	if _over or _llm_busy:
+	if _over:
 		return
 	var result := GameState.use_item(id, "gym", {"scenario_id": str(Game.current_scenario_id), "selected": sel, "turn": _turns})
 	Telemetry.log_event({"event": "item_used" if bool(result.get("ok", false)) else "item_blocked",
@@ -373,7 +373,7 @@ func _start_voice_input() -> void:
 		_result.text = "Voice input is not available in this browser."
 
 func _on_type_submit() -> void:
-	if _over or _llm_busy or _text_input == null:
+	if _over or _text_input == null:
 		return
 	var line := _text_input.text.strip_edges()
 	if line == "":
@@ -402,7 +402,7 @@ func _classify_gym_text(text: String) -> String:
 	return "elicit"
 
 func _on_move(tag: String) -> void:
-	if _over or _llm_busy:
+	if _over:
 		return
 	var input_mode := _next_input_mode
 	var free_text := _next_free_text
@@ -479,7 +479,7 @@ func _on_move(tag: String) -> void:
 		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, s, {}, "")
 
 func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, student: Dictionary, input_mode: String, free_text: String) -> void:
-	if _http == null:
+	if _http == null or _llm_busy:
 		return
 	_dialogue_tail.append({"speaker": "Teacher", "text": _move_gloss(tag, input_mode, free_text)})
 	_move_history.append({"tag": tag, "targets": targets})
@@ -509,12 +509,9 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 	if err != OK:
 		return
 	_llm_busy = true
-	_set_move_buttons_disabled(true)
 
 func _on_llm_reply(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	_llm_busy = false
-	if not _over:
-		_set_move_buttons_disabled(false)
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		return
 	var resp = JSON.parse_string(body.get_string_from_utf8())

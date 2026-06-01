@@ -250,7 +250,7 @@ func _build_ui() -> void:
 
 func _build_item_row() -> void:
 	var x := 284.0
-	var y := 72.0
+	var y := 62.0
 	for id in GameState.equipped_item_ids():
 		var item_id := str(id)
 		var b := Button.new()
@@ -275,11 +275,11 @@ func _refresh_item_buttons() -> void:
 	for b in _item_buttons:
 		var id := str(b.get_meta("item_id", ""))
 		if id != "":
-			b.disabled = not GameState.can_use_item(id, "lecture") or _over or _llm_busy
+			b.disabled = not GameState.can_use_item(id, "lecture") or _over
 			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
 
 func _use_item(id: String) -> void:
-	if _over or _llm_busy:
+	if _over:
 		return
 	var result := GameState.use_item(id, "lecture", {"scenario_id": str(Game.current_scenario_id), "selected": sel})
 	Telemetry.log_event({"event": "item_used" if bool(result.get("ok", false)) else "item_blocked",
@@ -437,7 +437,7 @@ func _start_voice_input() -> void:
 		_result.text = "Voice input is not available in this browser."
 
 func _on_type_submit() -> void:
-	if _over or _llm_busy or _text_input == null:
+	if _over or _text_input == null:
 		return
 	var line := _text_input.text.strip_edges()
 	if line == "":
@@ -460,7 +460,7 @@ func _classify_lecture_text(text: String) -> String:
 	return "present"
 
 func _on_move(tag: String) -> void:
-	if _over or _llm_busy:
+	if _over:
 		return
 	var input_mode := _next_input_mode
 	var free_text := _next_free_text
@@ -550,7 +550,7 @@ func _on_move(tag: String) -> void:
 	_arm_turn()
 
 func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode: String, free_text: String) -> void:
-	if _http == null:
+	if _http == null or _llm_busy:
 		return
 	_scenario_context = _build_scenario_context(sel)
 	_lecture_history.append({"speaker": "Teacher", "text": _lecture_move_gloss(tag, input_mode, free_text)})
@@ -580,12 +580,9 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 	if err != OK:
 		return
 	_llm_busy = true
-	_set_move_buttons_disabled(true)
 
 func _on_lecture_reply(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	_llm_busy = false
-	if not _over:
-		_set_move_buttons_disabled(false)
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		return
 	var resp = JSON.parse_string(body.get_string_from_utf8())
