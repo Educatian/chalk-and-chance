@@ -51,6 +51,7 @@ class TeacherMove(BaseModel):
 class TurnRequest(BaseModel):
     session_id: str = "dev"
     scenario_id: str = ""
+    scenario_context: dict[str, Any] = {}
     target_behavior: str = ""
     active_persona_id: str = ""
     runtime_state: dict[str, Any] = {}
@@ -60,6 +61,29 @@ class TurnRequest(BaseModel):
     win_moves: list[str] = []          # moves that actually unlock THIS student (differentiated)
     frozen_persona: dict[str, Any] = {}  # optional; backend loads from disk if absent
     model_profile: str = "stub"
+
+
+def _scenario_brief(req: TurnRequest) -> str:
+    sc = req.scenario_context or {}
+    active = sc.get("active_student", {}) if isinstance(sc.get("active_student", {}), dict) else {}
+    focus = sc.get("lecture_focus", {}) if isinstance(sc.get("lecture_focus", {}), dict) else {}
+    objectives = sc.get("objectives", [])
+    if isinstance(objectives, list) and objectives:
+        obj_text = "\n".join(f"- {str(o)}" for o in objectives)
+    else:
+        obj_text = "- keep the lesson moving while reading student thinking"
+    pieces = [
+        f"scenario_id: {req.scenario_id or sc.get('id', 'unknown')}",
+        f"lesson: {sc.get('title', 'Current lesson')}",
+        f"format: {sc.get('format', 'classroom encounter')}" + (f" ({sc.get('arrangement')})" if sc.get("arrangement") else ""),
+        "lesson objectives:",
+        obj_text,
+    ]
+    if active.get("target_label") or active.get("opening_line"):
+        pieces.append(f"current student focus: {active.get('target_label', 'read the student need')}")
+        if active.get("opening_line"):
+            pieces.append(f"student starting idea/behavior: {active.get('opening_line')}")
+    return "\n".join(pieces)
 
 
 def judge(move: TeacherMove, win_moves: list[str]) -> dict[str, Any]:
@@ -77,10 +101,14 @@ def judge(move: TeacherMove, win_moves: list[str]) -> dict[str, Any]:
         row = dict(RUBRIC["deltas"].get(tag, {}))
 
     targets = bool(row.get("targets_misconception", False))
-    if win_moves and tag and tag not in win_moves:
-        # not the move that unlocks THIS student: no understanding gain, not a resolving move
-        targets = False
-        row["understanding"] = 0.0
+    if win_moves and tag:
+        # The move only counts when it is a win move for THIS student. This mirrors the
+        # Godot deterministic scenes, including revoice/wait de-escalation targets.
+        targets = tag != "tell" and tag in win_moves and (tag != "wait" or wait_ok)
+        if not targets:
+            row["understanding"] = 0.0
+        elif not row.get("understanding", 0.0):
+            row["understanding"] = 0.12
     row["targets_misconception"] = targets
     return {
         "move_tags": [tag] if tag else [],
@@ -95,6 +123,8 @@ def _canned_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, str]
     """Deterministic fallback student generator (used when no LLM is configured or
     the OpenRouter call / validator fails). Keeps the game running with zero deps."""
     tag = verdict["move_tags"][0] if verdict["move_tags"] else ""
+    active = (req.scenario_context or {}).get("active_student", {})
+    idea = str(active.get("opening_line", "")).strip() if isinstance(active, dict) else ""
     canned = {
         "elicit": "Um... 8 pieces is more than 4, so I drew 8 little boxes. But they look skinnier?",
         "extend": "Wait... if each 1/8 box is skinnier, then one eighth is SMALLER than one fourth?",
@@ -104,6 +134,8 @@ def _canned_student(req: TurnRequest, verdict: dict[str, Any]) -> dict[str, str]
         "redirect": "Okay, sorry.",
         "wait": "...oh! Maybe more pieces means each piece has to be smaller?" if verdict["wait_time_ok"] else "...",
     }
+    if idea and tag in ("elicit", "revoice"):
+        canned[tag] = f"I was thinking: {idea}"
     return {"speaker": "Noah", "text": canned.get(tag, "...")}
 
 
@@ -135,7 +167,7 @@ def _heuristic_classify(text: str) -> str:
         return "elicit"
     if "?" in t and any(k in t for k in ("what if", "what about", "and then", "so what", "what else")):
         return "extend"
-    if t.startswith(("so you", "so what you", "you're saying", "what i hear")):
+    if t.startswith(("so you", "so what you", "you're saying", "what i hear", "it sounds like", "sounds like")):
         return "revoice"
     if any(k in t for k in ("good job", "nice work", "i like how", "well done", "great")):
         return "praise"
@@ -237,6 +269,11 @@ def _build_messages(req: TurnRequest, persona: dict[str, Any], verdict: dict[str
     }
     for k, v in repl.items():
         sys = sys.replace(k, v)
+    sys += (
+        "\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n"
+        + _scenario_brief(req)
+        + "\nUse this context to make your reply fit the current lesson. If misconception_resolved is false, stay inside your starting idea or behavior; do not reveal the final correct reasoning."
+    )
     return [{"role": "system", "content": sys},
             {"role": "user", "content": "Respond now as the student, in character. JSON only."}]
 
@@ -327,6 +364,11 @@ def _coach_messages(req: TurnRequest, persona: dict[str, Any], verdict: dict[str
     }
     for k, v in repl.items():
         sys = sys.replace(k, v)
+    sys += (
+        "\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n"
+        + _scenario_brief(req)
+        + "\nUse the scenario context to coach the teacher's move, but do not reveal the content answer or final resolution."
+    )
     return [{"role": "system", "content": sys},
             {"role": "user", "content": "Give your one coaching note now. JSON only."}]
 
@@ -422,6 +464,193 @@ def _coach_tip(verdict: dict[str, Any]) -> str:
     return tips.get(tag, "Pick a teaching move.")
 
 
+# --- Lecture turn (/lecture_turn): LLM classroom reaction only ----------------
+# Lecture scoring remains deterministic in Godot. This endpoint supplies the
+# scenario-aware student/class line and a pacing/check-for-understanding coach note.
+
+LECTURE_MOVE_DESC = {
+    "present": "presented the next chunk of content",
+    "ask": "asked the highlighted student a check-for-understanding question",
+    "wait": "paused to give the class think time",
+    "reexplain": "re-explained the tricky step another way",
+    "poll": "ran a whole-class check",
+}
+
+
+class LectureTurnRequest(BaseModel):
+    session_id: str = "lecture"
+    scenario_id: str = ""
+    scenario_context: dict[str, Any] = {}
+    selected_student: dict[str, Any] = {}
+    class_state: dict[str, Any] = {}
+    teacher_move: dict[str, Any] = {}
+    dialogue_tail: list[dict[str, str]] = []
+    model_profile: str = "openrouter_gemini"
+
+
+def _lecture_scenario_brief(req: LectureTurnRequest) -> str:
+    sc = req.scenario_context or {}
+    active = sc.get("active_student", {}) if isinstance(sc.get("active_student", {}), dict) else {}
+    objectives = sc.get("objectives", [])
+    obj_text = "\n".join(f"- {str(o)}" for o in objectives) if isinstance(objectives, list) and objectives else "- pace the lecture, keep attention, and check understanding"
+    roster = sc.get("roster", [])
+    if isinstance(roster, list) and roster:
+        rows = []
+        for s in roster:
+            if not isinstance(s, dict):
+                continue
+            label = f": {s.get('target_label')}" if s.get("target_label") else ""
+            rows.append(f"- {s.get('name', s.get('persona_id', 'student'))}{label}")
+        roster_text = "\n".join(rows) if rows else "- roster not specified"
+    else:
+        roster_text = "- roster not specified"
+    pieces = [
+        f"scenario_id: {req.scenario_id or sc.get('id', 'unknown')}",
+        f"lesson: {sc.get('title', 'Current lecture')}",
+        f"format: {sc.get('format', 'lecture')}" + (f" ({sc.get('arrangement')})" if sc.get("arrangement") else ""),
+        "lesson objectives:",
+        obj_text,
+        f"big idea: {focus.get('big_idea')}" if focus.get("big_idea") else "",
+        f"common confusion: {focus.get('common_confusion')}" if focus.get("common_confusion") else "",
+        f"sample check-for-understanding: {focus.get('check_for_understanding_prompt')}" if focus.get("check_for_understanding_prompt") else "",
+        "roster:",
+        roster_text,
+    ]
+    pieces = [p for p in pieces if p != ""]
+    if active.get("name") or active.get("target_label") or active.get("opening_line"):
+        pieces.append(f"highlighted student: {active.get('name', active.get('persona_id', 'student'))}")
+        if active.get("target_label"):
+            pieces.append(f"highlighted student need: {active.get('target_label')}")
+        if active.get("opening_line"):
+            pieces.append(f"highlighted starting idea/behavior: {active.get('opening_line')}")
+    return "\n".join(pieces)
+
+
+def _canned_lecture(req: LectureTurnRequest, tag: str) -> dict[str, Any]:
+    active = (req.scenario_context or {}).get("active_student", {})
+    active = active if isinstance(active, dict) else {}
+    name = str(active.get("name", "A student"))
+    state = req.class_state or {}
+    progress = float(state.get("progress", 0.0))
+    comprehension = float(state.get("comprehension", 0.0))
+    gap = progress - comprehension
+    reactions = {
+        "present": (
+            {"speaker": "Class", "text": "A few students keep copying, but their faces say the step is moving faster than their thinking.", "scope": "class", "emotion_shown": "confused"}
+            if gap > 25.0 else
+            {"speaker": "Class", "text": "Most students track the new chunk, though a few are waiting to see what it connects to.", "scope": "class", "emotion_shown": "thinking"}
+        ),
+        "ask": {"speaker": name, "text": str(active.get("opening_line", "")) or "I can try, but I need to say how I was thinking first.", "scope": "student", "emotion_shown": "confused" if gap > 25.0 else "engaged"},
+        "wait": {"speaker": "Class", "text": "The room gets quiet for a beat, and more students start forming an answer instead of watching one person.", "scope": "class", "emotion_shown": "thinking"},
+        "reexplain": {"speaker": "Class", "text": "The alternate explanation gives several students a way back into the idea.", "scope": "class", "emotion_shown": "engaged"},
+        "poll": {"speaker": "Class", "text": "Everyone has to commit to an answer, so the hidden confusion becomes visible.", "scope": "class", "emotion_shown": "excited"},
+    }
+    coach = {
+        "present": "You are ahead of their comprehension. Pause the content and check before adding more." if gap > 25.0 else "That chunk was manageable. Follow it with a check so attention turns into evidence.",
+        "ask": "Good check with wait time. Now use the answer as evidence, not as a performance moment." if bool(state.get("wait_ok", False)) else "The question helps, but give more wait time before choosing a student.",
+        "wait": "Wait time turns the room from watching to thinking. Follow it with a question or whole-class check.",
+        "reexplain": "Responsive repair is the right move when the lesson has outrun comprehension.",
+        "poll": "A whole-class check makes everyone accountable and shows you what to reteach.",
+    }
+    return {"reaction": reactions.get(tag, {"speaker": "Class", "text": "The class keeps working.", "scope": "class", "emotion_shown": "thinking"}),
+            "coach_tip": coach.get(tag, "Keep pacing the lecture from evidence, not hope.")}
+
+
+def _lecture_messages(req: LectureTurnRequest, tag: str) -> list[dict[str, str]]:
+    state = req.class_state or {}
+    active = (req.scenario_context or {}).get("active_student", {})
+    active = active if isinstance(active, dict) else {}
+    teacher_text = str((req.teacher_move or {}).get("text", "")).strip()
+    tail = "\n".join(f'{d.get("speaker","?")}: {d.get("text","")}' for d in req.dialogue_tail[-6:]) or "(start of lecture)"
+    sys = "\n".join([
+        "You simulate a direct-instruction classroom for a beginner teacher game.",
+        "Return ONLY JSON with this shape:",
+        '{"reaction":{"speaker":"Class or student name","text":"1 short in-character classroom reaction","scope":"class|student","emotion_shown":"engaged|thinking|confused|withdrawn|excited"},"coach_tip":"one concise Coach Vee note about pacing/checking understanding"}',
+        "",
+        "# CURRENT TEACHER MOVE",
+        f"{tag}: {LECTURE_MOVE_DESC.get(tag, 'addressed the class')}",
+        f"teacher's exact words: {teacher_text}" if teacher_text else "teacher used a menu move, not typed words",
+        "",
+        "# CLASS STATE",
+        f"progress: {state.get('progress', 0)}",
+        f"comprehension: {state.get('comprehension', 0)}",
+        f"attention: {state.get('attention', 0)}",
+        f"composure: {state.get('composure', 0)}",
+        f"consecutive_present: {state.get('consecutive_present', 0)}",
+        f"wait_ok: {'true' if state.get('wait_ok', False) else 'false'}",
+        "",
+        "# SCENARIO-SPECIFIC LESSON CONTEXT",
+        _lecture_scenario_brief(req),
+        "",
+        "# RECENT LECTURE HISTORY",
+        tail,
+        "",
+        "# BEGINNER LEARNING FRAME",
+        "The player is learning how to begin a lesson, what each move does, and how lecture pacing becomes evidence of student thinking.",
+        "Coach Vee should name the teaching concept in plain English: chunking, wait time, check-for-understanding, responsive re-explanation, or whole-class accountability.",
+        "Rules: keep the reaction lesson-specific, do not teach or imply the final content answer, and do not change scores. If the teacher is over-presenting, make attention/comprehension concerns visible. If they check understanding well, show the class becoming more accountable. The student may repeat a starting misconception, hesitate, or describe confusion, but must not resolve the misconception for the player.",
+    ])
+    who = active.get("name", "")
+    user = f"Generate the next classroom reaction. If appropriate, let {who} speak." if who else "Generate the next classroom reaction."
+    return [{"role": "system", "content": sys}, {"role": "user", "content": user}]
+
+
+def _parse_lecture(raw: str, fallback: dict[str, Any]) -> dict[str, Any]:
+    raw = raw.strip()
+    if "{" in raw and "}" in raw:
+        raw = raw[raw.find("{"): raw.rfind("}") + 1]
+    obj = json.loads(raw)
+    r = obj.get("reaction", {})
+    fb = fallback.get("reaction", {})
+    text = str(r.get("text", fb.get("text", "The class keeps working."))).strip()
+    if _lecture_leaks_answer(text):
+        return fallback
+    return {
+        "reaction": {
+            "speaker": str(r.get("speaker", fb.get("speaker", "Class"))).strip(),
+            "text": text,
+            "scope": str(r.get("scope", fb.get("scope", "class"))).strip(),
+            "emotion_shown": str(r.get("emotion_shown", fb.get("emotion_shown", "thinking"))).strip(),
+        },
+        "coach_tip": str(obj.get("coach_tip", fallback.get("coach_tip", "Use the class evidence to choose the next move."))).strip(),
+    }
+
+
+def _lecture_leaks_answer(text: str) -> bool:
+    low = text.lower()
+    patterns = [
+        r"(denominator|bottom number).*(smaller|bigger|larger).*(piece|pieces|fraction|slice|slices)",
+        r"(denominator|bottom number).*(bigger|larger).*(piece|pieces|slice|slices).*(smaller|skinnier)",
+        r"(piece|pieces|slice|slices).*(smaller|bigger|larger).*(denominator|bottom number)",
+        r"bigger denominator .* smaller",
+        r"bigger bottom number .* smaller",
+        r"more pieces .* smaller",
+        r"one fourth .* bigger",
+        r"1/4 .* bigger",
+        r"i get it now",
+    ]
+    return any(re.search(p, low) for p in patterns)
+
+
+def generate_lecture(req: LectureTurnRequest, tag: str) -> dict[str, Any]:
+    fallback = _canned_lecture(req, tag)
+    key = _openrouter_key()
+    if not key or req.model_profile == "stub":
+        return fallback
+    try:
+        return _parse_lecture(_call_openrouter(_lecture_messages(req, tag), key, 0.55), fallback)
+    except Exception as exc:
+        print(f"[lecture] fallback ({exc})")
+        return fallback
+
+
+@app.post("/lecture_turn")
+def lecture_turn(req: LectureTurnRequest) -> dict[str, Any]:
+    tag = str((req.teacher_move or {}).get("menu_tag", "")).strip()
+    out = generate_lecture(req, tag)
+    return {"session_id": req.session_id, **out}
+
+
 # --- lesson-plan import ------------------------------------------------------
 # POST /lesson_to_scenario  -> a validated Chalk & Chance scenario dict.
 # Accepts {"plan_text": "..."} or {"path": "C:/.../plan.docx"} (parses .docx/.pdf/.txt/.md).
@@ -432,7 +661,7 @@ import os
 import re
 
 ARRANGEMENTS = {"ushape", "rows", "clusters", "pairs"}
-METRICS = {"attention_min", "disruptions_max", "composure_min", "engaged_min", "waittime_min"}
+METRICS = {"attention_min", "disruptions_max", "composure_min", "engaged_min", "waittime_min", "connect_min"}
 PERSONAS = ["talia_dominator", "sam_withdrawn", "diego_ell", "jordan_skeptic", "priya_quiet",
             "noah_g5_fractions", "meilin_anxious", "deshawn_offtask", "riley_avoidant", "marcus_volatile"]
 SEAT_RANGE = {"ushape": 9, "rows": 15, "clusters": 16, "pairs": 12}
@@ -501,7 +730,9 @@ def heuristic(plan: str) -> dict:
     ]
     slug = re.sub(r"_+", "_", re.sub(r"[^a-z0-9]+", "_", subject.lower())).strip("_")[:28] or "lesson"
     fmt_name = {"lecture": "Lecture", "group_work": "Group Work", "independent": "Independent Work"}.get(fmt, "Discussion")
+    mode = "lecture" if fmt == "lecture" else "overworld"
     return {"id": f"custom_{slug}", "title": f"{subject}  -  {fmt_name} ({arr})", "format": fmt,
+            "mode": mode,
             "arrangement": arr, "period_seconds": period, "offtask_rise": 12.0 if fmt == "group_work" else 8.0,
             "roster": roster, "objectives": objs, "badge": badge, "_source": "backend_heuristic"}
 
@@ -509,6 +740,8 @@ def heuristic(plan: str) -> dict:
 def validate(s: dict) -> dict:
     if s.get("arrangement") not in ARRANGEMENTS:
         s["arrangement"] = "ushape"
+    if s.get("mode") not in {"overworld", "lecture", "gym"}:
+        s["mode"] = "lecture" if s.get("format") == "lecture" else "overworld"
     cap = SEAT_RANGE[s["arrangement"]]
     s["roster"] = [r for r in s.get("roster", []) if r.get("id") in PERSONAS and 0 <= int(r.get("seat", -1)) < cap]
     s["objectives"] = [o for o in s.get("objectives", []) if o.get("metric") in METRICS]
@@ -646,6 +879,7 @@ class GroupTurnRequest(BaseModel):
     shared_concept: str = ""
     collective_status: str = "shared_misconception"
     collective_reasoning: str = ""
+    scenario_context: dict[str, Any] = {}
     group_state: dict[str, Any] = {}            # {understanding, participation_balance, revealed}
     teacher_move: dict[str, Any] = {}           # {menu_tag}
     model_profile: str = "openrouter_gemini"
@@ -687,14 +921,50 @@ def _group_messages(req: GroupTurnRequest, tag: str, speaker: str) -> list[dict[
     }
     for k, v in repl.items():
         sys = sys.replace(k, v)
+    sys += (
+        "\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n"
+        + _group_scenario_brief(req)
+        + "\nUse this context to make the group's talk fit this lesson and these students. Do not jump to a final correct answer unless the monitoring move has surfaced and pressed the reasoning enough."
+    )
     return [{"role": "system", "content": sys},
             {"role": "user", "content": "Respond now as the group member, in character. JSON only."}]
 
 
-def _canned_group(tag: str, speaker: str) -> dict[str, str]:
+def _group_scenario_brief(req: GroupTurnRequest) -> str:
+    sc = req.scenario_context or {}
+    objectives = sc.get("objectives", [])
+    if isinstance(objectives, list) and objectives:
+        obj_text = "\n".join(f"- {str(o)}" for o in objectives)
+    else:
+        obj_text = "- monitor the pod, surface thinking, and rebalance participation"
+    pod_targets = sc.get("pod_targets", [])
+    if isinstance(pod_targets, list) and pod_targets:
+        rows = []
+        for p in pod_targets:
+            if not isinstance(p, dict):
+                continue
+            target = f" target={p.get('target_label')}" if p.get("target_label") else ""
+            opening = f" starting=\"{p.get('opening_line')}\"" if p.get("opening_line") else ""
+            rows.append(f"- {p.get('name', p.get('persona_id', 'student'))}:{target}{opening}")
+        pod_text = "\n".join(rows) if rows else "- pod targets not specified"
+    else:
+        pod_text = "- pod targets not specified"
+    return "\n".join([
+        f"scenario_id: {sc.get('id', 'unknown')}",
+        f"lesson: {sc.get('title', req.shared_concept or 'Current group task')}",
+        f"format: {sc.get('format', 'group_work')}" + (f" ({sc.get('arrangement')})" if sc.get("arrangement") else ""),
+        "lesson objectives:",
+        obj_text,
+        "pod-specific starting points:",
+        pod_text,
+    ])
+
+
+def _canned_group(tag: str, speaker: str, req: GroupTurnRequest | None = None) -> dict[str, str]:
+    reasoning = str(req.collective_reasoning).strip() if req is not None else ""
     canned = {
         "observe": "I think we should add them... wait, no, compare them first, right?",
-        "probe": "We said the bigger bottom number means the bigger fraction, so we picked 1/8.",
+        "probe": reasoning or "We said the bigger bottom number means the bigger fraction, so we picked 1/8.",
         "press": "Hmm... if we cut it into more pieces, wouldn't each piece be smaller though?",
         "redistribute": "...um, I actually thought 1/4 might be bigger, but I wasn't sure.",
         "move_on": "Okay, we'll keep working.",
@@ -705,17 +975,17 @@ def _canned_group(tag: str, speaker: str) -> dict[str, str]:
 def generate_group(req: GroupTurnRequest, tag: str, speaker: str) -> dict[str, str]:
     key = _openrouter_key()
     if not key or req.model_profile == "stub" or tag == "move_on":
-        return _canned_group(tag, speaker)
+        return _canned_group(tag, speaker, req)
     try:
         raw = _call_openrouter(_group_messages(req, tag, speaker), key, 0.7)
         raw = raw[raw.find("{"): raw.rfind("}") + 1]
         o = json.loads(raw)
         return {"speaker": str(o.get("speaker", speaker)).strip() or speaker,
-                "text": str(o.get("text", "")).strip() or _canned_group(tag, speaker)["text"],
+                "text": str(o.get("text", "")).strip() or _canned_group(tag, speaker, req)["text"],
                 "emotion_shown": str(o.get("emotion_shown", "thinking")).strip()}
     except Exception as exc:
         print(f"[group] fallback ({exc})")
-        return _canned_group(tag, speaker)
+        return _canned_group(tag, speaker, req)
 
 
 def _group_coach(tag: str, revealed: bool) -> str:

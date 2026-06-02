@@ -11,6 +11,8 @@ var _summary: Label
 var _validation: Label
 var _play_button: Button
 var _summary_scroll: ScrollContainer
+var _backdrop: TextureRect
+var _story: Label
 
 func _ready() -> void:
 	_build_shell()
@@ -44,17 +46,34 @@ func _build_shell() -> void:
 
 	_summary_scroll = ScrollContainer.new()
 	_summary_scroll.position = Vector2(58, 94)
-	_summary_scroll.size = Vector2(vp.x - 116, vp.y - 222)
+	_summary_scroll.size = Vector2(vp.x - 426, vp.y - 222)
 	_summary_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(_summary_scroll)
 
 	_summary = Label.new()
 	_summary.position = Vector2.ZERO
-	_summary.custom_minimum_size = Vector2(vp.x - 132, 0)
+	_summary.custom_minimum_size = Vector2(vp.x - 442, 0)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.add_theme_font_size_override("font_size", 16)
 	_summary.add_theme_color_override("font_color", Color(0.95, 0.96, 0.9))
 	_summary_scroll.add_child(_summary)
+
+	_backdrop = TextureRect.new()
+	_backdrop.position = Vector2(vp.x - 342, 96)
+	_backdrop.size = Vector2(282, 158)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_backdrop)
+
+	_story = Label.new()
+	_story.position = Vector2(vp.x - 342, 266)
+	_story.size = Vector2(282, 112)
+	_story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_story.add_theme_font_size_override("font_size", 13)
+	_story.add_theme_color_override("font_color", Color(0.82, 0.86, 0.78))
+	add_child(_story)
 
 	_validation = Label.new()
 	_validation.position = Vector2(62, vp.y - 126)
@@ -101,16 +120,15 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		var slot := Panel.new()
 		slot.position = Vector2(x, pos.y - 4)
 		slot.size = Vector2(34, 34)
+		slot.tooltip_text = "%s x%d" % [Items.name_for(item_id), GameState.item_count(item_id)]
 		add_child(slot)
 		if tex != null:
-			var icon := TextureRect.new()
+			var icon := Sprite2D.new()
 			icon.texture = tex
+			icon.centered = false
 			icon.position = Vector2(x + 1, pos.y - 3)
-			icon.size = Vector2(32, 32)
-			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.scale = Vector2(32.0 / float(tex.get_width()), 32.0 / float(tex.get_height()))
 			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			icon.tooltip_text = "%s x%d" % [Items.name_for(item_id), GameState.item_count(item_id)]
 			add_child(icon)
 		x += 38.0
 
@@ -126,9 +144,11 @@ func _refresh() -> void:
 	var src := "AI (content-specific)" if _scenario.get("persona_overrides", null) != null else "offline (format + objectives)"
 	var first_move := _first_recommended_move()
 	var errors := _validate_scenario(_scenario)
-	_summary.text = "%s\n\nYour class: %d students (%s)\nYour challenge: keep the room with you while every learner contributes.\nWin condition: meet the objective checklist before the period ends.\nFirst recommended move: %s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nConversion: %s\n\nObjectives:\n%s" % [
+	_summary.text = "%s\n\nYour class: %d students (%s)\nYour challenge: keep the room with you while every learner contributes.\nWin condition: meet the objective checklist before the period ends.\nFirst recommended move: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nConversion: %s\n\nObjectives:\n%s" % [
 		str(_scenario.get("title", "Lesson")),
 		names.size(), ", ".join(names), first_move,
+		Game.scenario_signature(_scenario),
+		Game.scenario_edge_label(_scenario),
 		str(_scenario.get("format", "?")), str(_scenario.get("arrangement", "?")),
 		int(_scenario.get("period_seconds", 120)), str(_scenario.get("badge", "")),
 		src, objs]
@@ -141,6 +161,10 @@ func _refresh() -> void:
 			_validation.add_theme_color_override("font_color", Color(0.95, 0.56, 0.48))
 	if _play_button != null:
 		_play_button.disabled = not errors.is_empty()
+	if _backdrop != null:
+		_backdrop.texture = Art.tex(Art.scenario_backdrop_path(_scenario, str(_scenario.get("id", "")), false))
+	if _story != null:
+		_story.text = str(_scenario.get("story_hook", ""))
 
 func _first_recommended_move() -> String:
 	var fmt := str(_scenario.get("format", ""))

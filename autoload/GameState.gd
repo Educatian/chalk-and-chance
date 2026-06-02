@@ -45,6 +45,7 @@ var inventory: Dictionary = {}         ## item_id -> count
 var equipped_items: Array = []         ## Array[String], up to Items.MAX_EQUIPPED
 var item_history: Array = []           ## item economy/use audit trail
 var item_cooldowns: Dictionary = {}    ## item_id -> unix/time marker, reserved for future tuning
+var leaderboard_records: Array = []    ## local run records, sorted by score desc
 ## Warm-demander: a per-student relationship (0..1) that PERSISTS across periods,
 ## not reset each lesson (Bondy & Ross; care ethic). Built by connecting to a
 ## student's assets and by appropriate demand; eroded by cold takeover (Tell).
@@ -195,6 +196,44 @@ func add_teacher_xp(amount: int, reason: String = "", save_now: bool = true) -> 
 		save_game()
 	return info
 
+func record_leaderboard(entry: Dictionary) -> Dictionary:
+	var score := maxi(0, int(entry.get("score", 0)))
+	var rec := {
+		"scenario_id": str(entry.get("scenario_id", "")),
+		"title": str(entry.get("title", "Lesson")),
+		"mode": str(entry.get("mode", "Practice")),
+		"score": score,
+		"rank": _rank_for_score(score),
+		"level": teacher_level,
+		"xp": teacher_xp,
+		"badge": str(entry.get("badge", "")),
+		"detail": str(entry.get("detail", "")),
+		"level_up": bool(entry.get("level_up", false)),
+		"unix": Time.get_unix_time_from_system(),
+	}
+	leaderboard_records.append(rec)
+	leaderboard_records.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
+	while leaderboard_records.size() > 30:
+		leaderboard_records.pop_back()
+	save_game()
+	return rec
+
+func leaderboard_top(limit: int = 8) -> Array:
+	var rows := leaderboard_records.duplicate()
+	rows.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
+	return rows.slice(0, maxi(0, limit))
+
+func _rank_for_score(score: int) -> String:
+	if score >= 260:
+		return "S"
+	if score >= 210:
+		return "A"
+	if score >= 165:
+		return "B"
+	if score >= 120:
+		return "C"
+	return "D"
+
 func badge_xp(_badge_id: String) -> int:
 	return 120
 
@@ -275,6 +314,7 @@ func save_game() -> void:
 		"equipped_items": equipped_items,
 		"item_history": item_history,
 		"item_cooldowns": item_cooldowns,
+		"leaderboard_records": leaderboard_records,
 		"relationships": relationships,
 		"reflections": reflections,
 	}
@@ -308,6 +348,7 @@ func load_game() -> void:
 	teacher_xp = int(parsed.get("teacher_xp", 0))
 	teacher_level = maxi(1, int(parsed.get("teacher_level", 1)))
 	upgrade_points = maxi(0, int(parsed.get("upgrade_points", 0)))
+	leaderboard_records = parsed.get("leaderboard_records", [])
 	upgrades = DEFAULT_UPGRADES.duplicate()
 	var loaded_upgrades = parsed.get("upgrades", {})
 	if typeof(loaded_upgrades) == TYPE_DICTIONARY:

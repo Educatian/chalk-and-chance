@@ -4,6 +4,7 @@ extends Control
 ## whether they follow. See LECTURE_DESIGN.md.
 
 const Art = preload("res://scripts/Art.gd")
+const PixelUi = preload("res://scripts/PixelUi.gd")
 const UI_SCALE := 2.0
 const MOVES := [
 	["Present", "present"], ["Question", "ask"], ["Wait", "wait"],
@@ -29,6 +30,7 @@ var _last_turn_payload: Dictionary = {}
 
 var _http: HTTPRequest
 var _layer: Control
+var _backdrop: TextureRect
 var _title: Label
 var _bars := {}            # key -> ColorRect fill
 var _dialogue: Label
@@ -57,8 +59,17 @@ func _ready() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	_backdrop = TextureRect.new()
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_backdrop.modulate = Color(1, 1, 1, 0.15)
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop.visible = false
+	add_child(_backdrop)
 	_layer = Control.new()
-	_layer.scale = Vector2(UI_SCALE, UI_SCALE)
+	_layer.scale = Vector2.ONE
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
@@ -66,6 +77,7 @@ func setup(data: Dictionary) -> void:
 	scenario = data.get("scenario", {})
 	composure = GameState.max_composure()
 	_scenario_context = _build_scenario_context(-1)
+	_refresh_backdrop()
 	for entry in scenario.get("roster", []):
 		students.append({"pid": str(entry.get("id", "")), "name": str(entry.get("name", "?")),
 			"comp": 0.3, "called": false})
@@ -106,6 +118,8 @@ func _build_scenario_context(selected_index: int) -> Dictionary:
 		"format": str(scenario.get("format", "lecture")),
 		"arrangement": str(scenario.get("arrangement", "rows")),
 		"objectives": objective_labels,
+		"backdrop": str(scenario.get("backdrop", "")),
+		"story_hook": str(scenario.get("story_hook", "")),
 		"lecture_focus": scenario.get("lecture_focus", {}),
 		"roster": roster_briefs,
 		"active_student": active,
@@ -121,6 +135,13 @@ func _read_persona(pid: String) -> Dictionary:
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
 	return {}
+
+func _refresh_backdrop() -> void:
+	if _backdrop == null:
+		return
+	var tex := Art.tex(Art.scenario_backdrop_path(scenario, str(Game.current_scenario_id), false))
+	_backdrop.texture = tex
+	_backdrop.visible = tex != null
 
 # --- UI ----------------------------------------------------------------------
 
@@ -240,22 +261,23 @@ func _build_ui() -> void:
 
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(408, 40)
-	_type_toggle.size = Vector2(60, 24)
+	_type_toggle.position = Vector2(426, 40)
+	_type_toggle.size = Vector2(48, 24)
 	_type_toggle.add_theme_font_size_override("font_size", 8)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
+	PixelUi.scale_tree(_layer, UI_SCALE)
 
 func _build_item_row() -> void:
-	var x := 284.0
+	var x := 276.0
 	var y := 62.0
 	for id in GameState.equipped_item_ids():
 		var item_id := str(id)
 		var b := Button.new()
 		b.position = Vector2(x, y)
-		b.size = Vector2(28, 28)
+		b.size = Vector2(34, 34)
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "lecture")
@@ -269,7 +291,7 @@ func _build_item_row() -> void:
 			b.add_theme_font_size_override("font_size", 6)
 		_layer.add_child(b)
 		_item_buttons.append(b)
-		x += 32.0
+		x += 38.0
 
 func _refresh_item_buttons() -> void:
 	for b in _item_buttons:
@@ -382,7 +404,7 @@ func _react(i: int, affect: String, emote_key: String) -> void:
 			var et := _tex("res://assets/ui/emote_%s.png" % emote_key)
 			if et != null:
 				emo.texture = et
-				emo.scale = Vector2(18.0 / float(et.get_width()), 18.0 / float(et.get_width()))
+				emo.scale = Vector2(18.0 * UI_SCALE / float(et.get_width()), 18.0 * UI_SCALE / float(et.get_width()))
 				emo.visible = true
 
 # --- turn logic --------------------------------------------------------------
@@ -397,7 +419,7 @@ func _process(_delta: float) -> void:
 	var elapsed := float(Time.get_ticks_msec() - _ready_ms)
 	var frac := clampf(elapsed / float(GameState.wait_threshold_ms()), 0.0, 1.0)
 	if _wait_fill != null:
-		_wait_fill.size = Vector2(90.0 * frac, 8)
+		_wait_fill.size = Vector2(90.0 * UI_SCALE * frac, 8.0 * UI_SCALE)
 		_wait_fill.color = Color(0.30, 0.80, 0.40) if frac >= 1.0 else Color(0.55, 0.56, 0.62)
 	if _wait_label != null:
 		_wait_label.text = _wait_label_text(frac >= 1.0)
@@ -696,12 +718,22 @@ func _finish(won: bool) -> void:
 		b.disabled = true
 	if won:
 		var badge := str(scenario.get("badge", ""))
+		var reward := {}
 		if badge != "":
-			var reward := GameState.award_badge(badge)
+			reward = GameState.award_badge(badge)
 			if bool(reward.get("level_up", false)):
 				_result.text = "Level %d reached. Upgrade point earned." % int(reward.get("level_after", GameState.teacher_level))
 		if _practice_goal_active:
 			GameState.add_teacher_xp(35, "practice_goal:%s" % str(Game.current_scenario_id))
+		GameState.record_leaderboard({
+			"scenario_id": str(Game.current_scenario_id),
+			"title": str(scenario.get("title", "Lecture")),
+			"mode": "Lecture",
+			"badge": badge,
+			"score": int(round(comprehension + attention + composure * 0.5 + progress * 0.5)),
+			"detail": "Comp %d%%  Attention %d%%  Progress %d%%" % [int(comprehension), int(attention), int(progress)],
+			"level_up": bool(reward.get("level_up", false)),
+		})
 		Sfx.play("badge")
 		_coach.text = "Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!" % int(comprehension)
 		for i in range(students.size()):
@@ -725,14 +757,14 @@ func _refresh() -> void:
 	_set_fill("composure", composure / GameState.max_composure())
 	if sel >= 0 and sel < students.size():
 		var s: Dictionary = students[sel]
-		_highlight.position = Vector2(float(s["x"]), float(s["y"]))
-		_highlight.size = Vector2(float(s["slot"]) - 2, 78)
+		_highlight.position = Vector2(float(s["x"]), float(s["y"])) * UI_SCALE
+		_highlight.size = Vector2((float(s["slot"]) - 2.0) * UI_SCALE, 78.0 * UI_SCALE)
 		_title.text = "LECTURE: %s   (Question asks -> %s)" % [str(scenario.get("title", "Lesson")), s["name"]]
 
 func _set_fill(key: String, frac: float) -> void:
 	var fill: ColorRect = _bars.get(key, null)
 	if fill != null:
-		fill.size = Vector2(150.0 * clampf(frac, 0.0, 1.0), 11)
+		fill.size = Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 11.0 * UI_SCALE)
 
 func _signed(n: int) -> String:
 	return "+%d" % n if n > 0 else str(n)

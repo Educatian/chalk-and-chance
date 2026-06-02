@@ -5,6 +5,7 @@ extends Control
 ## See GAME_CONCEPT.md sections 3.2 to 3.7 and 7.
 
 const Art = preload("res://scripts/Art.gd")
+const PixelUi = preload("res://scripts/PixelUi.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -67,16 +68,19 @@ var _last_free_text := ""
 
 # Node refs built in _ready().
 var _name_label: Label
+var _need_label: Label
 var _student_name_label: Label
 var _student_rect: ColorRect
 var _student_tex: TextureRect
 var _emote: TextureRect
+var _backdrop: TextureRect
 var _layer: Control
 var _dialogue: Label
 var _coach: Label
 var _result: Label
 var _dialogue_tween: Tween
 var _coach_tween: Tween
+var _wait_label: Label
 var _wait_bar: ProgressBar
 var _bond_fill: ColorRect
 var _bond_label: Label
@@ -106,6 +110,7 @@ func setup(data: Dictionary) -> void:
 	display_name = str(data.get("display_name", display_name))
 	_load_persona()
 	_apply_scenario_overrides()    # a custom (imported) lesson can rewrite lines/targets to its content
+	_refresh_backdrop()
 	Game.note_visit(persona_id)    # equity: this student was called on
 	_apply_relationship_headstart()
 	_refresh_intro()
@@ -175,6 +180,8 @@ func _build_scenario_context(scenario: Dictionary, persona_override: Dictionary)
 		"format": str(scenario.get("format", "")),
 		"arrangement": str(scenario.get("arrangement", "")),
 		"objectives": objective_labels,
+		"backdrop": str(scenario.get("backdrop", "")),
+		"story_hook": str(scenario.get("story_hook", "")),
 		"active_student": {
 			"persona_id": persona_id,
 			"name": display_name,
@@ -211,12 +218,21 @@ func _load_persona() -> void:
 func _refresh_intro() -> void:
 	if _name_label != null:
 		_name_label.text = "ENCOUNTER  -  %s  (%s)" % [display_name, target_concept]
+	if _need_label != null:
+		_need_label.text = "Need: %s" % target_concept
 	if _student_name_label != null:
 		_student_name_label.text = display_name
 	if opening_line != "":
 		_set_dialogue("%s: \"%s\"" % [display_name, opening_line])
 		TTSClient.speak(persona_id, opening_line, "neutral")
 	_update_portrait("neutral")
+
+func _refresh_backdrop() -> void:
+	if _backdrop == null:
+		return
+	var tex := Art.tex(Art.scenario_backdrop_path(_scenario_context, str(Game.current_scenario_id), false))
+	_backdrop.texture = tex
+	_backdrop.visible = tex != null
 
 # --- UI construction ---------------------------------------------------------
 
@@ -227,14 +243,27 @@ func _build_ui() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 
+	_backdrop = TextureRect.new()
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_backdrop.modulate = Color(1, 1, 1, 0.16)
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop.visible = false
+	add_child(_backdrop)
+
 	# All other UI lives in a 480x270-authored layer scaled up to the viewport.
 	_layer = Control.new()
-	_layer.scale = Vector2(UI_SCALE, UI_SCALE)
+	_layer.scale = Vector2.ONE
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
 	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 6), 9, Color(0.95, 0.93, 0.85))
 	_name_label.size = Vector2(340, 14)
+	_need_label = _make_label("Need: surface the student's reasoning", Vector2(10, 104), 7, Color(0.78, 0.88, 0.96))
+	_need_label.size = Vector2(260, 12)
+	_need_label.clip_text = true
 
 	# Meters block, top-left.
 	_bars["engagement"] = _make_meter("Engagement", 26, Color(0.30, 0.80, 0.40))
@@ -293,7 +322,8 @@ func _build_ui() -> void:
 	_layer.add_child(_emote)
 
 	# Wait-Time Ring (a bar in M1).
-	_make_label(_wait_label_text(false), Vector2(300, 26), 7, Color(0.8, 0.85, 0.95))
+	_wait_label = _make_label(_wait_label_text(false), Vector2(300, 26), 7, Color(0.8, 0.85, 0.95))
+	_wait_label.size = Vector2(68, 12)
 	_wait_bar = ProgressBar.new()
 	_wait_bar.position = Vector2(300, 40)
 	_wait_bar.size = Vector2(60, 10)
@@ -308,10 +338,10 @@ func _build_ui() -> void:
 	_build_dialogue_box()
 
 	# Result chip + coach tip box.
-	_result = _make_label("", Vector2(16, 162), 7, Color(0.96, 0.86, 0.50))
+	_result = _make_label("", Vector2(16, 170), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 12)
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _make_label("", Vector2(16, 174), 7, Color(0.70, 0.90, 0.75))
+	_coach = _make_label("", Vector2(16, 182), 7, Color(0.70, 0.90, 0.75))
 	_coach.size = Vector2(448, 18)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -319,7 +349,7 @@ func _build_ui() -> void:
 	var n := MOVES.size()
 	var cols := 4
 	var bw := 88.0
-	var row_y := [194.0, 232.0]
+	var row_y := [194.0, 233.0]
 	var short_labels := {
 		"redirect": "Redir.",
 	}
@@ -328,7 +358,7 @@ func _build_ui() -> void:
 		var tag: String = MOVES[i][1]
 		b.text = str(short_labels.get(tag, MOVES[i][0]))
 		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
-		b.size = Vector2(bw, 36)
+		b.size = Vector2(bw, 32)
 		b.clip_text = true
 		b.add_theme_font_size_override("font_size", 7)
 		b.pressed.connect(_on_move.bind(tag))
@@ -341,8 +371,8 @@ func _build_ui() -> void:
 
 	# Free-text input (hidden until the player toggles to Type mode), sharing the move row.
 	_text_input = LineEdit.new()
-	_text_input.position = Vector2(8, 226)
-	_text_input.size = Vector2(274, 36)
+	_text_input.position = Vector2(8, 233)
+	_text_input.size = Vector2(274, 32)
 	_text_input.placeholder_text = "Type teacher talk..."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
@@ -351,8 +381,8 @@ func _build_ui() -> void:
 
 	_mic_btn = Button.new()
 	_mic_btn.text = "Mic"
-	_mic_btn.position = Vector2(288, 226)
-	_mic_btn.size = Vector2(40, 36)
+	_mic_btn.position = Vector2(288, 233)
+	_mic_btn.size = Vector2(40, 32)
 	_mic_btn.add_theme_font_size_override("font_size", 7)
 	_mic_btn.visible = false
 	_mic_btn.disabled = not VoiceInput.is_supported()
@@ -362,8 +392,8 @@ func _build_ui() -> void:
 
 	_send_btn = Button.new()
 	_send_btn.text = "Say"
-	_send_btn.position = Vector2(332, 226)
-	_send_btn.size = Vector2(50, 36)
+	_send_btn.position = Vector2(332, 233)
+	_send_btn.size = Vector2(50, 32)
 	_send_btn.add_theme_font_size_override("font_size", 8)
 	_send_btn.visible = false
 	_send_btn.pressed.connect(func(): _on_type_submit())
@@ -372,22 +402,23 @@ func _build_ui() -> void:
 	# Mode toggle (top of the move row, far right).
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(388, 226)
-	_type_toggle.size = Vector2(76, 36)
+	_type_toggle.position = Vector2(388, 233)
+	_type_toggle.size = Vector2(76, 32)
 	_type_toggle.add_theme_font_size_override("font_size", 8)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
+	PixelUi.scale_tree(_layer, UI_SCALE)
 
 func _build_item_row() -> void:
-	var x := 244.0
-	var y := 72.0
+	var x := 234.0
+	var y := 56.0
 	for id in GameState.equipped_item_ids():
 		var item_id := str(id)
 		var b := Button.new()
 		b.position = Vector2(x, y)
-		b.size = Vector2(28, 28)
+		b.size = Vector2(32, 32)
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "encounter")
@@ -401,7 +432,7 @@ func _build_item_row() -> void:
 			b.add_theme_font_size_override("font_size", 6)
 		_layer.add_child(b)
 		_item_buttons.append(b)
-		x += 32.0
+		x += 35.0
 
 func _refresh_item_buttons() -> void:
 	for b in _item_buttons:
@@ -495,18 +526,22 @@ func _set_wait_bar_ready(ready: bool) -> void:
 func _build_dialogue_box() -> void:
 	var bub := Art.tex("res://assets/ui/bubble_9slice.png")
 	var text_color := Color(0.96, 0.96, 0.92)
-	var w := 448.0
+	var box_rect := Rect2(Vector2(10, 114), Vector2(460, 54))
+	var text_rect := Rect2(Vector2(22, 123), Vector2(436, 34))
 	if bub != null:
 		var np := NinePatchRect.new()
 		np.texture = bub
-		np.position = Vector2(10, 114)
-		np.size = Vector2(356, 50)
+		box_rect = Rect2(Vector2(10, 112), Vector2(356, 58))
+		text_rect = Rect2(Vector2(24, 124), Vector2(318, 34))
+		np.position = box_rect.position
+		np.size = box_rect.size
 		np.patch_margin_left = 14
 		np.patch_margin_right = 14
 		np.patch_margin_top = 14
 		np.patch_margin_bottom = 14
 		np.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		np.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		np.name = "DialogueBubble"
 		_layer.add_child(np)
 		var tailtex := Art.tex("res://assets/ui/bubble_tail.png")
 		if tailtex != null:
@@ -514,20 +549,24 @@ func _build_dialogue_box() -> void:
 			tail.texture = tailtex
 			tail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			tail.flip_v = true   # point up toward the portrait
-			tail.position = Vector2(346, 116)
+			tail.position = Vector2(346, 118)
 			_layer.add_child(tail)
 		text_color = Color(0.10, 0.12, 0.22)
-		w = 332.0
 	else:
 		var dbox := ColorRect.new()
-		dbox.position = Vector2(10, 120)
-		dbox.size = Vector2(460, 48)
+		dbox.name = "DialogueBubble"
+		dbox.position = box_rect.position
+		dbox.size = box_rect.size
 		dbox.color = Color(0.12, 0.15, 0.26)
 		dbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_layer.add_child(dbox)
-	_dialogue = _make_label("", Vector2(20, 121), 9, text_color)
-	_dialogue.size = Vector2(w, 38)
+	_dialogue = _make_label("", text_rect.position, 9, text_color)
+	_dialogue.name = "DialogueText"
+	_dialogue.size = text_rect.size
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialogue.set_meta("qa_container_rect", box_rect)
+	_dialogue.set_meta("qa_text_rect", text_rect)
+	_dialogue.set_meta("qa_min_padding", 8.0)
 
 func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Label:
 	var l := Label.new()
@@ -561,6 +600,8 @@ func _make_meter(name_txt: String, y: float, fill: Color) -> ProgressBar:
 func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
+	if _wait_label != null:
+		_wait_label.text = _wait_label_text(false)
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
@@ -569,7 +610,10 @@ func _process(_delta: float) -> void:
 	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
 	var threshold := float(GameState.wait_threshold_ms())
 	_wait_bar.value = min(elapsed, threshold)
-	_set_wait_bar_ready(elapsed >= threshold)
+	var ready := elapsed >= threshold
+	_set_wait_bar_ready(ready)
+	if _wait_label != null:
+		_wait_label.text = _wait_label_text(ready)
 
 func _wait_label_text(ready: bool) -> String:
 	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
@@ -770,8 +814,16 @@ func _win(route: String = "reasoning") -> void:
 	var reward := GameState.award_badge(target_badge)
 	if _practice_goal_active:
 		GameState.add_teacher_xp(35, "practice_goal:%s" % str(Game.current_scenario_id))
+	var run_record := GameState.record_leaderboard({
+		"scenario_id": str(Game.current_scenario_id),
+		"title": str(_scenario_context.get("title", display_name)),
+		"mode": "1:1 Encounter",
+		"badge": target_badge,
+		"score": int(round(understanding * 100.0)) + maxi(0, 42 - _turns * 4) + int(round(GameState.bond(persona_id) * 30.0)),
+		"detail": "%s reached in %d turns; bond %d%%" % [display_name, _turns, int(round(GameState.bond(persona_id) * 100.0))],
+		"level_up": bool(reward.get("level_up", false)),
+	})
 	Sfx.play("badge")
-	_show_badge_card(target_badge, reward)
 	var warm := GameState.bond(persona_id) >= 0.4
 	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
 	if route == "connect":
@@ -784,12 +836,10 @@ func _win(route: String = "reasoning") -> void:
 			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
 		else:
 			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
-	_show_competency_panel()
-	_show_continue_button()
+	_show_session_complete_panel(target_badge, reward, run_record)
 
-## A compact end-of-lesson readout of the player's live ECD competency estimates
-## (in-engine multivariate Elo). Shows the skills with evidence this session as bars.
-func _show_competency_panel() -> void:
+## Product-grade end-of-encounter readout: reward, level, score, rank, evidence, next focus.
+func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_record: Dictionary) -> void:
 	for b in _buttons:
 		b.visible = false
 	if _text_input != null:
@@ -802,38 +852,86 @@ func _show_competency_panel() -> void:
 		_type_toggle.visible = false
 	for b in _item_buttons:
 		b.visible = false
+	if _dialogue != null:
+		_dialogue.visible = false
+	if _result != null:
+		_result.visible = false
+	if _coach != null:
+		_coach.visible = false
+
+	var overlay := Control.new()
+	overlay.name = "SessionComplete"
+	_layer.add_child(overlay)
+
+	var panel := Panel.new()
+	panel.position = Vector2(34, 82)
+	panel.size = Vector2(436, 178)
+	overlay.add_child(panel)
+
+	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 98), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
+	_overlay_label(overlay, "Score %03d   |   Rank %s   |   Level %d" % [
+		int(run_record.get("score", 0)),
+		str(run_record.get("rank", "-")),
+		GameState.teacher_level,
+	], Vector2(48, 120), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+
+	var reward_line := "Badge %s" % badge_id.to_upper()
+	if bool(reward.get("level_up", false)):
+		reward_line += "   |   LEVEL %d  +1 UPGRADE" % int(reward.get("level_after", GameState.teacher_level))
+	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
+	if item_text != "":
+		reward_line += "   |   Items %s" % item_text
+	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
 
 	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
-	if rows.is_empty():
-		return
-	rows = rows.slice(0, 4)
-	var panel := ColorRect.new()
-	panel.color = Color(0.05, 0.06, 0.10, 0.94)
-	panel.position = Vector2(34, 194)
-	panel.size = Vector2(436, 68 + rows.size() * 14)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_layer.add_child(panel)
-	_make_label("Your teaching competencies this lesson", Vector2(48, 198), 8, Color(0.95, 0.85, 0.55)).size = Vector2(390, 12)
-	_make_label("Bars are live practice estimates from moves you actually used. n = evidence count.", Vector2(48, 212), 7, Color(0.72, 0.78, 0.88)).size = Vector2(400, 20)
-	var y := 236
+	rows = rows.slice(0, 3)
+	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 154), 7, Color(0.72, 0.78, 0.88), Vector2(404, 12))
+	var y := 172
 	for r in rows:
-		_make_label(str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96)).size = Vector2(140, 11)
+		_overlay_label(overlay, str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96), Vector2(132, 11))
 		var bg := ColorRect.new()
-		bg.position = Vector2(196, y + 1)
-		bg.size = Vector2(160, 8)
+		bg.position = Vector2(188, y + 2)
+		bg.size = Vector2(170, 8)
 		bg.color = Color(0, 0, 0, 0.5)
 		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_layer.add_child(bg)
+		overlay.add_child(bg)
 		var fill := ColorRect.new()
-		fill.position = Vector2(196, y + 1)
+		fill.position = bg.position
 		var p: float = r["prob"]
-		fill.size = Vector2(maxf(2.0, 160.0 * p), 8)
+		fill.size = Vector2(maxf(2.0, 170.0 * p), 8)
 		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_layer.add_child(fill)
-		_make_label("n=%d" % int(r["n"]), Vector2(362, y), 7, Color(0.6, 0.66, 0.74)).size = Vector2(36, 11)
-		y += 14
-	_make_label(_competency_next_step(rows), Vector2(48, y + 2), 7, Color(0.72, 0.92, 0.78)).size = Vector2(404, 28)
+		overlay.add_child(fill)
+		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(366, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
+		y += 15
+	if rows.is_empty():
+		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 172), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
+	else:
+		_overlay_label(overlay, _competency_next_step(rows), Vector2(48, 222), 7, Color(0.72, 0.92, 0.78), Vector2(292, 30))
+
+	_continue_btn = Button.new()
+	_continue_btn.text = "Continue"
+	_continue_btn.position = Vector2(360, 222)
+	_continue_btn.size = Vector2(92, 30)
+	_continue_btn.add_theme_font_size_override("font_size", 8)
+	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
+	overlay.add_child(_continue_btn)
+	PixelUi.scale_tree(overlay, UI_SCALE)
+	_continue_btn.grab_focus()
+
+func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.position = pos
+	l.size = size
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.clip_text = true
+	l.horizontal_alignment = align
+	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_color_override("font_color", color)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(l)
+	return l
 
 func _competency_next_step(rows: Array) -> String:
 	var lowest: Dictionary = rows[0]
@@ -857,13 +955,16 @@ func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 		return
 	var card := Panel.new()
 	card.position = Vector2(292, 110)
-	card.size = Vector2(178, 78 if bool(reward.get("level_up", false)) else 62)
+	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
+	card.size = Vector2(178, 94 if item_text != "" else (78 if bool(reward.get("level_up", false)) else 62))
 	_layer.add_child(card)
 	var text := "BADGE UNLOCKED\n%s" % badge_id.to_upper()
 	if bool(reward.get("level_up", false)):
 		text += "\nLEVEL %d  +1 UPGRADE" % int(reward.get("level_after", GameState.teacher_level))
+	if item_text != "":
+		text += "\nITEMS %s" % item_text
 	var lbl := _make_label(text, Vector2(306, 122), 8, Color(0.96, 0.86, 0.50))
-	lbl.size = Vector2(150, 58)
+	lbl.size = Vector2(150, 76)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if not bool(GameState.get_setting("reduced_motion", false)):
 		card.scale = Vector2(0.88, 0.88)
@@ -878,7 +979,7 @@ func _force_recover() -> void:
 	_arm_turn()
 
 func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary) -> String:
-	var parts: Array = []
+	var parts: Array = ["Understanding %d%%" % int(round(understanding * 100.0))]
 	var understanding_delta := int(round(float(deltas.get("understanding", 0.0)) * 100.0))
 	var engagement_delta := int(round(float(deltas.get("engagement", 0.0)) * 100.0))
 	var rapport_delta := int(round(float(deltas.get("trust", 0.0)) * 100.0))
@@ -900,6 +1001,17 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 	if _last_input_mode == "free_text":
 		parts.append("classified as %s" % tag.capitalize())
 	return "  |  ".join(parts)
+
+func _items_awarded_text(items) -> String:
+	if typeof(items) != TYPE_DICTIONARY:
+		return ""
+	var dict: Dictionary = items
+	var parts: Array = []
+	for id in dict.keys():
+		var amount := int(dict[id])
+		if amount > 0:
+			parts.append("+%s x%d" % [Items.short_name_for(str(id)), amount])
+	return ", ".join(parts)
 
 func _signed(n: int) -> String:
 	return "+%d" % n if n > 0 else str(n)
@@ -934,7 +1046,7 @@ func _refresh_meters() -> void:
 func _refresh_bond() -> void:
 	var b := GameState.bond(persona_id)
 	if _bond_fill != null:
-		_bond_fill.size = Vector2(84.0 * clampf(b, 0.0, 1.0), 8.0)
+		_bond_fill.size = Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
 	if _bond_label != null:
 		_bond_label.text = "Bond %d%%" % int(round(b * 100.0))
 
@@ -1035,10 +1147,10 @@ func _bounce_portrait() -> void:
 	_student_tex.pivot_offset = _student_tex.size * 0.5
 	if _port_tween != null and _port_tween.is_valid():
 		_port_tween.kill()
-	_student_tex.scale = Vector2(0.82, 1.12)   # squash on impact
+	_student_tex.scale = Vector2(0.94, 0.94)
 	_port_tween = create_tween()
-	_port_tween.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	_port_tween.tween_property(_student_tex, "scale", Vector2.ONE, 0.35)
+	_port_tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_port_tween.tween_property(_student_tex, "scale", Vector2.ONE, 0.22)
 
 func _update_emote(affect: String) -> void:
 	if _emote == null:

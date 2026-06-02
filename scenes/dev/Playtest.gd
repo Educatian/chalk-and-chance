@@ -49,6 +49,11 @@ func _press_move(enc: Node, tag: String) -> void:
 	await _frames(6)   # deferred stub reply lands on the next idle frame
 
 func _run() -> void:
+	# Keep this integration test deterministic and offline. Login routing is still
+	# exercised below, but dialogue/judge turns use the in-engine rubric.
+	LLMClient.use_stub = true
+	TTSClient.enabled = false
+
 	GameState.badges = []
 	GameState.attempts = {}
 	Game.clear_lesson()
@@ -58,6 +63,13 @@ func _run() -> void:
 	add_child(main)
 	await _frames(5)
 	var c := _cur()
+	if c != null and c.name == "Login":
+		var skip := _find_button(c, "Skip")
+		_check("boots into Login with skip available", skip != null and not skip.disabled)
+		if skip != null:
+			skip.pressed.emit()
+		await _frames(5)
+		c = _cur()
 	_check("boots into Hub", c != null and c.name == "Hub")
 
 	# Click the first unlocked mission (Lecture) like a user.

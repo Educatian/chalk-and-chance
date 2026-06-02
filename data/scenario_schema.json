@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chalk & Chance Scenario",
+  "type": "object",
+  "required": ["id", "title", "format", "arrangement", "mode", "roster", "objectives", "badge"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^(custom_)?[a-z0-9_]+$"},
+    "title": {"type": "string", "minLength": 3},
+    "format": {"enum": ["discussion", "lecture", "group_work", "independent"]},
+    "mode": {"enum": ["overworld", "lecture", "gym"]},
+    "arrangement": {"enum": ["ushape", "rows", "clusters", "pairs"]},
+    "requires": {"type": "string"},
+    "period_seconds": {"type": "integer", "minimum": 0, "maximum": 180},
+    "offtask_rise": {"type": "number", "minimum": 0, "maximum": 20},
+    "badge": {"enum": ["routine", "echo", "balance", "mirror", "insight", "bridge"]},
+    "lecture_focus": {
+      "type": "object",
+      "properties": {
+        "big_idea": {"type": "string"},
+        "common_confusion": {"type": "string"},
+        "check_for_understanding_prompt": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "collective_reasoning": {"type": "string"},
+    "roster": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "seat"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "seat": {"type": "integer", "minimum": 0}
+        },
+        "additionalProperties": true
+      }
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "metric", "target"],
+        "properties": {
+          "id": {"type": "string"},
+          "label": {"type": "string"},
+          "metric": {"enum": ["attention_min", "disruptions_max", "composure_min", "engaged_min", "waittime_min", "connect_min"]},
+          "target": {"type": "number"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "persona_overrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["target_label", "opening_line", "win_line", "win_moves"],
+        "properties": {
+          "target_label": {"type": "string"},
+          "opening_line": {"type": "string"},
+          "win_line": {"type": "string"},
+          "win_moves": {
+            "type": "array",
+            "items": {"enum": ["elicit", "extend", "revoice", "tell", "praise", "redirect", "wait", "connect"]}
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

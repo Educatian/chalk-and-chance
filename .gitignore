@@ -23,3 +23,14 @@ tools/*.log
 tools/*.output
 smoketest.log
 st.log
+
+# Generated QA screenshots/reports (curated copies live in docs/screenshots and landing/img)
+tools/product_qa_report.txt
+tools/ui_*.png
+tools/ui_*.png.import
+tools/qa_item_*.png
+tools/qa_item_*.png.import
+tools/shot_*_browser.png
+tools/shot_*_browser.png.import
+tools/backdrop_montage.png
+tools/backdrop_montage.png.import

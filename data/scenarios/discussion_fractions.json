@@ -2,24 +2,77 @@
   "id": "discussion_fractions",
   "title": "Fraction Talk  -  Group Discussion (U-shape)",
   "format": "discussion",
+  "mode": "overworld",
   "arrangement": "ushape",
   "requires": "routine",
   "period_seconds": 120,
   "offtask_rise": 7.0,
   "roster": [
-    {"id": "talia_dominator", "name": "Talia", "seat": 0},
-    {"id": "sam_withdrawn", "name": "Sam", "seat": 1},
-    {"id": "diego_ell", "name": "Diego", "seat": 2},
-    {"id": "jordan_skeptic", "name": "Jordan", "seat": 4},
-    {"id": "priya_quiet", "name": "Priya", "seat": 6},
-    {"id": "noah_g5_fractions", "name": "Noah", "seat": 8}
+    {
+      "id": "talia_dominator",
+      "name": "Talia",
+      "seat": 0
+    },
+    {
+      "id": "sam_withdrawn",
+      "name": "Sam",
+      "seat": 1
+    },
+    {
+      "id": "diego_ell",
+      "name": "Diego",
+      "seat": 2
+    },
+    {
+      "id": "jordan_skeptic",
+      "name": "Jordan",
+      "seat": 4
+    },
+    {
+      "id": "priya_quiet",
+      "name": "Priya",
+      "seat": 6
+    },
+    {
+      "id": "noah_g5_fractions",
+      "name": "Noah",
+      "seat": 8
+    }
   ],
   "objectives": [
-    {"id": "attn", "label": "Keep class attention >= 65%", "metric": "attention_min", "target": 65},
-    {"id": "comp", "label": "Finish with composure >= 50%", "metric": "composure_min", "target": 50},
-    {"id": "dis", "label": "At most 2 disruptions", "metric": "disruptions_max", "target": 2},
-    {"id": "eq", "label": "Call on every student (6)", "metric": "engaged_min", "target": 6},
-    {"id": "wt", "label": "Use wait time at least 3 times", "metric": "waittime_min", "target": 3}
+    {
+      "id": "attn",
+      "label": "Keep class attention >= 65%",
+      "metric": "attention_min",
+      "target": 65
+    },
+    {
+      "id": "comp",
+      "label": "Finish with composure >= 50%",
+      "metric": "composure_min",
+      "target": 50
+    },
+    {
+      "id": "dis",
+      "label": "At most 2 disruptions",
+      "metric": "disruptions_max",
+      "target": 2
+    },
+    {
+      "id": "eq",
+      "label": "Call on every student (6)",
+      "metric": "engaged_min",
+      "target": 6
+    },
+    {
+      "id": "wt",
+      "label": "Use wait time at least 3 times",
+      "metric": "waittime_min",
+      "target": 3
+    }
   ],
-  "badge": "echo"
+  "badge": "echo",
+  "backdrop": "res://assets/backdrops/discussion_fractions.png",
+  "backdrop_thumb": "res://assets/backdrops/discussion_fractions_thumb.png",
+  "story_hook": "A U-shaped fraction talk invites public reasoning, but wait-time and equitable airtime determine whose ideas become visible."
 }

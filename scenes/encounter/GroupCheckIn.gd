@@ -14,6 +14,7 @@ var members: Array = []          # [{persona_id,name,talkativeness}]
 var shared_concept := "comparing fractions"
 var collective_status := "shared_misconception"
 var collective_reasoning := "the group thinks 1/8 is bigger than 1/4 because 8 > 4"
+var scenario_context: Dictionary = {}
 
 var understanding := 0.2
 var participation := 0.3
@@ -37,6 +38,7 @@ func setup(data: Dictionary) -> void:
 	shared_concept = str(data.get("shared_concept", shared_concept))
 	collective_status = str(data.get("collective_status", collective_status))
 	collective_reasoning = str(data.get("collective_reasoning", collective_reasoning))
+	scenario_context = data.get("scenario_context", {})
 	if is_inside_tree() and _member_box != null:
 		_populate_members()
 		_refresh()
@@ -136,6 +138,7 @@ func _on_move(tag: String) -> void:
 		"shared_concept": shared_concept,
 		"collective_status": collective_status,
 		"collective_reasoning": collective_reasoning,
+		"scenario_context": scenario_context,
 		"group_state": {"understanding": understanding, "participation_balance": participation, "revealed": revealed},
 		"teacher_move": {"menu_tag": tag},
 		"model_profile": "openrouter_gemini",
@@ -159,6 +162,7 @@ func _on_reply(result: int, code: int, _h: PackedStringArray, body: PackedByteAr
 	_apply(j)
 	var u: Dictionary = resp.get("group_utterance", {})
 	_set_dialogue("%s (group): \"%s\"" % [str(u.get("speaker", "Group")), str(u.get("text", "..."))])
+	_speak_group_line(str(u.get("speaker", "Group")), str(u.get("text", "")), str(u.get("emotion_shown", "thinking")))
 	_set_coach("Coach Vee: " + str(resp.get("coach_tip", "")))
 	# telemetry/ECD: log the monitoring move under its group construct
 	var tag: String = str(j.get("move_tag", ""))
@@ -237,6 +241,22 @@ func _set_dialogue(t: String) -> void:
 func _set_coach(t: String) -> void:
 	if _coach != null:
 		_coach.text = t
+
+func _speak_group_line(speaker: String, text: String, emotion: String = "thinking") -> void:
+	if text.strip_edges() == "":
+		return
+	var pid := _persona_id_for_speaker(speaker)
+	if pid != "":
+		TTSClient.speak(pid, text, emotion)
+
+func _persona_id_for_speaker(speaker: String) -> String:
+	var clean := speaker.strip_edges().to_lower()
+	for m in members:
+		if str(m.get("name", "")).strip_edges().to_lower() == clean:
+			return str(m.get("persona_id", ""))
+	if not members.is_empty():
+		return str((members[0] as Dictionary).get("persona_id", ""))
+	return ""
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("ui_cancel"):

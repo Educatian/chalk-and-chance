@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/dev/VisualAssetAudit.gd" id="1_visualasset"]
+
+[node name="VisualAssetAudit" type="Node"]
+script = ExtResource("1_visualasset")

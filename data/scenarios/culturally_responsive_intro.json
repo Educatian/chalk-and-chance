@@ -2,24 +2,72 @@
   "id": "culturally_responsive_intro",
   "title": "Know Them First  -  Culturally Responsive Discussion (U-shape)",
   "format": "discussion",
+  "mode": "overworld",
   "arrangement": "ushape",
   "requires": "echo",
   "period_seconds": 140,
   "offtask_rise": 6.0,
   "roster": [
-    {"id": "jordan_skeptic", "name": "Jordan", "seat": 0},
-    {"id": "diego_ell", "name": "Diego", "seat": 1},
-    {"id": "riley_avoidant", "name": "Riley", "seat": 2},
-    {"id": "sam_withdrawn", "name": "Sam", "seat": 4},
-    {"id": "deshawn_offtask", "name": "Deshawn", "seat": 6},
-    {"id": "noah_g5_fractions", "name": "Noah", "seat": 8}
+    {
+      "id": "jordan_skeptic",
+      "name": "Jordan",
+      "seat": 0
+    },
+    {
+      "id": "diego_ell",
+      "name": "Diego",
+      "seat": 1
+    },
+    {
+      "id": "riley_avoidant",
+      "name": "Riley",
+      "seat": 2
+    },
+    {
+      "id": "sam_withdrawn",
+      "name": "Sam",
+      "seat": 4
+    },
+    {
+      "id": "deshawn_offtask",
+      "name": "Deshawn",
+      "seat": 6
+    },
+    {
+      "id": "noah_g5_fractions",
+      "name": "Noah",
+      "seat": 8
+    }
   ],
   "objectives": [
-    {"id": "attn", "label": "Keep class attention >= 60%", "metric": "attention_min", "target": 60},
-    {"id": "eq", "label": "Call on every student (6)", "metric": "engaged_min", "target": 6},
-    {"id": "connect", "label": "Connect to >= 3 students' funds of knowledge", "metric": "connect_min", "target": 3},
-    {"id": "comp", "label": "Finish with composure >= 50%", "metric": "composure_min", "target": 50}
+    {
+      "id": "attn",
+      "label": "Keep class attention >= 60%",
+      "metric": "attention_min",
+      "target": 60
+    },
+    {
+      "id": "eq",
+      "label": "Call on every student (6)",
+      "metric": "engaged_min",
+      "target": 6
+    },
+    {
+      "id": "connect",
+      "label": "Connect to >= 3 students' funds of knowledge",
+      "metric": "connect_min",
+      "target": 3
+    },
+    {
+      "id": "comp",
+      "label": "Finish with composure >= 50%",
+      "metric": "composure_min",
+      "target": 50
+    }
   ],
   "badge": "bridge",
-  "note": "Weinstein, Tomlinson-Clarke & Curran (2004): management is cultural. Use Connect to notice each student's assets (funds of knowledge) and check your assumption before you correct."
+  "note": "Weinstein, Tomlinson-Clarke & Curran (2004): management is cultural. Use Connect to notice each student's assets (funds of knowledge) and check your assumption before you correct.",
+  "backdrop": "res://assets/backdrops/culturally_responsive_intro.png",
+  "backdrop_thumb": "res://assets/backdrops/culturally_responsive_intro_thumb.png",
+  "story_hook": "Before correcting behavior, the teacher has to notice student assets and connect the lesson to lived knowledge."
 }

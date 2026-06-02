@@ -32,6 +32,7 @@ static func plan_to_scenario(text: String) -> Dictionary:
 		period = clampi(int(round(minutes * 2.5)), 90, 180)
 
 	var subject := _find_subject(text)
+	var backdrop := _backdrop_for(fmt, low)
 	var ros := _roster_for(fmt, arr)
 	var objs: Array = [
 		{"id": "attn", "label": "Keep class attention >= 65%", "metric": "attention_min", "target": 65},
@@ -51,9 +52,12 @@ static func plan_to_scenario(text: String) -> Dictionary:
 	return {
 		"id": "custom_" + _slug(subject),
 		"title": "%s  -  %s (%s)" % [subject, _fmt_name(fmt), arr],
-		"format": fmt, "arrangement": arr,
+		"format": fmt, "mode": "lecture" if fmt == "lecture" else "overworld", "arrangement": arr,
 		"period_seconds": period, "offtask_rise": rise,
 		"roster": ros, "objectives": objs, "badge": badge,
+		"backdrop": "res://assets/backdrops/%s.png" % backdrop,
+		"backdrop_thumb": "res://assets/backdrops/%s_thumb.png" % backdrop,
+		"story_hook": _story_hook_for(fmt, subject),
 		"_source": "offline_import",
 	}
 
@@ -125,6 +129,30 @@ static func _fmt_name(fmt: String) -> String:
 		"group_work": return "Group Work"
 		"independent": return "Independent Work"
 		_: return "Discussion"
+
+static func _backdrop_for(fmt: String, low: String) -> String:
+	if _has(low, ["decimal", "place value", "hundredth", "tenth", "money"]):
+		return "custom_comparing_decimals"
+	if _has(low, ["force", "motion", "ramp", "cart", "push", "pull"]):
+		return "science_force_motion"
+	if _has(low, ["main idea", "reading", "passage", "summary", "literacy"]):
+		return "reading_main_idea"
+	match fmt:
+		"lecture": return "lecture_fractions"
+		"group_work": return "group_work_fractions"
+		"independent": return "independent_fractions"
+		_: return "discussion_fractions"
+
+static func _story_hook_for(fmt: String, subject: String) -> String:
+	match fmt:
+		"lecture":
+			return "A compact mini-lesson is about to drift unless checks for understanding keep every learner visible."
+		"group_work":
+			return "Clusters are active, materials are moving, and the teacher has to surface shared reasoning before airtime narrows."
+		"independent":
+			return "The room looks quiet, but the real work is circulation: catch confusion early without breaking momentum."
+		_:
+			return "A discussion around %s is open, but the teacher must turn scattered student ideas into public reasoning." % subject
 
 static func _roster_for(fmt: String, arr: String) -> Array:
 	var ids: Array

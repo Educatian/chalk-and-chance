@@ -89,6 +89,7 @@ var _offtask_rise := OFFTASK_RISE
 var _attempt := 1
 var _scenario_title := "Lesson"
 var _badge := ""
+var _scenario_cfg: Dictionary = {}
 
 var _walls: Dictionary = {}   # Vector2i -> true
 var _npcs: Dictionary = {}    # Vector2i -> { persona_id, display_name, node, offtask, fill }
@@ -98,6 +99,9 @@ var _player: Node2D = null
 var _attention_fill: ColorRect = null
 var _disrupt_label: Label = null
 var _equity_label: Label = null
+var _risk_label: Label = null
+var _objective_label: Label = null
+var _interact_label: Label = null
 var _coach_hint: Label = null
 var _disruptions := 0
 
@@ -114,17 +118,19 @@ var _pending_debrief := ""   # scored summary, shown after the reflection step
 
 func _ready() -> void:
 	var cfg := _load_scenario(Game.current_scenario_id)
+	_scenario_cfg = cfg
 	_scenario_title = str(cfg.get("title", "Lesson"))
 	_format = str(cfg.get("format", ""))
 	_offtask_rise = float(cfg.get("offtask_rise", OFFTASK_RISE))
 	# Resume the in-progress period (returning from an encounter) or start a fresh one.
 	if Game.lesson_active(Game.current_scenario_id):
 		_period_left = float(Game.lesson.get("period_left", cfg.get("period_seconds", PERIOD_SECONDS)))
-		_composure = float(Game.lesson.get("composure", 100.0))
+		_composure = float(Game.lesson.get("composure", GameState.max_composure()))
 		_disruptions = int(Game.lesson.get("disruptions", 0))
 	else:
 		Game.start_lesson(Game.current_scenario_id, float(cfg.get("period_seconds", PERIOD_SECONDS)))
 		_period_left = float(cfg.get("period_seconds", PERIOD_SECONDS))
+		_composure = GameState.max_composure()
 		GameState.note_attempt(Game.current_scenario_id)
 	_objectives = cfg.get("objectives", [])
 	_badge = str(cfg.get("badge", ""))
@@ -515,6 +521,40 @@ func _build_hud() -> void:
 	_equity_label.z_index = 60
 	add_child(_equity_label)
 
+	_risk_label = Label.new()
+	_risk_label.text = "Room cue: settled"
+	_risk_label.position = Vector2(TILE + 4, 118)
+	_risk_label.size = Vector2(430, 20)
+	_risk_label.add_theme_font_size_override("font_size", 12)
+	_risk_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.96))
+	_risk_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_risk_label.add_theme_constant_override("outline_size", 5)
+	_risk_label.z_index = 60
+	add_child(_risk_label)
+
+	_objective_label = Label.new()
+	_objective_label.text = ""
+	_objective_label.position = Vector2(COLS * TILE - 300, 58)
+	_objective_label.size = Vector2(260, 90)
+	_objective_label.add_theme_font_size_override("font_size", 11)
+	_objective_label.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
+	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_objective_label.add_theme_constant_override("outline_size", 5)
+	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_objective_label.z_index = 60
+	add_child(_objective_label)
+
+	_interact_label = Label.new()
+	_interact_label.text = ""
+	_interact_label.position = Vector2(TILE + 4, ROWS * TILE - 54)
+	_interact_label.size = Vector2(COLS * TILE - 2 * TILE, 20)
+	_interact_label.add_theme_font_size_override("font_size", 14)
+	_interact_label.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
+	_interact_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_interact_label.add_theme_constant_override("outline_size", 5)
+	_interact_label.z_index = 60
+	add_child(_interact_label)
+
 	_coach_hint = Label.new()
 	_coach_hint.position = Vector2(TILE + 4, ROWS * TILE - 30)
 	_coach_hint.size = Vector2(COLS * TILE - 2 * TILE, 22)
@@ -621,6 +661,29 @@ func _process(delta: float) -> void:
 	if _equity_label != null:
 		_equity_label.text = "Engaged: %d/%d" % [_engaged_count(), _npcs.size()]
 
+	if _risk_label != null:
+		if worst >= 70.0:
+			_risk_label.text = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
+			_risk_label.add_theme_color_override("font_color", Color(0.98, 0.58, 0.46))
+		elif worst >= 45.0:
+			_risk_label.text = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
+			_risk_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.42))
+		else:
+			_risk_label.text = "Room cue: settled. Keep scanning and circulate."
+			_risk_label.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
+
+	var faced: Vector2i = ptile + _player.facing
+	if _interact_label != null:
+		var npc: Dictionary = npc_at(faced)
+		if not npc.is_empty():
+			_interact_label.text = "Press Z to talk to %s" % npc.get("display_name", "student")
+		else:
+			_interact_label.text = "Green bars = focused; red bars = drifting. Move closer to lower them."
+
+	if _objective_label != null:
+		var attention_now := 100.0 - total / float(_npcs.size())
+		_objective_label.text = _objectives_status(attention_now)
+
 	if _coach_hint != null:
 		if facing_up and worst > 30.0:
 			_coach_hint.text = "Coach Vee: eyes on the room. Turning your back lets them drift."
@@ -634,6 +697,7 @@ func _process(delta: float) -> void:
 # --- interrupt events + lesson debrief ---------------------------------------
 
 func _trigger_interrupt() -> void:
+	Sfx.play("interrupt")
 	var ev: Dictionary = INTERRUPTS[randi() % INTERRUPTS.size()]
 	_show_overlay(str(ev["text"]), ev["options"])
 
@@ -643,13 +707,13 @@ func _apply_noise(amount: float) -> void:
 		info["offtask"] = clampf(info.get("offtask", 0.0) + amount, 0.0, 100.0)
 
 func _resolve_interrupt(opt: Dictionary) -> void:
-	_composure = clampf(_composure + float(opt.get("dcomp", 0.0)), 0.0, 100.0)
+	_composure = clampf(_composure + float(opt.get("dcomp", 0.0)), 0.0, GameState.max_composure())
 	_apply_noise(float(opt.get("dnoise", 0.0)))
 	_disruptions += int(opt.get("ddis", 0))
 	if _disrupt_label != null:
 		_disrupt_label.text = "Disruptions: %d" % _disruptions
 	if _composure_fill != null:
-		_composure_fill.size = Vector2(156.0 * _composure / 100.0, 10)
+		_composure_fill.size = Vector2(156.0 * _composure / GameState.max_composure(), 10)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
 	_close_overlay()
@@ -671,22 +735,36 @@ func _end_lesson() -> void:
 		var ok := _objective_met(o, attention)
 		if ok:
 			stars += 1
-		lines += "%s  %s\n" % ["[PASS]" if ok else "[ -- ]", str(o.get("label", ""))]
+		lines += "%s  %s%s\n" % [
+			"[PASS]" if ok else "[MISS]",
+			str(o.get("label", "")),
+			"" if ok else "  -> " + _objective_tip(o, attention),
+		]
 	if stars == _objectives.size() and stars > 0 and _badge != "":
-		GameState.award_badge(_badge)
+		var reward := GameState.award_badge(_badge)
+		Sfx.play("badge")
+		if bool(reward.get("level_up", false)):
+			lines += "[LEVEL UP] Level %d reached. Upgrade point earned.\n" % int(reward.get("level_after", GameState.teacher_level))
+		GameState.record_leaderboard({
+			"scenario_id": str(Game.current_scenario_id),
+			"title": _scenario_title,
+			"mode": "Classroom",
+			"badge": _badge,
+			"score": stars * 80 + int(round(attention)) + int(round(_composure)) + _engaged_count() * 10 - _disruptions * 12,
+			"detail": "Objectives %d/%d  Attention %d%%  Engaged %d/%d" % [stars, _objectives.size(), int(attention), _engaged_count(), _npcs.size()],
+			"level_up": bool(reward.get("level_up", false)),
+		})
 	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d   Engaged %d/%d\n\n%sObjectives met: %d / %d\n%s" % [
 		_scenario_title, int(attention), int(_composure), _disruptions, _engaged_count(), _npcs.size(),
 		lines, stars, _objectives.size(), _debrief_note(attention)]
+	summary += "\n\n%s\n%s" % [Game.scenario_edge_label(_scenario_cfg), _evidence_fingerprint(attention)]
 	if _attempt > 1:
 		summary += "\n\n(Replay #%d - the room drifts faster each attempt.)" % _attempt
 	_pending_debrief = summary
+	var reflection_options := _reflection_options(attention)
 	Game.clear_lesson()
 	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
-	_show_overlay("REFLECT\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks (reflection-on-action, Schon 1983).", [
-		{"label": "Who I did not reach", "_reflect": "unreached"},
-		{"label": "A moment I would reframe", "_reflect": "reframe"},
-		{"label": "An asset I connected to", "_reflect": "asset"},
-	])
+	_show_overlay("REFLECT\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.", reflection_options)
 
 func _on_reflect(opt: Dictionary) -> void:
 	GameState.log_reflection({
@@ -699,6 +777,34 @@ func _on_reflect(opt: Dictionary) -> void:
 		{"label": "Replay this lesson", "_action": "replay"},
 		{"label": "Choose another mission", "_action": "hub"},
 	])
+
+func _reflection_options(attention: float) -> Array:
+	var opts: Array = []
+	for o in _objectives:
+		if _objective_met(o, attention):
+			continue
+		match str(o.get("metric", "")):
+			"engaged_min":
+				opts.append({"label": "Who I did not reach", "_reflect": "unreached"})
+			"attention_min":
+				opts.append({"label": "When the room drifted", "_reflect": "attention"})
+			"waittime_min":
+				opts.append({"label": "Where I rushed wait time", "_reflect": "wait_time"})
+			"connect_min":
+				opts.append({"label": "An asset I could connect to", "_reflect": "asset"})
+			"disruptions_max":
+				opts.append({"label": "A disruption I would handle smaller", "_reflect": "disruption"})
+			"composure_min":
+				opts.append({"label": "A moment I would reframe", "_reflect": "reframe"})
+	if opts.is_empty():
+		opts = [
+			{"label": "A move that worked", "_reflect": "worked"},
+			{"label": "An asset I connected to", "_reflect": "asset"},
+			{"label": "One stretch goal next time", "_reflect": "stretch"},
+		]
+	while opts.size() < 3:
+		opts.append({"label": "One moment to replay", "_reflect": "replay_moment"})
+	return opts.slice(0, 3)
 
 func _engaged_count() -> int:
 	var n := 0
@@ -740,6 +846,42 @@ func _objective_met(o: Dictionary, attention: float) -> bool:
 			return _connect_count() >= int(target)
 	return false
 
+func _objectives_status(attention: float) -> String:
+	if _objectives.is_empty():
+		return ""
+	var lines := ["Objectives  %d/%d" % [_objectives_met_count(attention), _objectives.size()]]
+	for o in _objectives:
+		var metric := str(o.get("metric", ""))
+		var target := int(o.get("target", 0))
+		var current := 0
+		match metric:
+			"attention_min":
+				current = int(attention)
+			"disruptions_max":
+				current = _disruptions
+			"composure_min":
+				current = int(_composure)
+			"engaged_min":
+				current = _engaged_count()
+			"waittime_min":
+				current = _waittime_count()
+			"connect_min":
+				current = _connect_count()
+		var ok := _objective_met(o, attention)
+		var mark := "OK" if ok else "  "
+		var desc := str(o.get("label", metric))
+		if desc.length() > 32:
+			desc = desc.substr(0, 29) + "..."
+		lines.append("[%s] %s (%d/%d)" % [mark, desc, current, target])
+	return "\n".join(lines)
+
+func _objectives_met_count(attention: float) -> int:
+	var n := 0
+	for o in _objectives:
+		if _objective_met(o, attention):
+			n += 1
+	return n
+
 func _debrief_note(attention: float) -> String:
 	if _composure <= 0.0:
 		return "You ran out of composure. Triage interruptions with the least-intrusive option and keep circulating."
@@ -748,6 +890,53 @@ func _debrief_note(attention: float) -> String:
 	if attention >= 55.0:
 		return "Decent control. Circulate more and turn your back to the class less."
 	return "The room drifted. Move among the desks and scan often; handle interruptions briefly."
+
+func _objective_tip(o: Dictionary, attention: float) -> String:
+	match str(o.get("metric", "")):
+		"attention_min":
+			return "circulate and face the room more"
+		"disruptions_max":
+			return "choose least-intrusive interruption responses"
+		"composure_min":
+			return "avoid dead time and public escalations"
+		"engaged_min":
+			return "talk to every student: %d/%d reached" % [_engaged_count(), int(o.get("target", 0))]
+		"waittime_min":
+			return "use Wait after asking: %d/%d" % [_waittime_count(), int(o.get("target", 0))]
+		"connect_min":
+			return "use Connect twice: notice, then bridge"
+	return "try again with this goal in mind"
+
+func _evidence_fingerprint(attention: float) -> String:
+	var moves: Array = Game.lesson.get("moves", [])
+	var targeted := 0
+	var waits := 0
+	var connects := 0
+	var tells := 0
+	var redirects := 0
+	for m in moves:
+		if bool(m.get("targets", false)):
+			targeted += 1
+		if bool(m.get("wait_ok", false)):
+			waits += 1
+		match str(m.get("tag", "")):
+			"connect":
+				connects += 1
+			"tell":
+				tells += 1
+			"redirect":
+				redirects += 1
+	var equity := "%d/%d learners reached" % [_engaged_count(), _npcs.size()]
+	var trace := "Evidence fingerprint: attention %d%%, %s, target-fit moves %d/%d, wait-time evidence %d" % [
+		int(attention), equity, targeted, moves.size(), waits]
+	if connects > 0:
+		trace += ", asset connects %d" % connects
+	if redirects > 0:
+		trace += ", least-intrusive redirects %d" % redirects
+	if tells > 0:
+		trace += ", tell/takeover attempts %d" % tells
+	trace += "."
+	return trace
 
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true
@@ -782,7 +971,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	lbl.position = Vector2(px + 22, py + 18)
 	lbl.size = Vector2(pw - 44, by - py - 28)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	lbl.add_theme_color_override("font_color", Color(0.97, 0.96, 0.9))
 	_overlay.add_child(lbl)
 
@@ -792,7 +981,7 @@ func _show_overlay(text: String, options: Array) -> void:
 		b.text = str(opt.get("label", "OK"))
 		b.position = Vector2(px + 22, by + i * 44.0)
 		b.size = Vector2(pw - 44, 38)
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 		if opt.has("_reflect"):
 			b.pressed.connect(_on_reflect.bind(opt))
 		elif opt.has("_action"):
@@ -849,9 +1038,13 @@ func start_encounter(npc: Dictionary) -> void:
 	_save_lesson_state()   # so the period/composure/off-task continue after the encounter
 	# Group work is monitored at the POD level (a distinct mechanic), not 1:1.
 	if _format == "group_work":
+		var pod := _build_pod(npc)
 		SceneRouter.change_scene("res://scenes/encounter/GroupCheckIn.tscn", {
-			"members": _build_pod(npc),
+			"members": pod,
 			"shared_concept": _scenario_title,
+			"collective_status": _group_collective_status(pod),
+			"collective_reasoning": _group_collective_reasoning(pod),
+			"scenario_context": _group_scenario_context(pod),
 		})
 		return
 	SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {
@@ -874,6 +1067,54 @@ func _build_pod(npc: Dictionary) -> Array:
 	for e in entries.slice(0, 3):
 		pod.append({"persona_id": e["pid"], "name": e["name"], "talkativeness": _persona_talk(str(e["pid"]))})
 	return pod
+
+func _group_collective_status(pod: Array) -> String:
+	var format_label := str(_scenario_cfg.get("format", "group_work"))
+	if format_label == "group_work":
+		return "shared_misconception_or_uneven_participation"
+	return "student_thinking_sample"
+
+func _group_collective_reasoning(pod: Array) -> String:
+	if str(_scenario_cfg.get("collective_reasoning", "")) != "":
+		return str(_scenario_cfg.get("collective_reasoning", ""))
+	var ov: Dictionary = _scenario_cfg.get("persona_overrides", {})
+	for member in pod:
+		var pid := str(member.get("persona_id", ""))
+		var po = ov.get(pid, {})
+		if typeof(po) == TYPE_DICTIONARY and str(po.get("opening_line", "")) != "":
+			return str(po.get("opening_line", ""))
+	if str(_scenario_cfg.get("title", "")) != "":
+		return "The pod is working on %s, but their reasoning has not been surfaced yet." % str(_scenario_cfg.get("title", "the task"))
+	return "The pod is still figuring it out."
+
+func _group_scenario_context(pod: Array) -> Dictionary:
+	var objective_labels: Array = []
+	for o in _scenario_cfg.get("objectives", []):
+		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
+			objective_labels.append(str(o.get("label", "")))
+	var pod_targets: Array = []
+	var ov: Dictionary = _scenario_cfg.get("persona_overrides", {})
+	for member in pod:
+		var pid := str(member.get("persona_id", ""))
+		var po = ov.get(pid, {})
+		if typeof(po) != TYPE_DICTIONARY:
+			po = {}
+		pod_targets.append({
+			"persona_id": pid,
+			"name": str(member.get("name", "Student")),
+			"target_label": str(po.get("target_label", "")),
+			"opening_line": str(po.get("opening_line", "")),
+			"win_moves": po.get("win_moves", []),
+		})
+	return {
+		"id": str(_scenario_cfg.get("id", Game.current_scenario_id)),
+		"title": str(_scenario_cfg.get("title", _scenario_title)),
+		"format": str(_scenario_cfg.get("format", _format)),
+		"arrangement": str(_scenario_cfg.get("arrangement", "")),
+		"objectives": objective_labels,
+		"collective_reasoning": str(_scenario_cfg.get("collective_reasoning", "")),
+		"pod_targets": pod_targets,
+	}
 
 func _persona_talk(pid: String) -> float:
 	var p := "res://data/persona_library/%s.json" % pid

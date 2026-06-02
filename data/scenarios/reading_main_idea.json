@@ -2,23 +2,68 @@
   "id": "reading_main_idea",
   "title": "Finding the Main Idea  -  Discussion (U-shape)",
   "format": "discussion",
+  "mode": "overworld",
   "arrangement": "ushape",
   "requires": "echo",
   "period_seconds": 120,
   "offtask_rise": 8.0,
   "roster": [
-    {"id": "talia_dominator", "name": "Talia", "seat": 0},
-    {"id": "sam_withdrawn", "name": "Sam", "seat": 1},
-    {"id": "diego_ell", "name": "Diego", "seat": 2},
-    {"id": "jordan_skeptic", "name": "Jordan", "seat": 4},
-    {"id": "priya_quiet", "name": "Priya", "seat": 6},
-    {"id": "noah_g5_fractions", "name": "Noah", "seat": 8}
+    {
+      "id": "talia_dominator",
+      "name": "Talia",
+      "seat": 0
+    },
+    {
+      "id": "sam_withdrawn",
+      "name": "Sam",
+      "seat": 1
+    },
+    {
+      "id": "diego_ell",
+      "name": "Diego",
+      "seat": 2
+    },
+    {
+      "id": "jordan_skeptic",
+      "name": "Jordan",
+      "seat": 4
+    },
+    {
+      "id": "priya_quiet",
+      "name": "Priya",
+      "seat": 6
+    },
+    {
+      "id": "noah_g5_fractions",
+      "name": "Noah",
+      "seat": 8
+    }
   ],
   "objectives": [
-    {"id": "attn", "label": "Keep class attention >= 65%", "metric": "attention_min", "target": 65},
-    {"id": "comp", "label": "Composure >= 50%", "metric": "composure_min", "target": 50},
-    {"id": "eq", "label": "Call on every student (6)", "metric": "engaged_min", "target": 6},
-    {"id": "wt", "label": "Use wait time at least 3 times", "metric": "waittime_min", "target": 3}
+    {
+      "id": "attn",
+      "label": "Keep class attention >= 65%",
+      "metric": "attention_min",
+      "target": 65
+    },
+    {
+      "id": "comp",
+      "label": "Composure >= 50%",
+      "metric": "composure_min",
+      "target": 50
+    },
+    {
+      "id": "eq",
+      "label": "Call on every student (6)",
+      "metric": "engaged_min",
+      "target": 6
+    },
+    {
+      "id": "wt",
+      "label": "Use wait time at least 3 times",
+      "metric": "waittime_min",
+      "target": 3
+    }
   ],
   "badge": "echo",
   "persona_overrides": {
@@ -26,37 +71,58 @@
       "target_label": "Elicit and extend Noah's idea of 'main idea'",
       "opening_line": "The main idea is the first sentence, because it comes first.",
       "win_line": "Oh, the first sentence is just a detail. The main idea is what all the sentences are about together.",
-      "win_moves": ["elicit", "extend"]
+      "win_moves": [
+        "elicit",
+        "extend"
+      ]
     },
     "jordan_skeptic": {
       "target_label": "Acknowledge relevance, then press",
       "opening_line": "Why does it matter what the 'main idea' is? I just read it.",
       "win_line": "Okay, finding the main idea is like the headline, it tells you the point fast.",
-      "win_moves": ["revoice", "extend"]
+      "win_moves": [
+        "revoice",
+        "extend"
+      ]
     },
     "diego_ell": {
       "target_label": "Wait, then revoice the gist",
       "opening_line": "I know the words... but 'main idea', the big one? I am not sure how to say.",
       "win_line": "So the main idea is the whole thing together, not one line. The passage is mostly about bees helping plants.",
-      "win_moves": ["wait", "revoice"]
+      "win_moves": [
+        "wait",
+        "revoice"
+      ]
     },
     "sam_withdrawn": {
       "target_label": "Warm wait, then elicit",
       "opening_line": "(looks down) I don't want to guess wrong.",
       "win_line": "Maybe... it's mostly about how bees help flowers grow?",
-      "win_moves": ["wait", "elicit"]
+      "win_moves": [
+        "wait",
+        "elicit"
+      ]
     },
     "priya_quiet": {
       "target_label": "Deliberately invite Priya",
       "opening_line": "(has a strong summary ready but waits to be asked)",
       "win_line": "The main idea is that bees and flowers help each other survive.",
-      "win_moves": ["elicit", "wait"]
+      "win_moves": [
+        "elicit",
+        "wait"
+      ]
     },
     "talia_dominator": {
       "target_label": "Revoice, then redirect the turn",
       "opening_line": "I know it! It's about bees! It's bees! Call on me!",
       "win_line": "Right, and I'll let someone else add why that's the main idea.",
-      "win_moves": ["revoice", "redirect"]
+      "win_moves": [
+        "revoice",
+        "redirect"
+      ]
     }
-  }
+  },
+  "backdrop": "res://assets/backdrops/reading_main_idea.png",
+  "backdrop_thumb": "res://assets/backdrops/reading_main_idea_thumb.png",
+  "story_hook": "A literacy discussion about main idea asks the teacher to help students move from first details to the whole point."
 }

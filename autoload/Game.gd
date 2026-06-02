@@ -19,7 +19,7 @@ func scenario_path(id: String) -> String:
 func start_lesson(scenario_id: String, period_seconds: float) -> void:
 	lesson = {
 		"active": true, "scenario_id": scenario_id,
-		"period_left": period_seconds, "composure": 100.0, "disruptions": 0,
+		"period_left": period_seconds, "composure": GameState.max_composure(), "disruptions": 0,
 		"offtask": {}, "visited": {}, "moves": [],
 	}
 
@@ -55,3 +55,84 @@ const SCENARIOS := [
 	"culturally_responsive_intro",
 	"gym_capstone",
 ]
+
+## One-line research/gameplay signature for mission cards and lesson previews.
+## The point is to foreground Chalk & Chance's edge over avatar-only rehearsal:
+## classroom orchestration, differentiated student needs, and construct-level evidence.
+func scenario_signature(cfg: Dictionary) -> String:
+	var mode := str(cfg.get("mode", "overworld"))
+	var fmt := str(cfg.get("format", "discussion"))
+	if mode == "gym":
+		return "Signature: simultaneous learner triage + competing classroom demands."
+	match fmt:
+		"lecture":
+			return "Signature: pacing, checks for understanding, wait-time, and equity evidence."
+		"group_work":
+			return "Signature: pod monitoring, shared reasoning, and participation balance."
+		"independent":
+			return "Signature: circulation, proximity control, and quiet individual conferences."
+		_:
+			return "Signature: whole-room orchestration plus differentiated student reasoning."
+
+func scenario_edge_label(cfg: Dictionary) -> String:
+	var fmt := str(cfg.get("format", "discussion"))
+	var objectives: Array = cfg.get("objectives", [])
+	var has_equity := false
+	var has_wait := false
+	for o in objectives:
+		if typeof(o) != TYPE_DICTIONARY:
+			continue
+		var metric := str(o.get("metric", ""))
+		has_equity = has_equity or metric == "engaged_min"
+		has_wait = has_wait or metric == "waittime_min"
+	if str(cfg.get("mode", "")) == "gym":
+		return "Research edge: not one scripted avatar, but a live multi-student capstone."
+	if fmt == "group_work":
+		return "Research edge: group-level reasoning and airtime are scored, not just talk quality."
+	if fmt == "lecture":
+		return "Research edge: lecture rhythm becomes measurable practice, not a monologue."
+	if has_equity and has_wait:
+		return "Research edge: wait-time, equity, and withitness are measured together."
+	return "Research edge: every move leaves a construct-level evidence trace."
+
+func practice_recommendation() -> String:
+	var next := _next_open_scenario_title()
+	var rows := Competency.summary()
+	var weakest := {}
+	for r in rows:
+		if int(r.get("n", 0)) <= 0:
+			continue
+		if weakest.is_empty() or float(r.get("prob", 0.5)) < float(weakest.get("prob", 0.5)):
+			weakest = r
+	if weakest.is_empty():
+		return "Adaptive coach: start with %s. First target: generate evidence for wait-time, equity, and reasoning moves." % next
+	return "Adaptive coach: next play %s. Focus on %s; current estimate %d%% from %d evidence events." % [
+		next,
+		str(weakest.get("label", weakest.get("skill", "practice focus"))),
+		int(round(float(weakest.get("prob", 0.5)) * 100.0)),
+		int(weakest.get("n", 0)),
+	]
+
+func _next_open_scenario_title() -> String:
+	for id in SCENARIOS:
+		var cfg := _load_scenario_cfg(id)
+		if cfg.is_empty():
+			continue
+		var badge := str(cfg.get("badge", ""))
+		var req := str(cfg.get("requires", ""))
+		if badge != "" and GameState.has_badge(badge):
+			continue
+		if req == "" or GameState.has_badge(req):
+			return str(cfg.get("title", id))
+	return "the capstone replay"
+
+func _load_scenario_cfg(id: String) -> Dictionary:
+	var path := scenario_path(id)
+	if not FileAccess.file_exists(path):
+		return {}
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return {}
+	var d = JSON.parse_string(f.get_as_text())
+	f.close()
+	return d if typeof(d) == TYPE_DICTIONARY else {}

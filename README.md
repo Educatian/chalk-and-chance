@@ -1,128 +1,124 @@
-<div align="center">
+# Chalk & Chance
 
-# 🎓 Chalk & Chance
+**A Godot teacher-simulation game for evidence-grounded classroom rehearsal.**
 
-### A Pokémon-style teacher-simulation for deliberate mental rehearsal
+Chalk & Chance is a pixel-art teacher-preparation game where the player rehearses high-leverage teaching moves in a living classroom. It is not a simple chat tree: the player navigates the room, chooses who needs attention, manages composure and order, uses classroom tools, and receives construct-level evidence about their teaching moves.
 
-*Walk a top-down classroom, manage a living room of LLM-style students, and surface their
-thinking move by move. Every mechanic is grounded in high-impact education research.*
+[Play in browser](https://educatian.github.io/chalk-and-chance-play/) | [Project page](https://chalk-and-chance.pages.dev) | Built with Godot 4.6.3
 
-[**▶ Play in your browser**](https://educatian.github.io/chalk-and-chance-play/) &nbsp;•&nbsp;
-[**🌐 Landing page**](https://chalk-and-chance.pages.dev) &nbsp;•&nbsp; Built in **Godot 4.6.3**
+## Current Build
 
-</div>
+The current build includes:
 
----
-
-## What it is
-
-Chalk & Chance is a teacher-preparation **mental-rehearsal** tool disguised as a cozy
-pixel game. You play a first-year teacher: every classroom door is a high-leverage practice,
-every "battle" is a read–act–observe dialogue against a student who holds a frozen
-misconception and won't simply agree with you. You win by *surfacing reasoning*, not lecturing.
-It's also a research artifact — each mechanic is anchored to the literature it trains.
+- Mission hub with badge-gated scenarios, adaptive practice recommendation, level progress, upgrades, item loadout, and local leaderboard.
+- Mission briefing before play, with generated classroom backdrop, story hook, success criteria, reward, evidence edge, and first-move guidance.
+- Multiple classroom formats: discussion, lecture, group work, independent work, one-on-one encounter, and gym capstone.
+- Free-text teacher talk: players can type their own line and the game maps it to a teaching move.
+- Evidence Journal: live ECD/Elo-style competency estimates, evidence counts, uncertainty, research anchors, and recent run evidence.
+- Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
+- Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
+- Product QA gates for UI clipping/overlap, visual assets, scenario integrity, telemetry, and playable learning loops.
 
 ## Screenshots
 
-**New: live LLM students, your own dialogue, and a competency read-out.**
-
-| Sign in (or skip and play as guest) | One-on-one encounter (LLM student + adaptive coach) |
+| Mission hub | Mission briefing |
 |---|---|
-| ![login](docs/screenshots/login.png) | ![encounter](docs/screenshots/encounter.png) |
+| ![Mission hub](docs/screenshots/hub.png) | ![Mission briefing](docs/screenshots/briefing.png) |
 
-| Type your own words (an LLM judge reads the move) | Your teaching competencies, estimated live |
+| One-on-one encounter | Type your own teacher talk |
 |---|---|
-| ![free text](docs/screenshots/freetext.png) | ![competency](docs/screenshots/competency.png) |
+| ![Encounter](docs/screenshots/encounter.png) | ![Free text mode](docs/screenshots/freetext.png) |
 
-| Mission hub (badge-gated campaign) | Lecture mode (reactive students) |
+| Evidence Journal | Item loadout |
 |---|---|
-| ![hub](docs/screenshots/hub.png) | ![lecture](docs/screenshots/lecture.png) |
+| ![Evidence Journal](docs/screenshots/evidence.png) | ![Item loadout](docs/screenshots/items.png) |
 
-| Group discussion (U-shape) | One-on-one encounter |
+| Lecture mode | Gym capstone |
 |---|---|
-| ![overworld](docs/screenshots/overworld.png) | ![encounter](docs/screenshots/encounter.png) |
+| ![Lecture](docs/screenshots/lecture.png) | ![Gym](docs/screenshots/gym.png) |
 
-| Gym boss (manage 4 at once) | Group work (clusters) |
+| Lesson import | Review generated scenario |
 |---|---|
-| ![gym](docs/screenshots/gym.png) | ![groupwork](docs/screenshots/groupwork.png) |
+| ![Import lesson](docs/screenshots/import.png) | ![Preview scenario](docs/screenshots/preview.png) |
 
-| Interrupt event (triage) | Scored debrief |
+| Leaderboard | Full UI montage |
 |---|---|
-| ![interrupt](docs/screenshots/interrupt.png) | ![debrief](docs/screenshots/debrief.png) |
+| ![Leaderboard](docs/screenshots/leaderboard.png) | ![Full UI montage](docs/screenshots/full_montage.png) |
 
-| Import your own lesson plan | Review & adjust before playing |
-|---|---|
-| ![import](docs/screenshots/import.png) | ![preview](docs/screenshots/preview.png) |
+## What Makes It Different
 
-## Core ideas
+Chalk & Chance is designed as a teacher rehearsal system rather than an avatar-only conversation demo.
 
-- **Decomposed practice.** One classroom = one high-leverage practice (Grossman; TeachingWorks).
-- **Live classroom management.** Attention drifts when you're far away or facing the board;
-  proximity and scanning are real moves (Kounin's *withitness*). A period clock runs, and
-  interruptions (intercom, a knock, a late student) must be triaged.
-- **Differentiated students.** 10 research-grounded personas, each resolved by the move that
-  actually works for them (e.g., Deshawn = least-intrusive redirect; Mei-Lin = process feedback;
-  Marcus = affect-first de-escalation; Sam = warm call + wait time).
-- **Seating by task.** Discussion uses a U-shape, lecture uses rows, group work uses clusters,
-  because the evidence says the task should dictate the arrangement (Wannarka & Ruhl 2008).
-- **Lecture mode.** Direct instruction as a rhythm: Present vs Check-for-Understanding, with an
-  attention curve and equitable cold-calling (Rosenshine; Lemov; Marx et al.).
-- **Scored debrief + badges.** Each period is coached and scored against named objectives;
-  gym-badge progression unlocks the next missions.
-- **Import a lesson plan.** Paste or upload your plan and the game builds a customized scenario
-  (seating, objectives, and student dialogue tuned to your content).
+- **Classroom orchestration:** movement, proximity, attention drift, interruptions, composure, and order all matter.
+- **Differentiated learners:** each persona has a distinct need and responds to different moves.
+- **Construct-level evidence:** every move can update competency estimates such as eliciting reasoning, wait time, revoicing, least-intrusive management, formative checking, group monitoring, and status treatment.
+- **Scenario-backed progression:** badges unlock harder missions, rewards grant classroom tools, and the leaderboard records run quality.
+- **Content adaptability:** lesson import converts a teacher's own plan into scenario data, objectives, roster, and dialogue hooks.
 
-## Evidence base (selected, OpenAlex-verified counts)
+## Evidence-Grounded Mechanics
 
-| In-game | Anchor | Cites |
+| In game | Construct | Evidence anchor |
 |---|---|---|
-| Process-focused feedback | Hattie & Timperley, *The Power of Feedback* (2007) | ~11,900 |
-| Re-engaging the withdrawn | Fredricks, Blumenfeld & Paris, *School Engagement* (2004) | ~11,600 |
-| Diagnosis / professional noticing | Jacobs, Lamb & Philipp (2010) | ~1,300 |
-| Least-to-most redirect | Simonsen et al., *Evidence-based Classroom Management* (2008) | ~900 |
-| Wait-time ring | Rowe (1986); seating by task: Wannarka & Ruhl (2008), Marx et al. (1999) | canonical |
+| Wait-time readiness | Productive pause after a prompt | Rowe 1986 |
+| Elicit / Extend / Revoice | Student reasoning and discourse moves | Jacobs, Lamb & Philipp 2010; Chapin/O'Connor discourse moves |
+| Least-intrusive redirect | Behavior management without escalation | Simonsen et al. 2008 |
+| Specific praise | Behavior-specific feedback | Reinke, Lewis-Palmer & Merrell 2008 |
+| Asset connect | Funds-of-knowledge connection | Moll & Gonzalez; TeachingWorks HLP 12 |
+| Group monitoring | Withitness and monitoring | Kounin withitness / classroom monitoring |
+| Formative check | Check for understanding | Black & Wiliam 1998 |
+| Status treatment | Equitable participation in group work | Cohen & Lotan complex instruction |
 
-Full design + evidence docs live in this repo: `GAME_CONCEPT.md`, `PERSONAS_EVIDENCE.md`,
-`SEATING_ARRANGEMENTS.md`, `ENVIRONMENT_MECHANICS.md`, `LECTURE_DESIGN.md`,
-`SCENES_AND_MISSIONS.md`, `LESSON_PLAN_IMPORT.md`, `QUALITATIVE_RESEARCH_AUDIT.md`,
-`GAME_ROADMAP.md`.
+The runtime competency model is documented in `data/competency_model.json` and displayed in the in-game Evidence Journal.
 
-## How to play
+## Product QA
 
-- **Arrow keys** move; **Z / Enter** talk to a student; **Esc** returns to the mission hub.
-- In an encounter, pick a teaching move; surface the student's reasoning (Elicit / Extend /
-  Revoice / Wait) rather than telling. Hold ~3s before acting for the wait-time bonus.
-- Finish a lesson meeting its objectives to earn its badge and unlock the next missions.
+Run the full product gate from the repository root:
 
-## Run from source
-
-Open the project in **Godot 4.6.3** and press play, or:
-
-```
-godot --path .            # play
-godot --headless --export-release "Web" dist_web/index.html   # web build (needs export templates)
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_product_qa.ps1
 ```
 
-Web build is single-threaded (no cross-origin headers needed); it uses an in-engine stubbed
-student model by default. A FastAPI backend (`tools/llm_backend/`) adds content-specific
-dialogue via a local or cloud LLM.
+Current gates include:
 
-## Project layout
+- Project load
+- UI layout audit, including text clipping, interactive overlap, button text fit, and dialogue-box padding
+- Visual asset audit for backdrops, icons, portraits, and sprite distortion
+- Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
+- Encounter smoke test and differentiated persona behavior
+- Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology
+- Screenshot refresh for the main product surfaces
 
+The latest report is written to `tools/product_qa_report.txt`.
+
+## Run From Source
+
+Open the project in Godot 4.6.3 and press Play, or run:
+
+```powershell
+C:\Users\jewoo\godot\godot.exe --path .
 ```
-scenes/      Main, overworld (Overworld, Player), encounter (Encounter, GymEncounter, LectureScene), ui (Hub, ImportLesson, PreviewScenario)
-scripts/     Art, Seating, LessonImport
-autoload/    GameState, Game, SceneRouter, LLMClient
-data/        scenarios/*.json (one file per mission), persona_library/*.json (the 10 students)
-assets/      pixel sprites, portraits, tiles, ui   ·   ui/ theme + font
-landing/     marketing landing page (deployed to Cloudflare Pages)
-tools/       llm_backend (FastAPI), converter prompts, dev screenshots
+
+For a web export:
+
+```powershell
+godot --headless --export-release "Web" dist_web/index.html
+```
+
+The game runs offline with an in-engine student model. Optional backend services in `tools/llm_backend/` and `cloudflare/` can support LLM-driven dialogue and content-specific turns.
+
+## Project Layout
+
+```text
+autoload/    GameState, Game, Competency, Items, Telemetry, LLM/TTS/voice clients
+assets/      portraits, item icons, classroom backdrops, pixel UI assets
+data/        scenarios, persona library, competency model, scenario schema
+docs/        screenshots, comparison notes, productization QA
+landing/     project page and player guidebook assets
+scenes/      hub, login, import, preview, overworld, encounter, lecture, gym, dev tests
+scripts/     art loading, lesson import, pixel UI scaling, QA runner
+tools/       generated screenshots, QA report, backend helpers
 ```
 
 ## Status
 
-Concept + playable vertical slices across discussion / lecture / group work / independent /
-gym, with a badge-gated campaign and lesson-plan import. A teacher-preparation rehearsal tool
-and a research artifact, in active development.
-
-<div align="center"><sub>🤖 built with Claude Code · pixel art generated with Codex imagegen2</sub></div>
+Playable vertical slice with campaign progression, scenario backdrops, mission briefing, level-up/leaderboard loop, item loadout, evidence journal, lesson import, and product QA gates. Active development continues toward a polished educational game and research-grade teacher simulation.

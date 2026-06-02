@@ -9,12 +9,19 @@ SCHEMA (must match exactly; the game loads this):
   "id": "custom_<slug>",                 // same as filename without .json
   "title": "<short title>  -  <Format> (<arrangement>)",
   "format": "discussion|lecture|group_work|independent",
+  "mode": "overworld|lecture|gym",        // lecture uses LectureScene; gym only for capstone; all others overworld
   "arrangement": "ushape|rows|clusters|pairs",
   "period_seconds": <int 90..180>,        // scale the lesson minutes down to a short round
   "offtask_rise": <float 7..12>,          // higher for lecture/group work
   "roster": [ {"id": <persona_id>, "name": <display>, "seat": <int>}, ... ],
   "objectives": [ {"id": <short>, "label": <text>, "metric": <metric>, "target": <num>}, ... ],
-  "badge": "routine|echo|balance|mirror|insight",
+  "badge": "routine|echo|balance|mirror|insight|bridge",
+  "lecture_focus": {                      // required when format is lecture
+    "big_idea": "<what the teacher is trying to make visible>",
+    "common_confusion": "<likely wrong idea students may hold>",
+    "check_for_understanding_prompt": "<a short question the teacher could ask>"
+  },
+  "collective_reasoning": "<group's shared starting idea>",  // required when format is group_work
   "persona_overrides": { "<persona_id>": {"target_label": "...","opening_line":"...","win_line":"...","win_moves":[...]}, ... }
 }
 
@@ -23,6 +30,8 @@ MAPPING RULES (grounded in the seating + practice literature):
   lecture/direct-instruction -> "rows"; group/collaborative/stations -> "clusters";
   independent/seatwork/practice -> "rows" (format "independent").
 - period_seconds: scale lesson minutes to ~2-3 min of game time (e.g., 45 min -> 120).
+- mode: "lecture" only for direct instruction / mini-lesson; "gym" only for capstone;
+  use "overworld" for discussion, group_work, and independent lessons.
 - badge: discussion/questioning -> "echo"; management/independent -> "routine"; equity focus
   -> "balance"; feedback focus -> "mirror"; diagnosis focus -> "insight".
 
@@ -42,5 +51,7 @@ persona_overrides: rewrite each rostered student's opening_line and win_line to 
   (Noah elicit/extend, Talia revoice/redirect, Mei-Lin praise/extend, Deshawn redirect/praise,
   Sam wait/elicit, Diego wait/revoice, Riley elicit/extend, Jordan revoice/extend,
   Priya elicit/wait, Marcus revoice/wait). Make the dialogue specific to the lesson topic.
+Every rostered student should have a persona_overrides entry. Do not rely on generic persona
+defaults unless the lesson plan gives no content information.
 
 Output ONLY the JSON file (valid JSON, no comments). Then print "WROTE <path>".

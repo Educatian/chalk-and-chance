@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chalk & Chance Player Guidebook</title>
+<meta name="description" content="A practical beginner guidebook for starting Chalk & Chance, understanding each button, and interpreting the activity as deliberate teaching practice." />
+<style>
+  :root{
+    color-scheme:dark;
+    --navy:#0e1326; --panel:#12172a; --panel2:#1a2138; --cream:#f2efd9;
+    --muted:#9fb0cf; --green:#4fae5f; --amber:#f0b132; --red:#cc4748; --blue:#4d8cf0;
+    --line:#28304e; --ink:#f7f3df;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--navy);color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.62}
+  a{color:var(--blue);text-decoration:none}
+  img{max-width:100%;display:block}
+  .pixel{image-rendering:pixelated;image-rendering:crisp-edges}
+  .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  .toc{position:sticky;top:0;height:100vh;padding:24px 18px;border-right:1px solid var(--line);background:#0a0f20;overflow:auto}
+  .toc h1{font-size:17px;line-height:1.25;margin:0 0 16px}
+  .toc p{margin:0 0 20px;color:var(--muted);font-size:13px}
+  .toc a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted);font-size:14px}
+  .toc a:hover{background:var(--panel);color:var(--ink)}
+  .main{padding:34px min(5vw,56px) 70px}
+  .hero{padding:28px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(135deg,#18213d,#10162b)}
+  .eyebrow{margin:0 0 8px;color:var(--green);font-weight:900;text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+  h2{font-size:clamp(26px,4vw,46px);line-height:1.08;margin:0 0 14px}
+  h3{font-size:22px;margin:0 0 12px}
+  .lead{font-size:18px;color:#d8e0f6;max-width:860px;margin:0 0 18px}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:2px solid #000;border-radius:8px;background:var(--panel2);color:var(--ink);font-weight:900;box-shadow:0 4px 0 #050914}
+  .btn.primary{background:var(--green);color:#041707}
+  section{padding:46px 0;border-bottom:1px solid var(--line)}
+  .sub{max-width:880px;color:var(--muted);margin:0 0 24px}
+  .video{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#050812}
+  video{display:block;width:100%;aspect-ratio:16/9;background:#000}
+  .steps{display:grid;gap:16px}
+  .step{display:grid;grid-template-columns:130px 1fr;gap:18px;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .num{color:var(--green);font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:13px}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .note{padding:13px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.035)}
+  .note b{display:block;color:var(--amber);font-size:13px;margin-bottom:6px}
+  .note p{margin:0;color:var(--muted);font-size:14px}
+  .glossary{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .move{padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .move b{color:var(--cream)}
+  .move p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .callout{padding:18px;border:1px solid var(--line);border-left:5px solid var(--green);border-radius:12px;background:var(--panel)}
+  details{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px}
+  details+details{margin-top:10px}
+  summary{cursor:pointer;font-weight:900;color:var(--cream)}
+  details p{color:var(--muted);margin:10px 0 0}
+  .shot-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+  figcaption{padding:10px 12px;color:var(--muted);font-size:13px}
+  @media(max-width:920px){
+    .shell{display:block}
+    .toc{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+    .toc nav{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+    .main{padding:24px 18px 54px}
+    .step{grid-template-columns:1fr}
+    .cols,.glossary,.shot-row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="toc">
+    <h1>Chalk & Chance Player Guidebook</h1>
+    <p>A beginner-friendly guide to starting the game and reading each activity as teaching practice.</p>
+    <nav>
+      <a href="#purpose">Purpose</a>
+      <a href="#video">Video guide</a>
+      <a href="#steps">13-step walkthrough</a>
+      <a href="#buttons">Button glossary</a>
+      <a href="#learning">Learning concepts</a>
+      <a href="#faq">FAQ</a>
+      <a href="#downloads">Downloads</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="hero" id="purpose">
+      <p class="eyebrow">Player onboarding guide</p>
+      <h2>How to start, what each button does, and how to learn from the rehearsal</h2>
+      <p class="lead">Chalk & Chance is a short teaching rehearsal. The point is not to guess the right button. The point is to see the classroom, study your choices, and notice how teaching moves change student thinking.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://educatian.github.io/chalk-and-chance-play/" target="_blank" rel="noopener">Play the web build</a>
+        <a class="btn" href="./index.html">Back to official page</a>
+      </div>
+    </header>
+
+    <section id="video">
+      <p class="eyebrow">Screen recording</p>
+      <h3>Watch the player guide with subtitles</h3>
+      <p class="sub">The video walks through the same steps as this guidebook. Use it first if you want the fastest orientation, then use the written guide as a reference while playing.</p>
+      <div class="video">
+        <video controls preload="metadata" poster="img/shot_overworld.png">
+          <source src="videos/chalk-and-chance-player-guide.mp4" type="video/mp4" />
+          <source src="videos/chalk-and-chance-player-guide.webm" type="video/webm" />
+          <track label="English" kind="subtitles" srclang="en" src="videos/chalk-and-chance-player-guide.vtt" default />
+        </video>
+      </div>
+    </section>
+
+    <section id="steps">
+      <p class="eyebrow">13-step walkthrough</p>
+      <h3>What to see, study, and notice</h3>
+      <p class="sub">Each step separates screen reading from learning interpretation. Use the three columns as a habit: first observe, then study, then reflect.</p>
+      <div class="steps">
+        <article class="step"><div class="num">Step 1</div><div><h3>Start the rehearsal</h3><div class="cols"><div class="note"><b>What you see</b><p>A classroom scene, students, and teacher-facing information rather than a conventional menu puzzle.</p></div><div class="note"><b>What you study</b><p>The room as a practice space. The game asks you to rehearse teaching decisions, not simply complete a level.</p></div><div class="note"><b>What to notice</b><p>Mistakes are expected data. A confusing moment tells you what to try differently.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 2</div><div><h3>Choose Play demo</h3><div class="cols"><div class="note"><b>What you see</b><p>A prominent Play demo button and a class sign-in area.</p></div><div class="note"><b>What you study</b><p>The demo starts immediately. Sign in / Join is for class accounts that need saved progress and instructor tracking.</p></div><div class="note"><b>What to notice</b><p>You do not need credentials to learn the basic flow. Start with the demo first.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 3</div><div><h3>Read the first screen calmly</h3><div class="cols"><div class="note"><b>What you see</b><p>Class code, name, password, and guest-play options.</p></div><div class="note"><b>What you study</b><p>Class code, name, and password are only for assigned courses. Guest play is enough for first-time exploration.</p></div><div class="note"><b>What to notice</b><p>The game is safe to try before you understand every setting.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 4</div><div><h3>Use the Mission Hub as a learning map</h3><div class="cols"><div class="note"><b>What you see</b><p>START HERE, mission rows, badges, and locked missions.</p></div><div class="note"><b>What you study</b><p>Badges are practice goals: Routine is pacing, Echo is reasoning, Balance is airtime, Mirror is feedback, and Insight is capstone judgment.</p></div><div class="note"><b>What to notice</b><p>Locked missions are not a punishment. They show the sequence of teaching skills the game wants you to build.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 5</div><div><h3>Notice Settings and Import</h3><div class="cols"><div class="note"><b>What you see</b><p>Settings and Import a lesson plan.</p></div><div class="note"><b>What you study</b><p>Settings adjusts comfort: sound, larger text, reduced motion, and dialogue speed. Import turns your own lesson text into a playable scenario.</p></div><div class="note"><b>What to notice</b><p>The game can become closer to your actual teaching context, not just a fixed example.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 6</div><div><h3>Read the classroom signals</h3><div class="cols"><div class="note"><b>What you see</b><p>Students, bars, objective checklist, attention, composure, participation, wait time, and disruptions.</p></div><div class="note"><b>What you study</b><p>These are live teaching signals. Attention shows whether the room is with you. Composure shows your remaining capacity. Participation shows inclusion.</p></div><div class="note"><b>What to notice</b><p>You are managing a learning environment, not only choosing dialogue.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 7</div><div><h3>Enter a student thinking moment</h3><div class="cols"><div class="note"><b>What you see</b><p>A student nearby and an interaction hint.</p></div><div class="note"><b>What you study</b><p>Move with arrow keys or WASD. Press Z, Enter, or Space when facing a student.</p></div><div class="note"><b>What to notice</b><p>Interaction is a teaching decision. You are deciding when to step into a student's thinking, not collecting points.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 8</div><div><h3>Read the student first</h3><div class="cols"><div class="note"><b>What you see</b><p>A student response, portrait, meters, and possible teaching moves.</p></div><div class="note"><b>What you study</b><p>The hidden need behind the response: confusion, dominance, avoidance, anxiety, off-task behavior, or readiness for a deeper prompt.</p></div><div class="note"><b>What to notice</b><p>Listen before acting. The best move depends on what the student needs, not just which button sounds positive.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 9</div><div><h3>Use academic teaching moves</h3><div class="cols"><div class="note"><b>What you see</b><p>Elicit, Extend, Revoice, and Wait.</p></div><div class="note"><b>What you study</b><p>Elicit asks for reasoning. Extend presses deeper. Revoice clarifies or restates the student's idea. Wait protects thinking time.</p></div><div class="note"><b>What to notice</b><p>These moves help students do the thinking themselves.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 10</div><div><h3>Use social and management moves carefully</h3><div class="cols"><div class="note"><b>What you see</b><p>Connect, Praise, Redirect, and Tell.</p></div><div class="note"><b>What you study</b><p>Connect draws on a student asset. Praise names useful effort. Redirect protects classroom order. Tell gives the answer directly but may reduce practice.</p></div><div class="note"><b>What to notice</b><p>Faster is not always better. The strongest move preserves student thinking while supporting the room.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 11</div><div><h3>Read the result chip</h3><div class="cols"><div class="note"><b>What you see</b><p>Feedback after your move, including changes to understanding, engagement, rapport, and order.</p></div><div class="note"><b>What you study</b><p>Cause and effect. Your choice changes the classroom state, and the result chip tells you what moved.</p></div><div class="note"><b>What to notice</b><p>The classroom is responding to your teaching decision. Use that response to adjust, not to judge yourself.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 12</div><div><h3>Use the debrief</h3><div class="cols"><div class="note"><b>What you see</b><p>Pass or miss indicators, missed-objective tips, and reflection choices.</p></div><div class="note"><b>What you study</b><p>The missed objective. Low wait time means practice pausing. Low participation means reach quiet students. High disruptions mean smaller redirections.</p></div><div class="note"><b>What to notice</b><p>The debrief turns gameplay into reflection-on-action.</p></div></div></div></article>
+        <article class="step"><div class="num">Step 13</div><div><h3>Replay with one focus</h3><div class="cols"><div class="note"><b>What you see</b><p>The option to replay or choose another mission.</p></div><div class="note"><b>What you study</b><p>One specific focus for the next run, such as wait time, eliciting reasoning, or distributing attention.</p></div><div class="note"><b>What to notice</b><p>Improvement comes from focused repetition. Try again with a clearer teaching intention.</p></div></div></div></article>
+      </div>
+    </section>
+
+    <section id="buttons">
+      <p class="eyebrow">Button glossary</p>
+      <h3>What each teaching move is for</h3>
+      <p class="sub">Use this as a quick reference while playing. The terms are teaching practices, not just game commands.</p>
+      <div class="glossary">
+        <div class="move"><b>Elicit</b><p>Ask the student to explain their reasoning before you correct or evaluate it.</p></div>
+        <div class="move"><b>Extend</b><p>Press for a deeper connection, example, justification, or next step.</p></div>
+        <div class="move"><b>Revoice</b><p>Restate a student's idea so the room can hear it and the student can refine it.</p></div>
+        <div class="move"><b>Wait</b><p>Pause long enough for thinking to happen. The pause is part of the teaching move.</p></div>
+        <div class="move"><b>Connect</b><p>Use a student asset, interest, or context to bridge into the academic idea.</p></div>
+        <div class="move"><b>Praise</b><p>Name a specific useful effort or strategy, not just the person.</p></div>
+        <div class="move"><b>Redirect</b><p>Handle off-task behavior with the smallest effective intervention.</p></div>
+        <div class="move"><b>Tell</b><p>Give the answer directly. It may be efficient, but it can reduce student thinking practice.</p></div>
+      </div>
+    </section>
+
+    <section id="learning">
+      <p class="eyebrow">How to interpret the activity</p>
+      <h3>The game loop as learning loop</h3>
+      <div class="callout">
+        <p><b>Observe:</b> Read the room and the student's response.</p>
+        <p><b>Choose:</b> Select a teaching move that fits the need.</p>
+        <p><b>Read feedback:</b> Look at what changed in understanding, engagement, rapport, and order.</p>
+        <p><b>Reflect:</b> Use the debrief to name one next practice focus.</p>
+      </div>
+      <div class="shot-row" style="margin-top:18px">
+        <figure><img class="pixel" src="img/shot_hub.png" alt="Mission hub" /><figcaption>Use the Hub as a learning map.</figcaption></figure>
+        <figure><img class="pixel" src="img/shot_encounter.png" alt="Encounter screen" /><figcaption>Read student need before choosing a move.</figcaption></figure>
+        <figure><img class="pixel" src="img/shot_competency.png" alt="Competency screen" /><figcaption>Read evidence as a practice signal.</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="faq">
+      <p class="eyebrow">FAQ</p>
+      <h3>Common beginner questions</h3>
+      <details open><summary>Do I need a class code?</summary><p>No. Use Play demo or guest play first. Class code is only for assigned class use where progress is saved.</p></details>
+      <details><summary>Am I supposed to win every encounter?</summary><p>No. The game is designed for rehearsal. A miss is useful when it tells you which teaching signal you ignored or misunderstood.</p></details>
+      <details><summary>How do I know which button to choose?</summary><p>Start by reading the student need. If the student is confused, elicit or revoice. If the student needs time, wait. If the room is drifting, redirect. If the student needs connection, connect.</p></details>
+      <details><summary>What should I study after a run?</summary><p>Study the missed objective first, then pick one next focus. Do not try to fix everything in one replay.</p></details>
+    </section>
+
+    <section id="downloads">
+      <p class="eyebrow">Downloads and source files</p>
+      <h3>Guidebook assets</h3>
+      <p class="sub">These files are public-facing guide assets for the official site.</p>
+      <div class="glossary">
+        <div class="move"><b>Narrated video</b><p><a href="videos/chalk-and-chance-player-guide.mp4">videos/chalk-and-chance-player-guide.mp4</a></p></div>
+        <div class="move"><b>Fallback video</b><p><a href="videos/chalk-and-chance-player-guide.webm">videos/chalk-and-chance-player-guide.webm</a></p></div>
+        <div class="move"><b>Subtitles</b><p><a href="videos/chalk-and-chance-player-guide.vtt">videos/chalk-and-chance-player-guide.vtt</a></p></div>
+        <div class="move"><b>Script</b><p><a href="videos/chalk-and-chance-player-guide-script.md">videos/chalk-and-chance-player-guide-script.md</a></p></div>
+        <div class="move"><b>Playable</b><p><a href="https://educatian.github.io/chalk-and-chance-play/" target="_blank" rel="noopener">Open the web build</a></p></div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

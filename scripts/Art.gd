@@ -13,6 +13,23 @@ static func tex(path: String) -> Texture2D:
 			return res
 	return null
 
+static func scenario_backdrop_path(cfg: Dictionary, scenario_id: String = "", thumb: bool = false) -> String:
+	var key := "backdrop_thumb" if thumb else "backdrop"
+	var p := str(cfg.get(key, ""))
+	if p != "":
+		return p
+	var id := str(cfg.get("id", scenario_id))
+	if id != "":
+		var candidate := "res://assets/backdrops/%s%s.png" % [id, "_thumb" if thumb else ""]
+		if ResourceLoader.exists(candidate):
+			return candidate
+	var fmt := str(cfg.get("format", "discussion"))
+	match fmt:
+		"lecture": return "res://assets/backdrops/lecture_fractions%s.png" % ("_thumb" if thumb else "")
+		"group_work": return "res://assets/backdrops/group_work_fractions%s.png" % ("_thumb" if thumb else "")
+		"independent": return "res://assets/backdrops/independent_fractions%s.png" % ("_thumb" if thumb else "")
+		_: return "res://assets/backdrops/discussion_fractions%s.png" % ("_thumb" if thumb else "")
+
 ## Bounding box (region-local) of the non-transparent pixels inside `region` of a texture.
 ## Used to normalize character size by the DRAWN figure, not the cell (figures fill cells
 ## unevenly, which made on-screen heights inconsistent).

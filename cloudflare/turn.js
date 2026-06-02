@@ -8,15 +8,36 @@ const MOVE_TAGS = ["elicit", "extend", "revoice", "tell", "praise", "redirect", 
 
 const lst = (v) => (Array.isArray(v) ? v.join("; ") : String(v ?? ""));
 
+function scenarioBrief(req) {
+  const sc = req.scenario_context || {};
+  const active = sc.active_student || {};
+  const objectives = Array.isArray(sc.objectives) && sc.objectives.length
+    ? sc.objectives.map((o) => `- ${String(o)}`).join("\n")
+    : "- keep the lesson moving while reading student thinking";
+  const pieces = [
+    `scenario_id: ${req.scenario_id || sc.id || "unknown"}`,
+    `lesson: ${sc.title || "Current lesson"}`,
+    `format: ${sc.format || "classroom encounter"}${sc.arrangement ? ` (${sc.arrangement})` : ""}`,
+    "lesson objectives:",
+    objectives,
+  ];
+  if (active.target_label || active.opening_line) {
+    pieces.push(`current student focus: ${active.target_label || "read the student's need"}`);
+    if (active.opening_line) pieces.push(`student's starting idea/behavior: ${active.opening_line}`);
+  }
+  return pieces.join("\n");
+}
+
 // --- deterministic judge (win-move-gated) -----------------------------------
 function judge(move, winMoves) {
   const tag = (move.menu_tag || "").trim();
   const waitOk = (move.wait_time_ms || 0) >= RUBRIC.wait.threshold_ms;
   let row = { ...(tag === "wait" ? (waitOk ? RUBRIC.wait.met : RUBRIC.wait.missed) : (RUBRIC.deltas[tag] || {})) };
   let targets = !!row.targets_misconception;
-  if (winMoves && winMoves.length && tag && !winMoves.includes(tag)) {
-    targets = false;
-    row.understanding = 0.0;
+  if (winMoves && winMoves.length && tag) {
+    targets = tag !== "tell" && winMoves.includes(tag) && (tag !== "wait" || waitOk);
+    if (!targets) row.understanding = 0.0;
+    else if (!row.understanding) row.understanding = 0.12;
   }
   row.targets_misconception = targets;
   return {
@@ -48,7 +69,7 @@ function heuristicClassify(text) {
   if (!t) return "wait";
   if (/(how did you|why do you|can you show me|what makes you|how do you)/.test(t)) return "elicit";
   if (t.includes("?") && /(what if|what about|and then|so what|what else)/.test(t)) return "extend";
-  if (/^(so you|so what you|you're saying|what i hear)/.test(t)) return "revoice";
+  if (/^(so you|so what you|you're saying|what i hear|it sounds like|sounds like)/.test(t)) return "revoice";
   if (/(good job|nice work|i like how|well done|great)/.test(t)) return "praise";
   if (/(settle|focus|quiet|back to|stop|eyes up)/.test(t)) return "redirect";
   if (/(tell you about|what do you like|outside class|good at)/.test(t)) return "connect";
@@ -106,6 +127,7 @@ function studentMessages(req, persona, verdict) {
   };
   let sys = STUDENT_PROMPT;
   for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
+  sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse this context to make your reply fit the current lesson. If misconception_resolved is false, stay inside your starting idea or behavior; do not reveal the final correct reasoning.`;
   return [{ role: "system", content: sys },
     { role: "user", content: "Respond now as the student, in character. JSON only." }];
 }
@@ -135,17 +157,26 @@ function parseStudent(raw) {
   const o = JSON.parse(s);
   return { text: String(o.text || "").trim(), emotion_shown: String(o.emotion_shown || "thinking").trim() };
 }
-function cannedStudent(verdict, name) {
+function scenarioStartingIdea(req) {
+  const sc = req.scenario_context || {};
+  const active = sc.active_student || {};
+  return String(active.opening_line || "").trim();
+}
+function cannedStudent(verdict, name, req = {}) {
   const tag = verdict.move_tags[0] || "";
+  const idea = scenarioStartingIdea(req);
   const m = { elicit: "Um... okay. Let me try to explain how I was thinking about it.",
     extend: "Wait... when you put it that way, I'm not so sure my first answer was right.",
     revoice: "Yeah... that's what I meant.", tell: "Oh. Okay, I guess.", praise: "...thanks.",
     redirect: "Okay, sorry.", wait: verdict.wait_time_ok ? "...oh. Actually, maybe I had it backwards." : "..." };
+  if (idea && (tag === "elicit" || tag === "revoice")) {
+    m[tag] = `I was thinking: ${idea}`;
+  }
   return { speaker: name, text: m[tag] || "...", emotion_shown: "guarded" };
 }
 async function generateStudent(req, persona, verdict, key) {
   const name = persona.display_name || "Student";
-  if (!key) return cannedStudent(verdict, name);
+  if (!key) return cannedStudent(verdict, name, req);
   const resolved = !!(req.runtime_state || {}).misconception_resolved;
   const grade = String(persona.grade_band || "");
   let messages = studentMessages(req, persona, verdict);
@@ -158,7 +189,7 @@ async function generateStudent(req, persona, verdict, key) {
     if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
     messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences. JSON only.` }];
   }
-  return cannedStudent(verdict, name);
+  return cannedStudent(verdict, name, req);
 }
 
 // --- adaptive coach ----------------------------------------------------------
@@ -191,6 +222,7 @@ async function makeCoach(req, persona, verdict, key) {
     };
     let sys = COACH_PROMPT;
     for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
+    sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse the scenario context to coach the teacher's move, but do not reveal the content answer or final resolution.`;
     const raw = await callOpenRouter([{ role: "system", content: sys },
       { role: "user", content: "Give your one coaching note now. JSON only." }], key, "google/gemini-2.5-flash-lite", 0.4, 120);
     const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();

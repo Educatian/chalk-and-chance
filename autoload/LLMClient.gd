@@ -69,6 +69,8 @@ func _on_request_completed(result: int, response_code: int, _headers: PackedStri
 func _emit_stub(payload: Dictionary) -> void:
 	var move: Dictionary = payload.get("teacher_move", {})
 	var tag: String = str(move.get("menu_tag", ""))
+	if tag == "" and str(move.get("input_mode", "")) == "free_text":
+		tag = _classify_stub_text(str(move.get("text", "")))
 	var wait_ms: int = int(move.get("wait_time_ms", 0))
 	var wait_ok: bool = wait_ms >= 3000
 	var win_moves: Array = payload.get("win_moves", ["elicit", "extend", "revoice", "wait"])
@@ -141,3 +143,21 @@ func _emit_stub(payload: Dictionary) -> void:
 		"coach_tip": coach,
 	}
 	reply_ready.emit(resp)
+
+func _classify_stub_text(text: String) -> String:
+	var t := text.to_lower()
+	if t.find("walk me through") >= 0 or t.find("how did") >= 0 or t.find("how you got") >= 0 or t.find("explain your thinking") >= 0:
+		return "elicit"
+	if t.find("what if") >= 0 or t.find("why") >= 0 or t.find("push") >= 0 or t.find("another way") >= 0:
+		return "extend"
+	if t.find("so you") >= 0 or t.find("what i hear") >= 0 or t.find("you are saying") >= 0 or t.find("restate") >= 0:
+		return "revoice"
+	if t.find("good") >= 0 or t.find("nice") >= 0 or t.find("i like") >= 0 or t.find("you did") >= 0:
+		return "praise"
+	if t.find("focus") >= 0 or t.find("back to") >= 0 or t.find("turn") >= 0 or t.find("voice") >= 0:
+		return "redirect"
+	if t.find("wait") >= 0 or t.find("take your time") >= 0 or t.find("think") >= 0:
+		return "wait"
+	if t.find("because") >= 0 or t.find("show") >= 0 or t.find("answer is") >= 0:
+		return "tell"
+	return "elicit"

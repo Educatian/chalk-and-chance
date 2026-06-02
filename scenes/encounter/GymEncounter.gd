@@ -5,6 +5,7 @@ extends Control
 ## See GAME_ROADMAP.md #13.
 
 const Art = preload("res://scripts/Art.gd")
+const PixelUi = preload("res://scripts/PixelUi.gd")
 const UI_SCALE := 2.0
 const WIN_U := 0.80
 const MOVES := [
@@ -30,6 +31,7 @@ var _last_targets := false
 
 var _http: HTTPRequest
 var _layer: Control
+var _backdrop: TextureRect
 var _title: Label
 var _comp_fill: ColorRect
 var _order_fill: ColorRect
@@ -57,14 +59,24 @@ func _ready() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	_backdrop = TextureRect.new()
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_backdrop.modulate = Color(1, 1, 1, 0.15)
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop.visible = false
+	add_child(_backdrop)
 	_layer = Control.new()
-	_layer.scale = Vector2(UI_SCALE, UI_SCALE)
+	_layer.scale = Vector2.ONE
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
 func setup(data: Dictionary) -> void:
 	scenario = data.get("scenario", {})
 	composure = GameState.max_composure()
+	_refresh_backdrop()
 	_load_students()
 	_build_ui()
 	_arm_turn()
@@ -97,6 +109,13 @@ func _read_json(path: String) -> Dictionary:
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
 	return {}
+
+func _refresh_backdrop() -> void:
+	if _backdrop == null:
+		return
+	var tex := Art.tex(Art.scenario_backdrop_path(scenario, str(Game.current_scenario_id), false))
+	_backdrop.texture = tex
+	_backdrop.visible = tex != null
 
 # --- UI ----------------------------------------------------------------------
 
@@ -147,12 +166,19 @@ func _build_ui() -> void:
 
 	# Dialogue + coach
 	var dbg := ColorRect.new()
-	dbg.position = Vector2(10, 172); dbg.size = Vector2(460, 30)
+	var dialogue_box := Rect2(Vector2(10, 170), Vector2(460, 32))
+	var dialogue_text := Rect2(Vector2(18, 176), Vector2(444, 18))
+	dbg.name = "DialogueBubble"
+	dbg.position = dialogue_box.position; dbg.size = dialogue_box.size
 	dbg.color = Color(0.12, 0.15, 0.26); dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(dbg)
-	_dialogue = _label("", Vector2(16, 174), 9, Color(0.96, 0.96, 0.92))
-	_dialogue.size = Vector2(448, 26)
+	_dialogue = _label("", dialogue_text.position, 9, Color(0.96, 0.96, 0.92))
+	_dialogue.name = "DialogueText"
+	_dialogue.size = dialogue_text.size
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialogue.set_meta("qa_container_rect", dialogue_box)
+	_dialogue.set_meta("qa_text_rect", dialogue_text)
+	_dialogue.set_meta("qa_min_padding", 6.0)
 	_result = _label("Current target: pick the highlighted student, then choose the move that fits their need.", Vector2(16, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 10)
 	_coach = _label("Coach Vee: pick a student, then a move. Help one, but watch the others drift.", Vector2(16, 216), 7, Color(0.72, 0.92, 0.78))
@@ -212,6 +238,7 @@ func _build_ui() -> void:
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
+	PixelUi.scale_tree(_layer, UI_SCALE)
 
 func _build_item_row() -> void:
 	var x := 252.0
@@ -220,7 +247,7 @@ func _build_item_row() -> void:
 		var item_id := str(id)
 		var b := Button.new()
 		b.position = Vector2(x, y)
-		b.size = Vector2(28, 28)
+		b.size = Vector2(34, 34)
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "gym")
@@ -234,7 +261,7 @@ func _build_item_row() -> void:
 			b.add_theme_font_size_override("font_size", 6)
 		_layer.add_child(b)
 		_item_buttons.append(b)
-		x += 32.0
+		x += 38.0
 
 func _refresh_item_buttons() -> void:
 	for b in _item_buttons:
@@ -583,6 +610,8 @@ func _gym_scenario_context(active_student: Dictionary) -> Dictionary:
 		"format": str(scenario.get("format", "discussion")),
 		"arrangement": str(scenario.get("arrangement", "")),
 		"objectives": objective_labels,
+		"backdrop": str(scenario.get("backdrop", "")),
+		"story_hook": str(scenario.get("story_hook", "")),
 		"pod_targets": targets,
 		"active_student": {
 			"persona_id": str(active_student.get("pid", "")),
@@ -649,12 +678,22 @@ func _finish(won: bool) -> void:
 			resolved += 1
 	if won:
 		var badge := str(scenario.get("badge", ""))
+		var reward := {}
 		if badge != "":
-			var reward := GameState.award_badge(badge)
+			reward = GameState.award_badge(badge)
 			if bool(reward.get("level_up", false)):
 				_result.text = "Level %d reached. Upgrade point earned." % int(reward.get("level_after", GameState.teacher_level))
 		if _practice_goal_active:
 			GameState.add_teacher_xp(50, "practice_goal:%s" % str(Game.current_scenario_id))
+		GameState.record_leaderboard({
+			"scenario_id": str(Game.current_scenario_id),
+			"title": str(scenario.get("title", "Capstone")),
+			"mode": "Gym",
+			"badge": badge,
+			"score": resolved * 60 + int(round(composure + order)),
+			"detail": "%d/%d reached  Order %d%%  Composure %d%%" % [resolved, students.size(), int(order), int(composure)],
+			"level_up": bool(reward.get("level_up", false)),
+		})
 		Sfx.play("badge")
 		_coach.text = "Coach Vee: you held the whole room and reached every student. Capstone cleared!"
 	else:
@@ -673,12 +712,12 @@ func _refresh() -> void:
 		_set_fill(s["rfill"], float(s["restless"]))
 	if sel >= 0 and sel < students.size():
 		var s2: Dictionary = students[sel]
-		_highlight.position = Vector2(float(s2["x"]) - 2, float(s2["y"]) - 2)
-		_highlight.size = Vector2(float(s2["w"]) + 4, 100)
+		_highlight.position = Vector2(float(s2["x"]) - 2.0, float(s2["y"]) - 2.0) * UI_SCALE
+		_highlight.size = Vector2((float(s2["w"]) + 4.0) * UI_SCALE, 100.0 * UI_SCALE)
 		_title.text = "GYM: target = %s  (%s)" % [s2["name"], s2.get("target_label", "")]
 
 func _set_fill(fill: ColorRect, frac: float) -> void:
 	if fill == null:
 		return
 	var w: float = fill.get_meta("w", 150.0)
-	fill.size = Vector2(w * clampf(frac, 0.0, 1.0), fill.size.y)
+	fill.size = Vector2(w * UI_SCALE * clampf(frac, 0.0, 1.0), fill.size.y)

@@ -13,6 +13,7 @@
 import { handleTurn } from "./turn.js";
 import { handleTts } from "./tts.js";
 import { handleGroupTurn } from "./group.js";
+import { handleLectureTurn } from "./lecture.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -102,6 +103,10 @@ export default {
       if (url.pathname === "/group_turn" && req.method === "POST") {
         if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
         return json(await handleGroupTurn(req, env));
+      }
+      if (url.pathname === "/lecture_turn" && req.method === "POST") {
+        if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
+        return json(await handleLectureTurn(req, env));
       }
       if (url.pathname === "/auth/login" && req.method === "POST") return login(req, env);
       if (url.pathname === "/me" && req.method === "GET") return me(req, env);

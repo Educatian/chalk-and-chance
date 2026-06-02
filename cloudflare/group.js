@@ -18,6 +18,29 @@ const GROUP_MOVE_DESC = {
   move_on: "moving on to another group",
 };
 
+function scenarioBrief(body) {
+  const sc = body.scenario_context || {};
+  const objectives = Array.isArray(sc.objectives) && sc.objectives.length
+    ? sc.objectives.map((o) => `- ${String(o)}`).join("\n")
+    : "- monitor the pod, surface thinking, and rebalance participation";
+  const podTargets = Array.isArray(sc.pod_targets) && sc.pod_targets.length
+    ? sc.pod_targets.map((p) => {
+      const target = p.target_label ? ` target=${p.target_label}` : "";
+      const opening = p.opening_line ? ` starting="${p.opening_line}"` : "";
+      return `- ${p.name || p.persona_id || "student"}:${target}${opening}`;
+    }).join("\n")
+    : "- pod targets not specified";
+  return [
+    `scenario_id: ${sc.id || body.scenario_id || "unknown"}`,
+    `lesson: ${sc.title || body.shared_concept || "Current group task"}`,
+    `format: ${sc.format || "group_work"}${sc.arrangement ? ` (${sc.arrangement})` : ""}`,
+    "lesson objectives:",
+    objectives,
+    "pod-specific starting points:",
+    podTargets,
+  ].join("\n");
+}
+
 function groupJudge(tag, revealed) {
   const row = GROUP_DELTAS[tag] || {};
   let du = row.understanding || 0.0;
@@ -50,14 +73,16 @@ function groupMessages(body, tag, speaker) {
   };
   let sys = GROUP_PROMPT;
   for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
+  sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(body)}\nUse this context to make the group's talk fit this lesson and these students. Do not jump to a final correct answer unless the monitoring move has surfaced and pressed the reasoning enough.`;
   return [{ role: "system", content: sys },
     { role: "user", content: "Respond now as the group member, in character. JSON only." }];
 }
 
-function cannedGroup(tag, speaker) {
+function cannedGroup(tag, speaker, body = {}) {
+  const reasoning = String(body.collective_reasoning || "").trim();
   const c = {
     observe: "I think we should add them... wait, no, compare them first, right?",
-    probe: "We said the bigger bottom number means the bigger fraction, so we picked 1/8.",
+    probe: reasoning || "We said the bigger bottom number means the bigger fraction, so we picked 1/8.",
     press: "Hmm... if we cut it into more pieces, wouldn't each piece be smaller though?",
     redistribute: "...um, I actually thought 1/4 might be bigger, but I wasn't sure.",
     move_on: "Okay, we'll keep working.",
@@ -66,7 +91,7 @@ function cannedGroup(tag, speaker) {
 }
 
 async function generateGroup(body, tag, speaker, key) {
-  if (!key || tag === "move_on") return cannedGroup(tag, speaker);
+  if (!key || tag === "move_on") return cannedGroup(tag, speaker, body);
   try {
     const r = await fetch(OPENROUTER_URL, {
       method: "POST",
@@ -81,7 +106,7 @@ async function generateGroup(body, tag, speaker, key) {
       text: String(o.text || "").trim() || cannedGroup(tag, speaker).text,
       emotion_shown: String(o.emotion_shown || "thinking").trim() };
   } catch (_e) {
-    return cannedGroup(tag, speaker);
+    return cannedGroup(tag, speaker, body);
   }
 }
 
