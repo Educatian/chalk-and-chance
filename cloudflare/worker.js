@@ -18,7 +18,7 @@ import { handleLectureTurn } from "./lecture.js";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Voice-Gate",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Voice-Token",
 };
 const json = (o, status = 200) =>
   new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json", ...CORS } });
@@ -50,6 +50,12 @@ async function signJWT(payload, secret) {
   const data = `${head}.${body}`;
   const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(data));
   return `${data}.${b64url(sig)}`;
+}
+
+async function signVoiceToken(payload, secret) {
+  const body = b64url(enc.encode(JSON.stringify(payload)));
+  const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(body));
+  return `${body}.${b64url(sig)}`;
 }
 async function verifyJWT(token, secret) {
   const [h, b, s] = (token || "").split(".");
@@ -98,7 +104,11 @@ export default {
       }
       if (url.pathname === "/tts" && req.method === "POST") {
         if (!(await rateLimit(env, clientIp(req), "tts"))) return new Response(null, { status: 429, headers: CORS });
-        return handleTts(req, env);
+        return await handleTts(req, env);
+      }
+      if (url.pathname === "/voice_token" && req.method === "POST") {
+        if (!(await rateLimit(env, clientIp(req), "voice_token"))) return json({ error: "rate_limited" }, 429);
+        return await voiceToken(req, env);
       }
       if (url.pathname === "/group_turn" && req.method === "POST") {
         if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
@@ -108,16 +118,30 @@ export default {
         if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
         return json(await handleLectureTurn(req, env));
       }
-      if (url.pathname === "/auth/login" && req.method === "POST") return login(req, env);
-      if (url.pathname === "/me" && req.method === "GET") return me(req, env);
-      if (url.pathname === "/telemetry" && req.method === "POST") return telemetry(req, env);
-      if (url.pathname === "/competency" && req.method === "POST") return competency(req, env);
+      if (url.pathname === "/auth/login" && req.method === "POST") return await login(req, env);
+      if (url.pathname === "/me" && req.method === "GET") return await me(req, env);
+      if (url.pathname === "/telemetry" && req.method === "POST") return await telemetry(req, env);
+      if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
       return json({ error: "not found" }, 404);
     } catch (e) {
       return json({ error: String(e) }, 500);
     }
   },
 };
+
+async function voiceToken(req, env) {
+  const raw = (await req.text()).replace(/^\uFEFF/, "");
+  const { passcode } = JSON.parse(raw || "{}");
+  const expected = (env.TTS_PASSCODE || "").trim();
+  if (!expected) return json({ error: "voice access is not configured" }, 503);
+  if (!(env.WORKER_SECRET || "").trim()) return json({ error: "voice signing is not configured" }, 503);
+  if ((passcode || "").trim() !== expected) return json({ error: "invalid passcode" }, 403);
+  const expiresIn = 15 * 60;
+  const token = await signVoiceToken(
+    { scope: "tts", exp: Math.floor(Date.now() / 1000) + expiresIn },
+    env.WORKER_SECRET);
+  return json({ token, expires_in: expiresIn });
+}
 
 async function login(req, env) {
   const { class_code, name, password } = await req.json();

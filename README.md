@@ -18,7 +18,7 @@ The current build includes:
 - Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
 - Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
 - Product QA gates for UI clipping/overlap, visual assets, scenario integrity, telemetry, and playable learning loops.
-- Public web demo access keeps ElevenLabs voice off unless opened through the passcode gate.
+- Public web demo access keeps ElevenLabs voice off unless opened through the server-verified passcode gate.
 
 ## Screenshots
 

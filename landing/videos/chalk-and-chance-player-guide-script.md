@@ -10,7 +10,7 @@ What to feel or notice: mistakes are expected data. A confusing moment is useful
 
 ## Step 2. Open the demo gate
 
-What you see: a voice-safe taste demo button and a passcode field for voice-enabled access.
+What you see: a voice-safe taste demo button and a server-verified passcode field for voice-enabled access.
 
 What you study: the public taste demo keeps spoken student lines silent so casual visitors do not trigger ElevenLabs costs.
 

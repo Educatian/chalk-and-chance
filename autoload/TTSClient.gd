@@ -12,7 +12,7 @@ var _http: HTTPRequest
 var _player: AudioStreamPlayer
 var voice_gate_required := false
 var voice_gate_unlocked := false
-var _voice_gate_code := ""
+var _voice_token := ""
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
@@ -30,8 +30,8 @@ func _ready() -> void:
 		if base != "":
 			endpoint = base + "/tts"
 			voice_gate_required = bool(cfg.get("tts_requires_gate", true))
-			_voice_gate_code = str(cfg.get("tts_gate_code", "")).strip_edges()
-			voice_gate_unlocked = (not voice_gate_required) or _web_voice_gate_ok(_voice_gate_code)
+			_voice_token = _web_voice_token()
+			voice_gate_unlocked = (not voice_gate_required) or _voice_token != ""
 			enabled = voice_gate_unlocked
 		else:
 			enabled = false  # no hosted endpoint configured; stay silent
@@ -44,15 +44,12 @@ func _web_auth_config() -> Dictionary:
 	f.close()
 	return cfg if typeof(cfg) == TYPE_DICTIONARY else {}
 
-func _web_voice_gate_ok(code: String) -> bool:
-	if code.strip_edges() == "":
-		return false
+func _web_voice_token() -> String:
 	if not OS.has_feature("web"):
-		return true
-	var token := ""
+		return ""
 	if ClassDB.class_exists("JavaScriptBridge"):
-		token = str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('voice') || new URLSearchParams(window.location.hash.slice(1)).get('voice') || '')", true))
-	return token.strip_edges() == code.strip_edges()
+		return str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('voice_token') || new URLSearchParams(window.location.hash.slice(1)).get('voice_token') || '')", true)).strip_edges()
+	return ""
 
 func speak(persona_id: String, text: String, emotion: String = "neutral") -> void:
 	if not enabled or text.strip_edges() == "" or not bool(GameState.get_setting("audio_enabled", true)):
@@ -62,8 +59,8 @@ func speak(persona_id: String, text: String, emotion: String = "neutral") -> voi
 		_player.stop()
 	var payload := {"persona_id": persona_id, "text": text, "emotion": emotion}
 	var headers := PackedStringArray(["Content-Type: application/json"])
-	if OS.has_feature("web") and _voice_gate_code != "" and voice_gate_unlocked:
-		headers.append("X-Voice-Gate: %s" % _voice_gate_code)
+	if OS.has_feature("web") and _voice_token != "" and voice_gate_unlocked:
+		headers.append("X-Voice-Token: %s" % _voice_token)
 	var err := _http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		push_warning("TTSClient: request error %d (silent)" % err)

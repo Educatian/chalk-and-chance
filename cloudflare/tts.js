@@ -6,8 +6,32 @@ import { VOICE_PROFILES } from "./gamedata.js";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Voice-Gate",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Voice-Token",
 };
+
+const enc = new TextEncoder();
+const b64urlToBytes = (s) => {
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  return Uint8Array.from(atob(s + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+};
+
+async function hmacKey(secret) {
+  return crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+}
+
+async function verifyVoiceToken(token, secret) {
+  try {
+    const [payloadB64, sigB64] = (token || "").split(".");
+    if (!payloadB64 || !sigB64 || !secret) return null;
+    const ok = await crypto.subtle.verify("HMAC", await hmacKey(secret), b64urlToBytes(sigB64), enc.encode(payloadB64));
+    if (!ok) return null;
+    const payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(payloadB64)));
+    if (payload.scope !== "tts" || !payload.exp || Date.now() / 1000 > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // emotion_shown -> [stability, style]; lower stability + higher style = more expressive
 const EMO = {
@@ -18,8 +42,8 @@ const EMO = {
 };
 
 export async function handleTts(req, env) {
-  const gate = (env.TTS_GATE_CODE || "MAPLE-RIDGE").trim();
-  if (gate && (req.headers.get("X-Voice-Gate") || "").trim() !== gate) {
+  const token = (req.headers.get("X-Voice-Token") || "").trim();
+  if (!(await verifyVoiceToken(token, env.WORKER_SECRET || ""))) {
     return new Response(null, { status: 204, headers: CORS });
   }
   const { persona_id, text, emotion, model_id } = await req.json();

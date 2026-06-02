@@ -123,7 +123,7 @@
 </main>
 <script>
   const PLAY_URL = "https://educatian.github.io/chalk-and-chance-play/";
-  const VOICE_CODE = "MAPLE-RIDGE";
+  const API_URL = "https://chalk-and-chance-api.jewoong-moon.workers.dev";
   const passcode = document.getElementById("passcode");
   const status = document.getElementById("status");
 
@@ -136,15 +136,35 @@
     openBuild(PLAY_URL);
   });
 
-  document.getElementById("voice-demo").addEventListener("click", () => {
+  document.getElementById("voice-demo").addEventListener("click", async () => {
     const entered = passcode.value.trim();
-    if (entered !== VOICE_CODE) {
+    if (!entered) {
       status.textContent = "Passcode required for voice-enabled demo.";
       passcode.focus();
       return;
     }
-    status.textContent = "Opening voice-enabled demo...";
-    openBuild(`${PLAY_URL}?voice=${encodeURIComponent(VOICE_CODE)}`);
+    status.textContent = "Checking passcode...";
+    try {
+      const response = await fetch(`${API_URL}/voice_token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode: entered }),
+      });
+      if (!response.ok) {
+        status.textContent = "Passcode not accepted for voice-enabled demo.";
+        passcode.focus();
+        return;
+      }
+      const data = await response.json();
+      if (!data.token) {
+        status.textContent = "Voice access is unavailable right now.";
+        return;
+      }
+      status.textContent = "Opening voice-enabled demo for this session...";
+      openBuild(`${PLAY_URL}?voice_token=${encodeURIComponent(data.token)}`);
+    } catch (error) {
+      status.textContent = "Could not reach voice gate. Try the voice-safe demo.";
+    }
   });
 
   passcode.addEventListener("keydown", (event) => {
