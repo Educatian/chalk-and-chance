@@ -65,6 +65,16 @@ try {
     $failed += 1
   }
 
+  $lines += "== API cost gate =="
+  $apiCostOutput = (& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\validate_api_cost_gate.ps1") -Root $root 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
+  $apiCostOk = $LASTEXITCODE -eq 0 -and $apiCostOutput.Contains("APICOST QA: PASS")
+  $lines += if ($apiCostOk) { "PASS" } else { "FAIL" }
+  $lines += $apiCostOutput.Trim()
+  $lines += ""
+  if (-not $apiCostOk) {
+    $failed += 1
+  }
+
   if (-not $SkipScreenshots) {
     $lines += "== UI screenshot refresh =="
     $shotOutput = (& $GodotPath --path . --scene "res://scenes/dev/UILayoutShots.tscn" 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine

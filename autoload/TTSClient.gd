@@ -27,6 +27,11 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		var cfg := _web_auth_config()
 		var base := str(cfg.get("api_base", "")).strip_edges().rstrip("/") if typeof(cfg) == TYPE_DICTIONARY else ""
+		if _web_public_demo_mode():
+			voice_gate_required = true
+			voice_gate_unlocked = false
+			enabled = false
+			return
 		if base != "":
 			endpoint = base + "/tts"
 			voice_gate_required = bool(cfg.get("tts_requires_gate", true))
@@ -51,6 +56,14 @@ func _web_voice_token() -> String:
 		return str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('voice_token') || new URLSearchParams(window.location.hash.slice(1)).get('voice_token') || '')", true)).strip_edges()
 	return ""
 
+func _web_public_demo_mode() -> bool:
+	if not OS.has_feature("web"):
+		return false
+	if ClassDB.class_exists("JavaScriptBridge"):
+		var raw := str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('public_demo') || new URLSearchParams(window.location.hash.slice(1)).get('public_demo') || '')", true)).strip_edges().to_lower()
+		return raw == "1" or raw == "true" or raw == "yes"
+	return false
+
 func speak(persona_id: String, text: String, emotion: String = "neutral") -> void:
 	if not enabled or text.strip_edges() == "" or not bool(GameState.get_setting("audio_enabled", true)):
 		return
@@ -72,7 +85,7 @@ func voice_status_label() -> String:
 
 func voice_status_detail() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
-		return "Voice is off in the public demo to prevent ElevenLabs charges. Use the passcode gate for voice."
+		return "Voice is off in the public demo to prevent paid API usage. Use the passcode gate for voice."
 	if enabled:
 		return "Voice is enabled. Sound toggles both SFX and spoken student lines."
 	return "Voice is unavailable because no TTS endpoint is configured."

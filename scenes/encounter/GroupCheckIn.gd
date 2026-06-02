@@ -147,6 +147,10 @@ func _on_move(tag: String) -> void:
 		_leave()
 		return
 	_busy = true
+	if LLMClient.use_stub:
+		_busy = false
+		_local_fallback(tag)
+		return
 	var payload := {
 		"session_id": "grp",
 		"members": members,

@@ -19,7 +19,7 @@ The current build includes:
 - Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
 - Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
 - Product QA gates for UI clipping/overlap, visual assets, scenario integrity, telemetry, and playable learning loops.
-- Public web demo access keeps ElevenLabs voice off unless opened through the server-verified passcode gate.
+- Public web demo access opens an API-safe offline taste mode; paid AI voice stays off unless opened through the server-verified passcode gate.
 
 ## Screenshots
 
@@ -95,6 +95,7 @@ Current gates include:
 - Visual asset audit for backdrops, icons, portraits, and sprite distortion
 - Learning surface content audit for adaptive coaching, practice targets, research edge, unlock guidance, and leaderboard evidence
 - Landing/social metadata audit for Open Graph, Twitter cards, favicon assets, and 1200x630 share image quality
+- API cost gate audit for public-demo offline mode, server-verified voice-token access, and TTS token validation before ElevenLabs calls
 - Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
 - Encounter smoke test and differentiated persona behavior
 - Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology

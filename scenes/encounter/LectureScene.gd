@@ -588,6 +588,8 @@ func _on_move(tag: String) -> void:
 func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode: String, free_text: String) -> void:
 	if _http == null or _llm_busy:
 		return
+	if LLMClient.use_stub:
+		return
 	_scenario_context = _build_scenario_context(sel)
 	_lecture_history.append({"speaker": "Teacher", "text": _lecture_move_gloss(tag, input_mode, free_text)})
 	var active: Dictionary = _scenario_context.get("active_student", {})

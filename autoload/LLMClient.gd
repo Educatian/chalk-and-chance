@@ -22,9 +22,19 @@ func _ready() -> void:
 	# The web build can't reach the local FastAPI backend, so it talks to the hosted
 	# Cloudflare Worker /turn (real Gemini students). Desktop keeps the local backend.
 	if OS.has_feature("web"):
+		if _web_public_demo_mode():
+			use_stub = true
 		var base := _read_api_base()
 		if base != "":
 			endpoint = base.rstrip("/") + "/turn"
+
+func _web_public_demo_mode() -> bool:
+	if not OS.has_feature("web"):
+		return false
+	if ClassDB.class_exists("JavaScriptBridge"):
+		var raw := str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('public_demo') || new URLSearchParams(window.location.hash.slice(1)).get('public_demo') || '')", true)).strip_edges().to_lower()
+		return raw == "1" or raw == "true" or raw == "yes"
+	return false
 
 func _read_api_base() -> String:
 	var f := FileAccess.open("res://data/auth_config.json", FileAccess.READ)

@@ -510,6 +510,9 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 		return
 	_dialogue_tail.append({"speaker": "Teacher", "text": _move_gloss(tag, input_mode, free_text)})
 	_move_history.append({"tag": tag, "targets": targets})
+	if LLMClient.use_stub:
+		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, student, {}, "")
+		return
 	var payload := {
 		"session_id": "gym",
 		"scenario_id": str(Game.current_scenario_id),
