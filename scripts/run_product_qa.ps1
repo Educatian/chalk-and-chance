@@ -55,6 +55,16 @@ try {
     }
   }
 
+  $lines += "== Landing/social metadata =="
+  $landingOutput = (& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\validate_landing_meta.ps1") -Root $root 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
+  $landingOk = $LASTEXITCODE -eq 0 -and $landingOutput.Contains("LANDING QA: PASS")
+  $lines += if ($landingOk) { "PASS" } else { "FAIL" }
+  $lines += $landingOutput.Trim()
+  $lines += ""
+  if (-not $landingOk) {
+    $failed += 1
+  }
+
   if (-not $SkipScreenshots) {
     $lines += "== UI screenshot refresh =="
     $shotOutput = (& $GodotPath --path . --scene "res://scenes/dev/UILayoutShots.tscn" 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine

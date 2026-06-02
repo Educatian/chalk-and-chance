@@ -94,6 +94,7 @@ Current gates include:
 - UI layout audit in normal and large-text modes, including text clipping, interactive overlap, button text fit, and dialogue-box padding
 - Visual asset audit for backdrops, icons, portraits, and sprite distortion
 - Learning surface content audit for adaptive coaching, practice targets, research edge, unlock guidance, and leaderboard evidence
+- Landing/social metadata audit for Open Graph, Twitter cards, favicon assets, and 1200x630 share image quality
 - Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
 - Encounter smoke test and differentiated persona behavior
 - Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology
