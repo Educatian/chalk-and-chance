@@ -93,6 +93,7 @@ Current gates include:
 - Project load
 - UI layout audit, including text clipping, interactive overlap, button text fit, and dialogue-box padding
 - Visual asset audit for backdrops, icons, portraits, and sprite distortion
+- Learning surface content audit for adaptive coaching, practice targets, research edge, unlock guidance, and leaderboard evidence
 - Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
 - Encounter smoke test and differentiated persona behavior
 - Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology

@@ -10,6 +10,7 @@ $scenes = @(
   @{ Name = "Project load"; Args = @("--headless", "--path", ".", "--quit"); Expect = "" },
   @{ Name = "UI layout audit"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/UILayoutAudit.tscn"); Expect = "UIAUDIT PASS" },
   @{ Name = "Visual asset audit"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/VisualAssetAudit.tscn"); Expect = "VISUALASSET PASS" },
+  @{ Name = "Learning surface content"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/ProductContentAudit.tscn"); Expect = "PRODUCTCONTENT PASS" },
   @{ Name = "Scenario/data integrity"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/ScenarioIntegrityAudit.tscn"); Expect = "SCENARIOINTEGRITY PASS" },
   @{ Name = "Encounter smoke + differentiation"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/SmokeTest.tscn"); Expect = "SMOKE TEST: PASS" },
   @{ Name = "Lecture mode"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/LectureTest.tscn"); Expect = "LECTURE TEST: PASS" },
