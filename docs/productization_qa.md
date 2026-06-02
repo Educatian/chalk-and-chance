@@ -14,7 +14,7 @@ This checklist treats the game as a releasable educational product, not only a p
 - Evidence layer: telemetry/xAPI writes turn evidence and competency signals.
 - Product motivation: Hub shows level progress, next upgrade XP, items, adaptive practice recommendation, and local leaderboard.
 - Mission clarity: selecting a mission opens a briefing with scenario art, story hook, success conditions, evidence edge, reward, and first-move guidance before rehearsal starts.
-- Learning evidence visibility: Hub includes an Evidence Journal showing competency estimates, evidence counts, uncertainty, research anchors, and recent run evidence.
+- Learning evidence visibility: Hub includes an Evidence Journal showing competency estimates, evidence counts, uncertainty, research anchors, recent run evidence, and an evidence-backed next practice target.
 - Debrief consistency: encounter, lecture, gym, group check-in, and overworld lesson endings show explicit score drivers, next focus, reward/progression information where applicable, and player-controlled Continue/replay actions.
 
 ## One Command

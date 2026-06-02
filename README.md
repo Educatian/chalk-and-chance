@@ -15,7 +15,7 @@ The current build includes:
 - Multiple classroom formats: discussion, lecture, group work, independent work, one-on-one encounter, and gym capstone.
 - Free-text teacher talk: players can type their own line and the game maps it to a teaching move.
 - Explicit debrief panels across encounter, lecture, gym, group check-in, and overworld lessons, with score drivers, next focus, rewards, and Continue/replay actions.
-- Evidence Journal: live ECD/Elo-style competency estimates, evidence counts, uncertainty, research anchors, and recent run evidence.
+- Evidence Journal: live ECD/Elo-style competency estimates, evidence counts, uncertainty, research anchors, recent run evidence, and a practice target for the next high-leverage move.
 - Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
 - Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
 - Product QA gates for UI clipping/overlap, visual assets, scenario integrity, telemetry, and playable learning loops.
