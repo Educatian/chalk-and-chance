@@ -264,7 +264,7 @@ func _show_complete_panel(run_record: Dictionary, reward: Dictionary) -> void:
 		int(round(participation * 120.0)),
 	], Vector2(96, 326), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
 	_overlay_label(overlay, "Focus: sample reasoning, press the shared error, rebalance airtime.", Vector2(96, 374), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
-	_overlay_label(overlay, _group_next_step(), Vector2(96, 416), 13, Color(0.72, 0.92, 0.78), Vector2(500, 24))
+	_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(96, 416), 13, Color(0.72, 0.92, 0.78), Vector2(600, 24))
 	var cont := Button.new()
 	cont.text = "Continue"
 	cont.position = Vector2(720, 448)
@@ -279,13 +279,6 @@ func _group_score() -> int:
 
 func _scenario_title() -> String:
 	return str(scenario_context.get("title", shared_concept))
-
-func _group_next_step() -> String:
-	if participation < 0.72:
-		return "Next: invite the quieter member sooner."
-	if understanding < 0.82:
-		return "Next: press the misconception one more step."
-	return "Next: move before one pod takes all your time."
 
 func _items_awarded_text(items) -> String:
 	if typeof(items) != TYPE_DICTIONARY:

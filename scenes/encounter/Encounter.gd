@@ -909,7 +909,7 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 186), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
 	else:
 		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 232), 7, Color(0.66, 0.90, 0.78), Vector2(292, 12))
-		_overlay_label(overlay, _competency_next_step(rows), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(292, 18))
+		_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(292, 18))
 
 	_continue_btn = Button.new()
 	_continue_btn.text = "Continue"
@@ -934,13 +934,6 @@ func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Co
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(l)
 	return l
-
-func _competency_next_step(rows: Array) -> String:
-	var lowest: Dictionary = rows[0]
-	for r in rows:
-		if float(r["prob"]) < float(lowest["prob"]):
-			lowest = r
-	return "Next: %s, one clean try." % str(lowest["label"])
 
 func _score_driver_text(run_record: Dictionary) -> String:
 	var u := int(round(understanding * 100.0))

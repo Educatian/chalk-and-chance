@@ -113,6 +113,107 @@ func practice_recommendation() -> String:
 		int(weakest.get("n", 0)),
 	]
 
+func evidence_practice_target(verbose := true) -> String:
+	var rows := Competency.summary()
+	var target := {}
+	for r in rows:
+		if int(r.get("n", 0)) > 0:
+			if target.is_empty() or float(r.get("prob", 0.5)) < float(target.get("prob", 0.5)):
+				target = r
+	if target.is_empty():
+		for r2 in rows:
+			if int(r2.get("n", 0)) <= 0:
+				target = r2
+				break
+	if target.is_empty():
+		return "Practice target: clear a mission to convert choices into evidence-backed coaching."
+	var skill := str(target.get("skill", ""))
+	var label := str(target.get("label", skill))
+	var move := _practice_move_for(skill, verbose)
+	var n := int(target.get("n", 0))
+	if n <= 0:
+		return "Practice target: collect first evidence for %s. Try: %s." % [label, move]
+	var pct := int(round(float(target.get("prob", 0.5)) * 100.0))
+	if verbose:
+		return "Practice target: %s is the growth edge (%d%%, %d events). Try: %s." % [label, pct, n, move]
+	return "Practice: %s %d%% -> %s" % [_compact_skill_label(skill, label), pct, move]
+
+func _practice_move_for(skill: String, verbose: bool) -> String:
+	if verbose:
+		match skill:
+			"elicit_reasoning":
+				return "ask the learner to explain their reasoning before you evaluate it"
+			"extend_thinking":
+				return "press for a second representation or a why-because explanation"
+			"revoicing":
+				return "make the student's idea public in your own words, then check it"
+			"wait_time":
+				return "pause before prompting again so the next response is earned"
+			"behavior_mgmt":
+				return "use proximity or a quiet redirect before escalating"
+			"restraint":
+				return "avoid taking over; cue the next step instead of telling the answer"
+			"behavior_specific_praise":
+				return "name the exact productive behavior you want repeated"
+			"funds_of_knowledge":
+				return "connect the task to a learner asset or lived example"
+			"group_monitoring":
+				return "observe the pod before intervening so you know the shared error"
+			"formative_check":
+				return "ask for a quick sample of thinking, not a yes/no check"
+			"status_treatment":
+				return "redistribute airtime to a quieter learner with competence"
+	match skill:
+		"elicit_reasoning":
+			return "why?"
+		"extend_thinking":
+			return "new model"
+		"revoicing":
+			return "revoice then check"
+		"wait_time":
+			return "hold the pause"
+		"behavior_mgmt":
+			return "quiet cue"
+		"restraint":
+			return "cue, do not tell"
+		"behavior_specific_praise":
+			return "specific praise"
+		"funds_of_knowledge":
+			return "asset link"
+		"group_monitoring":
+			return "observe"
+		"formative_check":
+			return "quick sample"
+		"status_treatment":
+			return "rebalance airtime"
+	return "produce visible evidence"
+
+func _compact_skill_label(skill: String, fallback: String) -> String:
+	match skill:
+		"elicit_reasoning":
+			return "Eliciting"
+		"extend_thinking":
+			return "Extending"
+		"revoicing":
+			return "Revoicing"
+		"wait_time":
+			return "Wait-time"
+		"behavior_mgmt":
+			return "Mgmt"
+		"restraint":
+			return "Restraint"
+		"behavior_specific_praise":
+			return "Praise"
+		"funds_of_knowledge":
+			return "Asset connect"
+		"group_monitoring":
+			return "Monitoring"
+		"formative_check":
+			return "Formative check"
+		"status_treatment":
+			return "Status treatment"
+	return fallback
+
 func _next_open_scenario_title() -> String:
 	for id in SCENARIOS:
 		var cfg := _load_scenario_cfg(id)

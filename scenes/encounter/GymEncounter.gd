@@ -738,7 +738,7 @@ func _show_complete_panel(won: bool, resolved: int, reward: Dictionary, run_reco
 	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.72, 0.82, 0.96), Vector2(404, 14))
 	_overlay_label(overlay, "Drivers: Reach%d Order%d Calm%d" % [resolved * 60, int(order), int(composure)], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
 	_overlay_label(overlay, "Focus: switch, monitor, support.", Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
-	_overlay_label(overlay, _gym_next_step(won, resolved), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(250, 16))
+	_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(308, 16))
 	var cont := Button.new()
 	cont.text = "Continue"
 	cont.position = Vector2(360, 224)
@@ -761,15 +761,6 @@ func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Co
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(l)
 	return l
-
-func _gym_next_step(won: bool, resolved: int) -> String:
-	if resolved < students.size():
-		return "Next: switch targets earlier."
-	if order < 70.0:
-		return "Next: signal before drift."
-	if won:
-		return "Next: balance target and room."
-	return "Next: highest-need first."
 
 # --- view --------------------------------------------------------------------
 

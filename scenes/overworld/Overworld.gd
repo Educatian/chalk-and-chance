@@ -761,11 +761,11 @@ func _end_lesson() -> void:
 	var next_line := _debrief_note(attention)
 	if not miss_tips.is_empty():
 		next_line = "Next: %s." % str(miss_tips[0]).capitalize()
-	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\n%s\n%s\n%s" % [
+	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\n%s\n%s\n%s\n%s" % [
 		_scenario_title, int(attention), int(_composure), _disruptions,
 		_engaged_count(), _npcs.size(), stars, _objectives.size(),
 		reward_lines, " | ".join(objective_tags), next_line,
-		Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
+		Game.evidence_practice_target(false), Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
 	if _attempt > 1:
 		summary += "\nReplay #%d: the room drifts faster each attempt." % _attempt
 	_pending_debrief = summary

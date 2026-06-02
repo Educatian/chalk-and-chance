@@ -789,7 +789,7 @@ func _open_evidence_journal() -> void:
 	var anchors := _competency_anchors()
 	var rows := Competency.summary()
 	var target := Label.new()
-	target.text = _wrap_words(_practice_target_text(rows), 82)
+	target.text = _wrap_words(Game.evidence_practice_target(true), 82)
 	target.position = Vector2(114, 136)
 	target.size = Vector2(720, 34)
 	target.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -821,54 +821,6 @@ func _open_evidence_journal() -> void:
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
 	close.grab_focus()
-
-func _practice_target_text(rows: Array) -> String:
-	var target: Dictionary = {}
-	for r in rows:
-		if int(r.get("n", 0)) > 0:
-			if target.is_empty() or float(r.get("prob", 0.5)) < float(target.get("prob", 0.5)):
-				target = r
-	if target.is_empty():
-		for r2 in rows:
-			if int(r2.get("n", 0)) <= 0:
-				target = r2
-				break
-	if target.is_empty():
-		return "Practice target: clear a mission to convert choices into evidence-backed coaching."
-	var skill := str(target.get("skill", ""))
-	var label := str(target.get("label", skill))
-	var n := int(target.get("n", 0))
-	var move := _practice_move_for(skill)
-	if n <= 0:
-		return "Practice target: collect first evidence for %s. Try: %s." % [label, move]
-	var pct := int(round(float(target.get("prob", 0.5)) * 100.0))
-	return "Practice target: %s is the growth edge (%d%%, %d events). Try: %s." % [label, pct, n, move]
-
-func _practice_move_for(skill: String) -> String:
-	match skill:
-		"elicit_reasoning":
-			return "ask the learner to explain their reasoning before you evaluate it"
-		"extend_thinking":
-			return "press for a second representation or a why-because explanation"
-		"revoicing":
-			return "make the student's idea public in your own words, then check it"
-		"wait_time":
-			return "pause before prompting again so the next response is earned"
-		"behavior_mgmt":
-			return "use proximity or a quiet redirect before escalating"
-		"restraint":
-			return "avoid taking over; cue the next step instead of telling the answer"
-		"behavior_specific_praise":
-			return "name the exact productive behavior you want repeated"
-		"funds_of_knowledge":
-			return "connect the task to a learner asset or lived example"
-		"group_monitoring":
-			return "observe the pod before intervening so you know the shared error"
-		"formative_check":
-			return "ask for a quick sample of thinking, not a yes/no check"
-		"status_treatment":
-			return "redistribute airtime to a quieter learner with competence"
-	return "choose a move that produces visible classroom evidence"
 
 func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: float) -> void:
 	var fd := GameState.ui_font_delta()

@@ -111,6 +111,8 @@ func _ready() -> void:
 	hub.queue_free()
 	await _frames(1)
 
+	await _audit_debrief_practice_targets()
+
 	if _issues.is_empty():
 		print("PRODUCTCONTENT PASS")
 	else:
@@ -135,12 +137,112 @@ func _seed_competencies() -> void:
 		Competency.theta[k] = float(sample[k]["theta"])
 		Competency.n[k] = float(sample[k]["n"])
 
+func _audit_debrief_practice_targets() -> void:
+	Game.current_scenario_id = "lecture_fractions"
+	var lecture: Node = load("res://scenes/encounter/LectureScene.tscn").instantiate()
+	add_child(lecture)
+	await _frames(2)
+	lecture.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
+	await _frames(2)
+	lecture.progress = 100.0
+	lecture.comprehension = 86.0
+	lecture.attention = 82.0
+	lecture.composure = 88.0
+	lecture._finish(true)
+	await _frames(2)
+	var lecture_complete := _find_named(lecture, "LectureComplete")
+	if lecture_complete == null:
+		_issue("Lecture debrief did not open")
+	else:
+		_assert_text("Lecture debrief", lecture_complete, ["LECTURE DEBRIEF", "Practice:", "Continue"])
+	lecture.queue_free()
+	await _frames(1)
+
+	Game.current_scenario_id = "gym_capstone"
+	var gym: Node = load("res://scenes/encounter/GymEncounter.tscn").instantiate()
+	add_child(gym)
+	await _frames(2)
+	gym.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
+	await _frames(2)
+	for s in gym.students:
+		s["resolved"] = true
+		s["u"] = 0.88
+	gym.composure = 84.0
+	gym.order = 82.0
+	gym._finish(true)
+	await _frames(2)
+	var gym_complete := _find_named(gym, "GymComplete")
+	if gym_complete == null:
+		_issue("Gym debrief did not open")
+	else:
+		_assert_text("Gym debrief", gym_complete, ["GYM DEBRIEF", "Practice:", "Continue"])
+	gym.queue_free()
+	await _frames(1)
+
+	var group: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
+	add_child(group)
+	await _frames(2)
+	group.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
+	await _frames(2)
+	group.understanding = 0.82
+	group.participation = 0.78
+	group.revealed = true
+	group._check_win()
+	await _frames(2)
+	var group_complete := _find_named(group, "GroupComplete")
+	if group_complete == null:
+		_issue("Group debrief did not open")
+	else:
+		_assert_text("Group debrief", group_complete, ["GROUP DEBRIEF", "Practice:", "Continue"])
+	group.queue_free()
+	await _frames(1)
+
+	Game.clear_lesson()
+	Game.current_scenario_id = "independent_fractions"
+	var over: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
+	add_child(over)
+	await _frames(3)
+	_prepare_overworld_clear(over)
+	over._end_lesson()
+	await _frames(2)
+	over._on_reflect({"_reflect": "worked"})
+	await _frames(2)
+	if over._overlay == null:
+		_issue("Overworld debrief did not open")
+	else:
+		_assert_text("Overworld debrief", over._overlay, ["DEBRIEF", "Practice:", "Research edge:", "Evidence:"])
+	over.queue_free()
+	Game.clear_lesson()
+	await _frames(1)
+
+func _prepare_overworld_clear(sc: Node) -> void:
+	sc._composure = 92.0
+	sc._disruptions = 0
+	for st in sc._npcs.keys():
+		sc._npcs[st]["offtask"] = 0.0
+		Game.note_visit(str(sc._npcs[st].get("persona_id", "")))
+	if sc._objective_label != null:
+		sc._objective_label.text = sc._objectives_status(100.0)
+	if sc._attention_fill != null:
+		sc._attention_fill.size = Vector2(216.0, 12.0)
+	if sc._composure_fill != null:
+		sc._composure_fill.size = Vector2(156.0 * sc._composure / GameState.max_composure(), 10.0)
+
 func _assert_text(label: String, root: Node, needles: Array) -> void:
 	var text := _visible_text(root).to_lower()
 	for needle in needles:
 		var n := str(needle).to_lower()
 		if text.find(n) == -1:
 			_issue("%s missing text: %s | visible=%s" % [label, str(needle), _truncate(text, 220)])
+
+func _find_named(root: Node, node_name: String) -> Node:
+	if str(root.name) == node_name:
+		return root
+	for ch in root.get_children():
+		var found := _find_named(ch, node_name)
+		if found != null:
+			return found
+	return null
 
 func _visible_text(root: Node) -> String:
 	var parts: Array = []
