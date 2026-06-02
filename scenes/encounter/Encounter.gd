@@ -101,7 +101,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_meters()
 	_set_dialogue("You walk over to %s's desk." % display_name)
-	_set_coach("Read the student, then choose a move. Tip: surface their reasoning before correcting. Waiting 3s before you act earns a bonus.")
+	_set_coach("Read the student. Surface reasoning before correcting. Wait for green to earn a bonus.")
 	_update_portrait("neutral")
 	_arm_turn()
 
@@ -341,8 +341,8 @@ func _build_ui() -> void:
 	_result = _make_label("", Vector2(16, 170), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 12)
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _make_label("", Vector2(16, 182), 7, Color(0.70, 0.90, 0.75))
-	_coach.size = Vector2(448, 18)
+	_coach = _make_label("", Vector2(16, 180), 7, Color(0.70, 0.90, 0.75))
+	_coach.size = Vector2(448, 14)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# Move buttons: two rows with enough theme-minimum height to avoid overlap.

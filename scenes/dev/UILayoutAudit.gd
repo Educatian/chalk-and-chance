@@ -167,6 +167,26 @@ func _scan(label: String, root: Node) -> void:
 				var area := ar.intersection(br).get_area()
 				if area > 24.0:
 					_issues.append("%s overlap: %s %s with %s %s" % [label, _node_name(a), str(ar), _node_name(b), str(br)])
+	var labels := controls.filter(func(c): return c is Label and (not _inside_scroll(c) or _visible_in_scroll(c)))
+	for lc in labels:
+		var l: Label = lc
+		if l.text.strip_edges() == "" or _under_interactive(l):
+			continue
+		var lr := _label_text_rect(l)
+		if lr.size.x <= 0.5 or lr.size.y <= 0.5:
+			continue
+		for ic in interactives:
+			var target: Control = ic
+			if _ancestor_related(l, target):
+				continue
+			if not _draws_after(target, l):
+				continue
+			var tr := _rect(target)
+			if lr.intersects(tr):
+				var hit := lr.intersection(tr)
+				var text_area := hit.get_area()
+				if text_area > 18.0 and hit.size.x > 3.0 and hit.size.y > 3.0:
+					_issues.append("%s text occluded: %s %s by %s %s text=%s" % [label, _node_name(l), str(lr), _node_name(target), str(tr), _quote_text(l.text)])
 
 func _scan_text_fit(label: String, c: Control) -> void:
 	if c is Button:
@@ -241,6 +261,16 @@ func _walk(n: Node, out: Array) -> void:
 func _rect(c: Control) -> Rect2:
 	return c.get_global_rect()
 
+func _label_text_rect(l: Label) -> Rect2:
+	var r := l.get_global_rect()
+	var min_size := l.get_combined_minimum_size()
+	var text_size := r.size
+	if l.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		text_size = Vector2(min_size.x, maxf(r.size.y, min_size.y))
+	elif r.size.x <= 0.5 or r.size.y <= 0.5:
+		text_size = min_size
+	return Rect2(r.position, text_size).grow(-1.0)
+
 func _is_interactive(c: Control) -> bool:
 	for cls in INTERACTIVE:
 		if c.is_class(cls):
@@ -249,6 +279,42 @@ func _is_interactive(c: Control) -> bool:
 
 func _ancestor_related(a: Node, b: Node) -> bool:
 	return a.is_ancestor_of(b) or b.is_ancestor_of(a)
+
+func _under_interactive(c: Node) -> bool:
+	var p := c.get_parent()
+	while p != null:
+		if p is Control and _is_interactive(p as Control):
+			return true
+		p = p.get_parent()
+	return false
+
+func _draws_after(a: Control, b: Control) -> bool:
+	if a.z_index != b.z_index:
+		return a.z_index > b.z_index
+	var common := _common_parent(a, b)
+	if common == null:
+		return true
+	var abranch := _branch_under(common, a)
+	var bbranch := _branch_under(common, b)
+	if abranch == null or bbranch == null or abranch == bbranch:
+		return true
+	return abranch.get_index() > bbranch.get_index()
+
+func _common_parent(a: Node, b: Node) -> Node:
+	var p := a
+	while p != null:
+		if p == b or p.is_ancestor_of(b):
+			return p
+		p = p.get_parent()
+	return null
+
+func _branch_under(parent: Node, child: Node) -> Node:
+	var n := child
+	var p := child.get_parent()
+	while p != null and p != parent:
+		n = p
+		p = p.get_parent()
+	return n if p == parent else null
 
 func _inside_scroll(c: Node) -> bool:
 	var p := c.get_parent()

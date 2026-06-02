@@ -30,9 +30,11 @@ func _build() -> void:
 	add_child(title)
 
 	var sub := Label.new()
-	sub.text = "Start with the demo lesson. Badges unlock harder classroom rehearsals."
+	sub.text = "Start with demo lessons. Unlock harder classrooms."
 	sub.position = Vector2(42, 74)
-	sub.add_theme_font_size_override("font_size", 16 + fd)
+	sub.size = Vector2(410, 22)
+	sub.clip_text = false
+	sub.add_theme_font_size_override("font_size", 15 + fd)
 	sub.add_theme_color_override("font_color", Color(0.7, 0.85, 0.95))
 	add_child(sub)
 
@@ -984,16 +986,16 @@ func _open_items() -> void:
 	overlay.add_child(title)
 
 	var help := Label.new()
-	help.text = _wrap_words("Equip up to four classroom tools. Use them during lessons to recover composure, notice cues, manage order, or set a practice goal.", 68)
+	help.text = _wrap_words("Equip up to four tools. Use them to recover, notice cues, manage order, or set a practice goal.", 68)
 	help.position = Vector2(140, 106)
-	help.size = Vector2(680, 38)
+	help.size = Vector2(680, 42)
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.clip_text = true
 	help.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
 	help.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
 	overlay.add_child(help)
 
-	var y := 150.0
+	var y := 158.0
 	var ids := Items.all_ids()
 	ids.sort()
 	for id in ids:
