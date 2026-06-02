@@ -1,8 +1,10 @@
 extends Node
 
 const MIN_TEXTURE_RECT := 16.0
+const MIN_BUTTON_ICON_EDGE := 16.0
 const MIN_SPRITE_EDGE := 12.0
 const MAX_SPRITE_SQUASH := 0.08
+const MAX_TEXTURE_RECT_SQUASH := 0.08
 
 var _issues: Array = []
 
@@ -154,6 +156,8 @@ func _walk(label: String, n: Node) -> void:
 		return
 	if n is TextureRect:
 		_check_texture_rect(label, n as TextureRect)
+	elif n is Button:
+		_check_button_icon(label, n as Button)
 	elif n is Sprite2D:
 		_check_sprite(label, n as Sprite2D)
 	for ch in n.get_children():
@@ -168,6 +172,21 @@ func _check_texture_rect(label: String, tr: TextureRect) -> void:
 	var r := tr.get_global_rect()
 	if r.size.x < MIN_TEXTURE_RECT or r.size.y < MIN_TEXTURE_RECT:
 		_issues.append("%s tiny TextureRect: %s rect=%s tex=%s" % [label, _node_path(tr), str(r), _tex_size(tr.texture)])
+	if tr.stretch_mode == TextureRect.STRETCH_SCALE and r.size.x > 0.0 and r.size.y > 0.0:
+		var tex_ratio := float(tr.texture.get_width()) / maxf(1.0, float(tr.texture.get_height()))
+		var draw_ratio := r.size.x / r.size.y
+		var squash := absf((draw_ratio / maxf(0.001, tex_ratio)) - 1.0)
+		if squash > MAX_TEXTURE_RECT_SQUASH:
+			_issues.append("%s squashed TextureRect: %s rect=%s tex=%s stretch=SCALE ratio_delta=%.2f" % [label, _node_path(tr), str(r), _tex_size(tr.texture), squash])
+
+func _check_button_icon(label: String, button: Button) -> void:
+	if not button.visible or button.icon == null:
+		return
+	var rect := button.get_global_rect()
+	if button.icon.get_width() < MIN_BUTTON_ICON_EDGE or button.icon.get_height() < MIN_BUTTON_ICON_EDGE:
+		_issues.append("%s tiny button icon source: %s icon=%s" % [label, _node_path(button), _tex_size(button.icon)])
+	if rect.size.x < MIN_BUTTON_ICON_EDGE or rect.size.y < MIN_BUTTON_ICON_EDGE:
+		_issues.append("%s tiny button icon surface: %s rect=%s icon=%s" % [label, _node_path(button), str(rect), _tex_size(button.icon)])
 
 func _check_sprite(label: String, spr: Sprite2D) -> void:
 	if not spr.visible:
