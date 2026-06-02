@@ -87,6 +87,16 @@ try {
     if (-not $encOk) {
       $failed += 1
     }
+
+    $lines += "== Screenshot quality gate =="
+    $qualityOutput = (& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\validate_screenshots.ps1") -Root $root 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
+    $qualityOk = $LASTEXITCODE -eq 0 -and $qualityOutput.Contains("SCREENSHOT QA: PASS")
+    $lines += if ($qualityOk) { "PASS" } else { "FAIL" }
+    $lines += $qualityOutput.Trim()
+    $lines += ""
+    if (-not $qualityOk) {
+      $failed += 1
+    }
   }
 
   $lines += "SUMMARY: " + ($(if ($failed -eq 0) { "PASS" } else { "FAIL ($failed gate(s))" }))

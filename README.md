@@ -96,7 +96,7 @@ Current gates include:
 - Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
 - Encounter smoke test and differentiated persona behavior
 - Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology
-- Screenshot refresh for the main product surfaces, including completion panels, reflection prompts, and overworld debrief
+- Screenshot refresh plus quality validation for the main product surfaces, including completion panels, reflection prompts, and overworld debrief
 
 The latest report is written to `tools/product_qa_report.txt`.
 
