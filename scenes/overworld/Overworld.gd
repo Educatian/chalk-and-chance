@@ -1111,6 +1111,7 @@ func _group_scenario_context(pod: Array) -> Dictionary:
 		"title": str(_scenario_cfg.get("title", _scenario_title)),
 		"format": str(_scenario_cfg.get("format", _format)),
 		"arrangement": str(_scenario_cfg.get("arrangement", "")),
+		"badge": str(_scenario_cfg.get("badge", "")),
 		"objectives": objective_labels,
 		"collective_reasoning": str(_scenario_cfg.get("collective_reasoning", "")),
 		"pod_targets": pod_targets,

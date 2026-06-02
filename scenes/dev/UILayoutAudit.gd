@@ -154,6 +154,8 @@ func _audit_group_checkin() -> void:
 	var sc: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
+	sc.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
+	await get_tree().process_frame
 	_scan("GroupCheckIn", sc)
 	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
 	await get_tree().process_frame

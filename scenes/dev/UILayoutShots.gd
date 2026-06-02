@@ -183,6 +183,8 @@ func _shot_group() -> void:
 	var sc: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
 	add_child(sc)
 	await _frames(10)
+	sc.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
+	await _frames(3)
 	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but everyone is moving fast.\""
 	await _save("ui_group.png")
 	sc.understanding = 0.82

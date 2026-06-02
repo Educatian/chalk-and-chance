@@ -15,6 +15,7 @@ var shared_concept := "comparing fractions"
 var collective_status := "shared_misconception"
 var collective_reasoning := "the group thinks 1/8 is bigger than 1/4 because 8 > 4"
 var scenario_context: Dictionary = {}
+var target_badge := ""
 
 var understanding := 0.2
 var participation := 0.3
@@ -39,6 +40,7 @@ func setup(data: Dictionary) -> void:
 	collective_status = str(data.get("collective_status", collective_status))
 	collective_reasoning = str(data.get("collective_reasoning", collective_reasoning))
 	scenario_context = data.get("scenario_context", {})
+	target_badge = str(data.get("badge", scenario_context.get("badge", target_badge)))
 	if is_inside_tree() and _member_box != null:
 		_populate_members()
 		_refresh()
@@ -211,18 +213,22 @@ func _check_win() -> void:
 		_set_dialogue("This pod is on track - they reasoned past their shared error AND everyone is in it.")
 		_set_coach("Coach Vee: you surfaced their thinking, pressed the crack, and rebalanced the talk. That is monitoring done right.")
 		var score := _group_score()
+		var reward := {}
+		if target_badge != "":
+			reward = GameState.award_badge(target_badge)
+			Sfx.play("badge")
 		var run_record := GameState.record_leaderboard({
 			"scenario_id": str(scenario_context.get("id", Game.current_scenario_id)),
 			"title": _scenario_title(),
 			"mode": "Group",
-			"badge": "",
+			"badge": target_badge,
 			"score": score,
 			"detail": "Understanding %d%%  Participation %d%%" % [int(round(understanding * 100.0)), int(round(participation * 100.0))],
-			"level_up": false,
+			"level_up": bool(reward.get("level_up", false)),
 		})
-		_show_complete_panel(run_record)
+		_show_complete_panel(run_record, reward)
 
-func _show_complete_panel(run_record: Dictionary) -> void:
+func _show_complete_panel(run_record: Dictionary, reward: Dictionary) -> void:
 	for b in _buttons:
 		b.visible = false
 	if _dialogue != null:
@@ -241,10 +247,17 @@ func _show_complete_panel(run_record: Dictionary) -> void:
 		int(run_record.get("score", _group_score())),
 		str(run_record.get("rank", "-")),
 	], Vector2(96, 242), 13, Color(0.96, 0.86, 0.50), Vector2(760, 22))
-	_overlay_label(overlay, "Understanding %d%% | Participation %d%% | Revealed status" % [
+	var reward_line := "Understanding %d%% | Participation %d%% | Revealed" % [
 		int(round(understanding * 100.0)),
 		int(round(participation * 100.0)),
-	], Vector2(96, 288), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
+	]
+	if target_badge != "":
+		reward_line += " | Badge %s" % target_badge.to_upper()
+	if bool(reward.get("level_up", false)):
+		reward_line += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
+	if _items_awarded_text(reward.get("items_awarded", {})) != "":
+		reward_line += " | +items"
+	_overlay_label(overlay, reward_line, Vector2(96, 288), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
 	_overlay_label(overlay, "Drivers: monitor %d | press %d | balance %d" % [
 		int(round(understanding * 80.0)),
 		int(round(understanding * 60.0)),
@@ -273,6 +286,16 @@ func _group_next_step() -> String:
 	if understanding < 0.82:
 		return "Next: press the misconception one more step."
 	return "Next: move before one pod takes all your time."
+
+func _items_awarded_text(items) -> String:
+	if typeof(items) != TYPE_DICTIONARY:
+		return ""
+	var parts: Array = []
+	for id in items.keys():
+		var amt := int(items[id])
+		if amt > 0:
+			parts.append("%s x%d" % [Items.short_name_for(str(id)), amt])
+	return ", ".join(parts)
 
 func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
 	var l := Label.new()
