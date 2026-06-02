@@ -28,7 +28,7 @@ func _ready() -> void:
 	await _audit_encounter()
 	await _audit_lecture()
 	await _audit_gym()
-	await _audit_scene("GroupCheckIn", load("res://scenes/encounter/GroupCheckIn.tscn").instantiate())
+	await _audit_group_checkin()
 
 	if _issues.is_empty():
 		print("UIAUDIT PASS")
@@ -150,14 +150,27 @@ func _audit_gym() -> void:
 	sc.queue_free()
 	await get_tree().process_frame
 
+func _audit_group_checkin() -> void:
+	var sc: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
+	add_child(sc)
+	await get_tree().process_frame
+	_scan("GroupCheckIn", sc)
+	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
+	await get_tree().process_frame
+	_scan("GroupCheckIn long dialogue", sc)
+	sc.understanding = 0.82
+	sc.participation = 0.78
+	sc.revealed = true
+	sc._check_win()
+	await get_tree().process_frame
+	_scan("GroupCheckIn completion", sc)
+	sc.queue_free()
+	await get_tree().process_frame
+
 func _audit_scene(label: String, sc: Node) -> void:
 	add_child(sc)
 	await get_tree().process_frame
 	_scan(label, sc)
-	if label == "GroupCheckIn":
-		sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
-		await get_tree().process_frame
-		_scan("GroupCheckIn long dialogue", sc)
 	sc.queue_free()
 	await get_tree().process_frame
 

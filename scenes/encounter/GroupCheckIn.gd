@@ -210,9 +210,82 @@ func _check_win() -> void:
 			b.disabled = true
 		_set_dialogue("This pod is on track - they reasoned past their shared error AND everyone is in it.")
 		_set_coach("Coach Vee: you surfaced their thinking, pressed the crack, and rebalanced the talk. That is monitoring done right.")
-		var t := get_tree().create_timer(3.2)
-		await t.timeout
-		_leave()
+		var score := _group_score()
+		var run_record := GameState.record_leaderboard({
+			"scenario_id": str(scenario_context.get("id", Game.current_scenario_id)),
+			"title": _scenario_title(),
+			"mode": "Group",
+			"badge": "",
+			"score": score,
+			"detail": "Understanding %d%%  Participation %d%%" % [int(round(understanding * 100.0)), int(round(participation * 100.0))],
+			"level_up": false,
+		})
+		_show_complete_panel(run_record)
+
+func _show_complete_panel(run_record: Dictionary) -> void:
+	for b in _buttons:
+		b.visible = false
+	if _dialogue != null:
+		_dialogue.visible = false
+	if _coach != null:
+		_coach.visible = false
+	var overlay := Control.new()
+	overlay.name = "GroupComplete"
+	_layer.add_child(overlay)
+	var panel := Panel.new()
+	panel.position = Vector2(66, 156)
+	panel.size = Vector2(874, 368)
+	overlay.add_child(panel)
+	_overlay_label(overlay, "GROUP DEBRIEF", Vector2(96, 194), 18, Color(0.97, 0.95, 0.86), Vector2(760, 26))
+	_overlay_label(overlay, "CLEARED   |   Score %03d   |   Rank %s" % [
+		int(run_record.get("score", _group_score())),
+		str(run_record.get("rank", "-")),
+	], Vector2(96, 242), 13, Color(0.96, 0.86, 0.50), Vector2(760, 22))
+	_overlay_label(overlay, "Understanding %d%% | Participation %d%% | Revealed status" % [
+		int(round(understanding * 100.0)),
+		int(round(participation * 100.0)),
+	], Vector2(96, 288), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
+	_overlay_label(overlay, "Drivers: monitor %d | press %d | balance %d" % [
+		int(round(understanding * 80.0)),
+		int(round(understanding * 60.0)),
+		int(round(participation * 120.0)),
+	], Vector2(96, 326), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
+	_overlay_label(overlay, "Focus: sample reasoning, press the shared error, rebalance airtime.", Vector2(96, 374), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
+	_overlay_label(overlay, _group_next_step(), Vector2(96, 416), 13, Color(0.72, 0.92, 0.78), Vector2(500, 24))
+	var cont := Button.new()
+	cont.text = "Continue"
+	cont.position = Vector2(720, 448)
+	cont.size = Vector2(184, 64)
+	cont.add_theme_font_size_override("font_size", 16)
+	cont.pressed.connect(_leave)
+	overlay.add_child(cont)
+	cont.grab_focus()
+
+func _group_score() -> int:
+	return int(round(understanding * 140.0 + participation * 120.0))
+
+func _scenario_title() -> String:
+	return str(scenario_context.get("title", shared_concept))
+
+func _group_next_step() -> String:
+	if participation < 0.72:
+		return "Next: invite the quieter member sooner."
+	if understanding < 0.82:
+		return "Next: press the misconception one more step."
+	return "Next: move before one pod takes all your time."
+
+func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.position = pos
+	l.size = size
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.clip_text = true
+	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_color_override("font_color", color)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(l)
+	return l
 
 func _leave() -> void:
 	SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")

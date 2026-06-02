@@ -30,7 +30,7 @@ func _ready() -> void:
 	await _shot_encounter()
 	await _shot_lecture()
 	await _shot_gym()
-	await _shot_plain("ui_group.png", "res://scenes/encounter/GroupCheckIn.tscn")
+	await _shot_group()
 	get_tree().quit()
 
 func _shot_plain(name: String, path: String) -> void:
@@ -176,6 +176,21 @@ func _shot_gym() -> void:
 	sc._finish(true)
 	await _frames(10)
 	await _save("ui_gym_complete.png")
+	sc.queue_free()
+	await _frames(3)
+
+func _shot_group() -> void:
+	var sc: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
+	add_child(sc)
+	await _frames(10)
+	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but everyone is moving fast.\""
+	await _save("ui_group.png")
+	sc.understanding = 0.82
+	sc.participation = 0.78
+	sc.revealed = true
+	sc._check_win()
+	await _frames(10)
+	await _save("ui_group_complete.png")
 	sc.queue_free()
 	await _frames(3)
 

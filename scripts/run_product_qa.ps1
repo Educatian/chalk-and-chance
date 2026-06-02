@@ -67,7 +67,8 @@ try {
       (Test-Path (Join-Path $root "tools\ui_upgrades.png")) -and
       (Test-Path (Join-Path $root "tools\ui_items.png")) -and
       (Test-Path (Join-Path $root "tools\ui_lecture_complete.png")) -and
-      (Test-Path (Join-Path $root "tools\ui_gym_complete.png"))
+      (Test-Path (Join-Path $root "tools\ui_gym_complete.png")) -and
+      (Test-Path (Join-Path $root "tools\ui_group_complete.png"))
     $lines += if ($shotOk) { "PASS" } else { "FAIL" }
     $lines += $shotOutput.Trim()
     $lines += ""
