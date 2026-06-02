@@ -739,12 +739,13 @@ func _finish(won: bool) -> void:
 				_result.text = "Level %d reached. Upgrade point earned." % int(reward.get("level_after", GameState.teacher_level))
 		if _practice_goal_active:
 			GameState.add_teacher_xp(35, "practice_goal:%s" % str(Game.current_scenario_id))
-		GameState.record_leaderboard({
+		var score := int(round(comprehension + attention + composure * 0.5 + progress * 0.5))
+		var run_record := GameState.record_leaderboard({
 			"scenario_id": str(Game.current_scenario_id),
 			"title": str(scenario.get("title", "Lecture")),
 			"mode": "Lecture",
 			"badge": badge,
-			"score": int(round(comprehension + attention + composure * 0.5 + progress * 0.5)),
+			"score": score,
 			"detail": "Comp %d%%  Attention %d%%  Progress %d%%" % [int(comprehension), int(attention), int(progress)],
 			"level_up": bool(reward.get("level_up", false)),
 		})
@@ -752,15 +753,85 @@ func _finish(won: bool) -> void:
 		_coach.text = "Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!" % int(comprehension)
 		for i in range(students.size()):
 			_react(i, "excited", "exclaim")
+		_show_complete_panel(true, reward, run_record)
 	else:
 		Sfx.play("bad")
 		if attention <= 0.0:
 			_coach.text = "Coach Vee: you lost the room. Present in smaller chunks and check more often."
 		else:
 			_coach.text = "Coach Vee: the lesson ended but comprehension was low (%d%%). Check understanding as you go." % int(comprehension)
-	var t := get_tree().create_timer(3.4)
-	await t.timeout
-	SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
+		_show_complete_panel(false, {}, {})
+
+func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary) -> void:
+	for b in _buttons:
+		b.visible = false
+	for b in _item_buttons:
+		b.visible = false
+	if _text_input != null:
+		_text_input.visible = false
+	if _send_btn != null:
+		_send_btn.visible = false
+	if _mic_btn != null:
+		_mic_btn.visible = false
+	if _type_toggle != null:
+		_type_toggle.visible = false
+	if _dialogue != null:
+		_dialogue.visible = false
+	if _result != null:
+		_result.visible = false
+	if _coach != null:
+		_coach.visible = false
+	var overlay := Control.new()
+	overlay.name = "LectureComplete"
+	_layer.add_child(overlay)
+	var panel := Panel.new()
+	panel.position = Vector2(34, 78)
+	panel.size = Vector2(436, 184)
+	overlay.add_child(panel)
+	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
+	var score := int(run_record.get("score", int(round(comprehension + attention + composure * 0.5 + progress * 0.5))))
+	var rank := str(run_record.get("rank", GameState._rank_for_score(score)))
+	_overlay_label(overlay, "%s   |   Score %03d   |   Rank %s" % ["CLEARED" if won else "TRY AGAIN", score, rank], Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	var reward_line := "Comp %d%% | Attention %d%% | Progress %d%%" % [int(comprehension), int(attention), int(progress)]
+	if bool(reward.get("level_up", false)):
+		reward_line += " | +upgrade"
+	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.72, 0.82, 0.96), Vector2(404, 14))
+	_overlay_label(overlay, "Drivers: C%d A%d Calm%d Pace%d" % [
+		int(comprehension), int(attention), int(round(composure * 0.5)), int(round(progress * 0.5))
+	], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
+	_overlay_label(overlay, "Focus: checks, wait-time, equity.", Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
+	_overlay_label(overlay, _lecture_next_step(won), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(250, 16))
+	var cont := Button.new()
+	cont.text = "Continue"
+	cont.position = Vector2(360, 224)
+	cont.size = Vector2(92, 30)
+	cont.add_theme_font_size_override("font_size", 8)
+	cont.pressed.connect(func(): SceneRouter.change_scene("res://scenes/ui/Hub.tscn"))
+	overlay.add_child(cont)
+	PixelUi.scale_tree(overlay, UI_SCALE)
+	cont.grab_focus()
+
+func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.position = pos
+	l.size = size
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.clip_text = true
+	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_color_override("font_color", color)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(l)
+	return l
+
+func _lecture_next_step(won: bool) -> String:
+	if attention < 55.0:
+		return "Next: chunk shorter, then Check."
+	if comprehension < 70.0:
+		return "Next: Repair before advance."
+	if won:
+		return "Next: distribute checks."
+	return "Next: Present, Question, Check."
 
 # --- view --------------------------------------------------------------------
 

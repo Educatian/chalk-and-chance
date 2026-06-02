@@ -115,6 +115,13 @@ func _audit_lecture() -> void:
 	sc._toggle_input_mode()
 	await get_tree().process_frame
 	_scan("Lecture type", sc)
+	sc.progress = 100.0
+	sc.comprehension = 86.0
+	sc.attention = 82.0
+	sc.composure = 88.0
+	sc._finish(true)
+	await get_tree().process_frame
+	_scan("Lecture completion", sc)
 	sc.queue_free()
 	await get_tree().process_frame
 
@@ -132,6 +139,14 @@ func _audit_gym() -> void:
 	sc._toggle_input_mode()
 	await get_tree().process_frame
 	_scan("Gym type", sc)
+	for s in sc.students:
+		s["resolved"] = true
+		s["u"] = 0.88
+	sc.composure = 84.0
+	sc.order = 82.0
+	sc._finish(true)
+	await get_tree().process_frame
+	_scan("Gym completion", sc)
 	sc.queue_free()
 	await get_tree().process_frame
 

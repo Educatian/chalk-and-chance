@@ -685,22 +685,91 @@ func _finish(won: bool) -> void:
 				_result.text = "Level %d reached. Upgrade point earned." % int(reward.get("level_after", GameState.teacher_level))
 		if _practice_goal_active:
 			GameState.add_teacher_xp(50, "practice_goal:%s" % str(Game.current_scenario_id))
-		GameState.record_leaderboard({
+		var score := resolved * 60 + int(round(composure + order))
+		var run_record := GameState.record_leaderboard({
 			"scenario_id": str(Game.current_scenario_id),
 			"title": str(scenario.get("title", "Capstone")),
 			"mode": "Gym",
 			"badge": badge,
-			"score": resolved * 60 + int(round(composure + order)),
+			"score": score,
 			"detail": "%d/%d reached  Order %d%%  Composure %d%%" % [resolved, students.size(), int(order), int(composure)],
 			"level_up": bool(reward.get("level_up", false)),
 		})
 		Sfx.play("badge")
 		_coach.text = "Coach Vee: you held the whole room and reached every student. Capstone cleared!"
+		_show_complete_panel(true, resolved, reward, run_record)
 	else:
 		_coach.text = "Coach Vee: the room got away from you (%d/%d reached). Circulate faster next time." % [resolved, students.size()]
-	var t := get_tree().create_timer(3.2)
-	await t.timeout
-	SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
+		_show_complete_panel(false, resolved, {}, {})
+
+func _show_complete_panel(won: bool, resolved: int, reward: Dictionary, run_record: Dictionary) -> void:
+	for b in _buttons:
+		b.visible = false
+	for b in _item_buttons:
+		b.visible = false
+	if _text_input != null:
+		_text_input.visible = false
+	if _send_btn != null:
+		_send_btn.visible = false
+	if _mic_btn != null:
+		_mic_btn.visible = false
+	if _type_toggle != null:
+		_type_toggle.visible = false
+	if _dialogue != null:
+		_dialogue.visible = false
+	if _result != null:
+		_result.visible = false
+	if _coach != null:
+		_coach.visible = false
+	var overlay := Control.new()
+	overlay.name = "GymComplete"
+	_layer.add_child(overlay)
+	var panel := Panel.new()
+	panel.position = Vector2(34, 78)
+	panel.size = Vector2(436, 184)
+	overlay.add_child(panel)
+	_overlay_label(overlay, "GYM DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
+	var score := int(run_record.get("score", resolved * 60 + int(round(composure + order))))
+	var rank := str(run_record.get("rank", GameState._rank_for_score(score)))
+	_overlay_label(overlay, "%s   |   Score %03d   |   Rank %s" % ["CLEARED" if won else "TRY AGAIN", score, rank], Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	var reward_line := "Reached %d/%d | Order %d%% | Composure %d%%" % [resolved, students.size(), int(order), int(composure)]
+	if bool(reward.get("level_up", false)):
+		reward_line += " | +upgrade"
+	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.72, 0.82, 0.96), Vector2(404, 14))
+	_overlay_label(overlay, "Drivers: Reach%d Order%d Calm%d" % [resolved * 60, int(order), int(composure)], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
+	_overlay_label(overlay, "Focus: switch, monitor, support.", Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
+	_overlay_label(overlay, _gym_next_step(won, resolved), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(250, 16))
+	var cont := Button.new()
+	cont.text = "Continue"
+	cont.position = Vector2(360, 224)
+	cont.size = Vector2(92, 30)
+	cont.add_theme_font_size_override("font_size", 8)
+	cont.pressed.connect(func(): SceneRouter.change_scene("res://scenes/ui/Hub.tscn"))
+	overlay.add_child(cont)
+	PixelUi.scale_tree(overlay, UI_SCALE)
+	cont.grab_focus()
+
+func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.position = pos
+	l.size = size
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.clip_text = true
+	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_color_override("font_color", color)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(l)
+	return l
+
+func _gym_next_step(won: bool, resolved: int) -> String:
+	if resolved < students.size():
+		return "Next: switch targets earlier."
+	if order < 70.0:
+		return "Next: signal before drift."
+	if won:
+		return "Next: balance target and room."
+	return "Next: highest-need first."
 
 # --- view --------------------------------------------------------------------
 

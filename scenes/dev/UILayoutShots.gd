@@ -145,6 +145,13 @@ func _shot_lecture() -> void:
 	sc._text_input.text = "Show me with your fingers if the denominator is the number of equal parts."
 	await _frames(10)
 	await _save("ui_lecture_type.png")
+	sc.progress = 100.0
+	sc.comprehension = 86.0
+	sc.attention = 82.0
+	sc.composure = 88.0
+	sc._finish(true)
+	await _frames(10)
+	await _save("ui_lecture_complete.png")
 	sc.queue_free()
 	await _frames(3)
 
@@ -161,6 +168,14 @@ func _shot_gym() -> void:
 	sc._text_input.text = "Noah, explain what part you are using as the whole."
 	await _frames(10)
 	await _save("ui_gym_type.png")
+	for s in sc.students:
+		s["resolved"] = true
+		s["u"] = 0.88
+	sc.composure = 84.0
+	sc.order = 82.0
+	sc._finish(true)
+	await _frames(10)
+	await _save("ui_gym_complete.png")
 	sc.queue_free()
 	await _frames(3)
 
