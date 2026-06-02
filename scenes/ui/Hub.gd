@@ -528,28 +528,37 @@ func _open_settings() -> void:
 	overlay.add_child(dim)
 
 	var panel := Panel.new()
-	panel.position = Vector2(210, 86)
-	panel.size = Vector2(540, 360)
+	panel.position = Vector2(190, 52)
+	panel.size = Vector2(580, 484)
 	overlay.add_child(panel)
 
 	var title := Label.new()
 	title.text = "SETTINGS"
-	title.position = Vector2(236, 112)
+	title.position = Vector2(222, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
 	title.add_theme_font_size_override("font_size", 18 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
+	var notice := Label.new()
+	notice.text = "Click Voice status if spoken lines are silent."
+	notice.position = Vector2(222, 122)
+	notice.size = Vector2(516, 34)
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	notice.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	notice.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
+	overlay.add_child(notice)
+
 	var options := [
-		{"label": "Sound", "key": "audio_enabled", "on": "On", "off": "Off"},
+		{"label": "Sound effects", "key": "audio_enabled", "on": "On", "off": "Off"},
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
 		{"label": "Motion", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
 	]
-	var y := 162.0
+	var y := 166.0
 	for opt in options:
 		var b := Button.new()
-		b.position = Vector2(250, y)
-		b.size = Vector2(420, 42)
+		b.position = Vector2(222, y)
+		b.size = Vector2(516, 38)
 		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 		overlay.add_child(b)
 		_refresh_setting_button(b, opt)
@@ -557,12 +566,25 @@ func _open_settings() -> void:
 			var key := str(opt["key"])
 			GameState.set_setting(key, not bool(GameState.get_setting(key, false)))
 			_refresh_setting_button(b, opt)
+			if key == "audio_enabled":
+				notice.text = TTSClient.voice_status_detail()
 		)
-		y += 54.0
+		y += 46.0
+
+	var voice := Button.new()
+	voice.position = Vector2(222, y)
+	voice.size = Vector2(516, 38)
+	voice.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	voice.text = TTSClient.voice_status_label()
+	voice.pressed.connect(func():
+		notice.text = TTSClient.voice_status_detail()
+	)
+	overlay.add_child(voice)
+	y += 46.0
 
 	var reveal := Button.new()
-	reveal.position = Vector2(250, y)
-	reveal.size = Vector2(420, 42)
+	reveal.position = Vector2(222, y)
+	reveal.size = Vector2(516, 38)
 	reveal.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	overlay.add_child(reveal)
 	_refresh_reveal_button(reveal)
@@ -574,8 +596,8 @@ func _open_settings() -> void:
 
 	var close := Button.new()
 	close.text = "Close"
-	close.position = Vector2(250, 386)
-	close.size = Vector2(420, 42)
+	close.position = Vector2(222, 478)
+	close.size = Vector2(516, 38)
 	close.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	close.pressed.connect(func():
 		overlay.queue_free()

@@ -4,7 +4,7 @@
 
 Chalk & Chance is a pixel-art teacher-preparation game where the player rehearses high-leverage teaching moves in a living classroom. It is not a simple chat tree: the player navigates the room, chooses who needs attention, manages composure and order, uses classroom tools, and receives construct-level evidence about their teaching moves.
 
-[Play in browser](https://educatian.github.io/chalk-and-chance-play/) | [Project page](https://chalk-and-chance.pages.dev) | Built with Godot 4.6.3
+[Demo gate](https://chalk-and-chance.pages.dev/demo.html) | [Project page](https://chalk-and-chance.pages.dev) | Built with Godot 4.6.3
 
 ## Current Build
 
@@ -18,6 +18,7 @@ The current build includes:
 - Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
 - Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
 - Product QA gates for UI clipping/overlap, visual assets, scenario integrity, telemetry, and playable learning loops.
+- Public web demo access keeps ElevenLabs voice off unless opened through the passcode gate.
 
 ## Screenshots
 

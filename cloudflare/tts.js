@@ -6,7 +6,7 @@ import { VOICE_PROFILES } from "./gamedata.js";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Voice-Gate",
 };
 
 // emotion_shown -> [stability, style]; lower stability + higher style = more expressive
@@ -18,6 +18,10 @@ const EMO = {
 };
 
 export async function handleTts(req, env) {
+  const gate = (env.TTS_GATE_CODE || "MAPLE-RIDGE").trim();
+  if (gate && (req.headers.get("X-Voice-Gate") || "").trim() !== gate) {
+    return new Response(null, { status: 204, headers: CORS });
+  }
   const { persona_id, text, emotion, model_id } = await req.json();
   const key = (env.ELEVENLABS_API_KEY || "").trim();
   const vid = VOICE_PROFILES[persona_id];

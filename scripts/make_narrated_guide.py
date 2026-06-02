@@ -41,13 +41,13 @@ Welcome to Chalk and Chance. This is a short teaching rehearsal, not a quiz. As 
 
 Step one. Start the rehearsal. You see a classroom with students and teacher-facing signals. Study the room as a practice space. If something goes wrong, treat it as useful data.
 
-Step two. Choose Play Demo. You may also see sign-in fields. Those are for class accounts that save progress. For a first run, the demo is the fastest way to learn.
+Step two. Open the demo gate. The public taste demo keeps spoken student lines silent, while voice-enabled review sessions use a passcode.
 
-Step three. Read the first screen calmly. A class code, name, and password are only needed for assigned courses. Guest play is enough for exploration.
+Step three. Read the first screen calmly. Class sign-in is for assigned courses. Settings explains whether voice is protected, unavailable, or enabled.
 
 Step four. Use the Mission Hub as a learning map. Start with the row marked Start Here. Badges are not only prizes. They name the skill you are practicing: pacing, reasoning, airtime, feedback, and capstone judgment.
 
-Step five. Notice Settings and Import. Settings control comfort, including sound, larger text, reduced motion, and dialogue speed. Import lets your own lesson become the practice scenario.
+Step five. Notice Settings and Import. Settings show sound effects, voice status, text size, motion, and dialogue speed. Import lets your own lesson become the practice scenario.
 
 Step six. In the classroom, read the signals. Attention tells you whether the room is with you. Composure tells you how much capacity you have left. Participation, wait time, and disruptions tell you what the lesson needs next.
 

@@ -8,21 +8,21 @@ What you study: the room as a practice space. The game is asking you to rehearse
 
 What to feel or notice: mistakes are expected data. A confusing moment is useful because it tells you what to try differently.
 
-## Step 2. Choose Play demo
+## Step 2. Open the demo gate
 
-What you see: a prominent Play demo button and a class sign-in area.
+What you see: a voice-safe taste demo button and a passcode field for voice-enabled access.
 
-What you study: the demo starts immediately. Sign in / Join is for class accounts that need saved progress and instructor tracking.
+What you study: the public taste demo keeps spoken student lines silent so casual visitors do not trigger ElevenLabs costs.
 
-What to feel or notice: you do not need credentials to learn the basic flow. Start with the demo first.
+What to feel or notice: if voice is silent, it is intentional. Use the passcode gate for voice-enabled review sessions.
 
 ## Step 3. Read the first screen calmly
 
-What you see: class code, name, password, and guest-play options.
+What you see: class code, name, password, guest-play options, and a voice status note in public builds.
 
-What you study: class code, name, and password are only for assigned courses. Guest play is enough for first-time exploration.
+What you study: class sign-in is for assigned courses. Public demo access is enough for first-time exploration.
 
-What to feel or notice: the game is safe to try before you understand every setting.
+What to feel or notice: Settings explains whether voice is protected, unavailable, or enabled.
 
 ## Step 4. Use the Mission Hub as a learning map
 
@@ -36,7 +36,7 @@ What to feel or notice: locked missions are not a punishment. They show the sequ
 
 What you see: Settings and Import a lesson plan.
 
-What you study: Settings adjusts comfort, including sound, larger text, reduced motion, and dialogue reveal speed. Import turns your own lesson text into a playable scenario.
+What you study: Settings adjusts comfort, including sound effects, voice status, larger text, reduced motion, and dialogue reveal speed. Import turns your own lesson text into a playable scenario.
 
 What to feel or notice: the game can become closer to your actual teaching context, not just a fixed canned example.
 

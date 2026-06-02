@@ -1,4 +1,6 @@
 {
-  "_doc": "Set api_base to your deployed Worker URL (cloudflare/SETUP.md). Empty = offline, no login screen, telemetry stays local.",
-  "api_base": "https://chalk-and-chance-api.jewoong-moon.workers.dev"
+  "_doc": "Set api_base to your deployed Worker URL (cloudflare/SETUP.md). Empty = offline, no login screen, telemetry stays local. Web TTS is off unless the landing gate opens the build with ?voice=<tts_gate_code>, preventing casual ElevenLabs spend.",
+  "api_base": "https://chalk-and-chance-api.jewoong-moon.workers.dev",
+  "tts_requires_gate": true,
+  "tts_gate_code": "MAPLE-RIDGE"
 }

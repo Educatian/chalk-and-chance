@@ -82,6 +82,8 @@ func _ready() -> void:
 
 	var demo := Button.new()
 	demo.text = "Play demo"
+	if OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
+		demo.text = "Play demo (voice off)"
 	demo.custom_minimum_size = Vector2(0, 46)
 	demo.add_theme_font_size_override("font_size", 18)
 	demo.pressed.connect(_go_hub)
@@ -123,6 +125,8 @@ func _ready() -> void:
 	Auth.login_failed.connect(func(m): _set_status(m, true))
 	if not Auth.configured():
 		_set_status("Offline mode is ready.", false)
+	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
+		_set_status("Public demo ready. Voice is off to prevent ElevenLabs overuse.", false)
 
 func _add_landing_background(vp: Vector2) -> void:
 	var art := TextureRect.new()

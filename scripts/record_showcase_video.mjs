@@ -17,12 +17,12 @@ const scenes = [
   },
   {
     selector: "#play",
-    caption: "Step 2: Choose Play demo. You see sign-in fields, but the demo button starts immediately. Study the difference between guest play and saved class progress.",
+    caption: "Step 2: Open the demo gate. The public taste demo keeps spoken student lines silent, while voice-enabled review sessions use a passcode.",
     ms: 6800,
   },
   {
     selector: "#play",
-    caption: "Step 3: Read the first screen calmly. Class code, name, and password are only for assigned courses. Feel free to enter as a guest and learn the flow first.",
+    caption: "Step 3: Read the first screen calmly. Class sign-in is for assigned courses. Settings explains whether voice is protected, unavailable, or enabled.",
     ms: 6800,
   },
   {
@@ -32,7 +32,7 @@ const scenes = [
   },
   {
     selector: "#screens",
-    caption: "Step 5: Before playing, notice Settings and Import. Settings control comfort. Import turns your own lesson into practice, so the simulation can match your teaching context.",
+    caption: "Step 5: Before playing, notice Settings and Import. Settings show sound effects, voice status, text size, motion, and dialogue speed.",
     ms: 7200,
   },
   {
