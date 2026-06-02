@@ -4,19 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chalk &amp; Chance - Evidence-grounded teacher simulation</title>
-<meta name="description" content="Chalk & Chance is a Godot teacher-simulation game for evidence-grounded classroom rehearsal, with mission briefing, item loadout, level-up progression, leaderboard, and live competency evidence." />
+<meta name="description" content="Chalk & Chance is a Godot teacher-simulation game for evidence-grounded classroom rehearsal, with mission briefing, debrief panels, item loadout, level-up progression, leaderboard, and live competency evidence." />
 <link rel="canonical" href="https://chalk-and-chance.pages.dev/" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://chalk-and-chance.pages.dev/" />
 <meta property="og:title" content="Chalk &amp; Chance - Evidence-grounded teacher simulation" />
-<meta property="og:description" content="A Godot classroom rehearsal game with mission briefings, student reasoning, coaching feedback, level-up progression, and live competency evidence." />
+<meta property="og:description" content="A Godot classroom rehearsal game with mission briefings, student reasoning, debriefs, level-up progression, and live competency evidence." />
 <meta property="og:image" content="https://chalk-and-chance.pages.dev/img/social-card.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Chalk & Chance teacher simulation game preview" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Chalk &amp; Chance - Evidence-grounded teacher simulation" />
-<meta name="twitter:description" content="Rehearse classroom decisions, surface student reasoning, and see the evidence your teaching moves create." />
+<meta name="twitter:description" content="Rehearse classroom decisions, surface student reasoning, and study the evidence your teaching moves create." />
 <meta name="twitter:image" content="https://chalk-and-chance.pages.dev/img/social-card.png" />
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
@@ -79,8 +79,8 @@
   }
   .hero-copy { max-width: 720px; }
   .eyebrow { color: var(--amber); font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: 0; margin: 0 0 14px; }
-  h1 { margin: 0; font-size: clamp(27px, 4vw, 46px); }
-  .lead { color: var(--soft); font-size: clamp(17px, 2vw, 21px); max-width: 680px; margin: 22px 0 28px; }
+  h1 { margin: 0; font-size: 40px; }
+  .lead { color: var(--soft); font-size: 19px; max-width: 680px; margin: 22px 0 28px; }
   .actions { display: flex; flex-wrap: wrap; gap: 12px; }
   .btn {
     display: inline-flex;
@@ -141,7 +141,18 @@
   @media (max-width: 850px) {
     .navlinks { display: none; }
     .hero { min-height: 76svh; background-position: center; }
+    h1 { font-size: 18px; overflow-wrap: anywhere; }
+    .lead { font-size: 14px; max-width: 100%; overflow-wrap: anywhere; }
+    .hero-copy { max-width: 280px; }
+    .actions { flex-direction: column; align-items: stretch; }
+    .btn { width: 100%; }
     .grid.three, .grid.two, .feature-row, .qa-list { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 430px) {
+    .wrap { padding: 0 20px; }
+    h1 { font-size: 21px; }
+    .lead { font-size: 15px; }
+    .btn { width: 100%; }
   }
 </style>
 </head>
@@ -180,12 +191,13 @@
     <div class="wrap">
       <p class="eyebrow">Current build</p>
       <h2>Not a chat demo. A rehearsal loop.</h2>
-      <p class="section-intro">The game now includes mission briefing, scenario backdrops, level-up progression, item loadout, local leaderboard, evidence journal, lesson import, and product QA gates.</p>
+      <p class="section-intro">The game now includes mission briefing, scenario backdrops, explicit debrief panels, level-up progression, item loadout, local leaderboard, evidence journal, lesson import, and product QA gates.</p>
       <div class="grid three">
         <div class="card"><h3>Mission briefing</h3><p>Each mission opens with art, story hook, success conditions, reward, evidence edge, and first-move guidance.</p></div>
         <div class="card"><h3>Classroom orchestration</h3><p>Players manage attention, order, composure, proximity, interruptions, and student-specific needs.</p></div>
         <div class="card"><h3>Evidence Journal</h3><p>Live ECD/Elo-style competency estimates show probability, evidence count, uncertainty, and research anchors.</p></div>
         <div class="card"><h3>Progression loop</h3><p>Badges unlock missions, XP grants upgrade points, item rewards change loadout, and runs post to a leaderboard.</p></div>
+        <div class="card"><h3>Readable debriefs</h3><p>Encounter, lecture, gym, group, and full-lesson endings show score drivers, next focus, rewards, and replay choices.</p></div>
         <div class="card"><h3>Free-text teacher talk</h3><p>Players can type their own teacher move; the game maps it to the same evidence-bearing action loop.</p></div>
         <div class="card"><h3>Lesson import</h3><p>Paste a lesson plan and generate a playable scenario with objectives, roster, seating, and dialogue hooks.</p></div>
       </div>
@@ -205,6 +217,8 @@
         <figure><div class="shot"><img class="pixel" src="img/shot_items.png" alt="Item loadout" /></div><figcaption><b>Item loadout.</b> Classroom tools support composure, noticing, equity, wait time, and goals.</figcaption></figure>
         <figure><div class="shot"><img class="pixel" src="img/shot_lecture.png" alt="Lecture mode" /></div><figcaption><b>Lecture.</b> Present, question, wait, repair, and check while students react.</figcaption></figure>
         <figure><div class="shot"><img class="pixel" src="img/shot_gym.png" alt="Gym capstone" /></div><figcaption><b>Gym capstone.</b> Resolve multiple students while order and composure remain under pressure.</figcaption></figure>
+        <figure><div class="shot"><img class="pixel" src="img/shot_group_debrief.png" alt="Group check-in debrief panel" /></div><figcaption><b>Group debrief.</b> See participation, shared-reasoning evidence, badge reward, and next focus.</figcaption></figure>
+        <figure><div class="shot"><img class="pixel" src="img/shot_debrief.png" alt="Overworld lesson debrief panel" /></div><figcaption><b>Lesson debrief.</b> Review attention, composure, objectives, rewards, and evidence fingerprint before replay.</figcaption></figure>
       </div>
     </div>
   </section>
@@ -264,6 +278,8 @@
         <div>Scenario/data integrity and competency-model coverage</div>
         <div>Encounter differentiation, lecture mode, gym capstone</div>
         <div>Lesson import, telemetry/xAPI, overworld ecology</div>
+        <div>Completion/debrief screenshots across encounter, lecture, gym, group, and overworld</div>
+        <div>Reflection overlay and final lesson debrief text-overlap checks</div>
       </div>
     </div>
   </section>

@@ -15,6 +15,7 @@ Chalk & Chance should not compete by imitating any one of these. Its edge is a p
 - It scores whole-class orchestration, not only the quality of a single dialogue. Attention drift, proximity, facing direction, interruptions, equity, and group pods are first-class mechanics.
 - It makes differentiated student needs mechanically real. Each persona has a target need and move profile, so the same "good teacher move" does not work on everyone.
 - It leaves construct-level evidence. Turns log move tags, wait time, target-fit judgments, xAPI-style statements, and live ECD competency estimates.
+- It closes each mode with a readable debrief. Encounters, lectures, gym capstones, group check-ins, and full lessons all expose score drivers, next focus, and reward/progression state instead of disappearing after a timer.
 - It can become a research artifact and a playable training product at the same time.
 
 ## Comparison Table

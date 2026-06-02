@@ -14,6 +14,7 @@ The current build includes:
 - Mission briefing before play, with generated classroom backdrop, story hook, success criteria, reward, evidence edge, and first-move guidance.
 - Multiple classroom formats: discussion, lecture, group work, independent work, one-on-one encounter, and gym capstone.
 - Free-text teacher talk: players can type their own line and the game maps it to a teaching move.
+- Explicit debrief panels across encounter, lecture, gym, group check-in, and overworld lessons, with score drivers, next focus, rewards, and Continue/replay actions.
 - Evidence Journal: live ECD/Elo-style competency estimates, evidence counts, uncertainty, research anchors, and recent run evidence.
 - Level-up, badge rewards, item rewards, upgrade points, and leaderboard records.
 - Lesson-plan import: paste or load a lesson plan and generate a playable scenario.
@@ -38,13 +39,21 @@ The current build includes:
 |---|---|
 | ![Lecture](docs/screenshots/lecture.png) | ![Gym](docs/screenshots/gym.png) |
 
+| Reflection prompt | Lesson debrief |
+|---|---|
+| ![Reflection prompt](docs/screenshots/reflection.png) | ![Lesson debrief](docs/screenshots/debrief.png) |
+
+| Group check-in debrief | Leaderboard |
+|---|---|
+| ![Group debrief](docs/screenshots/group_debrief.png) | ![Leaderboard](docs/screenshots/leaderboard.png) |
+
 | Lesson import | Review generated scenario |
 |---|---|
 | ![Import lesson](docs/screenshots/import.png) | ![Preview scenario](docs/screenshots/preview.png) |
 
-| Leaderboard | Full UI montage |
+| Evidence Journal | Full UI montage |
 |---|---|
-| ![Leaderboard](docs/screenshots/leaderboard.png) | ![Full UI montage](docs/screenshots/full_montage.png) |
+| ![Evidence Journal](docs/screenshots/evidence.png) | ![Full UI montage](docs/screenshots/full_montage.png) |
 
 ## What Makes It Different
 
@@ -87,7 +96,7 @@ Current gates include:
 - Scenario/data integrity audit for mission fields, objectives, badges, roster links, backdrops, persona overrides, and competency-model coverage
 - Encounter smoke test and differentiated persona behavior
 - Lecture mode, gym capstone, lesson import, telemetry/xAPI, and overworld ecology
-- Screenshot refresh for the main product surfaces
+- Screenshot refresh for the main product surfaces, including completion panels, reflection prompts, and overworld debrief
 
 The latest report is written to `tools/product_qa_report.txt`.
 
@@ -122,4 +131,4 @@ tools/       generated screenshots, QA report, backend helpers
 
 ## Status
 
-Playable vertical slice with campaign progression, scenario backdrops, mission briefing, level-up/leaderboard loop, item loadout, evidence journal, lesson import, and product QA gates. Active development continues toward a polished educational game and research-grade teacher simulation.
+Playable vertical slice with campaign progression, scenario backdrops, mission briefing, explicit debriefs, level-up/leaderboard loop, item loadout, evidence journal, lesson import, and product QA gates. Active development continues toward a polished educational game and research-grade teacher simulation.
