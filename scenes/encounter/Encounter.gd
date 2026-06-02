@@ -877,16 +877,17 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 
 	var reward_line := "Badge %s" % badge_id.to_upper()
 	if bool(reward.get("level_up", false)):
-		reward_line += "   |   LEVEL %d  +1 UPGRADE" % int(reward.get("level_after", GameState.teacher_level))
+		reward_line += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
 	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
 	if item_text != "":
-		reward_line += "   |   Items %s" % item_text
+		reward_line += " | +items"
 	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 152), 7, Color(0.72, 0.82, 0.96), Vector2(404, 12))
 
 	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
 	rows = rows.slice(0, 3)
-	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 154), 7, Color(0.72, 0.78, 0.88), Vector2(404, 12))
-	var y := 172
+	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 168), 7, Color(0.72, 0.78, 0.88), Vector2(404, 12))
+	var y := 186
 	for r in rows:
 		_overlay_label(overlay, str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96), Vector2(132, 11))
 		var bg := ColorRect.new()
@@ -902,16 +903,17 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		overlay.add_child(fill)
-		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(366, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
+		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(326, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
 		y += 15
 	if rows.is_empty():
-		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 172), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
+		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 186), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
 	else:
-		_overlay_label(overlay, _competency_next_step(rows), Vector2(48, 222), 7, Color(0.72, 0.92, 0.78), Vector2(292, 30))
+		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 232), 7, Color(0.66, 0.90, 0.78), Vector2(292, 12))
+		_overlay_label(overlay, _competency_next_step(rows), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(292, 18))
 
 	_continue_btn = Button.new()
 	_continue_btn.text = "Continue"
-	_continue_btn.position = Vector2(360, 222)
+	_continue_btn.position = Vector2(360, 226)
 	_continue_btn.size = Vector2(92, 30)
 	_continue_btn.add_theme_font_size_override("font_size", 8)
 	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
@@ -938,7 +940,35 @@ func _competency_next_step(rows: Array) -> String:
 	for r in rows:
 		if float(r["prob"]) < float(lowest["prob"]):
 			lowest = r
-	return "Next practice focus: %s. Try one move that gives this bar cleaner evidence next time." % str(lowest["label"])
+	return "Next: %s, one clean try." % str(lowest["label"])
+
+func _score_driver_text(run_record: Dictionary) -> String:
+	var u := int(round(understanding * 100.0))
+	var pace := maxi(0, 42 - _turns * 4)
+	var bond_pts := int(round(GameState.bond(persona_id) * 30.0))
+	return "Score: understand %d + pace %d + bond %d = %03d" % [
+		u,
+		pace,
+		bond_pts,
+		int(run_record.get("score", 0)),
+	]
+
+func _move_fingerprint_text() -> String:
+	if _move_history.is_empty():
+		return "Move fingerprint: no scored moves yet"
+	var counts := {}
+	for m in _move_history:
+		var tag := str(m.get("tag", ""))
+		if tag == "":
+			continue
+		counts[tag] = int(counts.get(tag, 0)) + 1
+	var parts: Array = []
+	for tag in ["elicit", "extend", "revoice", "wait", "redirect", "praise", "tell", "connect"]:
+		if int(counts.get(tag, 0)) > 0:
+			parts.append("%s%d" % [tag.capitalize(), int(counts[tag])])
+	if parts.is_empty():
+		return "Moves: no scored moves yet"
+	return "Moves: " + " ".join(parts)
 
 func _show_continue_button() -> void:
 	_continue_btn = Button.new()
@@ -1010,7 +1040,7 @@ func _items_awarded_text(items) -> String:
 	for id in dict.keys():
 		var amount := int(dict[id])
 		if amount > 0:
-			parts.append("+%s x%d" % [Items.short_name_for(str(id)), amount])
+			parts.append("%s x%d" % [Items.short_name_for(str(id)), amount])
 	return ", ".join(parts)
 
 func _signed(n: int) -> String:

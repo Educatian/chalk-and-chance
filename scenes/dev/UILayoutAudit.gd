@@ -80,12 +80,24 @@ func _audit_encounter() -> void:
 	var sc: Node = load("res://scenes/encounter/Encounter.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
-	sc.setup({"persona_id": "jordan_skeptic", "display_name": "Jordan"})
+	sc.setup({"persona_id": "noah_g5_fractions", "display_name": "Noah"})
 	await get_tree().process_frame
 	_scan("Encounter menu", sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
 	_scan("Encounter type", sc)
+	sc._toggle_input_mode()
+	for m in ["elicit", "extend", "elicit", "wait", "extend", "elicit", "revoice", "elicit", "extend"]:
+		if sc._resolved:
+			break
+		sc._on_move(m)
+		for i in range(6):
+			await get_tree().process_frame
+	await get_tree().process_frame
+	if sc._resolved:
+		_scan("Encounter completion", sc)
+	else:
+		_issues.append("Encounter completion did not resolve during UI audit")
 	sc.queue_free()
 	await get_tree().process_frame
 
