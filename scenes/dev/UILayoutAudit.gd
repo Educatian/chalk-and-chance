@@ -49,6 +49,9 @@ func _audit_hub() -> void:
 	await _scan_hub_overlay(sc, "Hub settings", func(): sc._open_settings(), "SettingsOverlay")
 	await _scan_hub_overlay(sc, "Hub upgrades", func(): sc._open_upgrades(), "UpgradeOverlay")
 	await _scan_hub_overlay(sc, "Hub items", func(): sc._open_items(), "ItemsOverlay")
+	GameState.upgrade_points = 0
+	await _scan_hub_overlay(sc, "Hub no-upgrade notice", func(): sc._open_upgrades_or_explain(), "NoticeOverlay")
+	await _scan_hub_overlay(sc, "Hub locked-mission notice", func(): sc._open_locked_mission_notice("group_work_fractions", _json("res://data/scenarios/group_work_fractions.json")), "NoticeOverlay")
 	sc.queue_free()
 	await get_tree().process_frame
 

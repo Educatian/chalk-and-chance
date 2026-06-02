@@ -46,6 +46,22 @@ func _shot_hub() -> void:
 	add_child(sc)
 	await _frames(10)
 	await _save("ui_hub.png")
+	GameState.upgrade_points = 0
+	sc._open_upgrades_or_explain()
+	await _frames(6)
+	await _save("ui_notice_upgrade.png")
+	var upgrade_notice := sc.get_node_or_null("NoticeOverlay")
+	if upgrade_notice != null:
+		upgrade_notice.queue_free()
+	await _frames(3)
+	sc._open_locked_mission_notice("group_work_fractions", _json("res://data/scenarios/group_work_fractions.json"))
+	await _frames(6)
+	await _save("ui_notice_locked.png")
+	var locked_notice := sc.get_node_or_null("NoticeOverlay")
+	if locked_notice != null:
+		locked_notice.queue_free()
+	await _frames(3)
+	GameState.upgrade_points = 1
 	sc._open_mission_briefing("lecture_fractions")
 	await _frames(6)
 	await _save("ui_briefing.png")

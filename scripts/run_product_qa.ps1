@@ -61,6 +61,8 @@ try {
       (Test-Path (Join-Path $root "tools\ui_briefing.png")) -and
       (Test-Path (Join-Path $root "tools\ui_evidence.png")) -and
       (Test-Path (Join-Path $root "tools\ui_leaderboard.png")) -and
+      (Test-Path (Join-Path $root "tools\ui_notice_upgrade.png")) -and
+      (Test-Path (Join-Path $root "tools\ui_notice_locked.png")) -and
       (Test-Path (Join-Path $root "tools\ui_settings.png")) -and
       (Test-Path (Join-Path $root "tools\ui_upgrades.png")) -and
       (Test-Path (Join-Path $root "tools\ui_items.png"))

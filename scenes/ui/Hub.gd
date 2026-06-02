@@ -76,8 +76,8 @@ func _build() -> void:
 	upgrades.position = Vector2(vp.x - 358, 74)
 	upgrades.size = Vector2(104, 34)
 	upgrades.add_theme_font_size_override("font_size", 12 + fd)
-	upgrades.disabled = GameState.upgrade_points <= 0
-	upgrades.pressed.connect(_open_upgrades)
+	upgrades.tooltip_text = "Spend upgrade points earned from level-ups."
+	upgrades.pressed.connect(_open_upgrades_or_explain)
 	add_child(upgrades)
 
 	var items := Button.new()
@@ -454,7 +454,8 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 	action.add_theme_font_size_override("font_size", 12 + fd)
 	if locked:
 		action.text = "Locked\n%s" % _badge_name(str(cfg.get("requires", "")))
-		action.disabled = true
+		action.tooltip_text = "Click to see how to unlock this mission."
+		action.pressed.connect(_open_locked_mission_notice.bind(id, cfg))
 	elif earned:
 		action.text = "Replay"
 		action.pressed.connect(_open_mission_briefing.bind(id))
@@ -515,6 +516,78 @@ func _mission_reward_text(badge: String, earned: bool) -> String:
 
 func _go_import() -> void:
 	SceneRouter.change_scene("res://scenes/ui/ImportLesson.tscn")
+
+func _open_upgrades_or_explain() -> void:
+	if GameState.upgrade_points > 0:
+		_open_upgrades()
+		return
+	_open_notice(
+		"NO UPGRADE POINTS YET",
+		"Level up by clearing missions. Each level-up grants one upgrade point for steadier presence, better wait-time, or stronger relationship sense.",
+		"Play the NEXT mission, earn XP, then come back to spend the point."
+	)
+
+func _open_locked_mission_notice(id: String, cfg: Dictionary) -> void:
+	var required := str(cfg.get("requires", ""))
+	_open_notice(
+		"MISSION LOCKED",
+		"%s opens after you earn the %s badge." % [str(cfg.get("title", id)), _badge_name(required)],
+		"Clear the earlier mission that practices %s, then this classroom becomes available." % _badge_desc(required)
+	)
+
+func _open_notice(title_text: String, body_text: String, next_text: String) -> void:
+	var fd := GameState.ui_font_delta()
+	var overlay := Control.new()
+	overlay.name = "NoticeOverlay"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(overlay)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.70)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(dim)
+
+	var panel := Panel.new()
+	panel.position = Vector2(210, 118)
+	panel.size = Vector2(540, 274)
+	overlay.add_child(panel)
+
+	var title := Label.new()
+	title.text = title_text
+	title.position = Vector2(242, 150)
+	title.size = Vector2(476, 34)
+	title.clip_text = true
+	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_size_override("font_size", 14 + fd)
+	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
+	overlay.add_child(title)
+
+	var body := Label.new()
+	body.text = _wrap_words(body_text, 70)
+	body.position = Vector2(242, 202)
+	body.size = Vector2(476, 78)
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_font_size_override("font_size", 13 + fd)
+	body.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
+	overlay.add_child(body)
+
+	var next := Label.new()
+	next.text = _wrap_words(next_text, 70)
+	next.position = Vector2(242, 292)
+	next.size = Vector2(476, 44)
+	next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	next.add_theme_font_size_override("font_size", 12 + fd)
+	next.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
+	overlay.add_child(next)
+
+	var close := Button.new()
+	close.text = "Got it"
+	close.position = Vector2(242, 348)
+	close.size = Vector2(476, 34)
+	close.add_theme_font_size_override("font_size", 13 + fd)
+	close.pressed.connect(func(): overlay.queue_free())
+	overlay.add_child(close)
+	close.grab_focus()
 
 func _open_settings() -> void:
 	var overlay := Control.new()
