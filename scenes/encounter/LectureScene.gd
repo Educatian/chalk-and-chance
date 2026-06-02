@@ -211,7 +211,7 @@ func _build_ui() -> void:
 		nm.add_theme_constant_override("outline_size", 4)
 
 	var dialogue_box := Rect2(Vector2(10, 162), Vector2(460, 42))
-	var dialogue_text := Rect2(Vector2(18, 168), Vector2(444, 24))
+	var dialogue_text := Rect2(Vector2(18, 166), Vector2(444, 24))
 	var dbg := ColorRect.new()
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position
@@ -225,7 +225,7 @@ func _build_ui() -> void:
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dialogue.set_meta("qa_container_rect", dialogue_box)
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
-	_dialogue.set_meta("qa_min_padding", 6.0)
+	_dialogue.set_meta("qa_min_padding", 4.0)
 	_result = _label("Question asks the highlighted student.", Vector2(12, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 10)
 	_coach = _label("Coach Vee: present a little, then check. Spread your questions across the room.", Vector2(12, 210), 7, Color(0.72, 0.92, 0.78))

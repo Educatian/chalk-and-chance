@@ -5,7 +5,7 @@ This checklist treats the game as a releasable educational product, not only a p
 ## Gates
 
 - Project load: Godot opens the project without parse errors.
-- UI audit: no clipped/out-of-viewport controls, overlapping interactives, clipped Label text, undersized Button text, or tight dialogue-box padding on key screens, including long dialogue stress cases, Hub overlays, completion panels, reflection prompts, and the overworld final debrief.
+- UI audit: no clipped/out-of-viewport controls, overlapping interactives, clipped Label text, undersized Button text, or tight dialogue-box padding on key screens in both normal and large-text modes, including long dialogue stress cases, Hub overlays, completion panels, reflection prompts, and the overworld final debrief.
 - Visual asset audit: required backdrops/item icons exist; visible TextureRects, Button icons, and Sprite2Ds have textures, render at usable size, and avoid unintended non-uniform sprite/TextureRect squash.
 - Learning surface content audit: Hub, Evidence Journal, mission briefing, click-feedback notices, and leaderboard keep the differentiating learning text visible, including adaptive coaching, practice target, research edge, unlock guidance, and leaderboard evidence.
 - Scenario/data integrity: every scenario has valid mission fields, objectives, badge unlocks, story/backdrop assets, roster persona/portrait links, persona overrides, and competency-model coverage for runtime evidence skills.

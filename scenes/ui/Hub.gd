@@ -32,22 +32,33 @@ func _build() -> void:
 	var sub := Label.new()
 	sub.text = "Start with demo lessons. Unlock harder classrooms."
 	sub.position = Vector2(42, 74)
-	sub.size = Vector2(410, 22)
+	sub.size = Vector2(420, 42)
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub.clip_text = false
 	sub.add_theme_font_size_override("font_size", 15 + fd)
 	sub.add_theme_color_override("font_color", Color(0.7, 0.85, 0.95))
 	add_child(sub)
 
 	var level := Label.new()
-	level.text = "Teacher Level %d   XP %d/%d   Next +1 upgrade in %d XP   Points %d" % [
-		GameState.teacher_level,
-		GameState.teacher_xp,
-		GameState.xp_for_level(GameState.teacher_level + 1),
-		GameState.xp_to_next_level(),
-		GameState.upgrade_points,
-	]
+	if fd > 0:
+		level.text = "Level %d   XP %d/%d   Next +1 in %d   Points %d" % [
+			GameState.teacher_level,
+			GameState.teacher_xp,
+			GameState.xp_for_level(GameState.teacher_level + 1),
+			GameState.xp_to_next_level(),
+			GameState.upgrade_points,
+		]
+	else:
+		level.text = "Teacher Level %d   XP %d/%d   Next +1 upgrade in %d XP   Points %d" % [
+			GameState.teacher_level,
+			GameState.teacher_xp,
+			GameState.xp_for_level(GameState.teacher_level + 1),
+			GameState.xp_to_next_level(),
+			GameState.upgrade_points,
+		]
 	level.position = Vector2(42, 98)
-	level.size = Vector2(vp.x - 260, 20)
+	level.size = Vector2(420, 20)
+	level.clip_text = true
 	level.add_theme_font_size_override("font_size", 13 + fd)
 	level.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	add_child(level)

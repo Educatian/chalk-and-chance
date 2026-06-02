@@ -79,7 +79,7 @@ func set_setting(key: String, value) -> void:
 	save_game()
 
 func ui_font_delta() -> int:
-	return 3 if bool(get_setting("large_text", false)) else 0
+	return 2 if bool(get_setting("large_text", false)) else 0
 
 func ensure_item_defaults() -> void:
 	for id in Items.DEFAULT_INVENTORY.keys():

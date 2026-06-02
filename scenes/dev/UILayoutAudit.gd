@@ -8,6 +8,21 @@ var _issues: Array = []
 func _ready() -> void:
 	LLMClient.use_stub = true
 	TTSClient.enabled = false
+	await _run_suite("normal", false)
+	await _run_suite("large text", true)
+
+	if _issues.is_empty():
+		print("UIAUDIT PASS")
+	else:
+		print("UIAUDIT FAIL %d issue(s)" % _issues.size())
+		for i in _issues:
+			print(i)
+	get_tree().quit()
+
+func _run_suite(prefix: String, large_text: bool) -> void:
+	GameState.settings["large_text"] = large_text
+	GameState.settings["text_reveal"] = "instant"
+	GameState.settings["reduced_motion"] = true
 	GameState.badges = []
 	GameState.attempts = {}
 	GameState.relationships = {}
@@ -21,38 +36,30 @@ func _ready() -> void:
 	_seed_competencies()
 	Game.clear_lesson()
 
-	await _audit_scene("Login", load("res://scenes/ui/Login.tscn").instantiate())
-	await _audit_hub()
-	await _audit_scene("ImportLesson", load("res://scenes/ui/ImportLesson.tscn").instantiate())
-	await _audit_preview()
-	await _audit_encounter()
-	await _audit_lecture()
-	await _audit_gym()
-	await _audit_group_checkin()
-	await _audit_overworld_debrief()
+	await _audit_scene("%s Login" % prefix, load("res://scenes/ui/Login.tscn").instantiate())
+	await _audit_hub(prefix)
+	await _audit_scene("%s ImportLesson" % prefix, load("res://scenes/ui/ImportLesson.tscn").instantiate())
+	await _audit_preview(prefix)
+	await _audit_encounter(prefix)
+	await _audit_lecture(prefix)
+	await _audit_gym(prefix)
+	await _audit_group_checkin(prefix)
+	await _audit_overworld_debrief(prefix)
 
-	if _issues.is_empty():
-		print("UIAUDIT PASS")
-	else:
-		print("UIAUDIT FAIL %d issue(s)" % _issues.size())
-		for i in _issues:
-			print(i)
-	get_tree().quit()
-
-func _audit_hub() -> void:
+func _audit_hub(prefix: String) -> void:
 	var sc: Node = load("res://scenes/ui/Hub.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
-	_scan("Hub", sc)
-	await _scan_hub_overlay(sc, "Hub briefing", func(): sc._open_mission_briefing("lecture_fractions"), "MissionBriefingOverlay")
-	await _scan_hub_overlay(sc, "Hub evidence", func(): sc._open_evidence_journal(), "EvidenceJournalOverlay")
-	await _scan_hub_overlay(sc, "Hub leaderboard", func(): sc._open_leaderboard(), "LeaderboardOverlay")
-	await _scan_hub_overlay(sc, "Hub settings", func(): sc._open_settings(), "SettingsOverlay")
-	await _scan_hub_overlay(sc, "Hub upgrades", func(): sc._open_upgrades(), "UpgradeOverlay")
-	await _scan_hub_overlay(sc, "Hub items", func(): sc._open_items(), "ItemsOverlay")
+	_scan("%s Hub" % prefix, sc)
+	await _scan_hub_overlay(sc, "%s Hub briefing" % prefix, func(): sc._open_mission_briefing("lecture_fractions"), "MissionBriefingOverlay")
+	await _scan_hub_overlay(sc, "%s Hub evidence" % prefix, func(): sc._open_evidence_journal(), "EvidenceJournalOverlay")
+	await _scan_hub_overlay(sc, "%s Hub leaderboard" % prefix, func(): sc._open_leaderboard(), "LeaderboardOverlay")
+	await _scan_hub_overlay(sc, "%s Hub settings" % prefix, func(): sc._open_settings(), "SettingsOverlay")
+	await _scan_hub_overlay(sc, "%s Hub upgrades" % prefix, func(): sc._open_upgrades(), "UpgradeOverlay")
+	await _scan_hub_overlay(sc, "%s Hub items" % prefix, func(): sc._open_items(), "ItemsOverlay")
 	GameState.upgrade_points = 0
-	await _scan_hub_overlay(sc, "Hub no-upgrade notice", func(): sc._open_upgrades_or_explain(), "NoticeOverlay")
-	await _scan_hub_overlay(sc, "Hub locked-mission notice", func(): sc._open_locked_mission_notice("group_work_fractions", _json("res://data/scenarios/group_work_fractions.json")), "NoticeOverlay")
+	await _scan_hub_overlay(sc, "%s Hub no-upgrade notice" % prefix, func(): sc._open_upgrades_or_explain(), "NoticeOverlay")
+	await _scan_hub_overlay(sc, "%s Hub locked-mission notice" % prefix, func(): sc._open_locked_mission_notice("group_work_fractions", _json("res://data/scenarios/group_work_fractions.json")), "NoticeOverlay")
 	sc.queue_free()
 	await get_tree().process_frame
 
@@ -65,28 +72,28 @@ func _scan_hub_overlay(sc: Node, label: String, opener: Callable, overlay_name: 
 		overlay.queue_free()
 	await get_tree().process_frame
 
-func _audit_preview() -> void:
+func _audit_preview(prefix: String) -> void:
 	var sc: Node = load("res://scenes/ui/PreviewScenario.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	var cfg := _json("res://data/scenarios/reading_main_idea.json")
 	sc.setup({"scenario": cfg})
 	await get_tree().process_frame
-	_scan("PreviewScenario", sc)
+	_scan("%s PreviewScenario" % prefix, sc)
 	sc.queue_free()
 	await get_tree().process_frame
 
-func _audit_encounter() -> void:
+func _audit_encounter(prefix: String) -> void:
 	Game.current_scenario_id = "discussion_fractions"
 	var sc: Node = load("res://scenes/encounter/Encounter.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	sc.setup({"persona_id": "noah_g5_fractions", "display_name": "Noah"})
 	await get_tree().process_frame
-	_scan("Encounter menu", sc)
+	_scan("%s Encounter menu" % prefix, sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
-	_scan("Encounter type", sc)
+	_scan("%s Encounter type" % prefix, sc)
 	sc._toggle_input_mode()
 	for m in ["elicit", "extend", "elicit", "wait", "extend", "elicit", "revoice", "elicit", "extend"]:
 		if sc._resolved:
@@ -96,50 +103,50 @@ func _audit_encounter() -> void:
 			await get_tree().process_frame
 	await get_tree().process_frame
 	if sc._resolved:
-		_scan("Encounter completion", sc)
+		_scan("%s Encounter completion" % prefix, sc)
 	else:
-		_issues.append("Encounter completion did not resolve during UI audit")
+		_issues.append("%s Encounter completion did not resolve during UI audit" % prefix)
 	sc.queue_free()
 	await get_tree().process_frame
 
-func _audit_lecture() -> void:
+func _audit_lecture(prefix: String) -> void:
 	Game.current_scenario_id = "lecture_fractions"
 	var sc: Node = load("res://scenes/encounter/LectureScene.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	sc.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
 	await get_tree().process_frame
-	_scan("Lecture menu", sc)
+	_scan("%s Lecture menu" % prefix, sc)
 	sc._dialogue.text = "Noah: \"I think the denominator names the equal parts, but I am still mixing it up when the picture changes.\""
 	await get_tree().process_frame
-	_scan("Lecture long dialogue", sc)
+	_scan("%s Lecture long dialogue" % prefix, sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
-	_scan("Lecture type", sc)
+	_scan("%s Lecture type" % prefix, sc)
 	sc.progress = 100.0
 	sc.comprehension = 86.0
 	sc.attention = 82.0
 	sc.composure = 88.0
 	sc._finish(true)
 	await get_tree().process_frame
-	_scan("Lecture completion", sc)
+	_scan("%s Lecture completion" % prefix, sc)
 	sc.queue_free()
 	await get_tree().process_frame
 
-func _audit_gym() -> void:
+func _audit_gym(prefix: String) -> void:
 	Game.current_scenario_id = "gym_capstone"
 	var sc: Node = load("res://scenes/encounter/GymEncounter.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	sc.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
 	await get_tree().process_frame
-	_scan("Gym menu", sc)
+	_scan("%s Gym menu" % prefix, sc)
 	sc._dialogue.text = "Priya: \"I can explain my fraction if I get a second, but everyone is moving on before I finish the whole idea.\""
 	await get_tree().process_frame
-	_scan("Gym long dialogue", sc)
+	_scan("%s Gym long dialogue" % prefix, sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
-	_scan("Gym type", sc)
+	_scan("%s Gym type" % prefix, sc)
 	for s in sc.students:
 		s["resolved"] = true
 		s["u"] = 0.88
@@ -147,44 +154,44 @@ func _audit_gym() -> void:
 	sc.order = 82.0
 	sc._finish(true)
 	await get_tree().process_frame
-	_scan("Gym completion", sc)
+	_scan("%s Gym completion" % prefix, sc)
 	sc.queue_free()
 	await get_tree().process_frame
 
-func _audit_group_checkin() -> void:
+func _audit_group_checkin(prefix: String) -> void:
 	var sc: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	sc.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
 	await get_tree().process_frame
-	_scan("GroupCheckIn", sc)
+	_scan("%s GroupCheckIn" % prefix, sc)
 	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
 	await get_tree().process_frame
-	_scan("GroupCheckIn long dialogue", sc)
+	_scan("%s GroupCheckIn long dialogue" % prefix, sc)
 	sc.understanding = 0.82
 	sc.participation = 0.78
 	sc.revealed = true
 	sc._check_win()
 	await get_tree().process_frame
-	_scan("GroupCheckIn completion", sc)
+	_scan("%s GroupCheckIn completion" % prefix, sc)
 	sc.queue_free()
 	await get_tree().process_frame
 
-func _audit_overworld_debrief() -> void:
+func _audit_overworld_debrief(prefix: String) -> void:
 	Game.clear_lesson()
 	Game.current_scenario_id = "independent_fractions"
 	var sc: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
 	add_child(sc)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	_scan("Overworld independent", sc)
+	_scan("%s Overworld independent" % prefix, sc)
 	_prepare_overworld_clear(sc)
 	sc._end_lesson()
 	await get_tree().process_frame
-	_scan("Overworld reflection", sc._overlay)
+	_scan("%s Overworld reflection" % prefix, sc._overlay)
 	sc._on_reflect({"_reflect": "worked"})
 	await get_tree().process_frame
-	_scan("Overworld debrief", sc._overlay)
+	_scan("%s Overworld debrief" % prefix, sc._overlay)
 	sc.queue_free()
 	Game.clear_lesson()
 	await get_tree().process_frame
