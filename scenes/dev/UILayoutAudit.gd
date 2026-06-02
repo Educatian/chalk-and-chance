@@ -29,6 +29,7 @@ func _ready() -> void:
 	await _audit_lecture()
 	await _audit_gym()
 	await _audit_group_checkin()
+	await _audit_overworld_debrief()
 
 	if _issues.is_empty():
 		print("UIAUDIT PASS")
@@ -168,6 +169,38 @@ func _audit_group_checkin() -> void:
 	_scan("GroupCheckIn completion", sc)
 	sc.queue_free()
 	await get_tree().process_frame
+
+func _audit_overworld_debrief() -> void:
+	Game.clear_lesson()
+	Game.current_scenario_id = "independent_fractions"
+	var sc: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
+	add_child(sc)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_scan("Overworld independent", sc)
+	_prepare_overworld_clear(sc)
+	sc._end_lesson()
+	await get_tree().process_frame
+	_scan("Overworld reflection", sc._overlay)
+	sc._on_reflect({"_reflect": "worked"})
+	await get_tree().process_frame
+	_scan("Overworld debrief", sc._overlay)
+	sc.queue_free()
+	Game.clear_lesson()
+	await get_tree().process_frame
+
+func _prepare_overworld_clear(sc: Node) -> void:
+	sc._composure = 92.0
+	sc._disruptions = 0
+	for st in sc._npcs.keys():
+		sc._npcs[st]["offtask"] = 0.0
+		Game.note_visit(str(sc._npcs[st].get("persona_id", "")))
+	if sc._objective_label != null:
+		sc._objective_label.text = sc._objectives_status(100.0)
+	if sc._attention_fill != null:
+		sc._attention_fill.size = Vector2(216.0, 12.0)
+	if sc._composure_fill != null:
+		sc._composure_fill.size = Vector2(156.0 * sc._composure / GameState.max_composure(), 10.0)
 
 func _audit_scene(label: String, sc: Node) -> void:
 	add_child(sc)

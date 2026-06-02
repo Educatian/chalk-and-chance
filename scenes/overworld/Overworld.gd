@@ -729,22 +729,26 @@ func _end_lesson() -> void:
 	for st in _npcs.keys():
 		total += _npcs[st].get("offtask", 0.0)
 	var attention := 100.0 - total / float(max(1, _npcs.size()))
-	var lines := ""
+	var reward_lines := ""
+	var objective_tags: Array = []
+	var miss_tips: Array = []
 	var stars := 0
 	for o in _objectives:
 		var ok := _objective_met(o, attention)
 		if ok:
 			stars += 1
-		lines += "%s  %s%s\n" % [
-			"[PASS]" if ok else "[MISS]",
-			str(o.get("label", "")),
-			"" if ok else "  -> " + _objective_tip(o, attention),
-		]
+		objective_tags.append("%s %s" % ["OK" if ok else "MISS", _objective_short_label(o)])
+		if not ok:
+			miss_tips.append(_objective_tip(o, attention))
 	if stars == _objectives.size() and stars > 0 and _badge != "":
 		var reward := GameState.award_badge(_badge)
 		Sfx.play("badge")
+		reward_lines += "Reward: Badge %s" % _badge.to_upper()
 		if bool(reward.get("level_up", false)):
-			lines += "[LEVEL UP] Level %d reached. Upgrade point earned.\n" % int(reward.get("level_after", GameState.teacher_level))
+			reward_lines += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
+		if _items_awarded_text(reward.get("items_awarded", {})) != "":
+			reward_lines += " | +items"
+		reward_lines += "\n"
 		GameState.record_leaderboard({
 			"scenario_id": str(Game.current_scenario_id),
 			"title": _scenario_title,
@@ -754,12 +758,16 @@ func _end_lesson() -> void:
 			"detail": "Objectives %d/%d  Attention %d%%  Engaged %d/%d" % [stars, _objectives.size(), int(attention), _engaged_count(), _npcs.size()],
 			"level_up": bool(reward.get("level_up", false)),
 		})
-	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d   Engaged %d/%d\n\n%sObjectives met: %d / %d\n%s" % [
-		_scenario_title, int(attention), int(_composure), _disruptions, _engaged_count(), _npcs.size(),
-		lines, stars, _objectives.size(), _debrief_note(attention)]
-	summary += "\n\n%s\n%s" % [Game.scenario_edge_label(_scenario_cfg), _evidence_fingerprint(attention)]
+	var next_line := _debrief_note(attention)
+	if not miss_tips.is_empty():
+		next_line = "Next: %s." % str(miss_tips[0]).capitalize()
+	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\n%s\n%s\n%s" % [
+		_scenario_title, int(attention), int(_composure), _disruptions,
+		_engaged_count(), _npcs.size(), stars, _objectives.size(),
+		reward_lines, " | ".join(objective_tags), next_line,
+		Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
 	if _attempt > 1:
-		summary += "\n\n(Replay #%d - the room drifts faster each attempt.)" % _attempt
+		summary += "\nReplay #%d: the room drifts faster each attempt." % _attempt
 	_pending_debrief = summary
 	var reflection_options := _reflection_options(attention)
 	Game.clear_lesson()
@@ -907,6 +915,22 @@ func _objective_tip(o: Dictionary, attention: float) -> String:
 			return "use Connect twice: notice, then bridge"
 	return "try again with this goal in mind"
 
+func _objective_short_label(o: Dictionary) -> String:
+	match str(o.get("metric", "")):
+		"attention_min":
+			return "on-task"
+		"disruptions_max":
+			return "disruptions"
+		"composure_min":
+			return "composure"
+		"engaged_min":
+			return "conferences"
+		"waittime_min":
+			return "wait-time"
+		"connect_min":
+			return "asset connect"
+	return str(o.get("id", "objective"))
+
 func _evidence_fingerprint(attention: float) -> String:
 	var moves: Array = Game.lesson.get("moves", [])
 	var targeted := 0
@@ -937,6 +961,28 @@ func _evidence_fingerprint(attention: float) -> String:
 		trace += ", tell/takeover attempts %d" % tells
 	trace += "."
 	return trace
+
+func _compact_evidence_fingerprint(attention: float) -> String:
+	var moves: Array = Game.lesson.get("moves", [])
+	var targeted := 0
+	var waits := 0
+	for m in moves:
+		if m.get("targets", false):
+			targeted += 1
+		if m.get("wait_ok", false):
+			waits += 1
+	return "Evidence: attention %d%%, reached %d/%d, target-fit %d/%d, wait-time %d." % [
+		int(attention), _engaged_count(), _npcs.size(), targeted, moves.size(), waits]
+
+func _items_awarded_text(items) -> String:
+	if typeof(items) != TYPE_DICTIONARY:
+		return ""
+	var parts: Array = []
+	for id in items.keys():
+		var amt := int(items[id])
+		if amt > 0:
+			parts.append("%s x%d" % [Items.short_name_for(str(id)), amt])
+	return ", ".join(parts)
 
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true
