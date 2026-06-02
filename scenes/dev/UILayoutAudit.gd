@@ -97,6 +97,9 @@ func _audit_lecture() -> void:
 	sc.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
 	await get_tree().process_frame
 	_scan("Lecture menu", sc)
+	sc._dialogue.text = "Noah: \"I think the denominator names the equal parts, but I am still mixing it up when the picture changes.\""
+	await get_tree().process_frame
+	_scan("Lecture long dialogue", sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
 	_scan("Lecture type", sc)
@@ -111,6 +114,9 @@ func _audit_gym() -> void:
 	sc.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
 	await get_tree().process_frame
 	_scan("Gym menu", sc)
+	sc._dialogue.text = "Priya: \"I can explain my fraction if I get a second, but everyone is moving on before I finish the whole idea.\""
+	await get_tree().process_frame
+	_scan("Gym long dialogue", sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
 	_scan("Gym type", sc)
@@ -121,6 +127,10 @@ func _audit_scene(label: String, sc: Node) -> void:
 	add_child(sc)
 	await get_tree().process_frame
 	_scan(label, sc)
+	if label == "GroupCheckIn":
+		sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
+		await get_tree().process_frame
+		_scan("GroupCheckIn long dialogue", sc)
 	sc.queue_free()
 	await get_tree().process_frame
 

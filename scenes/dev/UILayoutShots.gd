@@ -139,6 +139,7 @@ func _shot_lecture() -> void:
 	await _frames(4)
 	sc.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
 	await _frames(10)
+	sc._dialogue.text = "Noah: \"I think the denominator names the equal parts, but I still mix it up when the picture changes.\""
 	await _save("ui_lecture_menu.png")
 	sc._toggle_input_mode()
 	sc._text_input.text = "Show me with your fingers if the denominator is the number of equal parts."
@@ -154,6 +155,7 @@ func _shot_gym() -> void:
 	await _frames(4)
 	sc.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
 	await _frames(10)
+	sc._dialogue.text = "Priya: \"I can explain my fraction if I get a second, but everyone is moving on before I finish.\""
 	await _save("ui_gym_menu.png")
 	sc._toggle_input_mode()
 	sc._text_input.text = "Noah, explain what part you are using as the whole."

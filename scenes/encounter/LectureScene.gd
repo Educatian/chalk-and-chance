@@ -210,11 +210,25 @@ func _build_ui() -> void:
 		nm.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 		nm.add_theme_constant_override("outline_size", 4)
 
-	_dialogue = _label("", Vector2(12, 176), 9, Color(0.96, 0.96, 0.92))
-	_dialogue.size = Vector2(456, 16)
-	_result = _label("Question asks the highlighted student.", Vector2(12, 194), 7, Color(0.96, 0.86, 0.50))
+	var dialogue_box := Rect2(Vector2(10, 162), Vector2(460, 42))
+	var dialogue_text := Rect2(Vector2(18, 168), Vector2(444, 24))
+	var dbg := ColorRect.new()
+	dbg.name = "DialogueBubble"
+	dbg.position = dialogue_box.position
+	dbg.size = dialogue_box.size
+	dbg.color = Color(0.12, 0.15, 0.26, 0.88)
+	dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(dbg)
+	_dialogue = _label("", dialogue_text.position, 9, Color(0.96, 0.96, 0.92))
+	_dialogue.name = "DialogueText"
+	_dialogue.size = dialogue_text.size
+	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialogue.set_meta("qa_container_rect", dialogue_box)
+	_dialogue.set_meta("qa_text_rect", dialogue_text)
+	_dialogue.set_meta("qa_min_padding", 6.0)
+	_result = _label("Question asks the highlighted student.", Vector2(12, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 10)
-	_coach = _label("Coach Vee: present a little, then check. Spread your questions across the room.", Vector2(12, 206), 7, Color(0.72, 0.92, 0.78))
+	_coach = _label("Coach Vee: present a little, then check. Spread your questions across the room.", Vector2(12, 210), 7, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(456, 18)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 

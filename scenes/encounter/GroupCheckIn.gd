@@ -84,10 +84,23 @@ func _build_ui() -> void:
 	_p_bar = _bar(Vector2(250, 240), Color(0.55, 0.72, 0.95))
 
 	# dialogue + coach (their own clear band)
-	_dialogue = _label("", Vector2(20, 270), 15, Color(0.97, 0.97, 0.93))
-	_dialogue.size = Vector2(920, 62)
+	var dialogue_box := Rect2(Vector2(16, 264), Vector2(928, 76))
+	var dialogue_text := Rect2(Vector2(28, 276), Vector2(904, 48))
+	var dbg := ColorRect.new()
+	dbg.name = "DialogueBubble"
+	dbg.position = dialogue_box.position
+	dbg.size = dialogue_box.size
+	dbg.color = Color(0.10, 0.13, 0.23, 0.88)
+	dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(dbg)
+	_dialogue = _label("", dialogue_text.position, 15, Color(0.97, 0.97, 0.93))
+	_dialogue.name = "DialogueText"
+	_dialogue.size = dialogue_text.size
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _label("", Vector2(20, 338), 12, Color(0.62, 0.86, 0.62))
+	_dialogue.set_meta("qa_container_rect", dialogue_box)
+	_dialogue.set_meta("qa_text_rect", dialogue_text)
+	_dialogue.set_meta("qa_min_padding", 8.0)
+	_coach = _label("", Vector2(20, 346), 12, Color(0.62, 0.86, 0.62))
 	_coach.size = Vector2(920, 44)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -96,7 +109,7 @@ func _build_ui() -> void:
 	for mv in MOVES:
 		var b := Button.new()
 		b.text = mv[0]
-		b.position = Vector2(x, 392)
+		b.position = Vector2(x, 402)
 		b.size = Vector2(170, 42)
 		b.pressed.connect(_on_move.bind(mv[1]))
 		_layer.add_child(b)

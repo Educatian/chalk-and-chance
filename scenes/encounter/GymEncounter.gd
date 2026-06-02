@@ -166,8 +166,8 @@ func _build_ui() -> void:
 
 	# Dialogue + coach
 	var dbg := ColorRect.new()
-	var dialogue_box := Rect2(Vector2(10, 170), Vector2(460, 32))
-	var dialogue_text := Rect2(Vector2(18, 176), Vector2(444, 18))
+	var dialogue_box := Rect2(Vector2(10, 162), Vector2(460, 42))
+	var dialogue_text := Rect2(Vector2(18, 168), Vector2(444, 24))
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position; dbg.size = dialogue_box.size
 	dbg.color = Color(0.12, 0.15, 0.26); dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -181,7 +181,7 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_min_padding", 6.0)
 	_result = _label("Current target: pick the highlighted student, then choose the move that fits their need.", Vector2(16, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 10)
-	_coach = _label("Coach Vee: pick a student, then a move. Help one, but watch the others drift.", Vector2(16, 216), 7, Color(0.72, 0.92, 0.78))
+	_coach = _label("Coach Vee: pick a student, then a move. Help one, but watch the others drift.", Vector2(16, 210), 7, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(448, 12)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
