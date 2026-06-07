@@ -148,7 +148,7 @@ func _ready() -> void:
 	if delta == null:
 		_issue("TeacherSim Delta overlay did not open")
 	else:
-		_assert_text("TeacherSim Delta", delta, ["TEACHERSIM DELTA", "classic teacher simulation", "Comparison matrix", "Evidence transparency", "Novelty claim", "Adaptive evidence-transparent rehearsal", "Evidence plan", "Paired A/B", "Blind ratings"])
+		_assert_text("TeacherSim Delta", delta, ["TEACHERSIM DELTA", "classic teacher simulation", "Comparison matrix", "Professional benchmark check", "Mursion-class", "TeachLivE-class", "simSchool-class", "Outstanding design verdict", "Not proven yet", "Evidence transparency", "Novelty claim", "Adaptive evidence-transparent rehearsal", "Evidence plan", "Paired A/B", "Blind ratings"])
 		delta.queue_free()
 	await _frames(1)
 
