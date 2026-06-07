@@ -9,6 +9,7 @@ Add-Type -AssemblyName System.Drawing
 $pages = @(
   @{ Path = "landing\index.html"; Url = "https://chalk-and-chance.pages.dev/"; Type = "website" },
   @{ Path = "landing\demo.html"; Url = "https://chalk-and-chance.pages.dev/demo.html"; Type = "website" },
+  @{ Path = "landing\cat531.html"; Url = "https://chalk-and-chance.pages.dev/cat531.html"; Type = "website" },
   @{ Path = "landing\guidebook.html"; Url = "https://chalk-and-chance.pages.dev/guidebook.html"; Type = "article" }
 )
 

@@ -10,6 +10,7 @@ var _btn: Button
 var _class_box: VBoxContainer
 
 func _ready() -> void:
+	var course_code := _web_course_code()
 	var vp := get_viewport_rect().size
 	_add_landing_background(vp)
 
@@ -82,7 +83,9 @@ func _ready() -> void:
 
 	var demo := Button.new()
 	demo.text = "Play demo"
-	if OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
+	if course_code != "":
+		demo.text = "Practice as CAT531 guest"
+	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		demo.text = "Play demo (voice off)"
 	demo.custom_minimum_size = Vector2(0, 42)
 	demo.add_theme_font_size_override("font_size", 18)
@@ -117,10 +120,14 @@ func _ready() -> void:
 	_class_in = _field(_class_box, "Class code", "e.g. UA-CAT531-SUMMER26", false)
 	_name_in = _field(_class_box, "Your name", "First Last", false)
 	_pw_in = _field(_class_box, "Password", "choose / enter your password", true)
+	if course_code != "":
+		_class_in.text = course_code
 	_pw_in.text_submitted.connect(func(_t): _on_sign_in())
 
 	_btn = Button.new()
 	_btn.text = "Sign in / Join"
+	if course_code != "":
+		_btn.text = "Join CAT531 / Continue"
 	_btn.custom_minimum_size = Vector2(0, 36)
 	_apply_button_style(_btn, false)
 	_btn.pressed.connect(_on_sign_in)
@@ -142,6 +149,8 @@ func _ready() -> void:
 	Auth.login_failed.connect(func(m): _set_status(m, true))
 	if not Auth.configured():
 		_set_status("Offline mode is ready.", false)
+	elif course_code != "":
+		_set_status("CAT531 ready. Enter name + password.", false)
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		_set_status("Public demo ready. Voice is off to prevent ElevenLabs overuse.", false)
 
@@ -221,6 +230,14 @@ func _field(parent: Node, label: String, placeholder: String, secret: bool) -> L
 	e.custom_minimum_size = Vector2(0, 30)
 	parent.add_child(e)
 	return e
+
+func _web_course_code() -> String:
+	if not OS.has_feature("web") or not ClassDB.class_exists("JavaScriptBridge"):
+		return ""
+	var raw := str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('class_code') || new URLSearchParams(window.location.hash.slice(1)).get('class_code') || '')", true)).strip_edges()
+	if raw.to_upper() == "UA-CAT531-SUMMER26":
+		return "UA-CAT531-SUMMER26"
+	return ""
 
 func _on_sign_in() -> void:
 	if not Auth.configured():
