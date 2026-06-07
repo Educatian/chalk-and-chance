@@ -40,7 +40,7 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 				display_name = str(data.get("display_name", p_name))
 				class_code = str(data.get("class_code", p_class))
 				role = str(data.get("role", "learner"))
-				login_ok.emit()
+				_load_competency_then_login()
 			else:
 				var msg := "login failed"
 				if typeof(data) == TYPE_DICTIONARY:
@@ -56,8 +56,24 @@ func post_authed(path: String, body: Dictionary, cb: Callable = Callable()) -> v
 		if cb.is_valid():
 			cb.call(ok, data))
 
+func get_authed(path: String, cb: Callable = Callable()) -> void:
+	if not signed_in():
+		return
+	_request(path, HTTPClient.METHOD_GET, {}, true, func(ok, data):
+		if cb.is_valid():
+			cb.call(ok, data))
+
+func _load_competency_then_login() -> void:
+	get_authed("/competency", func(ok: bool, data):
+		if ok and typeof(data) == TYPE_DICTIONARY and typeof(data.get("skills", [])) == TYPE_ARRAY:
+			Competency.load_cloud_summary(data.get("skills", []))
+		login_ok.emit())
+
 # --- internal: one fresh HTTPRequest per call (avoids busy conflicts) ---------
 func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:
+	_request(path, HTTPClient.METHOD_POST, body, authed, cb)
+
+func _request(path: String, method: int, body: Dictionary, authed: bool, cb: Callable) -> void:
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.timeout = 15.0
@@ -68,7 +84,8 @@ func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	if authed:
 		headers.append("Authorization: Bearer " + token)
-	var err := http.request(api_base + path, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	var request_body := "" if method == HTTPClient.METHOD_GET else JSON.stringify(body)
+	var err := http.request(api_base + path, headers, method, request_body)
 	if err != OK:
 		cb.call(false, null)
 		http.queue_free()

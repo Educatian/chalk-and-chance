@@ -92,6 +92,93 @@ async function rateLimit(env, ip, bucket) {
   return true;
 }
 const slug = (s) => (s || "").trim().toLowerCase().replace(/\s+/g, "_").slice(0, 40);
+const TELEMETRY_STRING_FIELDS = [
+  "event", "session_id", "construct_id", "scenario_id", "mode", "scope", "tag", "source",
+  "item_id", "result", "reason", "rank", "badge", "profile", "persona_id", "emotion_shown",
+];
+const TELEMETRY_NUMBER_FIELDS = [
+  "turn", "score", "theta", "prob", "n", "progress", "comprehension", "attention",
+  "composure", "order", "understanding", "participation", "wait_ms", "remaining",
+];
+const TELEMETRY_BOOL_FIELDS = ["won", "targets", "wait_ok", "ok", "resolved", "level_up"];
+
+function copyStrings(src, keys, maxLen = 96) {
+  const out = {};
+  for (const key of keys) {
+    if (src[key] !== undefined && src[key] !== null) out[key] = String(src[key]).slice(0, maxLen);
+  }
+  return out;
+}
+
+function copyNumbers(src, keys) {
+  const out = {};
+  for (const key of keys) {
+    if (src[key] !== undefined && src[key] !== null && Number.isFinite(Number(src[key]))) out[key] = Number(src[key]);
+  }
+  return out;
+}
+
+function copyBools(src, keys) {
+  const out = {};
+  for (const key of keys) {
+    if (src[key] !== undefined && src[key] !== null) out[key] = Boolean(src[key]);
+  }
+  return out;
+}
+
+function safeNumberMap(src) {
+  const out = {};
+  if (!src || typeof src !== "object" || Array.isArray(src)) return out;
+  for (const [key, value] of Object.entries(src)) {
+    if (Number.isFinite(Number(value))) out[String(key).slice(0, 48)] = Number(value);
+  }
+  return out;
+}
+
+function safeXapi(src) {
+  if (!src || typeof src !== "object" || Array.isArray(src)) return undefined;
+  const result = src.result && typeof src.result === "object" && !Array.isArray(src.result) ? src.result : {};
+  const extensions = result.extensions && typeof result.extensions === "object" && !Array.isArray(result.extensions)
+    ? result.extensions : {};
+  return {
+    verb: src.verb ? String(src.verb).slice(0, 64) : "",
+    result: {
+      success: result.success === undefined ? undefined : Boolean(result.success),
+      score: safeNumberMap(result.score),
+      extensions: safeNumberMap(extensions),
+    },
+  };
+}
+
+function safeTelemetryEvent(e) {
+  const clean = {};
+  for (const key of TELEMETRY_STRING_FIELDS) {
+    if (e[key] !== undefined && e[key] !== null) clean[key] = String(e[key]).slice(0, 96);
+  }
+  for (const key of TELEMETRY_NUMBER_FIELDS) {
+    if (e[key] !== undefined && e[key] !== null && Number.isFinite(Number(e[key]))) clean[key] = Number(e[key]);
+  }
+  for (const key of TELEMETRY_BOOL_FIELDS) {
+    if (e[key] !== undefined && e[key] !== null) clean[key] = Boolean(e[key]);
+  }
+  if (e.move && typeof e.move === "object" && !Array.isArray(e.move)) {
+    clean.move = {
+      ...copyStrings(e.move, ["tag", "input_mode"], 48),
+      ...copyNumbers(e.move, ["wait_ms"]),
+    };
+  }
+  if (e.judge && typeof e.judge === "object" && !Array.isArray(e.judge)) {
+    clean.judge = {
+      ...copyBools(e.judge, ["targets", "wait_ok", "ok"]),
+      tags: Array.isArray(e.judge.tags) ? e.judge.tags.slice(0, 8).map((tag) => String(tag).slice(0, 48)) : [],
+    };
+  }
+  clean.deltas = safeNumberMap(e.deltas);
+  clean.meters = safeNumberMap(e.meters);
+  const xapi = safeXapi(e.xapi);
+  if (xapi) clean.xapi = xapi;
+  return clean;
+}
 
 export default {
   async fetch(req, env) {
@@ -122,6 +209,8 @@ export default {
       if (url.pathname === "/me" && req.method === "GET") return await me(req, env);
       if (url.pathname === "/telemetry" && req.method === "POST") return await telemetry(req, env);
       if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
+      if (url.pathname === "/competency" && req.method === "GET") return await competencyRead(req, env);
+      if (url.pathname === "/class_dashboard" && req.method === "GET") return await classDashboard(req, env);
       return json({ error: "not found" }, 404);
     } catch (e) {
       return json({ error: String(e) }, 500);
@@ -187,8 +276,10 @@ async function telemetry(req, env) {
   if (!Array.isArray(events)) return json({ error: "events[] required" }, 400);
   const stmt = env.DB.prepare(
     "INSERT INTO telemetry_events (user_id,session_id,construct_id,event) VALUES (?,?,?,?)");
-  const batch = events.slice(0, 500).map((e) =>
-    stmt.bind(p.sub, String(e.session_id || ""), e.construct_id || null, JSON.stringify(e)));
+  const batch = events.slice(0, 500).map((e) => {
+    const clean = safeTelemetryEvent(e || {});
+    return stmt.bind(p.sub, String(clean.session_id || ""), clean.construct_id || null, JSON.stringify(clean));
+  });
   if (batch.length) await env.DB.batch(batch);
   return json({ stored: batch.length });
 }
@@ -205,4 +296,40 @@ async function competency(req, env) {
     stmt.bind(p.sub, String(s.skill), Number(s.theta) || 0, Number(s.prob) || 0.5, Number(s.n) || 0));
   if (batch.length) await env.DB.batch(batch);
   return json({ upserted: batch.length });
+}
+
+async function competencyRead(req, env) {
+  const p = await auth(req, env);
+  if (!p) return json({ error: "unauthorized" }, 401);
+  const { results } = await env.DB.prepare(
+    "SELECT skill,theta,prob,n,updated_at FROM competency WHERE user_id=? ORDER BY updated_at DESC, skill ASC")
+    .bind(p.sub).all();
+  return json({ skills: results || [] });
+}
+
+async function classDashboard(req, env) {
+  const p = await auth(req, env);
+  if (!p) return json({ error: "unauthorized" }, 401);
+  if (p.role !== "instructor") return json({ error: "forbidden" }, 403);
+  const learners = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM learners WHERE class_code=?")
+    .bind(p.cls).first();
+  const telemetryRows = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM telemetry_events t JOIN learners l ON t.user_id=l.user_id WHERE l.class_code=?")
+    .bind(p.cls).first();
+  const { results } = await env.DB.prepare(
+    `SELECT c.skill AS skill, COUNT(*) AS learners, ROUND(AVG(c.prob), 3) AS avg_prob,
+            SUM(c.n) AS evidence, ROUND(MIN(c.prob), 3) AS min_prob, ROUND(MAX(c.prob), 3) AS max_prob
+       FROM competency c JOIN learners l ON c.user_id=l.user_id
+      WHERE l.class_code=?
+      GROUP BY c.skill
+      ORDER BY avg_prob ASC, evidence DESC`)
+    .bind(p.cls).all();
+  return json({
+    class_code: p.cls,
+    role: p.role,
+    learners: Number(learners?.n || 0),
+    telemetry_events: Number(telemetryRows?.n || 0),
+    skills: results || [],
+  });
 }

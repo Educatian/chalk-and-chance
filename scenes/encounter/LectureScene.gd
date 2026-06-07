@@ -5,6 +5,7 @@ extends Control
 
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
+const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 const UI_SCALE := 2.0
 const MOVES := [
 	["Present", "present"], ["Question", "ask"], ["Wait", "wait"],
@@ -23,6 +24,7 @@ var _ready_ms := 0
 var _over := false
 var _scenario_context: Dictionary = {}
 var _lecture_history: Array = []
+var _move_history: Array = []
 var _llm_busy := false
 var _next_input_mode := "menu"
 var _next_free_text := ""
@@ -48,6 +50,7 @@ var _type_mode := false
 var _item_buttons: Array = []
 var _wait_item_ready := false
 var _practice_goal_active := false
+var _target_comprehension := 60.0
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
@@ -81,9 +84,24 @@ func setup(data: Dictionary) -> void:
 	for entry in scenario.get("roster", []):
 		students.append({"pid": str(entry.get("id", "")), "name": str(entry.get("name", "?")),
 			"comp": 0.3, "called": false})
+	_apply_adaptive_difficulty()
 	_build_ui()
 	_arm_turn()
 	_refresh()
+
+func _apply_adaptive_difficulty() -> void:
+	var d := Game.adaptive_difficulty(["formative_check", "wait_time", "restraint"])
+	var level := str(d.get("level", "standard"))
+	if level == "scaffold":
+		comprehension = clampf(comprehension + 6.0, 0.0, 100.0)
+		attention = clampf(attention + 4.0, 0.0, 100.0)
+		_target_comprehension = 55.0
+	elif level == "challenge":
+		comprehension = clampf(comprehension - 5.0, 0.0, 100.0)
+		attention = clampf(attention - 7.0, 0.0, 100.0)
+		_target_comprehension = 68.0
+	else:
+		_target_comprehension = 60.0
 
 func _build_scenario_context(selected_index: int) -> Dictionary:
 	var objective_labels: Array = []
@@ -226,9 +244,9 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_container_rect", dialogue_box)
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
-	_result = _label("Question asks the highlighted student.", Vector2(12, 204), 7, Color(0.96, 0.86, 0.50))
+	_result = _label("Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.", Vector2(12, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 10)
-	_coach = _label("Coach Vee: present a little, then check. Spread your questions across the room.", Vector2(12, 210), 7, Color(0.72, 0.92, 0.78))
+	_coach = _label("Coach Vee: press Repair if progress outruns comprehension; otherwise Check.", Vector2(12, 210), 7, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(456, 18)
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -325,12 +343,14 @@ func _use_item(id: String) -> void:
 		return
 	match id:
 		"breathing_reset":
-			composure = clampf(composure + 18.0, 0.0, GameState.max_composure())
-			_result.text = "Breathing Reset  |  Composure +18"
+			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
+			composure = clampf(composure + gain, 0.0, GameState.max_composure())
+			_result.text = "Breathing Reset  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""]
 			_coach.text = "Coach Vee: you reset before continuing. Now choose a smaller, more diagnostic next move."
 		"quiet_signal":
-			attention = clampf(attention + 18.0, 0.0, 100.0)
-			_result.text = "Quiet Signal  |  Attention +18"
+			var signal_gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
+			attention = clampf(attention + signal_gain, 0.0, 100.0)
+			_result.text = "Quiet Signal  |  Attention +%d%s" % [int(signal_gain), " profile bonus" if signal_gain > 18.0 else ""]
 			_coach.text = "Coach Vee: a practiced attention signal restores the room without escalating."
 			_react_many("thinking", "dots", students.size())
 		"noticing_lens":
@@ -342,7 +362,9 @@ func _use_item(id: String) -> void:
 				if not bool(students[i].get("called", false)):
 					_select(i)
 					break
-			_result.text = "Equity Snapshot  |  highlighted a student who has not spoken"
+			var equity_gain := 6.0 if GameState.teacher_profile_id == "equity" else 0.0
+			attention = clampf(attention + equity_gain, 0.0, 100.0)
+			_result.text = "Equity Snapshot  |  highlighted a student who has not spoken%s" % ("  |  Attention +6" if equity_gain > 0.0 else "")
 			_coach.text = "Coach Vee: equitable participation is a design move, not just a fairness slogan. Ask the highlighted student next."
 		"wait_meter_pin":
 			_wait_item_ready = true
@@ -579,11 +601,63 @@ func _on_move(tag: String) -> void:
 			_result.text = "Whole-class check  |  Comprehension %s  |  everyone accountable" % _signed(int(round(comprehension - old_comp3)))
 			_coach.text = "Coach Vee: a whole-class check holds everyone accountable at once."
 			_react_many("thinking", "exclaim", students.size())
+	_observe_lecture_competency(tag, wait_ok, gap)
+	_move_history.append({"turn": _move_history.size() + 1, "tag": tag, "targets": _lecture_move_productive(tag, wait_ok, gap),
+		"construct": _lecture_construct(tag), "reaction": _dialogue.text, "meter": _result.text})
+	Telemetry.log_event({
+		"event": "lecture_move",
+		"scenario_id": str(Game.current_scenario_id),
+		"construct_id": _lecture_construct(tag),
+		"move": {"tag": tag, "input_mode": input_mode, "text": free_text, "wait_ms": wait_ms},
+		"wait_ok": wait_ok,
+		"class_state": {"progress": progress, "comprehension": comprehension, "attention": attention, "composure": composure},
+	})
 	_refresh()
 	_check_end()
 	if not _over:
 		_request_lecture_turn(tag, wait_ms, wait_ok, input_mode, free_text)
 	_arm_turn()
+
+func _observe_lecture_competency(tag: String, wait_ok: bool, gap_before: float) -> void:
+	match tag:
+		"ask":
+			Competency.observe_skill("elicit_reasoning", "lecture::ask", comprehension >= 55.0 or gap_before <= 25.0)
+			if wait_ok:
+				Competency.observe_skill("wait_time", "lecture::ask_wait", true)
+		"wait":
+			Competency.observe_skill("wait_time", "lecture::wait", wait_ok)
+		"reexplain":
+			Competency.observe_skill("formative_check", "lecture::repair", gap_before >= 18.0 or comprehension >= 60.0)
+		"poll":
+			Competency.observe_skill("formative_check", "lecture::poll", true)
+		"present":
+			Competency.observe_skill("restraint", "lecture::present_pacing", consec_present <= 2 and gap_before <= 28.0)
+
+func _lecture_construct(tag: String) -> String:
+	match tag:
+		"ask":
+			return "elicit_reasoning"
+		"wait":
+			return "wait_time"
+		"reexplain", "poll":
+			return "formative_check"
+		"present":
+			return "restraint"
+	return ""
+
+func _lecture_move_productive(tag: String, wait_ok: bool, gap_before: float) -> bool:
+	match tag:
+		"ask":
+			return comprehension >= 55.0 or gap_before <= 25.0
+		"wait":
+			return wait_ok
+		"reexplain":
+			return gap_before >= 18.0 or comprehension >= 60.0
+		"poll":
+			return true
+		"present":
+			return consec_present <= 2 and gap_before <= 28.0
+	return false
 
 func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode: String, free_text: String) -> void:
 	if _http == null or _llm_busy:
@@ -724,7 +798,7 @@ func _react_many(affect: String, emote_key: String, count: int) -> void:
 
 func _check_end() -> void:
 	if progress >= 100.0:
-		_finish(comprehension >= 60.0 and attention >= 25.0)
+		_finish(comprehension >= _target_comprehension and attention >= 25.0)
 	elif attention <= 0.0 or composure <= 0.0:
 		_finish(false)
 
@@ -732,6 +806,10 @@ func _finish(won: bool) -> void:
 	_over = true
 	for b in _buttons:
 		b.disabled = true
+	Telemetry.log_event({"event": "lecture_resolve", "scenario_id": str(Game.current_scenario_id),
+		"won": won, "progress": progress, "comprehension": comprehension, "attention": attention})
+	Telemetry.upload_competency()
+	Telemetry.flush()
 	if won:
 		var badge := str(scenario.get("badge", ""))
 		var reward := {}
@@ -750,6 +828,8 @@ func _finish(won: bool) -> void:
 			"score": score,
 			"detail": "Comp %d%%  Attention %d%%  Progress %d%%" % [int(comprehension), int(attention), int(progress)],
 			"level_up": bool(reward.get("level_up", false)),
+			"trace": Game.evidence_trace_from_moves(_move_history),
+			"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 		})
 		Sfx.play("badge")
 		_coach.text = "Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!" % int(comprehension)
@@ -790,6 +870,7 @@ func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary)
 	panel.position = Vector2(34, 78)
 	panel.size = Vector2(436, 184)
 	overlay.add_child(panel)
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), won)
 	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
 	var score := int(run_record.get("score", int(round(comprehension + attention + composure * 0.5 + progress * 0.5))))
 	var rank := str(run_record.get("rank", GameState._rank_for_score(score)))
@@ -801,13 +882,14 @@ func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary)
 	_overlay_label(overlay, "Drivers: C%d A%d Calm%d Pace%d" % [
 		int(comprehension), int(attention), int(round(composure * 0.5)), int(round(progress * 0.5))
 	], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
-	_overlay_label(overlay, "Focus: checks, wait-time, equity.", Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
+	var trace_line := str(run_record.get("evidence_trace", ""))
+	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored move trace"), Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
 	_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(308, 16))
 	var cont := Button.new()
-	cont.text = "Continue"
-	cont.position = Vector2(360, 224)
-	cont.size = Vector2(92, 30)
-	cont.add_theme_font_size_override("font_size", 8)
+	cont.text = "Return to hub"
+	cont.position = Vector2(326, 224)
+	cont.size = Vector2(126, 30)
+	cont.add_theme_font_size_override("font_size", 7)
 	cont.pressed.connect(func(): SceneRouter.change_scene("res://scenes/ui/Hub.tscn"))
 	overlay.add_child(cont)
 	PixelUi.scale_tree(overlay, UI_SCALE)

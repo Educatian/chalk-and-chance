@@ -36,9 +36,27 @@ var beta: Dictionary = {}    # "tag::persona" -> item difficulty
 var nb: Dictionary = {}
 
 func _ready() -> void:
+	reset_estimates()
+
+func reset_estimates() -> void:
+	theta.clear()
+	n.clear()
+	beta.clear()
+	nb.clear()
 	for s in SKILLS:
 		theta[s] = 0.0
 		n[s] = 0.0
+
+func load_cloud_summary(rows: Array) -> void:
+	reset_estimates()
+	for row in rows:
+		if typeof(row) != TYPE_DICTIONARY:
+			continue
+		var skill := str(row.get("skill", ""))
+		if not (skill in SKILLS):
+			continue
+		theta[skill] = float(row.get("theta", 0.0))
+		n[skill] = float(row.get("n", 0.0))
 
 ## Derive the success signal y in {0,1} from the turn (same evidence rules as the model).
 func score_y(tag: String, judge: Dictionary, deltas: Dictionary) -> int:
@@ -77,7 +95,14 @@ func observe_group(tag: String, productive: bool) -> void:
 	var skill: String = GROUP_TAG_SKILL.get(tag, "")
 	if skill == "":
 		return
-	var item := "group::%s" % tag
+	_observe_skill_item(skill, "group::%s" % tag, productive)
+
+func observe_skill(skill: String, item_id: String, productive: bool) -> void:
+	if not (skill in SKILLS):
+		return
+	_observe_skill_item(skill, item_id, productive)
+
+func _observe_skill_item(skill: String, item: String, productive: bool) -> void:
 	if not beta.has(item):
 		beta[item] = 0.0
 		nb[item] = 0.0

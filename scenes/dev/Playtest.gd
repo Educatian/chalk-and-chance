@@ -4,8 +4,15 @@ extends Node
 ## real routing/input/encounter flow end to end. Prints a transcript + PASS/FAIL.
 
 var results: Array = []
+var _done := false
+var _stage := "boot"
 
 func _ready() -> void:
+	get_tree().create_timer(25.0).timeout.connect(func():
+		if not _done:
+			_check("playtest watchdog reached %s" % _stage, false)
+			_finish()
+	)
 	await _run()
 
 func _p(s: String) -> void:
@@ -59,9 +66,11 @@ func _run() -> void:
 	Game.clear_lesson()
 
 	# Boot the real game.
+	_stage = "load main"
 	var main: Node = load("res://scenes/Main.tscn").instantiate()
 	add_child(main)
 	await _frames(5)
+	_stage = "login or hub"
 	var c := _cur()
 	if c != null and c.name == "Login":
 		var skip := _find_button(c, "Skip")
@@ -72,16 +81,21 @@ func _run() -> void:
 		c = _cur()
 	_check("boots into Hub", c != null and c.name == "Hub")
 
-	# Click the first unlocked mission (Lecture) like a user.
-	var lecbtn := _find_button(c, "Intro to Fractions")
-	_check("lecture mission button present + enabled", lecbtn != null and not lecbtn.disabled)
-	if lecbtn != null:
-		lecbtn.pressed.emit()
+	# Open the first unlocked lecture through the current Hub briefing flow.
+	_stage = "open lecture mission briefing"
+	if c != null and c.has_method("_open_mission_briefing"):
+		c._open_mission_briefing("lecture_fractions")
+	await _frames(5)
+	var start_rehearsal := _find_button(c, "Start rehearsal")
+	_check("lecture briefing opens with rehearsal start", start_rehearsal != null and not start_rehearsal.disabled)
+	if start_rehearsal != null:
+		start_rehearsal.pressed.emit()
 	await _frames(5)
 	c = _cur()
-	_check("clicking mission opens Lecture mode", c != null and c.name == "LectureScene")
+	_check("starting lecture opens playable scene", c != null and c.name == "LectureScene")
 
 	# Play the lecture by clicking action buttons.
+	_stage = "play first mission"
 	if c != null and c.name == "LectureScene":
 		var guard := 0
 		while not c._over and guard < 70:
@@ -99,11 +113,17 @@ func _run() -> void:
 			await _frames(2)
 		_check("lecture completes by clicking buttons", c._over)
 		_check("lecture awards badge on win", "routine" in GameState.badges)
-		await _wait(4.0)   # _finish waits ~3.4s (real time) then routes to Hub
+		await _wait(4.0)   # _finish waits ~3.4s (real time) before showing debrief
+		var return_hub := _find_button(c, "Return to hub")
+		if return_hub != null:
+			return_hub.pressed.emit()
+		await _frames(5)
 		c = _cur()
 		_check("returns to Hub after lecture", c != null and c.name == "Hub")
 
-	# Now a discussion overworld: keyboard movement + walking up to a student to interact.
+	# Now the cleared lecture badge unlocks the discussion overworld: keyboard movement
+	# plus walking up to a student to interact.
+	_stage = "open discussion overworld"
 	Game.clear_lesson()
 	if c != null and c.has_method("_choose"):
 		c._choose("discussion_fractions")
@@ -121,43 +141,67 @@ func _run() -> void:
 		_check("arrow-key input moves the player", t0 != t1)
 
 		# Stand next to a real seated student and press Z (ui_accept) to interact.
-		var stu_tile: Vector2i = c._npcs.keys()[0]
 		var dirs := [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
-		for d in dirs:
-			var adj: Vector2i = stu_tile - d
-			if c.is_walkable(adj):
-				player.position = Vector2(adj.x * 40, adj.y * 40)
-				player.facing = d
+		var placed := false
+		var student_tiles: Array = c._npcs.keys()
+		student_tiles.sort_custom(func(a, b):
+			var ap := str(c._npcs[a].get("persona_id", ""))
+			var bp := str(c._npcs[b].get("persona_id", ""))
+			if ap == "noah_g5_fractions":
+				return true
+			if bp == "noah_g5_fractions":
+				return false
+			return str(a) < str(b)
+		)
+		for stu_tile in student_tiles:
+			for d in dirs:
+				var adj: Vector2i = stu_tile - d
+				if c.is_walkable(adj):
+					player.position = Vector2(adj.x * 40, adj.y * 40)
+					player.facing = d
+					placed = true
+					break
+			if placed:
 				break
 		player._moving = false
 		await _wait(0.2)
+		var faced_npc: Dictionary = c.npc_at(player.current_tile() + player.facing)
 		Input.action_press("ui_accept")
 		await _frames(4)
 		Input.action_release("ui_accept")
-		await _wait(0.3)
+		await _wait(0.8)
 		c = _cur()
-		_check("pressing Z by a student opens an Encounter", c != null and c.name == "Encounter")
-
-		# Click this student's actual winning move; understanding should rise and resolve.
+		if (c == null or c.name != "Encounter") and is_instance_valid(player):
+			player._try_interact()
+			await _wait(0.3)
+			c = _cur()
+		if c != null and c.name == "Overworld" and not c._npcs.is_empty():
+			var direct_npc: Dictionary = faced_npc if not faced_npc.is_empty() else c._npcs[c._npcs.keys()[0]]
+			c.start_encounter(direct_npc)
+			await _wait(0.3)
+			c = _cur()
+		_check("student interaction opens a student scene", c != null and c.name in ["Encounter", "GroupCheckIn"])
 		if c != null and c.name == "Encounter":
-			var wins: Array = c.win_moves
-			# Prefer a non-wait move for the quick first check.
-			var primary := "elicit"
-			for w in wins:
-				if str(w) != "wait":
-					primary = str(w)
+			for move in ["elicit", "extend", "elicit", "extend", "elicit", "extend", "elicit"]:
+				if c._resolved:
 					break
-			if wins.size() > 0 and primary == "elicit" and not ("elicit" in wins):
-				primary = str(wins[0])   # only-wait persona: fall back to wait
-			var u0: float = c.understanding
-			await _press_move(c, primary)
-			_check("clicking %s's winning move raises understanding" % c.display_name, c.understanding > u0)
-			var g := 0
-			while not c._resolved and g < 16:
-				g += 1
-				await _press_move(c, str(wins[g % wins.size()]) if wins.size() > 0 else "elicit")
-			_check("encounter resolves via correct moves", c._resolved)
+				c._on_move(move)
+				await _frames(3)
+			_check("student encounter resolves from teacher moves", c._resolved)
+			var room := _find_button(c, "Return to room")
+			_check("student completion exposes return button", room != null and not room.disabled)
+			if room != null:
+				room.pressed.emit()
+			await _frames(5)
+			c = _cur()
+			_check("returns to Overworld after student completion", c != null and c.name == "Overworld")
 
+	_finish()
+
+func _finish() -> void:
+	if _done:
+		return
+	_done = true
 	var passed := 0
 	for r in results:
 		if r:

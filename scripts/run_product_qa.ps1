@@ -8,6 +8,7 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $report = Join-Path $root "tools\product_qa_report.txt"
 $scenes = @(
   @{ Name = "Project load"; Args = @("--headless", "--path", ".", "--quit"); Expect = "" },
+  @{ Name = "Login to playable completion"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/Playtest.tscn"); Expect = "PLAYTEST | ALL PASS" },
   @{ Name = "UI layout audit"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/UILayoutAudit.tscn"); Expect = "UIAUDIT PASS" },
   @{ Name = "Visual asset audit"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/VisualAssetAudit.tscn"); Expect = "VISUALASSET PASS" },
   @{ Name = "Learning surface content"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/ProductContentAudit.tscn"); Expect = "PRODUCTCONTENT PASS" },
@@ -24,6 +25,50 @@ if (-not (Test-Path $GodotPath)) {
   throw "Godot executable not found: $GodotPath"
 }
 
+function Invoke-GodotChecked {
+  param(
+    [string[]]$ArgsList,
+    [int]$TimeoutSeconds = 90
+  )
+
+  $psi = [System.Diagnostics.ProcessStartInfo]::new()
+  $psi.FileName = $GodotPath
+  $psi.Arguments = ($ArgsList | ForEach-Object {
+    if ($_ -match '[\s"]') {
+      '"' + ($_.Replace('"', '\"')) + '"'
+    } else {
+      $_
+    }
+  }) -join " "
+  $psi.RedirectStandardOutput = $true
+  $psi.RedirectStandardError = $true
+  $psi.UseShellExecute = $false
+  $psi.CreateNoWindow = $true
+  $proc = [System.Diagnostics.Process]::new()
+  $proc.StartInfo = $psi
+  [void]$proc.Start()
+  $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+  $stderrTask = $proc.StandardError.ReadToEndAsync()
+  if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
+    try {
+      $proc.Kill($true)
+    } catch {
+      $proc.Kill()
+    }
+    $output = @(
+      $stdoutTask.GetAwaiter().GetResult()
+      $stderrTask.GetAwaiter().GetResult()
+      "PROCESS TIMEOUT after ${TimeoutSeconds}s"
+    ) -join [Environment]::NewLine
+    return [pscustomobject]@{ ExitCode = 124; Output = $output }
+  }
+  $output = @(
+    $stdoutTask.GetAwaiter().GetResult()
+    $stderrTask.GetAwaiter().GetResult()
+  ) -join [Environment]::NewLine
+  return [pscustomobject]@{ ExitCode = $proc.ExitCode; Output = $output }
+}
+
 $lines = @()
 $lines += "Chalk & Chance Product QA"
 $lines += "Run: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
@@ -38,12 +83,13 @@ try {
     $argsList = $scene.Args
     $expect = $scene.Expect
     $lines += "== $name =="
-    $output = (& $GodotPath @argsList 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
+    $result = Invoke-GodotChecked -ArgsList $argsList
+    $output = $result.Output
     $fatal = $output.Contains("SCRIPT ERROR") -or
       $output.Contains("Parse Error") -or
       $output.Contains("Invalid call") -or
       $output.Contains("Cannot call")
-    $ok = $LASTEXITCODE -eq 0
+    $ok = $result.ExitCode -eq 0
     if ($expect -ne "") {
       $ok = $output.Contains($expect) -and (-not $fatal)
     }
@@ -75,10 +121,21 @@ try {
     $failed += 1
   }
 
+  $lines += "== D1 telemetry contract =="
+  $d1Output = (& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\validate_d1_contract.ps1") -Root $root 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
+  $d1Ok = $LASTEXITCODE -eq 0 -and $d1Output.Contains("D1 CONTRACT QA: PASS")
+  $lines += if ($d1Ok) { "PASS" } else { "FAIL" }
+  $lines += $d1Output.Trim()
+  $lines += ""
+  if (-not $d1Ok) {
+    $failed += 1
+  }
+
   if (-not $SkipScreenshots) {
     $lines += "== UI screenshot refresh =="
-    $shotOutput = (& $GodotPath --path . --scene "res://scenes/dev/UILayoutShots.tscn" 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
-    $shotOk = $LASTEXITCODE -eq 0 -and
+    $shotResult = Invoke-GodotChecked -ArgsList @("--path", ".", "--scene", "res://scenes/dev/UILayoutShots.tscn")
+    $shotOutput = $shotResult.Output
+    $shotOk = $shotResult.ExitCode -eq 0 -and
       (Test-Path (Join-Path $root "tools\ui_briefing.png")) -and
       (Test-Path (Join-Path $root "tools\ui_evidence.png")) -and
       (Test-Path (Join-Path $root "tools\ui_leaderboard.png")) -and
@@ -100,8 +157,9 @@ try {
     }
 
     $lines += "== Encounter completion screenshot =="
-    $encOutput = (& $GodotPath --path . --scene "res://scenes/dev/ShotEnc.tscn" 2>&1 | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine
-    $encOk = $LASTEXITCODE -eq 0 -and (Test-Path (Join-Path $root "tmp\shot_enc_competency.png"))
+    $encResult = Invoke-GodotChecked -ArgsList @("--path", ".", "--scene", "res://scenes/dev/ShotEnc.tscn")
+    $encOutput = $encResult.Output
+    $encOk = $encResult.ExitCode -eq 0 -and (Test-Path (Join-Path $root "tmp\shot_enc_competency.png"))
     $lines += if ($encOk) { "PASS" } else { "FAIL" }
     $lines += $encOutput.Trim()
     $lines += ""

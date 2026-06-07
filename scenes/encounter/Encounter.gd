@@ -6,6 +6,7 @@ extends Control
 
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
+const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -54,6 +55,7 @@ var rapport := 50.0
 var composure := 100.0
 # Per-student internal value (0..1); the win gate (GAME_CONCEPT.md 7.3).
 var understanding := 0.15
+var _win_understanding := WIN_UNDERSTANDING
 
 var _resolved := false
 var _busy := false
@@ -113,6 +115,7 @@ func setup(data: Dictionary) -> void:
 	_refresh_backdrop()
 	Game.note_visit(persona_id)    # equity: this student was called on
 	_apply_relationship_headstart()
+	_apply_adaptive_difficulty()
 	_refresh_intro()
 	_refresh_bond()
 
@@ -134,6 +137,30 @@ func _apply_relationship_headstart() -> void:
 
 func _apply_upgrade_baselines() -> void:
 	composure = GameState.max_composure()
+
+func _apply_adaptive_difficulty() -> void:
+	var skills: Array = []
+	for move in win_moves:
+		var skill := str(Competency.TAG_SKILL.get(str(move), ""))
+		if skill != "" and not (skill in skills):
+			skills.append(skill)
+	var d := Game.adaptive_difficulty(skills)
+	var level := str(d.get("level", "standard"))
+	if level == "scaffold":
+		understanding = clampf(understanding + 0.05, 0.0, 1.0)
+		engagement = clampf(engagement + 6.0, 0.0, 100.0)
+		rapport = clampf(rapport + 4.0, 0.0, 100.0)
+		_win_understanding = 0.75
+	elif level == "challenge":
+		understanding = clampf(understanding - 0.03, 0.0, 1.0)
+		engagement = clampf(engagement - 4.0, 0.0, 100.0)
+		rapport = clampf(rapport - 3.0, 0.0, 100.0)
+		_win_understanding = 0.85
+	else:
+		_win_understanding = WIN_UNDERSTANDING
+	if level != "standard" and _coach != null:
+		_set_coach("%s from saved evidence. Read the student, then choose the fit move." % Game.adaptive_difficulty_label(d))
+	_refresh_meters()
 
 ## Lesson-plan import / any scenario may override a persona's lines and targets for its
 ## content, via a "persona_overrides" map in the scenario JSON.
@@ -453,16 +480,18 @@ func _use_item(id: String) -> void:
 		return
 	match id:
 		"breathing_reset":
-			composure = clampf(composure + 18.0, 0.0, GameState.max_composure())
-			_set_result("Breathing Reset used  |  Composure +18")
+			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
+			composure = clampf(composure + gain, 0.0, GameState.max_composure())
+			_set_result("Breathing Reset used  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""])
 			_set_coach("Coach Vee: regulated first. Now choose a smaller, cleaner next move.")
 		"student_profile_card":
 			_asset_learned = true
-			rapport = clampf(rapport + 4.0, 0.0, 100.0)
+			var rapport_gain := 8.0 if GameState.teacher_profile_id == "listener" else 4.0
+			rapport = clampf(rapport + rapport_gain, 0.0, 100.0)
 			var hint := asset_hint if asset_hint != "" else "%s needs you to learn their thinking before correcting it." % display_name
 			if hint.length() > 72:
 				hint = hint.substr(0, 69) + "..."
-			_set_result("Student Profile Card used  |  Asset cue revealed")
+			_set_result("Student Profile Card used  |  Asset cue revealed  |  Rapport +%d" % int(rapport_gain))
 			_set_coach("Coach Vee: profile cue: %s" % hint)
 		"noticing_lens":
 			_set_result("Noticing Lens used  |  Look for %s" % ", ".join(win_moves))
@@ -706,7 +735,8 @@ func _on_reply(resp: Dictionary) -> void:
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
 	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
 	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
-	_move_history.append({"tag": tag0, "targets": targets})
+	_move_history.append({"turn": _turns, "tag": tag0, "targets": targets, "construct": Competency.TAG_SKILL.get(tag0, ""),
+		"reaction": str(utter.get("text", "")), "meter": _result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas)})
 	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
 	if targets:
 		GameState.add_bond(persona_id, 0.05)
@@ -781,6 +811,8 @@ func _do_connect() -> void:
 	_set_dialogue("%s: \"%s\"" % [display_name, line])
 	TTSClient.speak(persona_id, line, "excited" if connect_resolves else "thinking")
 	Game.log_move("connect", false, connect_resolves)
+	_move_history.append({"turn": _turns, "tag": "connect", "targets": connect_resolves, "construct": "funds_of_knowledge",
+		"reaction": line, "meter": "Rapport up | Engagement up"})
 	_update_portrait("excited" if connect_resolves else "thinking")
 	if connect_resolves and understanding >= WIN_UNDERSTANDING:
 		_win("connect")
@@ -792,7 +824,7 @@ func _do_connect() -> void:
 	_arm_turn()
 
 func _check_win(targets: bool, tags: Array) -> bool:
-	if understanding < WIN_UNDERSTANDING:
+	if understanding < _win_understanding:
 		return false
 	if not targets:
 		return false
@@ -822,6 +854,8 @@ func _win(route: String = "reasoning") -> void:
 		"score": int(round(understanding * 100.0)) + maxi(0, 42 - _turns * 4) + int(round(GameState.bond(persona_id) * 30.0)),
 		"detail": "%s reached in %d turns; bond %d%%" % [display_name, _turns, int(round(GameState.bond(persona_id) * 100.0))],
 		"level_up": bool(reward.get("level_up", false)),
+		"trace": Game.evidence_trace_from_moves(_move_history),
+		"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 	})
 	Sfx.play("badge")
 	var warm := GameState.bond(persona_id) >= 0.4
@@ -867,6 +901,7 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	panel.position = Vector2(34, 82)
 	panel.size = Vector2(436, 178)
 	overlay.add_child(panel)
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true)
 
 	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 98), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
 	_overlay_label(overlay, "Score %03d   |   Rank %s   |   Level %d" % [
@@ -903,19 +938,19 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		overlay.add_child(fill)
-		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(326, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
+		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(250, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
 		y += 15
 	if rows.is_empty():
 		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 186), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
 	else:
-		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 232), 7, Color(0.66, 0.90, 0.78), Vector2(292, 12))
-		_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(292, 18))
+		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 232), 7, Color(0.66, 0.90, 0.78), Vector2(260, 12))
+		_overlay_label(overlay, _short_practice_target(), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(260, 18))
 
 	_continue_btn = Button.new()
-	_continue_btn.text = "Continue"
-	_continue_btn.position = Vector2(360, 226)
-	_continue_btn.size = Vector2(92, 30)
-	_continue_btn.add_theme_font_size_override("font_size", 8)
+	_continue_btn.text = "Return to room"
+	_continue_btn.position = Vector2(320, 226)
+	_continue_btn.size = Vector2(126, 30)
+	_continue_btn.add_theme_font_size_override("font_size", 7)
 	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
 	overlay.add_child(_continue_btn)
 	PixelUi.scale_tree(overlay, UI_SCALE)
@@ -956,19 +991,35 @@ func _move_fingerprint_text() -> String:
 			continue
 		counts[tag] = int(counts.get(tag, 0)) + 1
 	var parts: Array = []
+	var short := {
+		"elicit": "E",
+		"extend": "X",
+		"revoice": "R",
+		"wait": "W",
+		"redirect": "D",
+		"praise": "P",
+		"tell": "T",
+		"connect": "C",
+	}
 	for tag in ["elicit", "extend", "revoice", "wait", "redirect", "praise", "tell", "connect"]:
 		if int(counts.get(tag, 0)) > 0:
-			parts.append("%s%d" % [tag.capitalize(), int(counts[tag])])
+			parts.append("%s%d" % [str(short.get(tag, tag.substr(0, 1).to_upper())), int(counts[tag])])
 	if parts.is_empty():
 		return "Moves: no scored moves yet"
 	return "Moves: " + " ".join(parts)
 
+func _short_practice_target() -> String:
+	var target := Game.evidence_practice_target(false)
+	if target.begins_with("Practice: "):
+		target = target.substr(10)
+	return "Practice: " + target.replace(" 40% -> ", " -> ")
+
 func _show_continue_button() -> void:
 	_continue_btn = Button.new()
-	_continue_btn.text = "Continue"
-	_continue_btn.position = Vector2(372, 176)
-	_continue_btn.size = Vector2(92, 24)
-	_continue_btn.add_theme_font_size_override("font_size", 8)
+	_continue_btn.text = "Return to room"
+	_continue_btn.position = Vector2(326, 176)
+	_continue_btn.size = Vector2(126, 24)
+	_continue_btn.add_theme_font_size_override("font_size", 7)
 	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
 	_layer.add_child(_continue_btn)
 	_continue_btn.grab_focus()

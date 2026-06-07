@@ -1,26 +1,22 @@
 extends Node
 
+const ProductAuditSupport = preload("res://scenes/dev/ProductAuditSupport.gd")
+const ProductDebriefAudit = preload("res://scenes/dev/ProductDebriefAudit.gd")
+
 var _issues: Array = []
 
 func _ready() -> void:
-	LLMClient.use_stub = true
-	TTSClient.enabled = false
-	GameState.badges = []
-	GameState.attempts = {}
-	GameState.relationships = {}
-	GameState.teacher_xp = 260
-	GameState.teacher_level = 2
-	GameState.upgrade_points = 1
-	GameState.leaderboard_records = [
-		{"rank": "A", "score": 236, "title": "Intro to Fractions", "detail": "Comp 85%  Attention 91%  Progress 100%", "level_up": true},
-		{"rank": "B", "score": 196, "title": "Comparing Decimals", "detail": "Objectives 2/2  Attention 78%  Engaged 6/6", "level_up": false},
-	]
-	_seed_competencies()
-	Game.clear_lesson()
+	_reset_state()
 
 	var hub: Node = load("res://scenes/ui/Hub.tscn").instantiate()
 	add_child(hub)
 	await _frames(2)
+	_reset_state()
+	for child in hub.get_children():
+		child.queue_free()
+	await _frames(1)
+	hub._build()
+	await _frames(1)
 	_assert_text("Hub base", hub, [
 		"CHALK & CHANCE",
 		"Adaptive coach:",
@@ -56,10 +52,13 @@ func _ready() -> void:
 			"CASE",
 			"SUCCESS",
 			"EVIDENCE",
+			"ADAPTIVE START",
 			"Research edge:",
 			"FIRST MOVE",
 			"Start rehearsal",
 		])
+		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["EVIDENCE", "Research edge:"], ["ADAPTIVE START", "Adaptive:"])
+		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["Reward:"], ["ADAPTIVE START", "Adaptive:"])
 		briefing.queue_free()
 	await _frames(1)
 
@@ -79,7 +78,7 @@ func _ready() -> void:
 		upgrade_notice.queue_free()
 	await _frames(1)
 
-	hub._open_locked_mission_notice("group_work_fractions", _json("res://data/scenarios/group_work_fractions.json"))
+	hub._open_locked_mission_notice("group_work_fractions", ProductAuditSupport.json("res://data/scenarios/group_work_fractions.json"))
 	await _frames(2)
 	var locked_notice := hub.get_node_or_null("NoticeOverlay")
 	if locked_notice == null:
@@ -101,17 +100,88 @@ func _ready() -> void:
 		_issue("Leaderboard overlay did not open")
 	else:
 		_assert_text("Leaderboard", leaderboard, [
-			"LEADERBOARD",
+			"LEADERBOARD / COACH REPORT",
 			"Level",
-			"Evidence",
+			"Coach Report",
 			"Intro to Fractions",
+			"Focus",
+			"TRACE",
+			"Trace",
+			"Class",
+			"Quality",
+			"TeacherSim",
+			"Cloud Log",
 		])
 		leaderboard.queue_free()
+	await _frames(1)
+
+	hub._open_trace_detail(ProductAuditSupport.sample_trace_record())
+	await _frames(2)
+	var trace_detail := hub.get_node_or_null("TraceDetailOverlay")
+	if trace_detail == null:
+		_issue("Trace Detail overlay did not open")
+	else:
+		_assert_text("Trace Detail", trace_detail, [
+			"TRACE DETAIL",
+			"Turn 1",
+			"Evidence",
+			"Signal:",
+			"Reaction:",
+			"Meter:",
+			"Next:",
+		])
+		trace_detail.queue_free()
+
+	hub._open_quality_report()
+	await _frames(2)
+	var quality := hub.get_node_or_null("QualityReportOverlay")
+	if quality == null:
+		_issue("Quality Report overlay did not open")
+	else:
+		_assert_text("Quality Report", quality, ["COMMERCIAL READINESS", "Current internal readiness", "Readiness dimensions", "Proof status", "Contract-proven", "Live-proven", "External-proven", "Adaptive proof", "Shift rule:", "Replay ladder proof", "low repeated evidence", "strong repeated evidence", "Remaining 95-point priorities"])
+		quality.queue_free()
+	await _frames(1)
+
+	hub._open_teacher_sim_delta()
+	await _frames(2)
+	var delta := hub.get_node_or_null("TeacherSimDeltaOverlay")
+	if delta == null:
+		_issue("TeacherSim Delta overlay did not open")
+	else:
+		_assert_text("TeacherSim Delta", delta, ["TEACHERSIM DELTA", "classic teacher simulation", "Comparison matrix", "Evidence transparency", "Novelty claim", "Adaptive evidence-transparent rehearsal", "Evidence plan", "Paired A/B", "Blind ratings"])
+		delta.queue_free()
+	await _frames(1)
+
+	hub._open_cloud_log_check()
+	await _frames(2)
+	var cloud := hub.get_node_or_null("CloudLogOverlay")
+	if cloud == null:
+		_issue("Cloud Log overlay did not open")
+	else:
+		_assert_text("Cloud Log", cloud, ["CLOUD LOG CHECK", "Local telemetry file:", "POST /telemetry", "GET /class_dashboard", "Live verifier:", "live D1 proof pending"])
+		cloud.queue_free()
+
+	hub._open_class_dashboard()
+	await _frames(2)
+	var class_dash := hub.get_node_or_null("ClassDashboardOverlay")
+	if class_dash == null:
+		_issue("Class Dashboard overlay did not open")
+	else:
+		_assert_text("Class Dashboard", class_dash, [
+			"INSTRUCTOR DASHBOARD",
+			"Local learner skill snapshot",
+			"Next practice:",
+		])
+		class_dash.queue_free()
 
 	hub.queue_free()
 	await _frames(1)
 
-	await _audit_debrief_practice_targets()
+	for issue in ProductAuditSupport.adaptive_semantic_issues():
+		_issue(issue)
+
+	for issue in await ProductDebriefAudit.run(self):
+		_issue(issue)
 
 	if _issues.is_empty():
 		print("PRODUCTCONTENT PASS")
@@ -121,163 +191,37 @@ func _ready() -> void:
 			print(issue)
 	get_tree().quit()
 
-func _seed_competencies() -> void:
-	for s in Competency.SKILLS:
-		Competency.theta[s] = 0.0
-		Competency.n[s] = 0.0
-	var sample := {
-		"wait_time": {"theta": 1.05, "n": 9.0},
-		"elicit_reasoning": {"theta": 0.72, "n": 7.0},
-		"revoicing": {"theta": 0.44, "n": 6.0},
-		"behavior_mgmt": {"theta": 0.18, "n": 5.0},
-		"formative_check": {"theta": -0.15, "n": 4.0},
-		"funds_of_knowledge": {"theta": -0.42, "n": 3.0},
-	}
-	for k in sample.keys():
-		Competency.theta[k] = float(sample[k]["theta"])
-		Competency.n[k] = float(sample[k]["n"])
-
-func _audit_debrief_practice_targets() -> void:
-	Game.current_scenario_id = "lecture_fractions"
-	var lecture: Node = load("res://scenes/encounter/LectureScene.tscn").instantiate()
-	add_child(lecture)
-	await _frames(2)
-	lecture.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
-	await _frames(2)
-	lecture.progress = 100.0
-	lecture.comprehension = 86.0
-	lecture.attention = 82.0
-	lecture.composure = 88.0
-	lecture._finish(true)
-	await _frames(2)
-	var lecture_complete := _find_named(lecture, "LectureComplete")
-	if lecture_complete == null:
-		_issue("Lecture debrief did not open")
-	else:
-		_assert_text("Lecture debrief", lecture_complete, ["LECTURE DEBRIEF", "Practice:", "Continue"])
-	lecture.queue_free()
-	await _frames(1)
-
-	Game.current_scenario_id = "gym_capstone"
-	var gym: Node = load("res://scenes/encounter/GymEncounter.tscn").instantiate()
-	add_child(gym)
-	await _frames(2)
-	gym.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
-	await _frames(2)
-	for s in gym.students:
-		s["resolved"] = true
-		s["u"] = 0.88
-	gym.composure = 84.0
-	gym.order = 82.0
-	gym._finish(true)
-	await _frames(2)
-	var gym_complete := _find_named(gym, "GymComplete")
-	if gym_complete == null:
-		_issue("Gym debrief did not open")
-	else:
-		_assert_text("Gym debrief", gym_complete, ["GYM DEBRIEF", "Practice:", "Continue"])
-	gym.queue_free()
-	await _frames(1)
-
-	var group: Node = load("res://scenes/encounter/GroupCheckIn.tscn").instantiate()
-	add_child(group)
-	await _frames(2)
-	group.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
-	await _frames(2)
-	group.understanding = 0.82
-	group.participation = 0.78
-	group.revealed = true
-	group._check_win()
-	await _frames(2)
-	var group_complete := _find_named(group, "GroupComplete")
-	if group_complete == null:
-		_issue("Group debrief did not open")
-	else:
-		_assert_text("Group debrief", group_complete, ["GROUP DEBRIEF", "Practice:", "Continue"])
-	group.queue_free()
-	await _frames(1)
-
-	Game.clear_lesson()
-	Game.current_scenario_id = "independent_fractions"
-	var over: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
-	add_child(over)
-	await _frames(3)
-	_prepare_overworld_clear(over)
-	over._end_lesson()
-	await _frames(2)
-	over._on_reflect({"_reflect": "worked"})
-	await _frames(2)
-	if over._overlay == null:
-		_issue("Overworld debrief did not open")
-	else:
-		_assert_text("Overworld debrief", over._overlay, ["DEBRIEF", "Practice:", "Research edge:", "Evidence:"])
-	over.queue_free()
-	Game.clear_lesson()
-	await _frames(1)
-
-func _prepare_overworld_clear(sc: Node) -> void:
-	sc._composure = 92.0
-	sc._disruptions = 0
-	for st in sc._npcs.keys():
-		sc._npcs[st]["offtask"] = 0.0
-		Game.note_visit(str(sc._npcs[st].get("persona_id", "")))
-	if sc._objective_label != null:
-		sc._objective_label.text = sc._objectives_status(100.0)
-	if sc._attention_fill != null:
-		sc._attention_fill.size = Vector2(216.0, 12.0)
-	if sc._composure_fill != null:
-		sc._composure_fill.size = Vector2(156.0 * sc._composure / GameState.max_composure(), 10.0)
-
 func _assert_text(label: String, root: Node, needles: Array) -> void:
-	var text := _visible_text(root).to_lower()
-	for needle in needles:
-		var n := str(needle).to_lower()
-		if text.find(n) == -1:
-			_issue("%s missing text: %s | visible=%s" % [label, str(needle), _truncate(text, 220)])
+	for issue in ProductAuditSupport.assert_text_issues(label, root, needles):
+		_issue(issue)
 
-func _find_named(root: Node, node_name: String) -> Node:
-	if str(root.name) == node_name:
-		return root
-	for ch in root.get_children():
-		var found := _find_named(ch, node_name)
-		if found != null:
-			return found
-	return null
+func _reset_state() -> void:
+	LLMClient.use_stub = true
+	TTSClient.enabled = false
+	Auth.token = ""
+	Auth.user_id = ""
+	Auth.display_name = ""
+	Auth.class_code = ""
+	Auth.role = ""
+	Auth.api_base = ""
+	GameState.badges = []
+	GameState.attempts = {}
+	GameState.relationships = {}
+	GameState.teacher_xp = 260
+	GameState.teacher_level = 2
+	GameState.upgrade_points = 1
+	GameState.leaderboard_records = [
+		ProductAuditSupport.sample_trace_record(),
+		{"rank": "B", "score": 196, "title": "Comparing Decimals", "detail": "Objectives 2/2  Attention 78%  Engaged 6/6", "level_up": false,
+			"coach_focus": "Funds of knowledge 40%", "coach_next": "Practice: Asset connect 40% -> Connect to learner asset",
+			"evidence_trace": "Elicit>Eliciting+ | Tell>Restraint-"},
+	]
+	ProductAuditSupport.seed_competencies()
+	Game.clear_lesson()
 
-func _visible_text(root: Node) -> String:
-	var parts: Array = []
-	_collect_text(root, parts)
-	return " ".join(parts).replace("\n", " ").replace("\t", " ").strip_edges()
-
-func _collect_text(n: Node, parts: Array) -> void:
-	if n is CanvasItem and not (n as CanvasItem).visible:
-		return
-	if n is Label:
-		var l := n as Label
-		if l.text.strip_edges() != "":
-			parts.append(l.text)
-	elif n is Button:
-		var b := n as Button
-		if b.text.strip_edges() != "":
-			parts.append(b.text)
-	elif n is LineEdit:
-		var e := n as LineEdit
-		if e.text.strip_edges() != "":
-			parts.append(e.text)
-	elif n is TextEdit:
-		var t := n as TextEdit
-		if t.text.strip_edges() != "":
-			parts.append(t.text)
-	for ch in n.get_children():
-		_collect_text(ch, parts)
-
-func _json(path: String) -> Dictionary:
-	var f := FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return {}
-	var d = JSON.parse_string(f.get_as_text())
-	f.close()
-	return d if typeof(d) == TYPE_DICTIONARY else {}
+func _assert_label_groups_do_not_overlap(label: String, root: Node, group_a: Array, group_b: Array) -> void:
+	for issue in ProductAuditSupport.label_overlap_issues(label, root, group_a, group_b):
+		_issue(issue)
 
 func _frames(n: int) -> void:
 	for i in range(n):
@@ -285,8 +229,3 @@ func _frames(n: int) -> void:
 
 func _issue(text: String) -> void:
 	_issues.append(text)
-
-func _truncate(text: String, max_len: int) -> String:
-	if text.length() <= max_len:
-		return text
-	return text.substr(0, max_len - 3) + "..."

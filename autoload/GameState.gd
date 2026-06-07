@@ -15,6 +15,33 @@ const DEFAULT_UPGRADES := {
 	"wait_mastery": 0,
 	"relationship_sense": 0,
 }
+const TEACHER_PROFILE_ORDER := ["steady", "listener", "equity"]
+const TEACHER_PROFILE_DEFS := {
+	"steady": {
+		"name": "Steady Lead",
+		"short": "Steady",
+		"desc": "Safer recovery and order tools.",
+		"composure_bonus": 10.0,
+		"wait_reduction_ms": 0,
+		"relationship_bonus": 0.0,
+	},
+	"listener": {
+		"name": "Deep Listener",
+		"short": "Listen",
+		"desc": "Starts with profile and noticing tools.",
+		"composure_bonus": 0.0,
+		"wait_reduction_ms": 0,
+		"relationship_bonus": 0.05,
+	},
+	"equity": {
+		"name": "Equity Scout",
+		"short": "Equity",
+		"desc": "Defaults toward airtime and wait-time control.",
+		"composure_bonus": 0.0,
+		"wait_reduction_ms": 300,
+		"relationship_bonus": 0.0,
+	},
+}
 const UPGRADE_DEFS := {
 	"steady_presence": {
 		"name": "Steady Presence",
@@ -45,6 +72,7 @@ var inventory: Dictionary = {}         ## item_id -> count
 var equipped_items: Array = []         ## Array[String], up to Items.MAX_EQUIPPED
 var item_history: Array = []           ## item economy/use audit trail
 var item_cooldowns: Dictionary = {}    ## item_id -> unix/time marker, reserved for future tuning
+var teacher_profile_id := "steady"
 var leaderboard_records: Array = []    ## local run records, sorted by score desc
 ## Warm-demander: a per-student relationship (0..1) that PERSISTS across periods,
 ## not reset each lesson (Bondy & Ross; care ethic). Built by connecting to a
@@ -86,12 +114,56 @@ func ensure_item_defaults() -> void:
 		if not inventory.has(id):
 			inventory[id] = int(Items.DEFAULT_INVENTORY[id])
 	if equipped_items.is_empty():
-		for id in Items.DEFAULT_LOADOUT:
+		for id in _default_loadout_for_profile():
 			if item_count(id) > 0 and Items.has_item(id):
 				equipped_items.append(id)
 	equipped_items = equipped_items.filter(func(id): return Items.has_item(str(id)) and item_count(str(id)) > 0)
 	while equipped_items.size() > Items.MAX_EQUIPPED:
 		equipped_items.pop_back()
+
+func _default_loadout_for_profile() -> Array:
+	var profile_loadout: Array = Items.PROFILE_LOADOUTS.get(teacher_profile_id, Items.DEFAULT_LOADOUT)
+	return profile_loadout
+
+func teacher_profile() -> Dictionary:
+	return TEACHER_PROFILE_DEFS.get(teacher_profile_id, TEACHER_PROFILE_DEFS["steady"])
+
+func teacher_profile_label() -> String:
+	var def: Dictionary = teacher_profile()
+	return "%s: %s" % [str(def.get("name", "Steady Lead")), str(def.get("desc", ""))]
+
+func teacher_profile_mechanic_text() -> String:
+	var def: Dictionary = teacher_profile()
+	var parts: Array = []
+	var comp := int(round(float(def.get("composure_bonus", 0.0))))
+	var wait := int(def.get("wait_reduction_ms", 0))
+	var rel := int(round(float(def.get("relationship_bonus", 0.0)) * 100.0))
+	if comp > 0:
+		parts.append("+%d Composure" % comp)
+	if wait > 0:
+		parts.append("Wait window -%.1fs" % (float(wait) / 1000.0))
+	if rel > 0:
+		parts.append("+%d%% starting rapport" % rel)
+	if parts.is_empty():
+		return "Balanced rehearsal defaults"
+	return " | ".join(parts)
+
+func set_teacher_profile(id: String, apply_default_loadout: bool = true) -> void:
+	if not TEACHER_PROFILE_DEFS.has(id):
+		id = "steady"
+	teacher_profile_id = id
+	if apply_default_loadout:
+		equipped_items = []
+		for item_id in _default_loadout_for_profile():
+			if Items.has_item(str(item_id)) and item_count(str(item_id)) > 0:
+				equipped_items.append(str(item_id))
+	save_game()
+
+func cycle_teacher_profile() -> void:
+	var idx := TEACHER_PROFILE_ORDER.find(teacher_profile_id)
+	if idx < 0:
+		idx = 0
+	set_teacher_profile(str(TEACHER_PROFILE_ORDER[(idx + 1) % TEACHER_PROFILE_ORDER.size()]), true)
 
 func item_count(id: String) -> int:
 	return maxi(0, int(inventory.get(id, 0)))
@@ -198,6 +270,7 @@ func add_teacher_xp(amount: int, reason: String = "", save_now: bool = true) -> 
 
 func record_leaderboard(entry: Dictionary) -> Dictionary:
 	var score := maxi(0, int(entry.get("score", 0)))
+	var report := _coach_report_fields()
 	var rec := {
 		"scenario_id": str(entry.get("scenario_id", "")),
 		"title": str(entry.get("title", "Lesson")),
@@ -209,6 +282,14 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"badge": str(entry.get("badge", "")),
 		"detail": str(entry.get("detail", "")),
 		"level_up": bool(entry.get("level_up", false)),
+		"profile_id": teacher_profile_id,
+		"profile": str(teacher_profile().get("short", "Steady")),
+		"coach_focus": str(report.get("focus", "")),
+		"coach_next": str(report.get("next", "")),
+		"coach_evidence": int(report.get("evidence", 0)),
+		"adaptive_level": str(report.get("adaptive_level", "Adaptive: standard start")),
+		"evidence_trace": str(entry.get("trace", "")),
+		"evidence_trace_steps": entry.get("trace_steps", []),
 		"unix": Time.get_unix_time_from_system(),
 	}
 	leaderboard_records.append(rec)
@@ -217,6 +298,29 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		leaderboard_records.pop_back()
 	save_game()
 	return rec
+
+func _coach_report_fields() -> Dictionary:
+	var rows := Competency.summary()
+	var weakest := {}
+	for r in rows:
+		if int(r.get("n", 0)) <= 0:
+			continue
+		if weakest.is_empty() or float(r.get("prob", 0.5)) < float(weakest.get("prob", 0.5)):
+			weakest = r
+	var difficulty := Game.adaptive_difficulty(Competency.SKILLS)
+	if weakest.is_empty():
+		return {
+			"focus": "Collect first evidence",
+			"next": "Clear one mission to produce a coachable trace.",
+			"evidence": 0,
+			"adaptive_level": Game.adaptive_difficulty_label(difficulty),
+		}
+	return {
+		"focus": "%s %d%%" % [str(weakest.get("label", weakest.get("skill", "Focus"))), int(round(float(weakest.get("prob", 0.5)) * 100.0))],
+		"next": Game.evidence_practice_target(false),
+		"evidence": int(weakest.get("n", 0)),
+		"adaptive_level": Game.adaptive_difficulty_label(difficulty),
+	}
 
 func leaderboard_top(limit: int = 8) -> Array:
 	var rows := leaderboard_records.duplicate()
@@ -252,16 +356,16 @@ func spend_upgrade(id: String) -> bool:
 	return true
 
 func max_composure() -> float:
-	return 100.0 + 10.0 * float(upgrade_rank("steady_presence"))
+	return 100.0 + float(teacher_profile().get("composure_bonus", 0.0)) + 10.0 * float(upgrade_rank("steady_presence"))
 
 func wait_threshold_ms() -> int:
-	return maxi(2200, 3000 - 250 * upgrade_rank("wait_mastery"))
+	return maxi(2000, 3000 - int(teacher_profile().get("wait_reduction_ms", 0)) - 250 * upgrade_rank("wait_mastery"))
 
 func effective_wait_ms(raw_wait_ms: int) -> int:
 	return raw_wait_ms + 250 * upgrade_rank("wait_mastery")
 
 func relationship_start_bonus() -> float:
-	return 0.05 * float(upgrade_rank("relationship_sense"))
+	return float(teacher_profile().get("relationship_bonus", 0.0)) + 0.05 * float(upgrade_rank("relationship_sense"))
 
 func has_badge(id: String) -> bool:
 	return id in badges
@@ -314,6 +418,7 @@ func save_game() -> void:
 		"equipped_items": equipped_items,
 		"item_history": item_history,
 		"item_cooldowns": item_cooldowns,
+		"teacher_profile_id": teacher_profile_id,
 		"leaderboard_records": leaderboard_records,
 		"relationships": relationships,
 		"reflections": reflections,
@@ -369,6 +474,9 @@ func load_game() -> void:
 				equipped_items.append(str(id))
 	item_history = parsed.get("item_history", [])
 	item_cooldowns = parsed.get("item_cooldowns", {})
+	teacher_profile_id = str(parsed.get("teacher_profile_id", "steady"))
+	if not TEACHER_PROFILE_DEFS.has(teacher_profile_id):
+		teacher_profile_id = "steady"
 	ensure_item_defaults()
 	relationships = parsed.get("relationships", {})
 	reflections = parsed.get("reflections", [])

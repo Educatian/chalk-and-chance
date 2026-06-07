@@ -75,6 +75,12 @@ const DEFAULT_INVENTORY := {
 
 const DEFAULT_LOADOUT := ["breathing_reset", "noticing_lens", "wait_meter_pin", "practice_goal_card"]
 
+const PROFILE_LOADOUTS := {
+	"steady": ["breathing_reset", "quiet_signal", "wait_meter_pin", "practice_goal_card"],
+	"listener": ["student_profile_card", "noticing_lens", "breathing_reset", "practice_goal_card"],
+	"equity": ["equity_snapshot", "wait_meter_pin", "noticing_lens", "quiet_signal"],
+}
+
 const BADGE_REWARDS := {
 	"routine": {"quiet_signal": 1, "lesson_map": 1},
 	"echo": {"student_profile_card": 1, "noticing_lens": 1},

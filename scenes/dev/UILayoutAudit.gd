@@ -30,7 +30,13 @@ func _run_suite(prefix: String, large_text: bool) -> void:
 	GameState.teacher_level = 2
 	GameState.upgrade_points = 1
 	GameState.leaderboard_records = [
-		{"rank": "A", "score": 236, "title": "Intro to Fractions", "detail": "Comp 85%  Attention 91%  Progress 100%", "level_up": true},
+		{"rank": "A", "score": 236, "title": "Intro to Fractions", "detail": "Comp 85%  Attention 91%  Progress 100%", "level_up": true,
+			"coach_focus": "Formative check 46%", "coach_next": "Practice: Formative 46% -> Check before presenting again",
+			"evidence_trace": "Present>Restraint+ | Check>Formative+",
+			"evidence_trace_steps": [
+				{"turn": 1, "move": "Present", "construct": "Restraint", "outcome": "evidence gained", "signal": "fit signal: the move matched the learning need", "reaction": "Class stayed with the chunk.", "meter": "Progress 42% | Attention 88%"},
+				{"turn": 2, "move": "Check", "construct": "Formative", "outcome": "evidence gained", "signal": "confusion surfaced: misconception is now teachable", "reaction": "Two students named the unit split.", "meter": "Progress 70% | Attention 91%"},
+			]},
 		{"rank": "B", "score": 196, "title": "Comparing Decimals", "detail": "Objectives 2/2  Attention 78%  Engaged 6/6", "level_up": false},
 	]
 	_seed_competencies()
@@ -53,7 +59,7 @@ func _audit_hub(prefix: String) -> void:
 	_scan("%s Hub" % prefix, sc)
 	await _scan_hub_overlay(sc, "%s Hub briefing" % prefix, func(): sc._open_mission_briefing("lecture_fractions"), "MissionBriefingOverlay")
 	await _scan_hub_overlay(sc, "%s Hub evidence" % prefix, func(): sc._open_evidence_journal(), "EvidenceJournalOverlay")
-	await _scan_hub_overlay(sc, "%s Hub leaderboard" % prefix, func(): sc._open_leaderboard(), "LeaderboardOverlay")
+	await _scan_leaderboard_reports(sc, prefix)
 	await _scan_hub_overlay(sc, "%s Hub settings" % prefix, func(): sc._open_settings(), "SettingsOverlay")
 	await _scan_hub_overlay(sc, "%s Hub upgrades" % prefix, func(): sc._open_upgrades(), "UpgradeOverlay")
 	await _scan_hub_overlay(sc, "%s Hub items" % prefix, func(): sc._open_items(), "ItemsOverlay")
@@ -71,6 +77,44 @@ func _scan_hub_overlay(sc: Node, label: String, opener: Callable, overlay_name: 
 		_scan(label, overlay)
 		overlay.queue_free()
 	await get_tree().process_frame
+
+func _scan_leaderboard_reports(sc: Node, prefix: String) -> void:
+	sc._open_leaderboard()
+	await get_tree().process_frame
+	var board := sc.get_node_or_null("LeaderboardOverlay")
+	if board == null:
+		_issues.append("%s Hub leaderboard missing overlay" % prefix)
+		return
+	_scan("%s Hub leaderboard" % prefix, board)
+	await _scan_button_overlay(sc, board, "%s Hub trace detail" % prefix, "Trace", "TraceDetailOverlay")
+	await _scan_button_overlay(sc, board, "%s Hub quality report" % prefix, "Quality", "QualityReportOverlay")
+	await _scan_button_overlay(sc, board, "%s Hub TeacherSim delta" % prefix, "TeacherSim", "TeacherSimDeltaOverlay")
+	await _scan_button_overlay(sc, board, "%s Hub cloud log" % prefix, "Cloud Log", "CloudLogOverlay")
+	await _scan_button_overlay(sc, board, "%s Hub class dashboard" % prefix, "Class", "ClassDashboardOverlay")
+	board.queue_free()
+	await get_tree().process_frame
+
+func _scan_button_overlay(sc: Node, button_root: Node, label: String, button_text: String, overlay_name: String) -> void:
+	if not _press_button_with_text(button_root, button_text):
+		_issues.append("%s button not found: %s" % [label, button_text])
+		return
+	await get_tree().process_frame
+	var overlay := sc.get_node_or_null(overlay_name)
+	if overlay == null:
+		_issues.append("%s overlay missing: %s" % [label, overlay_name])
+		return
+	_scan(label, overlay)
+	overlay.queue_free()
+	await get_tree().process_frame
+
+func _press_button_with_text(root: Node, text: String) -> bool:
+	if root is Button and (root as Button).text == text:
+		(root as Button).pressed.emit()
+		return true
+	for child in root.get_children():
+		if _press_button_with_text(child, text):
+			return true
+	return false
 
 func _audit_preview(prefix: String) -> void:
 	var sc: Node = load("res://scenes/ui/PreviewScenario.tscn").instantiate()

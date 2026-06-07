@@ -16,7 +16,13 @@ func _ready() -> void:
 	GameState.teacher_level = 2
 	GameState.upgrade_points = 1
 	GameState.leaderboard_records = [
-		{"rank": "A", "score": 236, "title": "Intro to Fractions", "detail": "Comp 85%  Attention 91%  Progress 100%", "level_up": true},
+		{"rank": "A", "score": 236, "title": "Intro to Fractions", "detail": "Comp 85%  Attention 91%  Progress 100%", "level_up": true,
+			"coach_focus": "Formative check 46%", "coach_next": "Practice: Formative 46% -> Check before presenting again",
+			"evidence_trace": "Present>Restraint+ | Check>Formative+",
+			"evidence_trace_steps": [
+				{"turn": 1, "move": "Present", "construct": "Restraint", "outcome": "evidence gained", "signal": "fit signal: the move matched the learning need", "reaction": "Class stayed with the chunk.", "meter": "Progress 42% | Attention 88%"},
+				{"turn": 2, "move": "Check", "construct": "Formative", "outcome": "evidence gained", "signal": "confusion surfaced: misconception is now teachable", "reaction": "Two students named the unit split.", "meter": "Progress 70% | Attention 91%"},
+			]},
 		{"rank": "B", "score": 196, "title": "Comparing Decimals", "detail": "Objectives 2/2  Attention 78%  Engaged 6/6", "level_up": false},
 		{"rank": "B", "score": 182, "title": "Jordan Encounter", "detail": "Jordan reached in 4 turns; bond 25%", "level_up": false},
 	]
@@ -82,6 +88,27 @@ func _shot_hub() -> void:
 	await _save("ui_leaderboard.png")
 	var board := sc.get_node_or_null("LeaderboardOverlay")
 	if board != null:
+		_press_button_with_text(board, "Trace")
+		await _frames(6)
+		await _save("ui_trace_detail.png")
+		_close_overlay(sc, "TraceDetailOverlay")
+		_press_button_with_text(board, "Quality")
+		await _frames(6)
+		await _save("ui_quality_report.png")
+		_close_overlay(sc, "QualityReportOverlay")
+		_press_button_with_text(board, "TeacherSim")
+		await _frames(6)
+		await _save("ui_teachersim_delta.png")
+		_close_overlay(sc, "TeacherSimDeltaOverlay")
+		_press_button_with_text(board, "Cloud Log")
+		await _frames(6)
+		await _save("ui_cloud_log.png")
+		_close_overlay(sc, "CloudLogOverlay")
+		_press_button_with_text(board, "Class")
+		await _frames(6)
+		await _save("ui_class_dashboard.png")
+		_close_overlay(sc, "ClassDashboardOverlay")
+	if board != null:
 		board.queue_free()
 	await _frames(3)
 	sc._open_settings()
@@ -117,6 +144,20 @@ func _shot_preview() -> void:
 	await _save("ui_preview.png")
 	sc.queue_free()
 	await _frames(3)
+
+func _press_button_with_text(root: Node, text: String) -> bool:
+	if root is Button and (root as Button).text == text:
+		(root as Button).pressed.emit()
+		return true
+	for child in root.get_children():
+		if _press_button_with_text(child, text):
+			return true
+	return false
+
+func _close_overlay(root: Node, overlay_name: String) -> void:
+	var overlay := root.get_node_or_null(overlay_name)
+	if overlay != null:
+		overlay.queue_free()
 
 func _shot_encounter() -> void:
 	Game.current_scenario_id = "discussion_fractions"

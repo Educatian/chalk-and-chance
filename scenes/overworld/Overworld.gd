@@ -749,6 +749,7 @@ func _end_lesson() -> void:
 		if _items_awarded_text(reward.get("items_awarded", {})) != "":
 			reward_lines += " | +items"
 		reward_lines += "\n"
+		var moves: Array = Game.lesson.get("moves", [])
 		GameState.record_leaderboard({
 			"scenario_id": str(Game.current_scenario_id),
 			"title": _scenario_title,
@@ -757,22 +758,24 @@ func _end_lesson() -> void:
 			"score": stars * 80 + int(round(attention)) + int(round(_composure)) + _engaged_count() * 10 - _disruptions * 12,
 			"detail": "Objectives %d/%d  Attention %d%%  Engaged %d/%d" % [stars, _objectives.size(), int(attention), _engaged_count(), _npcs.size()],
 			"level_up": bool(reward.get("level_up", false)),
+			"trace": Game.evidence_trace_from_moves(moves),
+			"trace_steps": Game.evidence_trace_steps_from_moves(moves),
 		})
 	var next_line := _debrief_note(attention)
 	if not miss_tips.is_empty():
 		next_line = "Next: %s." % str(miss_tips[0]).capitalize()
-	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\n%s\n%s\n%s\n%s" % [
+	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\nPractice: %s\n%s\n%s" % [
 		_scenario_title, int(attention), int(_composure), _disruptions,
 		_engaged_count(), _npcs.size(), stars, _objectives.size(),
-		reward_lines, " | ".join(objective_tags), next_line,
-		Game.evidence_practice_target(false), Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
+		reward_lines, " | ".join(objective_tags), Game.evidence_practice_target(false).trim_prefix("Practice: "),
+		Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
 	if _attempt > 1:
 		summary += "\nReplay #%d: the room drifts faster each attempt." % _attempt
 	_pending_debrief = summary
 	var reflection_options := _reflection_options(attention)
 	Game.clear_lesson()
 	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
-	_show_overlay("REFLECT\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.", reflection_options)
+	_show_overlay("REFLECT 1/2\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.", reflection_options)
 
 func _on_reflect(opt: Dictionary) -> void:
 	GameState.log_reflection({
@@ -781,7 +784,7 @@ func _on_reflect(opt: Dictionary) -> void:
 		"choice": str(opt.get("_reflect", "")),
 	})
 	_close_overlay()
-	_show_overlay(_pending_debrief, [
+	_show_overlay("REVIEW 2/2\n\n" + _pending_debrief, [
 		{"label": "Replay this lesson", "_action": "replay"},
 		{"label": "Choose another mission", "_action": "hub"},
 	])
@@ -1010,12 +1013,12 @@ func _show_overlay(text: String, options: Array) -> void:
 	if btns.is_empty():
 		btns = [{"label": "Continue", "_action": "hub"}]
 	# Buttons are bottom-anchored; the text fills the space above them (no overlap).
-	var by := py + ph - float(btns.size()) * 44.0 - 16.0
+	var by := py + ph - float(btns.size()) * 40.0 - 8.0
 
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.position = Vector2(px + 22, py + 18)
-	lbl.size = Vector2(pw - 44, by - py - 28)
+	lbl.size = Vector2(pw - 44, by - py - 48)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	lbl.add_theme_color_override("font_color", Color(0.97, 0.96, 0.9))
@@ -1025,8 +1028,8 @@ func _show_overlay(text: String, options: Array) -> void:
 		var opt: Dictionary = btns[i]
 		var b := Button.new()
 		b.text = str(opt.get("label", "OK"))
-		b.position = Vector2(px + 22, by + i * 44.0)
-		b.size = Vector2(pw - 44, 38)
+		b.position = Vector2(px + 22, by + i * 40.0)
+		b.size = Vector2(pw - 44, 34)
 		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 		if opt.has("_reflect"):
 			b.pressed.connect(_on_reflect.bind(opt))

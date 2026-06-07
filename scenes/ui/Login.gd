@@ -55,7 +55,7 @@ func _ready() -> void:
 	add_child(sub)
 
 	var panel_w := minf(390.0, vp.x - 56.0)
-	var panel_h := minf(492.0, vp.y - 32.0)
+	var panel_h := minf(510.0, vp.y - 32.0)
 	var panel_x := vp.x - panel_w - 46.0
 	if vp.x < 760.0:
 		panel_x = (vp.x - panel_w) * 0.5
@@ -77,23 +77,38 @@ func _ready() -> void:
 
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(panel_w - 44, 0)
-	box.add_theme_constant_override("separation", 10)
+	box.add_theme_constant_override("separation", 8)
 	scroll.add_child(box)
 
 	var demo := Button.new()
 	demo.text = "Play demo"
 	if OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		demo.text = "Play demo (voice off)"
-	demo.custom_minimum_size = Vector2(0, 46)
+	demo.custom_minimum_size = Vector2(0, 42)
 	demo.add_theme_font_size_override("font_size", 18)
+	_apply_button_style(demo, true)
 	demo.pressed.connect(_go_hub)
 	box.add_child(demo)
+
+	var demo_hint := Label.new()
+	demo_hint.text = "Demo path: choose a mission, rehearse teacher moves, then review evidence."
+	demo_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	demo_hint.add_theme_font_size_override("font_size", 12)
+	demo_hint.add_theme_color_override("font_color", Color(0.76, 0.86, 0.88))
+	box.add_child(demo_hint)
 
 	var divider := Label.new()
 	divider.text = "Class sign in"
 	divider.add_theme_font_size_override("font_size", 16)
 	divider.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	box.add_child(divider)
+
+	var signin_hint := Label.new()
+	signin_hint.text = "Class sign in keeps progress tied to a course account."
+	signin_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	signin_hint.add_theme_font_size_override("font_size", 11)
+	signin_hint.add_theme_color_override("font_color", Color(0.70, 0.78, 0.84))
+	box.add_child(signin_hint)
 
 	_class_box = VBoxContainer.new()
 	_class_box.add_theme_constant_override("separation", 8)
@@ -106,13 +121,15 @@ func _ready() -> void:
 
 	_btn = Button.new()
 	_btn.text = "Sign in / Join"
-	_btn.custom_minimum_size = Vector2(0, 40)
+	_btn.custom_minimum_size = Vector2(0, 36)
+	_apply_button_style(_btn, false)
 	_btn.pressed.connect(_on_sign_in)
 	_class_box.add_child(_btn)
 
 	var skip := Button.new()
 	skip.text = "Skip sign in"
-	skip.custom_minimum_size = Vector2(0, 36)
+	skip.custom_minimum_size = Vector2(0, 34)
+	_apply_button_style(skip, false)
 	skip.pressed.connect(_go_hub)
 	_class_box.add_child(skip)
 
@@ -171,6 +188,28 @@ func _panel_style(fill: Color, border: Color, border_width: int) -> StyleBoxFlat
 	style.shadow_size = 8
 	return style
 
+func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
+
+func _apply_button_style(btn: Button, primary: bool) -> void:
+	var base := _button_style(Color(0.17, 0.28, 0.24, 0.96) if primary else Color(0.08, 0.15, 0.18, 0.94), Color(0.96, 0.80, 0.38, 0.92) if primary else Color(0.48, 0.68, 0.70, 0.58))
+	var hover := _button_style(Color(0.23, 0.38, 0.31, 0.98) if primary else Color(0.12, 0.22, 0.26, 0.96), Color(1.0, 0.88, 0.50, 1.0) if primary else Color(0.68, 0.86, 0.86, 0.78))
+	var pressed := _button_style(Color(0.10, 0.20, 0.17, 1.0), Color(0.96, 0.70, 0.28, 1.0))
+	btn.add_theme_stylebox_override("normal", base)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_color_override("font_color", Color(0.98, 0.94, 0.76) if primary else Color(0.86, 0.94, 0.95))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+
 func _field(parent: Node, label: String, placeholder: String, secret: bool) -> LineEdit:
 	var l := Label.new()
 	l.text = label
@@ -179,7 +218,7 @@ func _field(parent: Node, label: String, placeholder: String, secret: bool) -> L
 	var e := LineEdit.new()
 	e.placeholder_text = placeholder
 	e.secret = secret
-	e.custom_minimum_size = Vector2(0, 34)
+	e.custom_minimum_size = Vector2(0, 30)
 	parent.add_child(e)
 	return e
 
