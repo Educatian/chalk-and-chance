@@ -1,5 +1,7 @@
 extends RefCounted
 
+const InstructorAnalyticsText = preload("res://scenes/ui/InstructorAnalyticsText.gd")
+
 static func quality_report_text() -> String:
 	var rows := GameState.leaderboard_top(30)
 	var evidence_score := 16
@@ -173,56 +175,10 @@ static func cloud_log_text(status: String, data: Dictionary = {}) -> String:
 	return "\n".join(lines)
 
 static func class_dashboard_text(data: Dictionary) -> String:
-	var lines: Array = []
-	lines.append("Class %s | learners %d | telemetry events %d" % [
-		str(data.get("class_code", "local")),
-		int(data.get("learners", 0)),
-		int(data.get("telemetry_events", 0)),
-	])
-	lines.append("Weakest class skills")
-	var skills: Array = data.get("skills", [])
-	if skills.is_empty():
-		lines.append("No cloud competency rows yet. Have learners complete one mission.")
-	else:
-		for i in range(mini(skills.size(), 7)):
-			var row: Dictionary = skills[i]
-			lines.append("%s  avg %d%%  ev %d  learners %d" % [
-				compact_skill_label(str(row.get("skill", ""))),
-				int(round(float(row.get("avg_prob", 0.5)) * 100.0)),
-				int(row.get("evidence", 0)),
-				int(row.get("learners", 0)),
-			])
-	lines.append("")
-	lines.append("Instructional next step: group low-probability skills into tomorrow's rehearsal stations.")
-	return "\n".join(lines)
+	return InstructorAnalyticsText.class_dashboard_text(data)
 
 static func local_class_dashboard_text(status: String) -> String:
-	var lines: Array = [status, ""]
-	lines.append("Local learner skill snapshot")
-	var rows := Competency.summary()
-	for i in range(mini(rows.size(), 6)):
-		var r: Dictionary = rows[i]
-		lines.append("%s  %d%%  ev %d" % [
-			compact_skill_label(str(r.get("skill", ""))),
-			int(round(float(r.get("prob", 0.5)) * 100.0)),
-			int(r.get("n", 0)),
-		])
-	lines.append("")
-	lines.append("Runs recorded locally: %d" % GameState.leaderboard_top(30).size())
-	lines.append("Next practice: %s" % Game.evidence_practice_target(false))
-	return "\n".join(lines)
+	return InstructorAnalyticsText.local_class_dashboard_text(status)
 
 static func compact_skill_label(skill: String) -> String:
-	return {
-		"elicit_reasoning": "Elicit reasoning",
-		"extend_thinking": "Extend thinking",
-		"revoicing": "Revoicing",
-		"wait_time": "Wait time",
-		"behavior_mgmt": "Behavior mgmt",
-		"restraint": "Restraint",
-		"behavior_specific_praise": "Specific praise",
-		"funds_of_knowledge": "Asset connect",
-		"group_monitoring": "Group monitor",
-		"formative_check": "Formative check",
-		"status_treatment": "Status treatment",
-	}.get(skill, skill)
+	return InstructorAnalyticsText.compact_skill_label(skill)

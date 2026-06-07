@@ -34,6 +34,7 @@ $telemetry = Read-Text "autoload\Telemetry.gd"
 $auth = Read-Text "autoload\Auth.gd"
 $hub = Read-Text "scenes\ui\Hub.gd"
 $hubReports = Read-Text "scenes\ui\HubReports.gd"
+$instructorAnalytics = Read-Text "scenes\ui\InstructorAnalyticsText.gd"
 $liveD1 = Read-Text "scripts\verify_live_d1_flow.ps1"
 
 Add-Check "worker stores telemetry in D1" ($worker.Contains("INSERT INTO telemetry_events") -and $worker.Contains("env.DB.batch(batch)"))
@@ -42,6 +43,7 @@ Add-Check "worker upserts competency in D1" ($worker.Contains("INSERT INTO compe
 Add-Check "worker exposes learner competency restore" ($worker.Contains("GET") -and $worker.Contains("/competency") -and $worker.Contains("competencyRead"))
 Add-Check "worker exposes instructor class dashboard" ($worker.Contains("/class_dashboard") -and $worker.Contains("classDashboard"))
 Add-Check "class dashboard requires instructor role" ($worker.Contains('p.role !== "instructor"') -and $worker.Contains("forbidden") -and $liveD1.Contains("learner dashboard access correctly denied"))
+Add-Check "class dashboard exposes live instructor analytics" ($worker.Contains("active_24h") -and $worker.Contains("completion_rate") -and $worker.Contains("learners_detail") -and $worker.Contains("interventions") -and $instructorAnalytics.Contains("Live instructor analytics") -and $liveD1.Contains("live analytics visible"))
 Add-Check "schema has telemetry table and indexes" ($schema.Contains("CREATE TABLE IF NOT EXISTS telemetry_events") -and $schema.Contains("tel_user_idx") -and $schema.Contains("tel_sess_idx"))
 Add-Check "schema has competency primary key" ($schema.Contains("CREATE TABLE IF NOT EXISTS competency") -and $schema.Contains("PRIMARY KEY (user_id, skill)"))
 Add-Check "telemetry uploads buffered events only when signed in" ($telemetry.Contains("Auth.signed_in()") -and $telemetry.Contains('/telemetry') -and $telemetry.Contains("_buffer"))

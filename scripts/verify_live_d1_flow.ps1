@@ -104,6 +104,7 @@ if ([string]::IsNullOrWhiteSpace($instructorLogin.token)) {
 $instructorHeaders = @{ Authorization = "Bearer $($instructorLogin.token)" }
 $after = Invoke-RestMethod -Method Get -Uri "$ApiBase/class_dashboard" -Headers $instructorHeaders
 $afterCount = [int]($after.telemetry_events)
+$hasAnalytics = ($null -ne $after.activity) -and ($null -ne $after.activity.completion_rate) -and ($null -ne $after.learners_detail) -and ($null -ne $after.interventions)
 $hasSkill = $false
 foreach ($skill in $after.skills) {
   if ($skill.skill -eq "formative_check" -and [int]($skill.evidence) -ge 3) {
@@ -114,5 +115,8 @@ foreach ($skill in $after.skills) {
 if (-not $hasSkill) {
   throw "Class dashboard did not expose the posted formative_check competency."
 }
+if (-not $hasAnalytics) {
+  throw "Class dashboard did not expose live instructor analytics fields."
+}
 
-Write-Host "LIVE D1 FLOW: PASS learner telemetry stored; learner dashboard denied; instructor dashboard telemetry=$afterCount; competency formative_check visible"
+Write-Host "LIVE D1 FLOW: PASS learner telemetry stored; learner dashboard denied; instructor dashboard telemetry=$afterCount; competency formative_check visible; live analytics visible"

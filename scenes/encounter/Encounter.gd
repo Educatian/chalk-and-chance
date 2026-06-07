@@ -7,6 +7,7 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -365,18 +366,20 @@ func _build_ui() -> void:
 	_build_dialogue_box()
 
 	# Result chip + coach tip box.
-	_result = _make_label("", Vector2(16, 170), 7, Color(0.96, 0.86, 0.50))
-	_result.size = Vector2(448, 12)
+	_result = _make_label("", Vector2(16, 164), 7, Color(0.96, 0.86, 0.50))
+	_result.size = Vector2(448, 10)
+	_result.clip_text = true
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _make_label("", Vector2(16, 180), 7, Color(0.70, 0.90, 0.75))
+	_coach = _make_label("", Vector2(16, 174), 7, Color(0.70, 0.90, 0.75))
 	_coach.size = Vector2(448, 14)
+	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
-	# Move buttons: two rows with enough theme-minimum height to avoid overlap.
+	# Move buttons: two compact rows with a reserved mode column.
 	var n := MOVES.size()
 	var cols := 4
-	var bw := 88.0
-	var row_y := [194.0, 233.0]
+	var bw := 80.0
+	var row_y := [188.0, 228.0]
 	var short_labels := {
 		"redirect": "Redir.",
 	}
@@ -385,9 +388,9 @@ func _build_ui() -> void:
 		var tag: String = MOVES[i][1]
 		b.text = str(short_labels.get(tag, MOVES[i][0]))
 		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
-		b.size = Vector2(bw, 32)
+		b.size = Vector2(bw, 30)
 		b.clip_text = true
-		b.add_theme_font_size_override("font_size", 7)
+		CompactButtonStyle.apply(b, 7)
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
@@ -398,8 +401,8 @@ func _build_ui() -> void:
 
 	# Free-text input (hidden until the player toggles to Type mode), sharing the move row.
 	_text_input = LineEdit.new()
-	_text_input.position = Vector2(8, 233)
-	_text_input.size = Vector2(274, 32)
+	_text_input.position = Vector2(8, 228)
+	_text_input.size = Vector2(270, 30)
 	_text_input.placeholder_text = "Type teacher talk..."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
@@ -408,9 +411,9 @@ func _build_ui() -> void:
 
 	_mic_btn = Button.new()
 	_mic_btn.text = "Mic"
-	_mic_btn.position = Vector2(288, 233)
-	_mic_btn.size = Vector2(40, 32)
-	_mic_btn.add_theme_font_size_override("font_size", 7)
+	_mic_btn.position = Vector2(286, 228)
+	_mic_btn.size = Vector2(38, 30)
+	CompactButtonStyle.apply(_mic_btn, 7)
 	_mic_btn.visible = false
 	_mic_btn.disabled = not VoiceInput.is_supported()
 	_mic_btn.tooltip_text = "Speak teacher talk" if VoiceInput.is_supported() else "Voice input is not supported in this browser."
@@ -419,19 +422,19 @@ func _build_ui() -> void:
 
 	_send_btn = Button.new()
 	_send_btn.text = "Say"
-	_send_btn.position = Vector2(332, 233)
-	_send_btn.size = Vector2(50, 32)
-	_send_btn.add_theme_font_size_override("font_size", 8)
+	_send_btn.position = Vector2(340, 228)
+	_send_btn.size = Vector2(46, 30)
+	CompactButtonStyle.apply(_send_btn, 8)
 	_send_btn.visible = false
 	_send_btn.pressed.connect(func(): _on_type_submit())
 	_layer.add_child(_send_btn)
 
-	# Mode toggle (top of the move row, far right).
+	# Mode toggle uses the reserved right column instead of floating over content.
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(388, 233)
-	_type_toggle.size = Vector2(76, 32)
-	_type_toggle.add_theme_font_size_override("font_size", 8)
+	_type_toggle.position = Vector2(386, 212)
+	_type_toggle.size = Vector2(78, 48)
+	CompactButtonStyle.apply(_type_toggle, 8, true)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
@@ -449,6 +452,7 @@ func _build_item_row() -> void:
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "encounter")
+		CompactButtonStyle.apply(b, 7)
 		b.pressed.connect(_use_item.bind(item_id))
 		var tex := Art.tex(Items.icon_for(item_id))
 		if tex != null:
@@ -456,7 +460,7 @@ func _build_item_row() -> void:
 			b.expand_icon = true
 		else:
 			b.text = Items.short_name_for(item_id)
-			b.add_theme_font_size_override("font_size", 6)
+			CompactButtonStyle.apply(b, 6)
 		_layer.add_child(b)
 		_item_buttons.append(b)
 		x += 35.0

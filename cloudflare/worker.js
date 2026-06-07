@@ -307,29 +307,102 @@ async function competencyRead(req, env) {
   return json({ skills: results || [] });
 }
 
+function classInterventions(skills) {
+  const rows = (skills || []).slice(0, 3);
+  if (!rows.length) {
+    return ["Collect one completed mission per learner before assigning class-wide reteach stations."];
+  }
+  return rows.map((row) => {
+    const skill = row.skill || "target skill";
+    const risk = Number(row.at_risk || 0);
+    const avg = Math.round(Number(row.avg_prob || 0.5) * 100);
+    if (risk > 0) return `Run a small-group rehearsal on ${skill}; ${risk} learner(s) are below the live support threshold.`;
+    return `Use ${skill} as tomorrow's warm-up check; class average is ${avg}%.`;
+  });
+}
+
 async function classDashboard(req, env) {
   const p = await auth(req, env);
   if (!p) return json({ error: "unauthorized" }, 401);
   if (p.role !== "instructor") return json({ error: "forbidden" }, 403);
   const learners = await env.DB.prepare(
-    "SELECT COUNT(*) AS n FROM learners WHERE class_code=?")
+    "SELECT COUNT(*) AS n FROM learners WHERE class_code=? AND role='learner'")
     .bind(p.cls).first();
   const telemetryRows = await env.DB.prepare(
-    "SELECT COUNT(*) AS n FROM telemetry_events t JOIN learners l ON t.user_id=l.user_id WHERE l.class_code=?")
+    "SELECT COUNT(*) AS n FROM telemetry_events t JOIN learners l ON t.user_id=l.user_id WHERE l.class_code=? AND l.role='learner'")
+    .bind(p.cls).first();
+  const activity = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT t.session_id) AS sessions,
+            COUNT(DISTINCT CASE
+              WHEN json_extract(t.event,'$.event') IN ('resolve','lecture_resolve','group_resolve','gym_resolve') THEN t.session_id
+            END) AS completed_sessions,
+            COUNT(DISTINCT CASE WHEN t.created_at >= datetime('now','-1 day') THEN t.user_id END) AS active_24h,
+            MAX(t.created_at) AS last_event_at
+       FROM telemetry_events t JOIN learners l ON t.user_id=l.user_id
+      WHERE l.class_code=? AND l.role='learner'`)
     .bind(p.cls).first();
   const { results } = await env.DB.prepare(
     `SELECT c.skill AS skill, COUNT(*) AS learners, ROUND(AVG(c.prob), 3) AS avg_prob,
-            SUM(c.n) AS evidence, ROUND(MIN(c.prob), 3) AS min_prob, ROUND(MAX(c.prob), 3) AS max_prob
+            SUM(c.n) AS evidence, ROUND(MIN(c.prob), 3) AS min_prob, ROUND(MAX(c.prob), 3) AS max_prob,
+            SUM(CASE WHEN c.prob < 0.45 THEN 1 ELSE 0 END) AS at_risk,
+            SUM(CASE WHEN c.prob >= 0.70 THEN 1 ELSE 0 END) AS ready
        FROM competency c JOIN learners l ON c.user_id=l.user_id
-      WHERE l.class_code=?
+      WHERE l.class_code=? AND l.role='learner'
       GROUP BY c.skill
       ORDER BY avg_prob ASC, evidence DESC`)
     .bind(p.cls).all();
+  const { results: modes } = await env.DB.prepare(
+    `SELECT COALESCE(NULLIF(json_extract(t.event,'$.mode'),''), json_extract(t.event,'$.event'), 'event') AS mode,
+            COUNT(*) AS events,
+            COUNT(DISTINCT t.session_id) AS sessions
+       FROM telemetry_events t JOIN learners l ON t.user_id=l.user_id
+      WHERE l.class_code=? AND l.role='learner'
+      GROUP BY mode
+      ORDER BY events DESC
+      LIMIT 6`)
+    .bind(p.cls).all();
+  const { results: learnerRows } = await env.DB.prepare(
+    `WITH activity AS (
+       SELECT user_id, COUNT(*) AS events, COUNT(DISTINCT session_id) AS sessions, MAX(created_at) AS last_active
+         FROM telemetry_events
+        GROUP BY user_id
+     ), skill_avg AS (
+       SELECT user_id, ROUND(AVG(prob), 3) AS avg_prob, SUM(n) AS evidence
+         FROM competency
+        GROUP BY user_id
+     )
+     SELECT l.display_name,
+            COALESCE(a.events, 0) AS events,
+            COALESCE(a.sessions, 0) AS sessions,
+            a.last_active AS last_active,
+            COALESCE(s.avg_prob, 0.5) AS avg_prob,
+            COALESCE(s.evidence, 0) AS evidence,
+            (SELECT skill FROM competency c WHERE c.user_id=l.user_id ORDER BY c.prob ASC, c.n DESC LIMIT 1) AS weakest_skill
+       FROM learners l
+      LEFT JOIN activity a ON a.user_id=l.user_id
+      LEFT JOIN skill_avg s ON s.user_id=l.user_id
+      WHERE l.class_code=? AND l.role='learner'
+      ORDER BY avg_prob ASC, last_active DESC
+      LIMIT 8`)
+    .bind(p.cls).all();
+  const skills = results || [];
+  const sessions = Number(activity?.sessions || 0);
+  const completed = Number(activity?.completed_sessions || 0);
   return json({
     class_code: p.cls,
     role: p.role,
     learners: Number(learners?.n || 0),
     telemetry_events: Number(telemetryRows?.n || 0),
-    skills: results || [],
+    activity: {
+      sessions,
+      completed_sessions: completed,
+      completion_rate: sessions > 0 ? Number((completed / sessions).toFixed(3)) : 0,
+      active_24h: Number(activity?.active_24h || 0),
+      last_event_at: activity?.last_event_at || "",
+    },
+    skills,
+    modes: modes || [],
+    learners_detail: learnerRows || [],
+    interventions: classInterventions(skills),
   });
 }

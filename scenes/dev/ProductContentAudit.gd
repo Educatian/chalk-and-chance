@@ -169,6 +169,8 @@ func _ready() -> void:
 	else:
 		_assert_text("Class Dashboard", class_dash, [
 			"INSTRUCTOR DASHBOARD",
+			"Live instructor analytics",
+			"Cloud metrics need instructor sign-in",
 			"Local learner skill snapshot",
 			"Next practice:",
 		])

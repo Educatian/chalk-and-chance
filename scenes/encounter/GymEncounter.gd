@@ -7,6 +7,7 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const UI_SCALE := 2.0
 const WIN_U := 0.80
 const MOVES := [
@@ -201,29 +202,30 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
 	_result = _label("Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck.", Vector2(16, 204), 7, Color(0.96, 0.86, 0.50))
-	_result.size = Vector2(448, 10)
-	_coach = _label("Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.", Vector2(16, 210), 7, Color(0.72, 0.92, 0.78))
-	_coach.size = Vector2(448, 12)
+	_result.size = Vector2(448, 9)
+	_result.clip_text = true
+	_coach = _label("Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.", Vector2(16, 213), 7, Color(0.72, 0.92, 0.78))
+	_coach.size = Vector2(448, 13)
+	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# Move menu
-	var button_widths := [55.0, 72.0, 78.0, 52.0, 66.0, 64.0, 54.0]
-	var x := 10.0
+	var button_widths := [55.0, 70.0, 76.0, 45.0, 64.0, 62.0, 52.0]
+	var button_x := [10.0, 68.0, 146.0, 225.0, 274.0, 340.0, 404.0]
 	for i in range(MOVES.size()):
 		var b := Button.new()
 		b.text = MOVES[i][0]
-		b.position = Vector2(x, 230)
-		b.size = Vector2(button_widths[i], 32)
+		b.position = Vector2(button_x[i], 230)
+		b.size = Vector2(button_widths[i], 30)
 		b.clip_text = true
-		b.add_theme_font_size_override("font_size", 7)
+		CompactButtonStyle.apply(b, 7)
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
 		_buttons.append(b)
-		x += button_widths[i] + 3.0
 
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(10, 230)
-	_text_input.size = Vector2(300, 32)
+	_text_input.size = Vector2(286, 30)
 	_text_input.placeholder_text = "Type what you would say to the selected student."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
@@ -232,9 +234,9 @@ func _build_ui() -> void:
 
 	_mic_btn = Button.new()
 	_mic_btn.text = "Mic"
-	_mic_btn.position = Vector2(314, 230)
-	_mic_btn.size = Vector2(46, 32)
-	_mic_btn.add_theme_font_size_override("font_size", 7)
+	_mic_btn.position = Vector2(300, 230)
+	_mic_btn.size = Vector2(42, 30)
+	CompactButtonStyle.apply(_mic_btn, 7)
 	_mic_btn.visible = false
 	_mic_btn.disabled = not VoiceInput.is_supported()
 	_mic_btn.tooltip_text = "Speak teacher talk" if VoiceInput.is_supported() else "Voice input is not supported in this browser."
@@ -243,9 +245,9 @@ func _build_ui() -> void:
 
 	_send_btn = Button.new()
 	_send_btn.text = "Say"
-	_send_btn.position = Vector2(364, 230)
-	_send_btn.size = Vector2(48, 32)
-	_send_btn.add_theme_font_size_override("font_size", 8)
+	_send_btn.position = Vector2(346, 230)
+	_send_btn.size = Vector2(46, 30)
+	CompactButtonStyle.apply(_send_btn, 8)
 	_send_btn.visible = false
 	_send_btn.pressed.connect(_on_type_submit)
 	_layer.add_child(_send_btn)
@@ -254,7 +256,7 @@ func _build_ui() -> void:
 	_type_toggle.text = "Type"
 	_type_toggle.position = Vector2(408, 24)
 	_type_toggle.size = Vector2(60, 24)
-	_type_toggle.add_theme_font_size_override("font_size", 8)
+	CompactButtonStyle.apply(_type_toggle, 8, true)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
@@ -272,6 +274,7 @@ func _build_item_row() -> void:
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "gym")
+		CompactButtonStyle.apply(b, 7)
 		b.pressed.connect(_use_item.bind(item_id))
 		var tex := Art.tex(Items.icon_for(item_id))
 		if tex != null:
@@ -279,7 +282,7 @@ func _build_item_row() -> void:
 			b.expand_icon = true
 		else:
 			b.text = Items.short_name_for(item_id)
-			b.add_theme_font_size_override("font_size", 6)
+			CompactButtonStyle.apply(b, 6)
 		_layer.add_child(b)
 		_item_buttons.append(b)
 		x += 38.0
