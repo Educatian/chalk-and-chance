@@ -237,6 +237,8 @@ async function login(req, env) {
   if (!class_code || !name || !password) return json({ error: "class_code, name, password required" }, 400);
   const cls = await env.DB.prepare("SELECT * FROM classes WHERE class_code=?").bind(class_code).first();
   if (!cls) return json({ error: "unknown class code" }, 404);
+  const coursePasscode = passcodeForClass(class_code, env);
+  const usingCoursePasscode = coursePasscode && password === coursePasscode;
   const login_name = slug(name);
   let row = await env.DB.prepare("SELECT * FROM learners WHERE class_code=? AND login_name=?")
     .bind(class_code, login_name).first();
@@ -251,12 +253,30 @@ async function login(req, env) {
     row = { user_id, class_code, login_name, display_name: name.trim(), pw_hash: hash, pw_salt: salt, role: "learner" };
   } else {
     const { hash } = await hashPw(password, row.pw_salt);
-    if (hash !== row.pw_hash) return json({ error: "wrong password" }, 401);
+    const role = row.role || "learner";
+    if (hash !== row.pw_hash) {
+      if (role === "learner" && usingCoursePasscode) {
+        const reset = await hashPw(coursePasscode);
+        await env.DB.prepare("UPDATE learners SET pw_hash=?, pw_salt=? WHERE user_id=?")
+          .bind(reset.hash, reset.salt, row.user_id).run();
+        row.pw_hash = reset.hash;
+        row.pw_salt = reset.salt;
+      } else {
+        return json({ error: coursePasscode ? "wrong passcode" : "wrong password" }, 401);
+      }
+    }
   }
   const token = await signJWT(
     { sub: row.user_id, name: row.display_name, cls: class_code, role: row.role,
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 }, env.WORKER_SECRET);
   return json({ token, user_id: row.user_id, display_name: row.display_name, class_code, role: row.role });
+}
+
+function passcodeForClass(classCode, env) {
+  if (classCode === "UA-CAT531-SUMMER26") {
+    return String(env.CAT531_PASSCODE || "CAT5312026").trim();
+  }
+  return "";
 }
 
 async function auth(req, env) {
