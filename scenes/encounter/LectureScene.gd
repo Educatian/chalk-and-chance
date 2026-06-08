@@ -173,15 +173,15 @@ func _build_ui() -> void:
 	_make_bar("attn", "Attention", 58, Color(0.95, 0.78, 0.30))
 	_make_bar("composure", "Composure", 74, Color(0.90, 0.45, 0.55))
 
-	_wait_label = _label(_wait_label_text(false), Vector2(284, 42), 7, Color(0.8, 0.85, 0.95))
+	_wait_label = _label(_wait_label_text(false), Vector2(284, 24), 7, Color(0.8, 0.85, 0.95))
 	var wbg := ColorRect.new()
-	wbg.position = Vector2(284, 58)
+	wbg.position = Vector2(284, 40)
 	wbg.size = Vector2(90, 8)
 	wbg.color = Color(0, 0, 0, 0.5)
 	wbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(wbg)
 	_wait_fill = ColorRect.new()
-	_wait_fill.position = Vector2(284, 58)
+	_wait_fill.position = Vector2(284, 40)
 	_wait_fill.size = Vector2(0, 8)
 	_wait_fill.color = Color(0.55, 0.56, 0.62)
 	_wait_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -197,11 +197,11 @@ func _build_ui() -> void:
 	var psize := minf(54.0, slot - 6.0)
 	for i in range(n):
 		var cx := 10.0 + i * slot + slot / 2.0
-		var py := 100.0
+		var py := 92.0
 		var btn := Button.new()
 		btn.flat = true
 		btn.position = Vector2(10.0 + i * slot, py - 4)
-		btn.size = Vector2(slot - 2, psize + 28)
+		btn.size = Vector2(slot - 2, psize + 20)
 		btn.pressed.connect(_select.bind(i))
 		_layer.add_child(btn)
 		students[i]["x"] = 10.0 + i * slot
@@ -226,11 +226,12 @@ func _build_ui() -> void:
 		students[i]["emote"] = emo
 		var nm := _label(students[i]["name"], Vector2(10.0 + i * slot, py + psize + 2), 8, Color.WHITE)
 		nm.size = Vector2(slot - 2, 12)
+		nm.z_index = 2
 		nm.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 		nm.add_theme_constant_override("outline_size", 4)
 
-	var dialogue_box := Rect2(Vector2(10, 162), Vector2(460, 42))
-	var dialogue_text := Rect2(Vector2(18, 166), Vector2(444, 24))
+	var dialogue_box := Rect2(Vector2(10, 170), Vector2(460, 44))
+	var dialogue_text := Rect2(Vector2(18, 174), Vector2(444, 24))
 	var dbg := ColorRect.new()
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position
@@ -245,13 +246,14 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_container_rect", dialogue_box)
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
-	_result = _label("Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.", Vector2(12, 204), 7, Color(0.96, 0.86, 0.50))
+	_result = _label("Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.", Vector2(12, 216), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 9)
 	_result.clip_text = true
-	_coach = _label("Coach Vee: press Repair if progress outruns comprehension; otherwise Check.", Vector2(12, 213), 7, Color(0.72, 0.92, 0.78))
-	_coach.size = Vector2(456, 13)
+	_coach = _label("Coach Vee: Repair when progress outruns comprehension; otherwise Check.", Vector2(12, 224), 6, Color(0.72, 0.92, 0.78))
+	_coach.size = Vector2(456, 8)
 	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_coach.visible = false
 
 	var button_x := [10.0, 103.0, 196.0, 289.0, 382.0]
 	for i in range(MOVES.size()):
@@ -296,8 +298,8 @@ func _build_ui() -> void:
 
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(426, 40)
-	_type_toggle.size = Vector2(48, 24)
+	_type_toggle.position = Vector2(424, 44)
+	_type_toggle.size = Vector2(48, 28)
 	CompactButtonStyle.apply(_type_toggle, 8, true)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
@@ -306,8 +308,8 @@ func _build_ui() -> void:
 	PixelUi.scale_tree(_layer, UI_SCALE)
 
 func _build_item_row() -> void:
-	var x := 276.0
-	var y := 62.0
+	var x := 258.0
+	var y := 52.0
 	for id in GameState.equipped_item_ids():
 		var item_id := str(id)
 		var b := Button.new()

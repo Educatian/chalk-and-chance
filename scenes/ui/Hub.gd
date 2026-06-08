@@ -79,8 +79,8 @@ func _build() -> void:
 	add_child(xp_fill)
 
 	var command_plate := Panel.new()
-	command_plate.position = Vector2(vp.x - 502, 68)
-	command_plate.size = Vector2(488, 76)
+	command_plate.position = Vector2(vp.x - 502, 66)
+	command_plate.size = Vector2(488, 104)
 	command_plate.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.075, 0.09, 0.16, 0.82), Color(0.20, 0.30, 0.46, 0.70)))
 	add_child(command_plate)
 
@@ -137,10 +137,11 @@ func _build() -> void:
 	add_child(board)
 
 	var legend := Label.new()
-	legend.text = "Badges: Routine=pacing  |  Echo=reasoning  |  Balance=airtime  |  Mirror=feedback  |  Insight=capstone"
-	legend.position = Vector2(42, 136)
-	legend.size = Vector2(vp.x - 84, 34)
+	legend.text = "Badges: Routine=pacing | Echo=reasoning\nBalance=airtime | Mirror=feedback | Insight=capstone"
+	legend.position = Vector2(42, 154)
+	legend.size = Vector2(maxf(300.0, vp.x - 560.0), 42)
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	legend.clip_text = true
 	legend.add_theme_font_size_override("font_size", 11 + fd)
 	legend.add_theme_color_override("font_color", Color(0.68, 0.76, 0.86))
 	add_child(legend)
@@ -154,7 +155,7 @@ func _build() -> void:
 	settings.pressed.connect(_open_settings)
 	add_child(settings)
 
-	_draw_equipped_items(Vector2(vp.x - 398, 116))
+	_draw_equipped_items(Vector2(vp.x - 488, 120))
 
 	var open_ids: Array = []
 	var locked_ids: Array = []
@@ -167,7 +168,7 @@ func _build() -> void:
 			open_ids.append(sid)
 	var ordered_ids := open_ids + locked_ids
 
-	var list_top := 178.0
+	var list_top := 212.0
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(42, list_top)
 	scroll.size = Vector2(vp.x - 84, maxf(148.0, vp.y - list_top - 22.0))
