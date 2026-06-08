@@ -290,15 +290,16 @@ func _add_badge_strip() -> void:
 		if t != null:
 			var s := Sprite2D.new()
 			s.texture = t
-			s.centered = false
+			s.centered = true
 			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			s.position = Vector2(x, 8)
-			s.scale = Vector2(28.0 / float(t.get_width()), 28.0 / float(t.get_height()))
+			s.position = Vector2(x + 14.0, 22.0)
+			var badge_scale := minf(28.0 / float(t.get_width()), 28.0 / float(t.get_height()))
+			s.scale = Vector2(badge_scale, badge_scale)
 			s.z_index = 50
 			add_child(s)
 		else:
 			var dot := ColorRect.new()
-			dot.position = Vector2(x, 8)
+			dot.position = Vector2(x + 1, 9)
 			dot.size = Vector2(26, 26)
 			dot.color = Color(0.95, 0.82, 0.30)
 			dot.z_index = 50

@@ -31,3 +31,17 @@ static func _scale_node(node: Node, factor: float) -> void:
 
 static func _snap(v: Vector2) -> Vector2:
 	return Vector2(roundf(v.x), roundf(v.y))
+
+static func add_centered_icon(parent: Control, tex: Texture2D, inset: float = 3.0) -> TextureRect:
+	if parent == null or tex == null:
+		return null
+	var icon := TextureRect.new()
+	icon.texture = tex
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.position = Vector2(inset, inset)
+	icon.size = Vector2(maxf(1.0, parent.size.x - inset * 2.0), maxf(1.0, parent.size.y - inset * 2.0))
+	parent.add_child(icon)
+	return icon

@@ -78,6 +78,14 @@ func speak(persona_id: String, text: String, emotion: String = "neutral") -> voi
 	if err != OK:
 		push_warning("TTSClient: request error %d (silent)" % err)
 
+func unlock_voice_token(token: String) -> void:
+	var clean := token.strip_edges()
+	if clean == "":
+		return
+	_voice_token = clean
+	voice_gate_unlocked = true
+	enabled = true
+
 func voice_status_label() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
 		return "Voice: Off (demo gate)"

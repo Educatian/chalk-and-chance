@@ -5,6 +5,7 @@ extends Control
 
 const LessonImport = preload("res://scripts/LessonImport.gd")
 const Art = preload("res://scripts/Art.gd")
+const PixelUi = preload("res://scripts/PixelUi.gd")
 
 var _scenario: Dictionary = {}
 var _summary: Label
@@ -123,13 +124,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		slot.tooltip_text = "%s x%d" % [Items.name_for(item_id), GameState.item_count(item_id)]
 		add_child(slot)
 		if tex != null:
-			var icon := Sprite2D.new()
-			icon.texture = tex
-			icon.centered = false
-			icon.position = Vector2(x + 1, pos.y - 3)
-			icon.scale = Vector2(32.0 / float(tex.get_width()), 32.0 / float(tex.get_height()))
-			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(icon)
+			PixelUi.add_centered_icon(slot, tex, 3.0)
 		x += 38.0
 
 func _refresh() -> void:

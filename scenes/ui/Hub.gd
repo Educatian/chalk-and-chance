@@ -3,6 +3,7 @@ extends Control
 ## title/badge), shows which badges are earned, and routes to the chosen scenario.
 
 const Art = preload("res://scripts/Art.gd")
+const PixelUi = preload("res://scripts/PixelUi.gd")
 const HubReports = preload("res://scenes/ui/HubReports.gd")
 const HubTraceText = preload("res://scenes/ui/HubTraceText.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
@@ -1378,13 +1379,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		slot.tooltip_text = "%s x%d" % [Items.name_for(str(id)), GameState.item_count(str(id))]
 		add_child(slot)
 		if tex != null:
-			var icon := Sprite2D.new()
-			icon.texture = tex
-			icon.centered = false
-			icon.position = Vector2(x + 1, pos.y - 3)
-			icon.scale = Vector2(32.0 / float(tex.get_width()), 32.0 / float(tex.get_height()))
-			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(icon)
+			PixelUi.add_centered_icon(slot, tex, 3.0)
 		x += 38.0
 
 func _open_items() -> void:
@@ -1456,13 +1451,12 @@ func _add_item_row(overlay: Control, id: String, x: float, y: float) -> void:
 	var equipped := id in GameState.equipped_item_ids()
 	var tex := Art.tex(Items.icon_for(id))
 	if tex != null:
-		var icon := Sprite2D.new()
-		icon.texture = tex
-		icon.centered = false
-		icon.position = Vector2(x, y)
-		icon.scale = Vector2(28.0 / float(tex.get_width()), 28.0 / float(tex.get_height()))
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		overlay.add_child(icon)
+		var icon_slot := Control.new()
+		icon_slot.position = Vector2(x - 2.0, y - 4.0)
+		icon_slot.size = Vector2(34, 34)
+		icon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		overlay.add_child(icon_slot)
+		PixelUi.add_centered_icon(icon_slot, tex, 3.0)
 	var label := Label.new()
 	label.text = "%s  x%d" % [Items.name_for(id), count]
 	label.position = Vector2(x + 48, y + 3)

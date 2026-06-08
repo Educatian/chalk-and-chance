@@ -278,8 +278,7 @@ func _build_item_row() -> void:
 		b.pressed.connect(_use_item.bind(item_id))
 		var tex := Art.tex(Items.icon_for(item_id))
 		if tex != null:
-			b.icon = tex
-			b.expand_icon = true
+			PixelUi.add_centered_icon(b, tex, 4.0)
 		else:
 			b.text = Items.short_name_for(item_id)
 			CompactButtonStyle.apply(b, 6)

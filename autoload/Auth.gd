@@ -42,7 +42,7 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 				role = str(data.get("role", "learner"))
 				if role == "learner":
 					GameState.apply_course_baseline(class_code)
-				_load_competency_then_login()
+				_unlock_voice_then_login(p_password)
 			else:
 				var msg := "login failed"
 				if typeof(data) == TYPE_DICTIONARY:
@@ -70,6 +70,15 @@ func _load_competency_then_login() -> void:
 		if ok and typeof(data) == TYPE_DICTIONARY and typeof(data.get("skills", [])) == TYPE_ARRAY:
 			Competency.load_cloud_summary(data.get("skills", []))
 		login_ok.emit())
+
+func _unlock_voice_then_login(passcode: String) -> void:
+	if TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked and passcode.strip_edges() != "":
+		_post("/voice_token", {"passcode": passcode}, false, func(ok: bool, data):
+			if ok and typeof(data) == TYPE_DICTIONARY and str(data.get("token", "")).strip_edges() != "":
+				TTSClient.unlock_voice_token(str(data.get("token", "")))
+			_load_competency_then_login())
+	else:
+		_load_competency_then_login()
 
 # --- internal: one fresh HTTPRequest per call (avoids busy conflicts) ---------
 func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:
