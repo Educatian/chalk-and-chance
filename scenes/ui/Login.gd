@@ -8,9 +8,13 @@ var _pw_in: LineEdit
 var _status: Label
 var _btn: Button
 var _class_box: VBoxContainer
+var _class_label: Label
+
+const CAT531_CLASS_CODE := "UA-CAT531-SUMMER26"
 
 func _ready() -> void:
 	var course_code := _web_course_code()
+	var is_cat531 := course_code == CAT531_CLASS_CODE
 	var vp := get_viewport_rect().size
 	_add_landing_background(vp)
 
@@ -83,8 +87,8 @@ func _ready() -> void:
 
 	var demo := Button.new()
 	demo.text = "Play demo"
-	if course_code != "":
-		demo.text = "Practice as CAT531 guest"
+	if is_cat531:
+		demo.visible = false
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		demo.text = "Play demo (voice off)"
 	demo.custom_minimum_size = Vector2(0, 42)
@@ -95,6 +99,8 @@ func _ready() -> void:
 
 	var demo_hint := Label.new()
 	demo_hint.text = "Demo path: choose a mission, rehearse teacher moves, then review evidence."
+	if is_cat531:
+		demo_hint.text = "CAT531 course access: enter your name and the course passcode to save progress and evidence."
 	demo_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	demo_hint.add_theme_font_size_override("font_size", 12)
 	demo_hint.add_theme_color_override("font_color", Color(0.76, 0.86, 0.88))
@@ -102,12 +108,16 @@ func _ready() -> void:
 
 	var divider := Label.new()
 	divider.text = "Class sign in"
+	if is_cat531:
+		divider.text = "CAT531 sign in"
 	divider.add_theme_font_size_override("font_size", 16)
 	divider.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	box.add_child(divider)
 
 	var signin_hint := Label.new()
 	signin_hint.text = "Class sign in keeps progress tied to a course account."
+	if is_cat531:
+		signin_hint.text = "The CAT531 class code is already loaded. Students only need their own name and the course passcode."
 	signin_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	signin_hint.add_theme_font_size_override("font_size", 11)
 	signin_hint.add_theme_color_override("font_color", Color(0.70, 0.78, 0.84))
@@ -119,9 +129,12 @@ func _ready() -> void:
 
 	_class_in = _field(_class_box, "Class code", "e.g. UA-CAT531-SUMMER26", false)
 	_name_in = _field(_class_box, "Your name", "First Last", false)
-	_pw_in = _field(_class_box, "Password", "choose / enter your password", true)
+	_pw_in = _field(_class_box, "Course passcode", "enter course passcode", true)
 	if course_code != "":
 		_class_in.text = course_code
+	if is_cat531:
+		_class_label.visible = false
+		_class_in.visible = false
 	_pw_in.text_submitted.connect(func(_t): _on_sign_in())
 
 	_btn = Button.new()
@@ -135,6 +148,8 @@ func _ready() -> void:
 
 	var skip := Button.new()
 	skip.text = "Skip sign in"
+	if is_cat531:
+		skip.visible = false
 	skip.custom_minimum_size = Vector2(0, 34)
 	_apply_button_style(skip, false)
 	skip.pressed.connect(_go_hub)
@@ -150,7 +165,7 @@ func _ready() -> void:
 	if not Auth.configured():
 		_set_status("Offline mode is ready.", false)
 	elif course_code != "":
-		_set_status("CAT531 ready. Enter name + password.", false)
+		_set_status("CAT531 ready. Enter your name + course passcode.", false)
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		_set_status("Public demo ready. Voice is off to prevent ElevenLabs overuse.", false)
 
@@ -229,14 +244,16 @@ func _field(parent: Node, label: String, placeholder: String, secret: bool) -> L
 	e.secret = secret
 	e.custom_minimum_size = Vector2(0, 30)
 	parent.add_child(e)
+	if label == "Class code":
+		_class_label = l
 	return e
 
 func _web_course_code() -> String:
 	if not OS.has_feature("web") or not ClassDB.class_exists("JavaScriptBridge"):
 		return ""
-	var raw := str(JavaScriptBridge.eval("(new URLSearchParams(window.location.search).get('class_code') || new URLSearchParams(window.location.hash.slice(1)).get('class_code') || '')", true)).strip_edges()
-	if raw.to_upper() == "UA-CAT531-SUMMER26":
-		return "UA-CAT531-SUMMER26"
+	var raw := str(JavaScriptBridge.eval("(() => { const q = new URLSearchParams(window.location.search); const h = new URLSearchParams(window.location.hash.slice(1)); return q.get('class_code') || h.get('class_code') || (q.get('cat531') === '1' || h.get('cat531') === '1' ? 'UA-CAT531-SUMMER26' : ''); })()", true)).strip_edges()
+	if raw.to_upper() == CAT531_CLASS_CODE:
+		return CAT531_CLASS_CODE
 	return ""
 
 func _on_sign_in() -> void:
@@ -244,7 +261,10 @@ func _on_sign_in() -> void:
 		_go_hub()
 		return
 	if _class_in.text.strip_edges() == "" or _name_in.text.strip_edges() == "" or _pw_in.text == "":
-		_set_status("Enter class code, name, and password.", true)
+		if _class_in.text.strip_edges() == CAT531_CLASS_CODE:
+			_set_status("Enter your name and course passcode.", true)
+		else:
+			_set_status("Enter class code, name, and password.", true)
 		return
 	_btn.disabled = true
 	_set_status("Signing in...", false)
