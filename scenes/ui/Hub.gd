@@ -1360,7 +1360,17 @@ func _draw_equipped_items(pos: Vector2) -> void:
 	label.add_theme_color_override("font_color", Color(0.78, 0.86, 0.96))
 	add_child(label)
 	var x := pos.x + 92.0
-	for id in GameState.equipped_item_ids():
+	var equipped := GameState.equipped_item_ids()
+	if equipped.is_empty():
+		var empty := Label.new()
+		empty.text = "None"
+		empty.position = Vector2(x, pos.y)
+		empty.size = Vector2(160, 18)
+		empty.add_theme_font_size_override("font_size", 11 + fd)
+		empty.add_theme_color_override("font_color", Color(0.55, 0.62, 0.72))
+		add_child(empty)
+		return
+	for id in equipped:
 		var tex := Art.tex(Items.icon_for(str(id)))
 		var slot := Panel.new()
 		slot.position = Vector2(x, pos.y - 4)
@@ -1410,10 +1420,10 @@ func _open_items() -> void:
 	overlay.add_child(title)
 
 	var help := Label.new()
-	help.text = _wrap_words("%s %s. Default loadout changes when you cycle Profile on the hub." % [GameState.teacher_profile_label(), GameState.teacher_profile_mechanic_text()], 68)
+	help.text = "Base starts empty. Items are earned from mission rewards."
 	help.position = Vector2(140, 106)
-	help.size = Vector2(680, 42)
-	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help.size = Vector2(680, 24)
+	help.autowrap_mode = TextServer.AUTOWRAP_OFF
 	help.clip_text = true
 	help.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
 	help.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))

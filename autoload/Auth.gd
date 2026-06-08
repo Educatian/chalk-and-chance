@@ -40,6 +40,8 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 				display_name = str(data.get("display_name", p_name))
 				class_code = str(data.get("class_code", p_class))
 				role = str(data.get("role", "learner"))
+				if role == "learner":
+					GameState.apply_course_baseline(class_code)
 				_load_competency_then_login()
 			else:
 				var msg := "login failed"

@@ -15,8 +15,16 @@ const DEFAULT_UPGRADES := {
 	"wait_mastery": 0,
 	"relationship_sense": 0,
 }
-const TEACHER_PROFILE_ORDER := ["steady", "listener", "equity"]
+const TEACHER_PROFILE_ORDER := ["base", "steady", "listener", "equity"]
 const TEACHER_PROFILE_DEFS := {
+	"base": {
+		"name": "Base",
+		"short": "Base",
+		"desc": "Baseline rehearsal with no profile bonus.",
+		"composure_bonus": 0.0,
+		"wait_reduction_ms": 0,
+		"relationship_bonus": 0.0,
+	},
 	"steady": {
 		"name": "Steady Lead",
 		"short": "Steady",
@@ -72,7 +80,7 @@ var inventory: Dictionary = {}         ## item_id -> count
 var equipped_items: Array = []         ## Array[String], up to Items.MAX_EQUIPPED
 var item_history: Array = []           ## item economy/use audit trail
 var item_cooldowns: Dictionary = {}    ## item_id -> unix/time marker, reserved for future tuning
-var teacher_profile_id := "steady"
+var teacher_profile_id := "base"
 var leaderboard_records: Array = []    ## local run records, sorted by score desc
 ## Warm-demander: a per-student relationship (0..1) that PERSISTS across periods,
 ## not reset each lesson (Bondy & Ross; care ethic). Built by connecting to a
@@ -80,6 +88,7 @@ var leaderboard_records: Array = []    ## local run records, sorted by score des
 var relationships: Dictionary = {}     ## persona_id -> bond 0..1
 ## Schon reflection-on-action: what the player chose to notice at each debrief.
 var reflections: Array = []            ## Array[{scenario, prompt, choice}]
+var course_baseline_classes: Array = [] ## class codes whose local starter state was normalized
 
 func _ready() -> void:
 	ensure_item_defaults()
@@ -126,7 +135,7 @@ func _default_loadout_for_profile() -> Array:
 	return profile_loadout
 
 func teacher_profile() -> Dictionary:
-	return TEACHER_PROFILE_DEFS.get(teacher_profile_id, TEACHER_PROFILE_DEFS["steady"])
+	return TEACHER_PROFILE_DEFS.get(teacher_profile_id, TEACHER_PROFILE_DEFS["base"])
 
 func teacher_profile_label() -> String:
 	var def: Dictionary = teacher_profile()
@@ -145,12 +154,12 @@ func teacher_profile_mechanic_text() -> String:
 	if rel > 0:
 		parts.append("+%d%% starting rapport" % rel)
 	if parts.is_empty():
-		return "Balanced rehearsal defaults"
+		return "Baseline: no bonus, no starter items"
 	return " | ".join(parts)
 
 func set_teacher_profile(id: String, apply_default_loadout: bool = true) -> void:
 	if not TEACHER_PROFILE_DEFS.has(id):
-		id = "steady"
+		id = "base"
 	teacher_profile_id = id
 	if apply_default_loadout:
 		equipped_items = []
@@ -268,6 +277,19 @@ func add_teacher_xp(amount: int, reason: String = "", save_now: bool = true) -> 
 		save_game()
 	return info
 
+func apply_course_baseline(class_code: String) -> void:
+	if class_code != "UA-CAT531-SUMMER26":
+		return
+	if class_code in course_baseline_classes:
+		return
+	teacher_profile_id = "base"
+	inventory = {}
+	equipped_items = []
+	item_cooldowns = {}
+	course_baseline_classes.append(class_code)
+	item_history.append({"event": "course_baseline_applied", "class_code": class_code, "unix": Time.get_unix_time_from_system()})
+	save_game()
+
 func record_leaderboard(entry: Dictionary) -> Dictionary:
 	var score := maxi(0, int(entry.get("score", 0)))
 	var report := _coach_report_fields()
@@ -283,7 +305,7 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"detail": str(entry.get("detail", "")),
 		"level_up": bool(entry.get("level_up", false)),
 		"profile_id": teacher_profile_id,
-		"profile": str(teacher_profile().get("short", "Steady")),
+		"profile": str(teacher_profile().get("short", "Base")),
 		"coach_focus": str(report.get("focus", "")),
 		"coach_next": str(report.get("next", "")),
 		"coach_evidence": int(report.get("evidence", 0)),
@@ -422,6 +444,7 @@ func save_game() -> void:
 		"leaderboard_records": leaderboard_records,
 		"relationships": relationships,
 		"reflections": reflections,
+		"course_baseline_classes": course_baseline_classes,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
@@ -474,9 +497,10 @@ func load_game() -> void:
 				equipped_items.append(str(id))
 	item_history = parsed.get("item_history", [])
 	item_cooldowns = parsed.get("item_cooldowns", {})
-	teacher_profile_id = str(parsed.get("teacher_profile_id", "steady"))
+	teacher_profile_id = str(parsed.get("teacher_profile_id", "base"))
 	if not TEACHER_PROFILE_DEFS.has(teacher_profile_id):
-		teacher_profile_id = "steady"
+		teacher_profile_id = "base"
 	ensure_item_defaults()
 	relationships = parsed.get("relationships", {})
 	reflections = parsed.get("reflections", [])
+	course_baseline_classes = parsed.get("course_baseline_classes", [])

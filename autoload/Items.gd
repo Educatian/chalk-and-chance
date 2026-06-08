@@ -62,20 +62,12 @@ const DEFS := {
 	},
 }
 
-const DEFAULT_INVENTORY := {
-	"lesson_map": 1,
-	"breathing_reset": 2,
-	"student_profile_card": 1,
-	"quiet_signal": 2,
-	"noticing_lens": 2,
-	"equity_snapshot": 1,
-	"wait_meter_pin": 2,
-	"practice_goal_card": 1,
-}
+const DEFAULT_INVENTORY := {}
 
-const DEFAULT_LOADOUT := ["breathing_reset", "noticing_lens", "wait_meter_pin", "practice_goal_card"]
+const DEFAULT_LOADOUT := []
 
 const PROFILE_LOADOUTS := {
+	"base": [],
 	"steady": ["breathing_reset", "quiet_signal", "wait_meter_pin", "practice_goal_card"],
 	"listener": ["student_profile_card", "noticing_lens", "breathing_reset", "practice_goal_card"],
 	"equity": ["equity_snapshot", "wait_meter_pin", "noticing_lens", "quiet_signal"],
