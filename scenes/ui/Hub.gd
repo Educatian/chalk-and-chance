@@ -61,7 +61,7 @@ func _build() -> void:
 			GameState.xp_to_next_level(),
 			GameState.upgrade_points,
 		]
-	level.position = Vector2(42, 98)
+	level.position = Vector2(42, 122)
 	level.size = Vector2(420, 20)
 	level.clip_text = true
 	level.add_theme_font_size_override("font_size", 13 + fd)
@@ -69,7 +69,7 @@ func _build() -> void:
 	add_child(level)
 
 	var xp_bg := ColorRect.new()
-	xp_bg.position = Vector2(42, 122)
+	xp_bg.position = Vector2(42, 146)
 	xp_bg.size = Vector2(240, 9)
 	xp_bg.color = Color(0, 0, 0, 0.52)
 	add_child(xp_bg)
@@ -139,7 +139,7 @@ func _build() -> void:
 
 	var legend := Label.new()
 	legend.text = "Badges: Routine=pacing | Echo=reasoning\nBalance=airtime | Mirror=feedback | Insight=capstone"
-	legend.position = Vector2(42, 154)
+	legend.position = Vector2(42, 170)   # below the gold header rule at y=160
 	legend.size = Vector2(maxf(300.0, vp.x - 560.0), 42)
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	legend.clip_text = true
@@ -223,6 +223,20 @@ func _build() -> void:
 
 	if first != null:
 		first.grab_focus()
+
+## ESC closes the topmost open overlay (Settings, Items, Briefing, Leaderboard, ...).
+## Every overlay is a direct child Control named "*Overlay", newest on top.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.keycode != KEY_ESCAPE:
+		return
+	for i in range(get_child_count() - 1, -1, -1):
+		var c := get_child(i)
+		if c is Control and str(c.name).ends_with("Overlay"):
+			c.queue_free()
+			get_viewport().set_input_as_handled()
+			return
 
 ## All scenarios found in data/scenarios/ (built-ins first in Game.SCENARIOS order, then any
 ## imported custom_*.json), so a lesson-plan import shows up automatically.
@@ -689,7 +703,7 @@ func _open_settings() -> void:
 	var notice := Label.new()
 	notice.text = "Click Voice status if spoken lines are silent."
 	notice.position = Vector2(222, 122)
-	notice.size = Vector2(516, 34)
+	notice.size = Vector2(516, 64)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	notice.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
@@ -700,7 +714,7 @@ func _open_settings() -> void:
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
 		{"label": "Motion", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
 	]
-	var y := 166.0
+	var y := 196.0
 	for opt in options:
 		var b := Button.new()
 		b.position = Vector2(222, y)
@@ -1107,6 +1121,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 	]
 	label.position = Vector2(140, y)
 	label.size = Vector2(408, 24)
+	label.clip_text = true
 	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	label.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90))
 	overlay.add_child(label)

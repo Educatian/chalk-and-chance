@@ -84,10 +84,11 @@ var _result: Label
 var _dialogue_tween: Tween
 var _coach_tween: Tween
 var _wait_label: Label
-var _wait_bar: ProgressBar
+var _wait_bar: ColorRect             # fill; drawn as ColorRects so height is exact
+var _wait_bar_bg: ColorRect
 var _bond_fill: ColorRect
 var _bond_label: Label
-var _bars: Dictionary = {}   # key -> ProgressBar
+var _bars: Dictionary = {}   # key -> ColorRect fill
 var _buttons: Array = []
 var _text_input: LineEdit = null     # free-text teacher utterance box
 var _type_toggle: Button = null      # menu <-> type switch
@@ -290,7 +291,7 @@ func _build_ui() -> void:
 	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 6), 9, Color(0.95, 0.93, 0.85))
 	_name_label.size = Vector2(340, 14)
 	_need_label = _make_label("Need: surface the student's reasoning", Vector2(10, 104), 7, Color(0.78, 0.88, 0.96))
-	_need_label.size = Vector2(260, 12)
+	_need_label.size = Vector2(350, 12)
 	_need_label.clip_text = true
 
 	# Meters block, top-left.
@@ -298,7 +299,6 @@ func _build_ui() -> void:
 	_bars["order"] = _make_meter("Order", 44, Color(0.35, 0.65, 0.95))
 	_bars["rapport"] = _make_meter("Rapport", 62, Color(0.95, 0.70, 0.30))
 	_bars["composure"] = _make_meter("Composure", 84, Color(0.90, 0.35, 0.45))
-	_bars["composure"].max_value = GameState.max_composure()
 
 	# Student sprite, top-right (placeholder; affect portrait swaps in later).
 	_student_rect = ColorRect.new()
@@ -352,13 +352,16 @@ func _build_ui() -> void:
 	# Wait-Time Ring (a bar in M1).
 	_wait_label = _make_label(_wait_label_text(false), Vector2(300, 26), 7, Color(0.8, 0.85, 0.95))
 	_wait_label.size = Vector2(68, 12)
-	_wait_bar = ProgressBar.new()
+	_wait_bar_bg = ColorRect.new()
+	_wait_bar_bg.position = Vector2(300, 40)
+	_wait_bar_bg.size = Vector2(60, 10)
+	_wait_bar_bg.color = Color(0, 0, 0, 0.5)
+	_wait_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(_wait_bar_bg)
+	_wait_bar = ColorRect.new()
 	_wait_bar.position = Vector2(300, 40)
-	_wait_bar.size = Vector2(60, 10)
-	_wait_bar.min_value = 0
-	_wait_bar.max_value = GameState.wait_threshold_ms()
-	_wait_bar.value = 0
-	_wait_bar.show_percentage = false
+	_wait_bar.size = Vector2(0, 10)
+	_wait_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_wait_bar_ready(false)
 	_layer.add_child(_wait_bar)
 
@@ -551,9 +554,7 @@ func _preview_move(tag: String) -> void:
 func _set_wait_bar_ready(ready: bool) -> void:
 	if _wait_bar == null:
 		return
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
-	_wait_bar.add_theme_stylebox_override("fill", fill)
+	_wait_bar.color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
 
 func _build_dialogue_box() -> void:
 	var bub := Art.tex("res://assets/ui/bubble_9slice.png")
@@ -613,19 +614,23 @@ func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Lab
 		add_child(l)
 	return l
 
-func _make_meter(name_txt: String, y: float, fill: Color) -> ProgressBar:
+## Drawn as ColorRects (like the gym/lecture bars) so the 12px height is exactly
+## controlled; ProgressBar inflates to its theme minimum and buried the Need line.
+func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
 	_make_label(name_txt, Vector2(10, y - 2), 8, Color(0.85, 0.88, 0.95))
-	var bar := ProgressBar.new()
-	bar.position = Vector2(86, y)
-	bar.size = Vector2(150, 12)
-	bar.min_value = 0
-	bar.max_value = 100
-	bar.show_percentage = false
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = fill
-	bar.add_theme_stylebox_override("fill", sb)
-	_layer.add_child(bar)
-	return bar
+	var bg := ColorRect.new()
+	bg.position = Vector2(86, y)
+	bg.size = Vector2(150, 12)
+	bg.color = Color(0, 0, 0, 0.5)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(bg)
+	var fr := ColorRect.new()
+	fr.position = Vector2(86, y)
+	fr.size = Vector2(150, 12)
+	fr.color = fill
+	fr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(fr)
+	return fr
 
 # --- turn loop ---------------------------------------------------------------
 
@@ -641,7 +646,8 @@ func _process(_delta: float) -> void:
 		return
 	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
 	var threshold := float(GameState.wait_threshold_ms())
-	_wait_bar.value = min(elapsed, threshold)
+	if _wait_bar != null:
+		_wait_bar.size = Vector2(60.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 10.0 * UI_SCALE)
 	var ready := elapsed >= threshold
 	_set_wait_bar_ready(ready)
 	if _wait_label != null:
@@ -703,7 +709,7 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 			"understanding": understanding,
 			"engagement": engagement / 100.0,
 			"trust_in_teacher": rapport / 100.0,
-			"misconception_resolved": understanding >= 0.8,
+			"misconception_resolved": understanding >= _win_understanding,
 			"turns_elapsed": _turns,
 		},
 		"teacher_move": teacher_move,
@@ -834,6 +840,10 @@ func _check_win(targets: bool, tags: Array) -> bool:
 	for t in tags:
 		if t in win_moves:
 			return true
+	# Degraded judge response: backend marked the move on-target and the
+	# understanding gate is crossed, but omitted move_tags. Treat as a win.
+	if tags.is_empty():
+		return true
 	return false
 
 func _win(route: String = "reasoning") -> void:
@@ -1015,7 +1025,9 @@ func _short_practice_target() -> String:
 	var target := Game.evidence_practice_target(false)
 	if target.begins_with("Practice: "):
 		target = target.substr(10)
-	return "Practice: " + target.replace(" 40% -> ", " -> ")
+	var re := RegEx.new()
+	re.compile(" \\d+% -> ")
+	return "Practice: " + re.sub(target, " -> ")
 
 func _show_continue_button() -> void:
 	_continue_btn = Button.new()
@@ -1115,10 +1127,16 @@ func _return_to_overworld_after(seconds: float) -> void:
 # --- view helpers ------------------------------------------------------------
 
 func _refresh_meters() -> void:
-	_bars["engagement"].value = engagement
-	_bars["order"].value = order
-	_bars["rapport"].value = rapport
-	_bars["composure"].value = composure
+	_set_meter_fill("engagement", engagement / 100.0)
+	_set_meter_fill("order", order / 100.0)
+	_set_meter_fill("rapport", rapport / 100.0)
+	_set_meter_fill("composure", composure / maxf(1.0, GameState.max_composure()))
+
+## Fill widths are set in post-scale_tree pixels (all callers run after _build_ui).
+func _set_meter_fill(key: String, frac: float) -> void:
+	var fill: ColorRect = _bars.get(key, null)
+	if fill != null:
+		fill.size = Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
 
 func _refresh_bond() -> void:
 	var b := GameState.bond(persona_id)
@@ -1291,3 +1309,20 @@ func _reveal_label(label: Label, txt: String, is_dialogue: bool) -> void:
 func _set_result(txt: String) -> void:
 	if _result != null:
 		_result.text = txt
+
+## Click anywhere that is not a button to finish the typewriter reveal instantly,
+## so impatient readers are never stuck watching text trickle in.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	var skipped := false
+	for tw in [_dialogue_tween, _coach_tween]:
+		if tw != null and tw.is_valid() and tw.is_running():
+			tw.kill()
+			skipped = true
+	if skipped:
+		if _dialogue != null:
+			_dialogue.visible_characters = -1
+		if _coach != null:
+			_coach.visible_characters = -1
+		get_viewport().set_input_as_handled()

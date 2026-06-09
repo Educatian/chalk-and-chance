@@ -100,7 +100,9 @@ func _process(_delta: float) -> void:
 		facing = dir
 		_start_walk()
 		_try_move(dir)
-	elif Input.is_action_just_pressed("ui_accept") or Input.is_key_pressed(KEY_SPACE):
+	elif Input.is_action_just_pressed("ui_accept"):
+		# ui_accept already covers Enter and Space; a raw is_key_pressed check here
+		# would re-trigger the interaction every frame while the key is held.
 		_try_interact()
 	else:
 		_go_idle()
@@ -152,6 +154,9 @@ func _try_move(dir: Vector2i) -> void:
 		"position": {"x": position.x, "y": position.y},
 	})
 	if bool(GameState.get_setting("reduced_motion", false)):
+		# Snap instead of tween, but keep the same per-tile cadence; without the
+		# cooldown the player crosses one tile per frame (~60 tiles/sec).
+		_moving = true
 		position = Vector2(target.x * tile, target.y * tile)
 		Telemetry.log_player_movement("step_end", {
 			"from": _tile_dict(from_tile),
@@ -159,6 +164,8 @@ func _try_move(dir: Vector2i) -> void:
 			"dir": _tile_dict(dir),
 			"position": {"x": position.x, "y": position.y},
 		})
+		await get_tree().create_timer(STEP_TIME).timeout
+		_moving = false
 		return
 	_moving = true
 	var tw := create_tween()

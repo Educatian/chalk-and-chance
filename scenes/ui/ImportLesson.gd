@@ -12,6 +12,8 @@ var _status: Label
 var _dialog: FileDialog
 var _http: HTTPRequest
 var _pending_text := ""
+var _gen_btn: Button
+var _genai_btn: Button
 
 func _ready() -> void:
 	_build()
@@ -64,12 +66,12 @@ func _build() -> void:
 	var x := 42.0
 	_make_btn("Use sample", x, by, bw, _on_sample); x += bw + gap
 	_make_btn("Load file", x, by, bw, _on_load); x += bw + gap
-	var gen := _make_btn("Generate (offline)", x, by, bw, _on_generate_offline); x += bw + gap
-	var genai := _make_btn("Generate with AI", x, by, bw, _on_generate_ai); x += bw + gap
+	_gen_btn = _make_btn("Generate (offline)", x, by, bw, _on_generate_offline); x += bw + gap
+	_genai_btn = _make_btn("Generate with AI", x, by, bw, _on_generate_ai); x += bw + gap
 	_make_btn("Back", x, by, bw, _on_back)
-	gen.add_theme_color_override("font_color", Color(0.2, 0.95, 0.4))
-	genai.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
-	gen.grab_focus()
+	_gen_btn.add_theme_color_override("font_color", Color(0.2, 0.95, 0.4))
+	_genai_btn.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
+	_gen_btn.grab_focus()
 
 	_dialog = FileDialog.new()
 	_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -127,6 +129,11 @@ func _on_generate_ai() -> void:
 		return
 	_pending_text = txt
 	_status.text = "Contacting AI backend..."
+	# Lock both generate paths while the request is in flight so a double-click
+	# cannot fire a second request (HTTPRequest would return ERR_BUSY and silently
+	# degrade to the offline conversion).
+	_gen_btn.disabled = true
+	_genai_btn.disabled = true
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	var err := _http.request(ENDPOINT, headers, HTTPClient.METHOD_POST, JSON.stringify({"plan_text": txt}))
 	if err != OK:
