@@ -145,6 +145,8 @@ func _ready() -> void:
 		var idx: int = int(entry.get("seat", 0))
 		if idx >= 0 and idx < _seats.size():
 			var tile: Vector2i = _seats[idx]
+			if occupied.has(tile):
+				continue  # duplicate/colliding seat in roster; skip to avoid orphaned, unscored sprite
 			occupied[tile] = true
 			_spawn_npc(tile, str(entry.get("id", "")), str(entry.get("name", "Student")))
 	# Restore each student's off-task level if resuming the period.
@@ -156,6 +158,12 @@ func _ready() -> void:
 	_add_banner()
 	_add_badge_strip()
 	_build_hud()
+	Telemetry.log_event({
+		"event": "classroom_start", "scenario_id": str(Game.current_scenario_id),
+		"title": _scenario_title, "format": _format, "attempt": _attempt,
+		"objectives": _objectives.size(), "students": _npcs.size(),
+		"composure": _composure, "resumed": Game.lesson_active(Game.current_scenario_id),
+	})
 
 func setup(_data: Dictionary) -> void:
 	pass
@@ -505,7 +513,7 @@ func _build_hud() -> void:
 	_disrupt_label = Label.new()
 	_disrupt_label.text = "Disruptions: 0"
 	_disrupt_label.position = Vector2(TILE + 4, 98)
-	_disrupt_label.add_theme_font_size_override("font_size", 12)
+	_disrupt_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_disrupt_label.add_theme_color_override("font_color", Color(0.97, 0.85, 0.6))
 	_disrupt_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_disrupt_label.add_theme_constant_override("outline_size", 5)
@@ -514,8 +522,8 @@ func _build_hud() -> void:
 
 	_equity_label = Label.new()
 	_equity_label.text = "Engaged: 0/0"
-	_equity_label.position = Vector2(TILE + 250, 112)
-	_equity_label.add_theme_font_size_override("font_size", 12)
+	_equity_label.position = Vector2(TILE + 4, 138)
+	_equity_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_equity_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.95))
 	_equity_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_equity_label.add_theme_constant_override("outline_size", 5)
@@ -526,7 +534,8 @@ func _build_hud() -> void:
 	_risk_label.text = "Room cue: settled"
 	_risk_label.position = Vector2(TILE + 4, 118)
 	_risk_label.size = Vector2(430, 20)
-	_risk_label.add_theme_font_size_override("font_size", 12)
+	_risk_label.clip_text = true
+	_risk_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_risk_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.96))
 	_risk_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_risk_label.add_theme_constant_override("outline_size", 5)
@@ -537,7 +546,7 @@ func _build_hud() -> void:
 	_objective_label.text = ""
 	_objective_label.position = Vector2(COLS * TILE - 300, 58)
 	_objective_label.size = Vector2(260, 90)
-	_objective_label.add_theme_font_size_override("font_size", 11)
+	_objective_label.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
 	_objective_label.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
 	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_objective_label.add_theme_constant_override("outline_size", 5)
@@ -549,7 +558,7 @@ func _build_hud() -> void:
 	_interact_label.text = ""
 	_interact_label.position = Vector2(TILE + 4, ROWS * TILE - 54)
 	_interact_label.size = Vector2(COLS * TILE - 2 * TILE, 20)
-	_interact_label.add_theme_font_size_override("font_size", 14)
+	_interact_label.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	_interact_label.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	_interact_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_interact_label.add_theme_constant_override("outline_size", 5)
@@ -598,9 +607,11 @@ func _build_hud() -> void:
 	_composure_fill.color = Color(0.90, 0.45, 0.55)
 	_composure_fill.z_index = 61
 	add_child(_composure_fill)
+	# Reflect current (possibly resumed/reduced) composure instead of always showing full.
+	_composure_fill.size = Vector2(156.0 * _composure / GameState.max_composure(), 10)
 
 func _process(delta: float) -> void:
-	if _player == null or _npcs.is_empty():
+	if _player == null:
 		return
 	if _lesson_over or input_locked:
 		return
@@ -619,81 +630,82 @@ func _process(delta: float) -> void:
 		_trigger_interrupt()
 		return
 
-	var ptile: Vector2i = _player.current_tile()
-	var facing_up: bool = _player.facing == Vector2i(0, -1)   # writing at the board, back to class
+	if not _npcs.is_empty():
+		var ptile: Vector2i = _player.current_tile()
+		var facing_up: bool = _player.facing == Vector2i(0, -1)   # writing at the board, back to class
 
-	var total := 0.0
-	var worst := 0.0
-	var worst_name := ""
-	for st in _npcs.keys():
-		var info: Dictionary = _npcs[st]
-		var ot: float = info.get("offtask", 0.0)
-		var dist: int = abs(ptile.x - st.x) + abs(ptile.y - st.y)
-		if dist <= PROX_TILES:
-			ot -= OFFTASK_RECOVER * delta            # proximity control
-		else:
-			var rise := _offtask_rise
-			if facing_up:
-				rise *= OFFTASK_AWAY_MULT            # not withit
+		var total := 0.0
+		var worst := 0.0
+		var worst_name := ""
+		for st in _npcs.keys():
+			var info: Dictionary = _npcs[st]
+			var ot: float = info.get("offtask", 0.0)
+			var dist: int = abs(ptile.x - st.x) + abs(ptile.y - st.y)
+			if dist <= PROX_TILES:
+				ot -= OFFTASK_RECOVER * delta            # proximity control
 			else:
-				ot -= WITHIT_RECOVER * delta         # scanning the class
-			ot += rise * delta
-		ot = clampf(ot, 0.0, 100.0)
-		if ot >= 100.0:
-			_disruptions += 1
-			if _disrupt_label != null:
-				_disrupt_label.text = "Disruptions: %d" % _disruptions
-			ot = 65.0                                # brief cooldown after a flare-up
-		info["offtask"] = ot
-		var fill: ColorRect = info.get("fill", null)
-		if fill != null:
-			fill.size = Vector2(30.0 * ot / 100.0, 5)
-			fill.color = Color(0.3, 0.8, 0.4).lerp(Color(0.9, 0.3, 0.25), ot / 100.0)
-		total += ot
-		if ot > worst:
-			worst = ot
-			worst_name = info.get("display_name", "")
+				var rise := _offtask_rise
+				if facing_up:
+					rise *= OFFTASK_AWAY_MULT            # not withit
+				else:
+					ot -= WITHIT_RECOVER * delta         # scanning the class
+				ot += rise * delta
+			ot = clampf(ot, 0.0, 100.0)
+			if ot >= 100.0:
+				_disruptions += 1
+				if _disrupt_label != null:
+					_disrupt_label.text = "Disruptions: %d" % _disruptions
+				ot = 65.0                                # brief cooldown after a flare-up
+			info["offtask"] = ot
+			var fill: ColorRect = info.get("fill", null)
+			if fill != null:
+				fill.size = Vector2(30.0 * ot / 100.0, 5)
+				fill.color = Color(0.3, 0.8, 0.4).lerp(Color(0.9, 0.3, 0.25), ot / 100.0)
+			total += ot
+			if ot > worst:
+				worst = ot
+				worst_name = info.get("display_name", "")
 
-	if _attention_fill != null:
-		var attention := 100.0 - total / float(_npcs.size())
-		_attention_fill.size = Vector2(216.0 * attention / 100.0, 12)
-		_attention_fill.color = Color(0.9, 0.3, 0.25).lerp(Color(0.30, 0.80, 0.40), attention / 100.0)
+		if _attention_fill != null:
+			var attention := 100.0 - total / float(_npcs.size())
+			_attention_fill.size = Vector2(216.0 * attention / 100.0, 12)
+			_attention_fill.color = Color(0.9, 0.3, 0.25).lerp(Color(0.30, 0.80, 0.40), attention / 100.0)
 
-	if _equity_label != null:
-		_equity_label.text = "Engaged: %d/%d" % [_engaged_count(), _npcs.size()]
+		if _equity_label != null:
+			_equity_label.text = "Engaged: %d/%d" % [_engaged_count(), _npcs.size()]
 
-	if _risk_label != null:
-		if worst >= 70.0:
-			_risk_label.text = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
-			_risk_label.add_theme_color_override("font_color", Color(0.98, 0.58, 0.46))
-		elif worst >= 45.0:
-			_risk_label.text = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
-			_risk_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.42))
-		else:
-			_risk_label.text = "Room cue: settled. Keep scanning and circulate."
-			_risk_label.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
+		if _risk_label != null:
+			if worst >= 70.0:
+				_risk_label.text = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
+				_risk_label.add_theme_color_override("font_color", Color(0.98, 0.58, 0.46))
+			elif worst >= 45.0:
+				_risk_label.text = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
+				_risk_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.42))
+			else:
+				_risk_label.text = "Room cue: settled. Keep scanning and circulate."
+				_risk_label.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 
-	var faced: Vector2i = ptile + _player.facing
-	if _interact_label != null:
-		var npc: Dictionary = npc_at(faced)
-		if not npc.is_empty():
-			_interact_label.text = "Press Z to talk to %s" % npc.get("display_name", "student")
-		else:
-			_interact_label.text = "Green bars = focused; red bars = drifting. Move closer to lower them."
+		var faced: Vector2i = ptile + _player.facing
+		if _interact_label != null:
+			var npc: Dictionary = npc_at(faced)
+			if not npc.is_empty():
+				_interact_label.text = "Press Z to talk to %s" % npc.get("display_name", "student")
+			else:
+				_interact_label.text = "Green bars = focused; red bars = drifting. Move closer to lower them."
 
-	if _objective_label != null:
-		var attention_now := 100.0 - total / float(_npcs.size())
-		_objective_label.text = _objectives_status(attention_now)
+		if _objective_label != null:
+			var attention_now := 100.0 - total / float(_npcs.size())
+			_objective_label.text = _objectives_status(attention_now)
 
-	if _coach_hint != null:
-		if facing_up and worst > 30.0:
-			_coach_hint.text = "Coach Vee: eyes on the room. Turning your back lets them drift."
-		elif worst >= 60.0:
-			_coach_hint.text = "Coach Vee: %s is drifting. Move closer (proximity) or scan the room." % worst_name
-		elif worst >= 35.0:
-			_coach_hint.text = "Coach Vee: a little restlessness building. Keep circulating."
-		else:
-			_coach_hint.text = "Coach Vee: room is settled. Circulate and scan as you teach."
+		if _coach_hint != null:
+			if facing_up and worst > 30.0:
+				_coach_hint.text = "Coach Vee: eyes on the room. Turning your back lets them drift."
+			elif worst >= 60.0:
+				_coach_hint.text = "Coach Vee: %s is drifting. Move closer (proximity) or scan the room." % worst_name
+			elif worst >= 35.0:
+				_coach_hint.text = "Coach Vee: a little restlessness building. Keep circulating."
+			else:
+				_coach_hint.text = "Coach Vee: room is settled. Circulate and scan as you teach."
 
 # --- interrupt events + lesson debrief ---------------------------------------
 
@@ -717,6 +729,14 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 		_composure_fill.size = Vector2(156.0 * _composure / GameState.max_composure(), 10)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
+	var ptile: Vector2i = _player.current_tile() if _player != null else Vector2i.ZERO
+	Telemetry.log_event({
+		"event": "interrupt_resolved", "scenario_id": str(Game.current_scenario_id),
+		"choice": str(opt.get("label", "")), "dcomp": float(opt.get("dcomp", 0.0)),
+		"dnoise": float(opt.get("dnoise", 0.0)), "ddis": int(opt.get("ddis", 0)),
+		"composure": _composure, "disruptions": _disruptions,
+		"player_tile": {"x": ptile.x, "y": ptile.y},
+	})
 	_close_overlay()
 	_next_interrupt = randf_range(INTERRUPT_MIN, INTERRUPT_MAX)
 	if _composure <= 0.0:
@@ -773,6 +793,16 @@ func _end_lesson() -> void:
 	if _attempt > 1:
 		summary += "\nReplay #%d: the room drifts faster each attempt." % _attempt
 	_pending_debrief = summary
+	Telemetry.log_event({
+		"event": "classroom_resolve", "scenario_id": str(Game.current_scenario_id),
+		"title": _scenario_title, "attempt": _attempt,
+		"stars": stars, "objectives": _objectives.size(), "objective_tags": objective_tags,
+		"attention": attention, "composure": _composure, "disruptions": _disruptions,
+		"engaged": _engaged_count(), "students": _npcs.size(),
+		"won": stars == _objectives.size() and stars > 0,
+	})
+	Telemetry.upload_competency()
+	Telemetry.flush()
 	var reflection_options := _reflection_options(attention)
 	Game.clear_lesson()
 	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
@@ -783,6 +813,10 @@ func _on_reflect(opt: Dictionary) -> void:
 		"scenario": Game.current_scenario_id,
 		"prompt": "what_stays_with_you",
 		"choice": str(opt.get("_reflect", "")),
+	})
+	Telemetry.log_event({
+		"event": "reflection", "scenario_id": str(Game.current_scenario_id),
+		"prompt": "what_stays_with_you", "choice": str(opt.get("_reflect", "")),
 	})
 	_close_overlay()
 	_show_overlay("REVIEW 2/2\n\n" + _pending_debrief, [

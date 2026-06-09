@@ -58,6 +58,29 @@ func post_authed(path: String, body: Dictionary, cb: Callable = Callable()) -> v
 		if cb.is_valid():
 			cb.call(ok, data))
 
+## Unload-safe authenticated POST for telemetry that MUST survive a tab close.
+## On web we use fetch(keepalive:true) — unlike a normal HTTPRequest, the browser
+## guarantees delivery even if the page is unloading right after the call. Off web
+## (desktop/headless) there is no unload race, so fall back to the normal async POST.
+func beacon(path: String, body: Dictionary) -> bool:
+	if not signed_in():
+		return false
+	if OS.has_feature("web"):
+		var js := """
+		(function(url, token, payload){
+		  try {
+		    fetch(url, {method:'POST', keepalive:true,
+		      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+		      body: payload});
+		    return true;
+		  } catch (e) { return false; }
+		})(%s, %s, %s);
+		""" % [JSON.stringify(api_base + path), JSON.stringify(token), JSON.stringify(JSON.stringify(body))]
+		JavaScriptBridge.eval(js, true)
+		return true
+	post_authed(path, body)
+	return true
+
 func get_authed(path: String, cb: Callable = Callable()) -> void:
 	if not signed_in():
 		return

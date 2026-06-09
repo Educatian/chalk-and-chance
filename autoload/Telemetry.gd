@@ -13,6 +13,8 @@ var capture_mouse_motion: bool = true
 var _last_button_scan_ms := 0
 var _last_mouse_motion_ms := 0
 var _last_mouse_pos := Vector2.INF
+var _last_flush_ms := 0
+const AUTO_FLUSH_MS := 12000  ## push buffered events to the cloud at least this often
 
 func _ready() -> void:
 	session_id = "sess_%d_%d" % [int(Time.get_unix_time_from_system()), (Time.get_ticks_usec() % 100000)]
@@ -25,12 +27,36 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec()
+	# Time-based flush so a player who acts a little and then idles/leaves still
+	# lands their events in the cloud, even if the buffer never reaches the size gate.
+	if not _buffer.is_empty() and now - _last_flush_ms >= AUTO_FLUSH_MS:
+		_last_flush_ms = now
+		flush()
 	if now - _last_button_scan_ms < 500:
 		return
 	_last_button_scan_ms = now
 	var root := get_tree().root
 	if root != null:
 		_scan_buttons(root)
+
+## Tab close / app background / quit: get whatever is buffered to the cloud NOW,
+## before the page can unload. On web this uses a keepalive fetch that survives unload.
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_WINDOW_FOCUS_OUT, \
+		NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED, \
+		NOTIFICATION_EXIT_TREE, NOTIFICATION_CRASH:
+			flush_sync()
+
+## Best-effort synchronous flush: hand the entire buffer to the unload-safe beacon.
+## We clear locally because the keepalive request is fire-and-forget (no callback on unload).
+func flush_sync() -> void:
+	if _f != null:
+		_f.flush()
+	if not Auth.signed_in() or _buffer.is_empty():
+		return
+	if Auth.beacon("/telemetry", {"events": _buffer.duplicate()}):
+		_buffer.clear()
 
 func _input(event: InputEvent) -> void:
 	if not capture_raw_input:
@@ -119,6 +145,8 @@ func log_event(d: Dictionary) -> void:
 	_write(d)
 	if Auth.signed_in():
 		_buffer.append(d)
+		if _buffer.size() > 256:
+			_buffer = _buffer.slice(_buffer.size() - 256)
 		if _buffer.size() >= 8:
 			flush()
 
@@ -167,6 +195,7 @@ func flush() -> void:
 		return
 	var payload := _buffer.duplicate()
 	_flush_in_flight = true
+	_last_flush_ms = Time.get_ticks_msec()
 	Auth.post_authed("/telemetry", {"events": payload}, func(ok: bool, _data):
 		_flush_in_flight = false
 		if not ok:
