@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 CREATE INDEX IF NOT EXISTS tel_user_idx ON telemetry_events(user_id);
 CREATE INDEX IF NOT EXISTS tel_sess_idx ON telemetry_events(session_id);
 
+-- Anonymous / demo (not-logged-in) play. No FK to learners so public demo sessions are
+-- minable. anon_id is a stable per-browser id; event is the full JSON behavioral line.
+CREATE TABLE IF NOT EXISTS telemetry_anon_events (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  anon_id      TEXT NOT NULL,
+  session_id   TEXT NOT NULL,
+  construct_id TEXT,
+  event        TEXT NOT NULL,             -- JSON
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS tel_anon_idx ON telemetry_anon_events(anon_id);
+CREATE INDEX IF NOT EXISTS tel_anon_sess_idx ON telemetry_anon_events(session_id);
+
 -- Per-IP rate limit counters for the paid endpoints (/turn, /tts cost guard).
 CREATE TABLE IF NOT EXISTS rate_limits (
   k   TEXT PRIMARY KEY,

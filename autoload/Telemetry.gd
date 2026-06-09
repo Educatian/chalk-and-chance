@@ -15,15 +15,57 @@ var _last_mouse_motion_ms := 0
 var _last_mouse_pos := Vector2.INF
 var _last_flush_ms := 0
 const AUTO_FLUSH_MS := 12000  ## push buffered events to the cloud at least this often
+var anon_id: String = ""      ## stable per-browser id for un-logged-in (demo) play
+var _session_start_ms := 0
+var _last_heartbeat_ms := 0
+const HEARTBEAT_MS := 30000   ## periodic "still here" pulse so engagement/dwell is minable
+
+var _net := true   ## false under the headless driver so automated test runs never hit live D1
 
 func _ready() -> void:
+	_net = DisplayServer.get_name() != "headless"
 	session_id = "sess_%d_%d" % [int(Time.get_unix_time_from_system()), (Time.get_ticks_usec() % 100000)]
+	anon_id = _load_or_make_anon_id()
+	_session_start_ms = Time.get_ticks_msec()
 	DirAccess.make_dir_recursive_absolute("user://telemetry")
 	_path = "user://telemetry/%s.jsonl" % session_id
 	_f = FileAccess.open(_path, FileAccess.WRITE)
-	log_event({"event": "session_start", "engine": Engine.get_version_info().get("string", "")})
+	log_event({
+		"event": "session_start", "engine": Engine.get_version_info().get("string", ""),
+		"client": _client_context(),
+	})
 	set_process_input(true)
 	set_process(true)
+
+## A stable anonymous id persisted in user:// so repeat demo visits from the same browser
+## attribute to one anon learner (web: IndexedDB-backed user://).
+func _load_or_make_anon_id() -> String:
+	var p := "user://anon_id.txt"
+	if FileAccess.file_exists(p):
+		var rf := FileAccess.open(p, FileAccess.READ)
+		if rf != null:
+			var s := rf.get_as_text().strip_edges()
+			rf.close()
+			if s != "":
+				return s
+	var made := "a_%d_%d" % [int(Time.get_unix_time_from_system()), (Time.get_ticks_usec() % 1000000)]
+	var wf := FileAccess.open(p, FileAccess.WRITE)
+	if wf != null:
+		wf.store_string(made)
+		wf.close()
+	return made
+
+## Where the player is connecting from + their setup (web only; server adds CF geo).
+func _client_context() -> Dictionary:
+	var ctx := {"platform": OS.get_name(), "locale": OS.get_locale()}
+	if OS.has_feature("web"):
+		ctx["url"] = str(JavaScriptBridge.eval("window.location.href", true))
+		ctx["referrer"] = str(JavaScriptBridge.eval("document.referrer", true))
+		ctx["ua"] = str(JavaScriptBridge.eval("navigator.userAgent", true))
+		ctx["lang"] = str(JavaScriptBridge.eval("navigator.language", true))
+		ctx["screen"] = str(JavaScriptBridge.eval("window.screen.width + 'x' + window.screen.height", true))
+		ctx["tz"] = str(JavaScriptBridge.eval("Intl.DateTimeFormat().resolvedOptions().timeZone", true))
+	return ctx
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec()
@@ -32,6 +74,12 @@ func _process(_delta: float) -> void:
 	if not _buffer.is_empty() and now - _last_flush_ms >= AUTO_FLUSH_MS:
 		_last_flush_ms = now
 		flush()
+	# Engagement pulse: lets "how much / how long they played" be reconstructed even for a
+	# player who only wanders and never completes an encounter.
+	if now - _last_heartbeat_ms >= HEARTBEAT_MS:
+		_last_heartbeat_ms = now
+		if now - _session_start_ms > HEARTBEAT_MS - 1000:
+			log_event({"event": "heartbeat", "elapsed_s": (now - _session_start_ms) / 1000, "scene": _scene_name()})
 	if now - _last_button_scan_ms < 500:
 		return
 	_last_button_scan_ms = now
@@ -53,9 +101,14 @@ func _notification(what: int) -> void:
 func flush_sync() -> void:
 	if _f != null:
 		_f.flush()
-	if not Auth.signed_in() or _buffer.is_empty():
+	if not _net or not Auth.configured() or _buffer.is_empty():
 		return
-	if Auth.beacon("/telemetry", {"events": _buffer.duplicate()}):
+	var ok := false
+	if Auth.signed_in():
+		ok = Auth.beacon("/telemetry", {"events": _buffer.duplicate()})
+	else:
+		ok = Auth.beacon("/telemetry_anon", {"anon_id": anon_id, "events": _buffer.duplicate()}, false)
+	if ok:
 		_buffer.clear()
 
 func _input(event: InputEvent) -> void:
@@ -137,18 +190,22 @@ func log_event(d: Dictionary) -> void:
 	d["session_id"] = session_id
 	d["t_ms"] = Time.get_ticks_msec()
 	d["unix"] = Time.get_unix_time_from_system()
-	# Stamp the learner identity so the cloud row attributes to the right person.
+	# Stamp the learner identity so the cloud row attributes to the right person; for demo
+	# (not signed in) play we stamp the anonymous id instead so it is still attributable.
 	if Auth.signed_in():
 		d["user_id"] = Auth.user_id
 		d["learner"] = Auth.display_name
 		d["class_code"] = Auth.class_code
+	else:
+		d["anon_id"] = anon_id
 	_write(d)
-	if Auth.signed_in():
-		_buffer.append(d)
-		if _buffer.size() > 256:
-			_buffer = _buffer.slice(_buffer.size() - 256)
-		if _buffer.size() >= 8:
-			flush()
+	# Always buffer for cloud upload (signed-in OR anonymous demo). Buffering does not
+	# depend on Auth being loaded yet, so the very first session_start is never lost.
+	_buffer.append(d)
+	if _buffer.size() > 256:
+		_buffer = _buffer.slice(_buffer.size() - 256)
+	if _buffer.size() >= 8:
+		flush()
 
 func log_player_movement(kind: String, data: Dictionary) -> void:
 	data["event"] = "player_movement"
@@ -189,14 +246,15 @@ func _scene_name() -> String:
 func _vec2_dict(v: Vector2) -> Dictionary:
 	return {"x": v.x, "y": v.y}
 
-## Upload buffered events under the signed-in learner (no-op offline). Call at lesson end.
+## Upload buffered events to the cloud (no-op if the API is not provisioned). Routes to the
+## authed endpoint when signed in, otherwise to the anonymous demo endpoint. Call at lesson end.
 func flush() -> void:
-	if not Auth.signed_in() or _buffer.is_empty() or _flush_in_flight:
+	if not _net or not Auth.configured() or _buffer.is_empty() or _flush_in_flight:
 		return
 	var payload := _buffer.duplicate()
 	_flush_in_flight = true
 	_last_flush_ms = Time.get_ticks_msec()
-	Auth.post_authed("/telemetry", {"events": payload}, func(ok: bool, _data):
+	var on_done := func(ok: bool, _data):
 		_flush_in_flight = false
 		if not ok:
 			return
@@ -204,11 +262,15 @@ func flush() -> void:
 		for _i in range(sent_count):
 			_buffer.remove_at(0)
 		if _buffer.size() >= 8:
-			flush())
+			flush()
+	if Auth.signed_in():
+		Auth.post_authed("/telemetry", {"events": payload}, on_done)
+	else:
+		Auth.post_anon("/telemetry_anon", {"anon_id": anon_id, "events": payload}, on_done)
 
 ## Push the current ECD competency estimate to the learner's account.
 func upload_competency() -> void:
-	if not Auth.signed_in():
+	if not _net or not Auth.signed_in():
 		return
 	var skills: Array = []
 	for r in Competency.summary():

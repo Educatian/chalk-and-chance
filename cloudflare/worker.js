@@ -180,6 +180,51 @@ function safeTelemetryEvent(e) {
   return clean;
 }
 
+// Full-fidelity storage: preserve the WHOLE behavioral event (dialogue text, movement
+// tiles, input keys, classroom choices, reflections) — not just a whitelist — but bound
+// it so an unauthenticated client cannot write unbounded payloads to D1.
+function clampJson(v, depth) {
+  if (depth > 5) return null;
+  if (typeof v === "string") return v.slice(0, 600);
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "boolean" || v === null) return v;
+  if (Array.isArray(v)) return v.slice(0, 64).map((x) => clampJson(x, depth + 1));
+  if (typeof v === "object") {
+    const out = {};
+    let i = 0;
+    for (const [k, val] of Object.entries(v)) {
+      if (i++ >= 64) break;
+      out[String(k).slice(0, 48)] = clampJson(val, depth + 1);
+    }
+    return out;
+  }
+  return null;
+}
+function sanitizeEvent(e) {
+  const clean = clampJson(e && typeof e === "object" ? e : {}, 0) || {};
+  if (JSON.stringify(clean).length > 8000) {
+    return {
+      event: String(clean.event || "").slice(0, 96),
+      session_id: String(clean.session_id || "").slice(0, 96),
+      construct_id: clean.construct_id || null,
+      _truncated: true,
+    };
+  }
+  return clean;
+}
+// Server-trusted connection context: WHERE the player connects from (geo/referrer/agent).
+// Cloudflare populates req.cf; we keep country/city grain (not raw IP) for privacy.
+function connCtx(req) {
+  const cf = req.cf || {};
+  return {
+    country: cf.country || null, city: cf.city || null, region: cf.region || null,
+    colo: cf.colo || null, tz: cf.timezone || null, org: cf.asOrganization || null,
+    referer: (req.headers.get("Referer") || "").slice(0, 200),
+    ua: (req.headers.get("User-Agent") || "").slice(0, 200),
+    lang: (req.headers.get("Accept-Language") || "").slice(0, 60),
+  };
+}
+
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -208,6 +253,7 @@ export default {
       if (url.pathname === "/auth/login" && req.method === "POST") return await login(req, env);
       if (url.pathname === "/me" && req.method === "GET") return await me(req, env);
       if (url.pathname === "/telemetry" && req.method === "POST") return await telemetry(req, env);
+      if (url.pathname === "/telemetry_anon" && req.method === "POST") return await telemetryAnon(req, env);
       if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
       if (url.pathname === "/competency" && req.method === "GET") return await competencyRead(req, env);
       if (url.pathname === "/class_dashboard" && req.method === "GET") return await classDashboard(req, env);
@@ -296,11 +342,37 @@ async function telemetry(req, env) {
   if (!p) return json({ error: "unauthorized" }, 401);
   const { events } = await req.json();
   if (!Array.isArray(events)) return json({ error: "events[] required" }, 400);
+  const ctx = connCtx(req);
   const stmt = env.DB.prepare(
     "INSERT INTO telemetry_events (user_id,session_id,construct_id,event) VALUES (?,?,?,?)");
   const batch = events.slice(0, 500).map((e) => {
-    const clean = safeTelemetryEvent(e || {});
+    const clean = sanitizeEvent(e || {});
+    if (clean.event === "session_start" && !clean.conn) clean.conn = ctx;  // where they connect from
     return stmt.bind(p.sub, String(clean.session_id || ""), clean.construct_id || null, JSON.stringify(clean));
+  });
+  if (batch.length) await env.DB.batch(batch);
+  return json({ stored: batch.length });
+}
+
+// Anonymous / demo telemetry — no login. Events are namespaced under 'anon:<id>' so they
+// can never impersonate a real learner, rate-limited per IP, and full-fidelity like the
+// authed path. This is what makes public demo play minable.
+async function telemetryAnon(req, env) {
+  if (!(await rateLimit(env, clientIp(req), "tel_anon"))) return json({ error: "rate_limited" }, 429);
+  let body;
+  try { body = await req.json(); } catch (_e) { return json({ error: "bad json" }, 400); }
+  const events = body && Array.isArray(body.events) ? body.events : null;
+  if (!events) return json({ error: "events[] required" }, 400);
+  const anon = slug(body.anon_id) || "unknown";
+  const ctx = connCtx(req);
+  // Separate FK-free table so demo rows need no learners row (D1 enforces foreign keys).
+  const stmt = env.DB.prepare(
+    "INSERT INTO telemetry_anon_events (anon_id,session_id,construct_id,event) VALUES (?,?,?,?)");
+  const batch = events.slice(0, 500).map((e) => {
+    const clean = sanitizeEvent(e || {});
+    clean.anon = true;
+    if (clean.event === "session_start" && !clean.conn) clean.conn = ctx;  // where they connect from
+    return stmt.bind(anon, String(clean.session_id || ""), clean.construct_id || null, JSON.stringify(clean));
   });
   if (batch.length) await env.DB.batch(batch);
   return json({ stored: batch.length });

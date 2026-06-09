@@ -58,27 +58,44 @@ func post_authed(path: String, body: Dictionary, cb: Callable = Callable()) -> v
 		if cb.is_valid():
 			cb.call(ok, data))
 
-## Unload-safe authenticated POST for telemetry that MUST survive a tab close.
-## On web we use fetch(keepalive:true) — unlike a normal HTTPRequest, the browser
-## guarantees delivery even if the page is unloading right after the call. Off web
-## (desktop/headless) there is no unload race, so fall back to the normal async POST.
-func beacon(path: String, body: Dictionary) -> bool:
-	if not signed_in():
+## Unauthenticated POST (anonymous/demo telemetry). No Bearer header; only the namespaced
+## anon_id in the body identifies the session. No-op if the API is not provisioned.
+func post_anon(path: String, body: Dictionary, cb: Callable = Callable()) -> void:
+	if not configured():
+		return
+	_post(path, body, false, func(ok, data):
+		if cb.is_valid():
+			cb.call(ok, data))
+
+## Unload-safe POST for telemetry that MUST survive a tab close. On web we use
+## fetch(keepalive:true) — unlike a normal HTTPRequest, the browser guarantees delivery
+## even if the page is unloading right after the call. Off web (desktop/headless) there is
+## no unload race, so fall back to the normal async POST. authed=false omits the Bearer
+## header for the anonymous demo path.
+func beacon(path: String, body: Dictionary, authed := true) -> bool:
+	if authed and not signed_in():
+		return false
+	if not authed and not configured():
 		return false
 	if OS.has_feature("web"):
+		var headers_js := "{'Content-Type':'application/json','Authorization':'Bearer '+token}" if authed \
+			else "{'Content-Type':'application/json'}"
 		var js := """
 		(function(url, token, payload){
 		  try {
 		    fetch(url, {method:'POST', keepalive:true,
-		      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+		      headers:%s,
 		      body: payload});
 		    return true;
 		  } catch (e) { return false; }
 		})(%s, %s, %s);
-		""" % [JSON.stringify(api_base + path), JSON.stringify(token), JSON.stringify(JSON.stringify(body))]
+		""" % [headers_js, JSON.stringify(api_base + path), JSON.stringify(token), JSON.stringify(JSON.stringify(body))]
 		JavaScriptBridge.eval(js, true)
 		return true
-	post_authed(path, body)
+	if authed:
+		post_authed(path, body)
+	else:
+		post_anon(path, body)
 	return true
 
 func get_authed(path: String, cb: Callable = Callable()) -> void:
