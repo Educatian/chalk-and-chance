@@ -101,16 +101,16 @@ func _emit_stub(payload: Dictionary) -> void:
 		"elicit":
 			deltas = {"understanding": 0.0, "trust": 0.02, "engagement": 0.06, "order": 0.0, "composure": 0.02}
 			feedback_type = "process"
-			text = "Hmm... okay. Let me try to explain how I was thinking about it."
+			text = "Okay... let me walk you through how I was thinking about it."
 			coach = "Good eliciting move; you surfaced their reasoning instead of correcting it. Press on the crack."
 		"extend":
 			deltas = {"understanding": 0.0, "trust": 0.0, "engagement": 0.04, "order": 0.0, "composure": 0.0}
 			feedback_type = "process"
-			text = "Wait... when you put it that way, I'm not so sure my first answer was right."
+			text = "Hmm, now I'm not so sure about my first answer."
 			coach = "Nice press. They are reasoning it through themselves instead of being told."
 		"revoice":
 			deltas = {"understanding": 0.04, "trust": 0.10, "engagement": 0.05, "order": 0.0, "composure": 0.0}
-			text = "Yeah... that's what I meant."
+			text = "Yeah, that's what I meant."
 			coach = "Revoicing builds rapport and makes their thinking public. The move new teachers skip most."
 		"tell":
 			deltas = {"understanding": 0.0, "trust": -0.05, "engagement": -0.10, "order": 0.02, "composure": -0.05}
@@ -127,7 +127,7 @@ func _emit_stub(payload: Dictionary) -> void:
 		"wait":
 			if wait_ok:
 				deltas = {"understanding": 0.0, "trust": 0.04, "engagement": 0.06, "order": 0.0, "composure": 0.03}
-				text = "...oh. Actually, maybe I had it backwards."
+				text = "...oh, wait, maybe I had it backwards."
 				coach = "Wait time paid off. They filled the silence with their own reasoning. Three to five seconds is the sweet spot."
 			else:
 				deltas = {"understanding": 0.0, "trust": -0.05, "engagement": -0.02, "order": 0.0, "composure": -0.02}
@@ -149,7 +149,7 @@ func _emit_stub(payload: Dictionary) -> void:
 			"wait_time_ok": wait_ok,
 		},
 		"meter_deltas": deltas,
-		"student_utterance": {"speaker": "Noah", "text": text},
+		"student_utterance": {"speaker": str(payload.get("display_name", payload.get("active_persona_id", "Student"))), "text": text},
 		"coach_tip": coach,
 	}
 	reply_ready.emit(resp)

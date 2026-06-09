@@ -465,9 +465,12 @@ func load_game() -> void:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("GameState: save file unreadable, starting fresh")
 		return
-	badges = parsed.get("badges", [])
-	student_progress = parsed.get("student_progress", {})
-	attempts = parsed.get("attempts", {})
+	var _badges = parsed.get("badges", [])
+	badges = _badges if typeof(_badges) == TYPE_ARRAY else []
+	var _sp = parsed.get("student_progress", {})
+	student_progress = _sp if typeof(_sp) == TYPE_DICTIONARY else {}
+	var _att = parsed.get("attempts", {})
+	attempts = _att if typeof(_att) == TYPE_DICTIONARY else {}
 	settings = DEFAULT_SETTINGS.duplicate()
 	var loaded_settings = parsed.get("settings", {})
 	if typeof(loaded_settings) == TYPE_DICTIONARY:
@@ -475,8 +478,12 @@ func load_game() -> void:
 			settings[k] = loaded_settings[k]
 	teacher_xp = int(parsed.get("teacher_xp", 0))
 	teacher_level = maxi(1, int(parsed.get("teacher_level", 1)))
+	# Reconcile a stale/edited level against the XP curve (no-op on consistent saves)
+	while teacher_xp >= xp_for_level(teacher_level + 1):
+		teacher_level += 1
 	upgrade_points = maxi(0, int(parsed.get("upgrade_points", 0)))
-	leaderboard_records = parsed.get("leaderboard_records", [])
+	var _lr = parsed.get("leaderboard_records", [])
+	leaderboard_records = _lr if typeof(_lr) == TYPE_ARRAY else []
 	upgrades = DEFAULT_UPGRADES.duplicate()
 	var loaded_upgrades = parsed.get("upgrades", {})
 	if typeof(loaded_upgrades) == TYPE_DICTIONARY:
@@ -495,12 +502,17 @@ func load_game() -> void:
 		for id in loaded_equipped:
 			if Items.has_item(str(id)) and str(id) not in equipped_items:
 				equipped_items.append(str(id))
-	item_history = parsed.get("item_history", [])
-	item_cooldowns = parsed.get("item_cooldowns", {})
+	var _ih = parsed.get("item_history", [])
+	item_history = _ih if typeof(_ih) == TYPE_ARRAY else []
+	var _ic = parsed.get("item_cooldowns", {})
+	item_cooldowns = _ic if typeof(_ic) == TYPE_DICTIONARY else {}
 	teacher_profile_id = str(parsed.get("teacher_profile_id", "base"))
 	if not TEACHER_PROFILE_DEFS.has(teacher_profile_id):
 		teacher_profile_id = "base"
 	ensure_item_defaults()
-	relationships = parsed.get("relationships", {})
-	reflections = parsed.get("reflections", [])
-	course_baseline_classes = parsed.get("course_baseline_classes", [])
+	var _rel = parsed.get("relationships", {})
+	relationships = _rel if typeof(_rel) == TYPE_DICTIONARY else {}
+	var _ref = parsed.get("reflections", [])
+	reflections = _ref if typeof(_ref) == TYPE_ARRAY else []
+	var _cbc = parsed.get("course_baseline_classes", [])
+	course_baseline_classes = _cbc if typeof(_cbc) == TYPE_ARRAY else []
