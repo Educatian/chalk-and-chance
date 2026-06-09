@@ -161,7 +161,7 @@ func _ready() -> void:
 	box.add_child(_status)
 
 	Auth.login_ok.connect(_go_hub)
-	Auth.login_failed.connect(func(m): _set_status(m, true))
+	Auth.login_failed.connect(func(m): _set_status(m, true); if _btn != null: _btn.disabled = false)
 	if not Auth.configured():
 		_set_status("Offline mode is ready.", false)
 	elif course_code != "":
@@ -275,8 +275,6 @@ func _set_status(msg: String, err: bool) -> void:
 		_status.text = msg
 		_status.add_theme_color_override("font_color",
 			Color(0.95, 0.6, 0.55) if err else Color(0.7, 0.9, 0.7))
-	if _btn != null:
-		_btn.disabled = false
 
 func _go_hub() -> void:
 	SceneRouter.change_scene("res://scenes/ui/Hub.tscn")

@@ -1,7 +1,7 @@
 extends RefCounted
-## Seat-tile presets for the 30x17 classroom grid (board at the top, y=0). Each preset
-## returns an Array of Vector2i seat tiles; a desk is drawn one tile south of each seat, so
-## seat rows are spaced to leave that overhang clear. Arrangement is chosen per scenario
+## Seat-tile presets for the 24x13 classroom grid (board at the top, y=0). Each preset
+## returns an Array of Vector2i seat tiles; a desk is drawn on the seat tile itself (no
+## overhang). Arrangement is chosen per scenario
 ## from the seating literature (SEATING_ARRANGEMENTS.md): rows for independent/lecture,
 ## ushape for discussion, clusters for group work.
 
@@ -17,8 +17,8 @@ static func seats_for(arrangement: String) -> Array:
 			return _pairs()
 	return _rows()
 
-# Layouts fit a 24x13 grid (board at y=0; interior x 1..22, y 1..11). A desk is drawn one
-# tile south of each seat, so seat rows stay <= y 10.
+# Layouts fit a 24x13 grid (board at y=0; interior x 1..22, y 1..11). A desk is drawn on
+# the seat tile itself, so seats stay within y 1..11.
 
 static func _ushape() -> Array:
 	return [

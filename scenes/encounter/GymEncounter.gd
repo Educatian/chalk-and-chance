@@ -30,6 +30,8 @@ var _next_input_mode := "menu"
 var _next_free_text := ""
 var _last_turn_payload: Dictionary = {}
 var _last_targets := false
+var _last_wait_ok := false
+var _last_student: Dictionary = {}
 
 var _http: HTTPRequest
 var _layer: Control
@@ -81,6 +83,10 @@ func setup(data: Dictionary) -> void:
 	composure = GameState.max_composure()
 	_refresh_backdrop()
 	_load_students()
+	if students.is_empty():
+		push_warning("Gym scenario '%s' has an empty roster; returning to hub." % str(Game.current_scenario_id))
+		SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
+		return
 	_apply_adaptive_difficulty()
 	_build_ui()
 	_arm_turn()
@@ -539,6 +545,9 @@ func _on_move(tag: String) -> void:
 
 func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, student: Dictionary, input_mode: String, free_text: String) -> void:
 	if _http == null or _llm_busy:
+		# A move taken while a request is already in flight (or HTTP is unavailable)
+		# still needs to be recorded so the turn is not silently dropped.
+		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, student, {}, "")
 		return
 	_dialogue_tail.append({"speaker": "Teacher", "text": _move_gloss(tag, input_mode, free_text)})
 	_move_history.append({"turn": _turns, "tag": tag, "targets": targets, "construct": Competency.TAG_SKILL.get(tag, ""),
@@ -567,6 +576,8 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 	}
 	_last_turn_payload = payload
 	_last_targets = targets
+	_last_wait_ok = wait_ok
+	_last_student = student
 	var err := _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
@@ -582,24 +593,24 @@ func _on_llm_reply(result: int, code: int, _headers: PackedStringArray, body: Pa
 		return
 	var utter: Dictionary = resp.get("student_utterance", {})
 	var text := str(utter.get("text", ""))
-	var speaker := str(utter.get("speaker", students[sel].get("name", "Student") if sel >= 0 and sel < students.size() else "Student"))
+	var speaker := str(utter.get("speaker", _last_student.get("name", "Student")))
 	if text != "":
 		_dialogue.text = "%s: \"%s\"" % [speaker, text]
 		_dialogue_tail.append({"speaker": speaker, "text": text})
 	var tip := str(resp.get("coach_tip", ""))
 	if tip != "":
 		_coach.text = "Coach Vee: " + tip
-	if sel >= 0 and sel < students.size():
-		TTSClient.speak(str(students[sel].get("pid", "")), text, str(utter.get("emotion_shown", "thinking")))
+	if not _last_student.is_empty():
+		TTSClient.speak(str(_last_student.get("pid", "")), text, str(utter.get("emotion_shown", "thinking")))
 		var move: Dictionary = _last_turn_payload.get("teacher_move", {})
 		_log_gym_turn(
 			str(move.get("menu_tag", "")),
 			str(move.get("input_mode", "menu")),
 			str(move.get("text", "")),
 			int(move.get("wait_time_ms", 0)),
-			int(move.get("wait_time_ms", 0)) >= 3000,
+			_last_wait_ok,
 			_last_targets,
-			students[sel],
+			_last_student,
 			resp,
 			text
 		)

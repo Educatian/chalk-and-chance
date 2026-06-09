@@ -549,6 +549,7 @@ func _on_move(tag: String) -> void:
 			if gap > 28.0:
 				attention = clampf(attention - 8.0, 0.0, 100.0)
 				composure = clampf(composure - 3.0, 0.0, GameState.max_composure())
+				_result.text = "Progress +12  |  Attention %s" % _signed(int(round(attention - old_attention)))
 				_coach.text = "Coach Vee: you're getting ahead of them. Stop and check."
 				_react_many("confused", "question", 3)
 			elif consec_present >= 3:
@@ -558,6 +559,13 @@ func _on_move(tag: String) -> void:
 				_coach.text = "Coach Vee: good chunk. Check in before moving on."
 				_react_many("neutral", "dots", 2)
 		"ask":
+			if sel < 0 or sel >= students.size():
+				consec_present = 0
+				_result.text = "No student selected to call on."
+				_coach.text = "Coach Vee: there's no one highlighted, run a whole-class Check instead."
+				_refresh()
+				_arm_turn()
+				return
 			consec_present = 0
 			var old_comp := comprehension
 			var old_attn := attention
@@ -789,8 +797,10 @@ func _persona_id_for_speaker(speaker: String) -> String:
 	for s in students:
 		if str(s.get("name", "")).strip_edges().to_lower() == clean:
 			return str(s.get("pid", ""))
-	if sel >= 0 and sel < students.size() and clean.find(str(students[sel].get("name", "")).to_lower()) >= 0:
-		return str(students[sel].get("pid", ""))
+	if sel >= 0 and sel < students.size():
+		var sel_name := str(students[sel].get("name", "")).to_lower()
+		if sel_name != "" and clean.find(sel_name) >= 0:
+			return str(students[sel].get("pid", ""))
 	return ""
 
 func _react_many(affect: String, emote_key: String, count: int) -> void:

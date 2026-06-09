@@ -2,7 +2,9 @@ extends RefCounted
 
 static func class_dashboard_text(data: Dictionary) -> String:
 	var lines: Array = []
-	var activity: Dictionary = data.get("activity", {})
+	var activity = data.get("activity", {})
+	if typeof(activity) != TYPE_DICTIONARY:
+		activity = {}
 	lines.append("Class %s | learners %d | telemetry events %d" % [
 		str(data.get("class_code", "local")),
 		int(data.get("learners", 0)),
@@ -19,13 +21,25 @@ static func class_dashboard_text(data: Dictionary) -> String:
 	if last_event != "":
 		lines.append("Last D1 event: %s" % last_event)
 	lines.append("")
-	_add_skill_risk(lines, data.get("skills", []))
+	var skills = data.get("skills", [])
+	if typeof(skills) != TYPE_ARRAY:
+		skills = []
+	_add_skill_risk(lines, skills)
 	lines.append("")
-	_add_modes(lines, data.get("modes", []))
+	var modes = data.get("modes", [])
+	if typeof(modes) != TYPE_ARRAY:
+		modes = []
+	_add_modes(lines, modes)
 	lines.append("")
-	_add_learner_watchlist(lines, data.get("learners_detail", []))
+	var learners = data.get("learners_detail", [])
+	if typeof(learners) != TYPE_ARRAY:
+		learners = []
+	_add_learner_watchlist(lines, learners)
 	lines.append("")
-	_add_interventions(lines, data.get("interventions", []))
+	var interventions = data.get("interventions", [])
+	if typeof(interventions) != TYPE_ARRAY:
+		interventions = []
+	_add_interventions(lines, interventions)
 	return "\n".join(lines)
 
 static func local_class_dashboard_text(status: String) -> String:

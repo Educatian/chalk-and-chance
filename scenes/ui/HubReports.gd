@@ -156,11 +156,15 @@ static func cloud_log_text(status: String, data: Dictionary = {}) -> String:
 		lines.append("")
 		lines.append("D1 snapshot")
 		lines.append("Learners %d | telemetry events %d" % [int(data.get("learners", 0)), int(data.get("telemetry_events", 0))])
-		var skills: Array = data.get("skills", [])
+		var skills = data.get("skills", [])
+		if typeof(skills) != TYPE_ARRAY:
+			skills = []
 		if skills.is_empty():
 			lines.append("No class competency rows yet.")
 		else:
 			for i in range(mini(skills.size(), 4)):
+				if typeof(skills[i]) != TYPE_DICTIONARY:
+					continue
 				var row: Dictionary = skills[i]
 				lines.append("%s avg %d%% ev %d" % [
 					compact_skill_label(str(row.get("skill", ""))),

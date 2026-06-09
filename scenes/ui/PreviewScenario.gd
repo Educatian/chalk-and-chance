@@ -34,7 +34,7 @@ func _build_shell() -> void:
 	title.text = "REVIEW & ADJUST"
 	title.position = Vector2(40, 28)
 	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_size_override("font_size", 18 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
 
@@ -55,7 +55,7 @@ func _build_shell() -> void:
 	_summary.position = Vector2.ZERO
 	_summary.custom_minimum_size = Vector2(vp.x - 442, 0)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.add_theme_font_size_override("font_size", 16)
+	_summary.add_theme_font_size_override("font_size", 16 + GameState.ui_font_delta())
 	_summary.add_theme_color_override("font_color", Color(0.95, 0.96, 0.9))
 	_summary_scroll.add_child(_summary)
 
@@ -72,7 +72,7 @@ func _build_shell() -> void:
 	_story.position = Vector2(vp.x - 342, 266)
 	_story.size = Vector2(282, 112)
 	_story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_story.add_theme_font_size_override("font_size", 13)
+	_story.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
 	_story.add_theme_color_override("font_color", Color(0.82, 0.86, 0.78))
 	add_child(_story)
 
@@ -80,7 +80,7 @@ func _build_shell() -> void:
 	_validation.position = Vector2(62, vp.y - 126)
 	_validation.size = Vector2(vp.x - 124, 34)
 	_validation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_validation.add_theme_font_size_override("font_size", 13)
+	_validation.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
 	add_child(_validation)
 
 	var by := vp.y - 70
@@ -101,7 +101,7 @@ func _make_btn(label: String, x: float, y: float, w: float, cb: Callable) -> But
 	b.text = label
 	b.position = Vector2(x, y)
 	b.size = Vector2(w, 40)
-	b.add_theme_font_size_override("font_size", 14)
+	b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	b.pressed.connect(cb)
 	add_child(b)
 	return b
@@ -111,7 +111,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 	label.text = "Loadout"
 	label.position = pos
 	label.size = Vector2(86, 20)
-	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	label.add_theme_color_override("font_color", Color(0.78, 0.86, 0.96))
 	add_child(label)
 	var x := pos.x + 82.0
@@ -206,7 +206,7 @@ func _validate_scenario(scenario: Dictionary) -> Array:
 	return errors
 
 func _on_period_down() -> void:
-	_scenario["period_seconds"] = max(90, int(_scenario.get("period_seconds", 120)) - 15)
+	_scenario["period_seconds"] = max(60, int(_scenario.get("period_seconds", 120)) - 15)
 	_refresh()
 
 func _on_period_up() -> void:
@@ -229,7 +229,13 @@ func _on_play() -> void:
 	var id := LessonImport.save_custom(_scenario)
 	Game.current_scenario_id = id
 	Game.clear_lesson()
-	SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
+	var mode := str(_scenario.get("mode", "overworld"))
+	if mode == "gym":
+		SceneRouter.change_scene("res://scenes/encounter/GymEncounter.tscn", {"scenario": _scenario})
+	elif mode == "lecture":
+		SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": _scenario})
+	else:
+		SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
 
 func _on_back() -> void:
 	SceneRouter.change_scene("res://scenes/ui/ImportLesson.tscn")
