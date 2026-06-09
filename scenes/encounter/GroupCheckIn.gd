@@ -143,7 +143,9 @@ func _on_reply(result: int, code: int, _h: PackedStringArray, body: PackedByteAr
 	_move_history.append({"turn": _move_history.size() + 1, "tag": tag, "targets": bool(j.get("targets", false)), "construct": str(j.get("construct", "")),
 		"reaction": str(u.get("text", "")), "meter": "Understanding %d%% | Participation %d%%" % [int(round(understanding * 100.0)), int(round(participation * 100.0))]})
 	Telemetry.log_event({"event": "group_turn", "move": tag, "construct_id": str(j.get("construct", "")),
-		"targets": bool(j.get("targets", false)), "understanding": understanding, "participation": participation})
+		"targets": bool(j.get("targets", false)), "understanding": understanding, "participation": participation,
+		"student_text": str(u.get("text", "")), "speaker": str(u.get("speaker", "Group")),
+		"emotion_shown": str(u.get("emotion_shown", ""))})
 	if "current_scenario_id" in Game:
 		Competency.observe_group(tag, bool(j.get("targets", false)))
 	_refresh()
@@ -168,7 +170,8 @@ func _local_fallback(tag: String) -> void:
 	_move_history.append({"turn": _move_history.size() + 1, "tag": tag, "targets": productive, "construct": Competency.GROUP_TAG_SKILL.get(tag, ""),
 		"reaction": "(group keeps working)", "meter": "Understanding %d%% | Participation %d%%" % [int(round(understanding * 100.0)), int(round(participation * 100.0))]})
 	Telemetry.log_event({"event": "group_turn", "move": tag, "construct_id": Competency.GROUP_TAG_SKILL.get(tag, ""),
-		"targets": productive, "understanding": understanding, "participation": participation, "offline": true})
+		"targets": productive, "understanding": understanding, "participation": participation, "offline": true,
+		"student_text": "(group keeps working)"})
 	Competency.observe_group(tag, productive)
 	_refresh()
 	_check_win()

@@ -36,6 +36,17 @@ func _ready() -> void:
 	})
 	set_process_input(true)
 	set_process(true)
+	# Connect every Button to the press logger the instant it enters the tree, so a click in
+	# the first half-second after a scene loads still records its button label (the periodic
+	# scan is a backstop). Raw mouse events capture the click either way.
+	get_tree().node_added.connect(_on_node_added)
+
+func _on_node_added(n: Node) -> void:
+	if n is Button:
+		var b := n as Button
+		if not bool(b.get_meta("_telemetry_connected", false)):
+			b.set_meta("_telemetry_connected", true)
+			b.pressed.connect(log_ui_button.bind(b))
 
 ## A stable anonymous id persisted in user:// so repeat demo visits from the same browser
 ## attribute to one anon learner (web: IndexedDB-backed user://).
