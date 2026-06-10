@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Instructor Dashboard - Chalk &amp; Chance</title>
+<meta name="description" content="Instructor dashboard for Chalk & Chance: class activity, skill mastery, at-risk flags, and suggested interventions." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #070912;
+    --bg: #0e1326;
+    --panel: #151b31;
+    --panel2: #1c2440;
+    --line: #344061;
+    --text: #f4f1dc;
+    --muted: #b8c6df;
+    --green: #61c071;
+    --amber: #f3c14d;
+    --rose: #e66b8e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background:
+      linear-gradient(180deg, rgba(7,9,18,0.95), rgba(7,9,18,0.86)),
+      url("img/shot_hub.png") center / cover no-repeat fixed;
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  main { width: min(1060px, calc(100vw - 32px)); margin: 0 auto; padding: 28px 0 40px; }
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(21, 27, 49, 0.94);
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  h1, h2, .brand { font-family: "Press Start 2P", monospace; line-height: 1.35; letter-spacing: 0; }
+  .brand { color: var(--amber); font-size: 13px; margin: 0 0 14px; }
+  h1 { font-size: clamp(18px, 3.4vw, 26px); margin: 0 0 14px; }
+  h2 { font-size: 13px; color: var(--amber); margin: 0 0 14px; }
+  p { color: var(--muted); line-height: 1.55; margin: 0 0 14px; }
+  label { color: var(--amber); font-size: 13px; font-weight: 800; }
+  input, select {
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #0b1022;
+    color: var(--text);
+    padding: 0 12px;
+    font: inherit;
+  }
+  .field { display: grid; gap: 8px; margin-bottom: 14px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    color: var(--text);
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+  }
+  .btn.primary { background: var(--green); color: #07130a; border-color: #86dc94; }
+  .status { min-height: 22px; color: var(--rose); font-weight: 800; margin-top: 10px; }
+  .topbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .topbar .who { color: var(--muted); font-weight: 600; }
+  .topbar .who b { color: var(--text); }
+  .topbar .actions { display: flex; gap: 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel2);
+    padding: 14px;
+  }
+  .card .num { font-family: "Press Start 2P", monospace; font-size: 18px; color: var(--green); margin-bottom: 8px; word-break: break-word; }
+  .card .lbl { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--amber); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; }
+  tr.risk td { background: rgba(230, 107, 142, 0.12); }
+  tr.risk td:first-child { box-shadow: inset 3px 0 0 var(--rose); }
+  .bar { position: relative; width: 110px; height: 10px; border-radius: 5px; background: #0b1022; border: 1px solid var(--line); overflow: hidden; }
+  .bar i { position: absolute; inset: 0 auto 0 0; display: block; background: var(--green); }
+  .bar.low i { background: var(--rose); }
+  .bar.mid i { background: var(--amber); }
+  .probcell { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+  .pill.rose { background: rgba(230,107,142,0.18); color: var(--rose); border: 1px solid rgba(230,107,142,0.5); }
+  .pill.green { background: rgba(97,192,113,0.16); color: #aef0ba; border: 1px solid rgba(97,192,113,0.5); }
+  .callout {
+    border: 1px solid rgba(243, 193, 77, 0.5);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    background: rgba(243, 193, 77, 0.08);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .tablewrap { overflow-x: auto; }
+  .grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
+  .muted { color: var(--muted); }
+  .hidden { display: none; }
+  #login-panel { max-width: 460px; margin: 6vh auto 0; }
+  @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <!-- Login -->
+  <section class="panel" id="login-panel">
+    <p class="brand">CHALK &amp; CHANCE</p>
+    <h1>Instructor dashboard</h1>
+    <p>Sign in with your instructor account to view live class progress. Each course has its own sign-in; to switch courses, log out and sign in with the other class code.</p>
+    <div class="field">
+      <label for="class-code">Course</label>
+      <select id="class-code">
+        <option value="UA-CAT531-SUMMER26">CAT531 (UA-CAT531-SUMMER26)</option>
+        <option value="UA-CAT100-SUMMER26">CAT100 (UA-CAT100-SUMMER26)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" type="text" autocomplete="username" placeholder="Your name" />
+    </div>
+    <div class="field">
+      <label for="passcode">Passcode</label>
+      <input id="passcode" type="password" autocomplete="current-password" placeholder="Instructor passcode" />
+    </div>
+    <button class="btn primary" id="login-btn" type="button">Sign in</button>
+    <div class="status" id="login-status" role="status"></div>
+  </section>
+
+  <!-- Dashboard -->
+  <div id="dash" class="hidden">
+    <section class="panel topbar">
+      <div>
+        <p class="brand" style="margin:0 0 6px;">CHALK &amp; CHANCE</p>
+        <div class="who">Instructor dashboard &middot; <b id="who-class"></b> &middot; signed in as <b id="who-name"></b></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="refresh-btn" type="button">Refresh</button>
+        <button class="btn" id="logout-btn" type="button">Log out</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Class summary</h2>
+      <div class="cards" id="cards"></div>
+      <div class="status" id="dash-status" role="status"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Skill mastery</h2>
+      <p class="muted" style="font-size:13px;">Rows with at-risk learners (prob &lt; 0.45) are highlighted. Bars show class average mastery probability.</p>
+      <div class="tablewrap">
+        <table id="skills-table">
+          <thead><tr><th>Skill</th><th>Avg mastery</th><th>Range</th><th>Learners</th><th>Evidence</th><th>At risk</th><th>Ready</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="panel">
+        <h2>Learners</h2>
+        <div class="tablewrap">
+          <table id="learners-table">
+            <thead><tr><th>Learner</th><th>Avg mastery</th><th>Weakest skill</th><th>Events</th><th>Sessions</th><th>Last active</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+      <div>
+        <section class="panel">
+          <h2>Suggested interventions</h2>
+          <div id="interventions"></div>
+        </section>
+        <section class="panel">
+          <h2>Practice modes</h2>
+          <div class="tablewrap">
+            <table id="modes-table">
+              <thead><tr><th>Mode</th><th>Events</th><th>Sessions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+  const API_URL = "https://chalk-and-chance-api.jewoong-moon.workers.dev";
+  const STORE_KEY = "cc_instructor_session";
+
+  const $ = (id) => document.getElementById(id);
+  const loginPanel = $("login-panel");
+  const dash = $("dash");
+
+  function getSession() {
+    try { return JSON.parse(sessionStorage.getItem(STORE_KEY) || "null"); }
+    catch { return null; }
+  }
+  function setSession(s) { sessionStorage.setItem(STORE_KEY, JSON.stringify(s)); }
+  function clearSession() { sessionStorage.removeItem(STORE_KEY); }
+
+  function showLogin(message) {
+    dash.classList.add("hidden");
+    loginPanel.classList.remove("hidden");
+    $("login-status").textContent = message || "";
+  }
+  function showDash(session) {
+    loginPanel.classList.add("hidden");
+    dash.classList.remove("hidden");
+    $("who-class").textContent = session.class_code;
+    $("who-name").textContent = session.display_name;
+  }
+
+  function fmtPct(x) { return Math.round(Number(x || 0) * 100) + "%"; }
+  function fmtTime(s) {
+    if (!s) return "-";
+    const d = new Date(String(s).replace(" ", "T") + (String(s).includes("Z") ? "" : "Z"));
+    if (Number.isNaN(d.getTime())) return s;
+    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function probBar(prob) {
+    const pct = Math.max(0, Math.min(100, Math.round(Number(prob || 0) * 100)));
+    const tier = pct < 45 ? "low" : (pct < 70 ? "mid" : "");
+    return '<span class="probcell"><span class="bar ' + tier + '"><i style="width:' + pct + '%"></i></span>' + pct + "%</span>";
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function renderCards(data) {
+    const a = data.activity || {};
+    const cards = [
+      [data.learners, "Learners"],
+      [a.sessions, "Sessions"],
+      [fmtPct(a.completion_rate), "Completion rate"],
+      [a.active_24h, "Active (24h)"],
+      [data.telemetry_events, "Telemetry events"],
+      [fmtTime(a.last_event_at), "Last event"],
+    ];
+    $("cards").innerHTML = cards.map(([num, lbl]) =>
+      '<div class="card"><div class="num">' + esc(num ?? 0) + '</div><div class="lbl">' + esc(lbl) + "</div></div>"
+    ).join("");
+  }
+
+  function renderSkills(skills) {
+    const tbody = $("skills-table").querySelector("tbody");
+    if (!skills.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="muted">No competency evidence yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = skills.map((s) => {
+      const risk = Number(s.at_risk || 0) > 0;
+      return '<tr class="' + (risk ? "risk" : "") + '">' +
+        "<td><b>" + esc(s.skill) + "</b></td>" +
+        "<td>" + probBar(s.avg_prob) + "</td>" +
+        "<td>" + fmtPct(s.min_prob) + " - " + fmtPct(s.max_prob) + "</td>" +
+        "<td>" + esc(s.learners) + "</td>" +
+        "<td>" + esc(s.evidence) + "</td>" +
+        "<td>" + (risk ? '<span class="pill rose">' + esc(s.at_risk) + " at risk</span>" : '<span class="muted">0</span>') + "</td>" +
+        "<td>" + (Number(s.ready || 0) > 0 ? '<span class="pill green">' + esc(s.ready) + " ready</span>" : '<span class="muted">0</span>') + "</td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function renderLearners(rows) {
+    const tbody = $("learners-table").querySelector("tbody");
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="muted">No learners enrolled yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map((r) => {
+      const risk = Number(r.avg_prob || 0.5) < 0.45 && Number(r.evidence || 0) > 0;
+      return '<tr class="' + (risk ? "risk" : "") + '">' +
+        "<td><b>" + esc(r.display_name) + "</b></td>" +
+        "<td>" + probBar(r.avg_prob) + "</td>" +
+        "<td>" + esc(r.weakest_skill || "-") + "</td>" +
+        "<td>" + esc(r.events) + "</td>" +
+        "<td>" + esc(r.sessions) + "</td>" +
+        "<td>" + esc(fmtTime(r.last_active)) + "</td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function renderModes(modes) {
+    const tbody = $("modes-table").querySelector("tbody");
+    if (!modes.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="muted">No telemetry yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = modes.map((m) =>
+      "<tr><td><b>" + esc(m.mode) + "</b></td><td>" + esc(m.events) + "</td><td>" + esc(m.sessions) + "</td></tr>"
+    ).join("");
+  }
+
+  function renderInterventions(items) {
+    $("interventions").innerHTML = (items && items.length)
+      ? items.map((t) => '<div class="callout">' + esc(t) + "</div>").join("")
+      : '<p class="muted">No suggestions yet.</p>';
+  }
+
+  async function loadDashboard() {
+    const session = getSession();
+    if (!session || !session.token) { showLogin(); return; }
+    showDash(session);
+    $("dash-status").textContent = "";
+    $("refresh-btn").disabled = true;
+    try {
+      const res = await fetch(API_URL + "/class_dashboard", {
+        headers: { Authorization: "Bearer " + session.token },
+      });
+      if (res.status === 401) {
+        clearSession();
+        showLogin("Session expired. Please sign in again.");
+        return;
+      }
+      if (res.status === 403) {
+        clearSession();
+        showLogin("This account is not an instructor for that course.");
+        return;
+      }
+      if (!res.ok) {
+        $("dash-status").textContent = "Could not load dashboard (HTTP " + res.status + "). Try refresh.";
+        return;
+      }
+      const data = await res.json();
+      $("who-class").textContent = data.class_code || session.class_code;
+      renderCards(data);
+      renderSkills(data.skills || []);
+      renderLearners(data.learners_detail || []);
+      renderModes(data.modes || []);
+      renderInterventions(data.interventions || []);
+    } catch (err) {
+      $("dash-status").textContent = "Could not reach the class API. Check your connection and refresh.";
+    } finally {
+      $("refresh-btn").disabled = false;
+    }
+  }
+
+  async function doLogin() {
+    const class_code = $("class-code").value;
+    const name = $("name").value.trim();
+    const password = $("passcode").value;
+    const status = $("login-status");
+    if (!name || !password) {
+      status.textContent = "Name and passcode are required.";
+      return;
+    }
+    status.textContent = "Signing in...";
+    $("login-btn").disabled = true;
+    try {
+      const res = await fetch(API_URL + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ class_code, name, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        status.textContent = data.error === "wrong passcode" || data.error === "wrong password"
+          ? "Passcode not accepted." : ("Sign-in failed: " + (data.error || "HTTP " + res.status));
+        return;
+      }
+      if (data.role !== "instructor") {
+        status.textContent = "Signed in, but this account is not an instructor. Ask the course owner to grant instructor access.";
+        return;
+      }
+      setSession({ token: data.token, class_code: data.class_code, display_name: data.display_name });
+      $("passcode").value = "";
+      status.textContent = "";
+      loadDashboard();
+    } catch (err) {
+      status.textContent = "Could not reach the sign-in service.";
+    } finally {
+      $("login-btn").disabled = false;
+    }
+  }
+
+  $("login-btn").addEventListener("click", doLogin);
+  $("passcode").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+  $("name").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+  $("refresh-btn").addEventListener("click", loadDashboard);
+  $("logout-btn").addEventListener("click", () => { clearSession(); showLogin("Signed out."); });
+
+  loadDashboard();
+</script>
+</body>
+</html>
