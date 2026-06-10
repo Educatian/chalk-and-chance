@@ -118,9 +118,10 @@
     <section id="access">
       <p class="eyebrow">Access paths</p>
       <h3>Choose the right doorway before playing</h3>
-      <p class="sub">The site now has two player-facing entry points. CAT531 students should use the course access page; public visitors should use the demo gate.</p>
+      <p class="sub">The site has course access pages per class plus a public demo gate. CAT531 and CAT100 students should use their own course page; public visitors should use the demo gate.</p>
       <div class="feature-grid">
         <div class="feature"><b>CAT531 full access</b><p>Use <a href="cat531.html">cat531.html</a>. It opens the live build with UA-CAT531-SUMMER26 preloaded so students enter only their name and the one shared course passcode.</p></div>
+        <div class="feature"><b>CAT100 full access</b><p>Use <a href="cat100.html">cat100.html</a>. Same setup as CAT531 with UA-CAT100-SUMMER26 preloaded, so CAT100 progress and logs stay separate by course.</p></div>
         <div class="feature"><b>Public taste demo</b><p>Use <a href="demo.html">demo.html</a>. It opens the safe demo with public_demo=1, deterministic responses, and voice off.</p></div>
         <div class="feature"><b>One shared passcode</b><p>The whole class uses the same course passcode. Enter it the first time to join, and again any time to continue your own saved progress. There is no separate per-student password to remember.</p></div>
         <div class="feature"><b>Optional student voice</b><p>The same course passcode also unlocks student voice through a short-lived server token, so the page never stores a passcode.</p></div>
@@ -218,9 +219,10 @@
     <section id="faq">
       <p class="eyebrow">FAQ</p>
       <h3>Common beginner questions</h3>
-      <details open><summary>Do I need a class code?</summary><p>No for public exploration: use the demo gate or guest play first. Yes for assigned course progress: CAT531 students should use the CAT531 page so the class code is preloaded.</p></details>
+      <details open><summary>Do I need a class code?</summary><p>No for public exploration: use the demo gate or guest play first. Yes for assigned course progress: CAT531 students use the CAT531 page and CAT100 students use the CAT100 page, so the right class code is preloaded.</p></details>
       <details><summary>What is different about the CAT531 page?</summary><p>It opens the full live build with UA-CAT531-SUMMER26 already loaded. The whole class shares one course passcode: enter it with your name to join, and re-enter it any time to continue your own saved progress, so there is no separate per-student password to remember. First-time CAT531 sign-in starts from a clean baseline. The same passcode also unlocks optional student voice through a server-issued token.</p></details>
-      <details><summary>Where do I get the passcode?</summary><p>Your instructor shares the CAT531 course passcode with the class. It is not printed on this public guide. The same code is used for joining, continuing, and unlocking optional voice.</p></details>
+      <details><summary>What about the CAT100 page?</summary><p>It works exactly the same way as the CAT531 page, with UA-CAT100-SUMMER26 preloaded instead, so each course keeps its own accounts, progress, and logs.</p></details>
+      <details><summary>Where do I get the passcode?</summary><p>Your instructor shares the course passcode with the class. It is not printed on this public guide. The same code is used for joining, continuing, and unlocking optional voice.</p></details>
       <details><summary>Why is voice sometimes off?</summary><p>The public demo disables voice to prevent paid API and ElevenLabs overuse. Voice-enabled sessions use the shared course passcode gate, which returns a short-lived token.</p></details>
       <details><summary>Am I supposed to win every encounter?</summary><p>No. The game is designed for rehearsal. A miss is useful when it tells you which teaching signal you ignored or misunderstood.</p></details>
       <details><summary>How do I know which button to choose?</summary><p>Start by reading the student need. If the student is confused, elicit or revoice. If the student needs time, wait. If the room is drifting, redirect. If the student needs connection, connect.</p></details>

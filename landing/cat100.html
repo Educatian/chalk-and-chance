@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CAT100 Full Access - Chalk &amp; Chance</title>
+<meta name="description" content="CAT100 student access page for the full Chalk & Chance teacher-rehearsal build with live AI practice, class progress, and optional voice access." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://chalk-and-chance.pages.dev/cat100.html" />
+<meta property="og:title" content="CAT100 Full Access - Chalk &amp; Chance" />
+<meta property="og:description" content="Open the full Chalk & Chance build for CAT100 with the course code preloaded and all live practice features available." />
+<meta property="og:image" content="https://chalk-and-chance.pages.dev/img/social-card.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Chalk & Chance teacher simulation game preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="CAT100 Full Access - Chalk &amp; Chance" />
+<meta name="twitter:description" content="Open the full Chalk & Chance build for CAT100 with the course code preloaded and all live practice features available." />
+<meta name="twitter:image" content="https://chalk-and-chance.pages.dev/img/social-card.png" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #070912;
+    --bg: #0e1326;
+    --panel: #151b31;
+    --panel2: #1c2440;
+    --line: #344061;
+    --text: #f4f1dc;
+    --muted: #b8c6df;
+    --green: #61c071;
+    --amber: #f3c14d;
+    --rose: #e66b8e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(90deg, rgba(7,9,18,0.94), rgba(7,9,18,0.58)),
+      url("img/shot_hub.png") center / cover no-repeat;
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  main {
+    width: min(960px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 0.92fr 1.08fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .panel, .shot {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(21, 27, 49, 0.94);
+    overflow: hidden;
+  }
+  .panel { padding: 24px; }
+  .shot {
+    display: grid;
+    place-items: center;
+    background: #0b1022;
+  }
+  .shot img {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  h1, .brand { font-family: "Press Start 2P", monospace; line-height: 1.35; letter-spacing: 0; }
+  .brand { color: var(--amber); font-size: 13px; margin: 0 0 16px; }
+  h1 { font-size: clamp(22px, 4vw, 34px); margin: 0 0 16px; }
+  p { color: var(--muted); line-height: 1.55; margin: 0 0 16px; }
+  .course {
+    display: inline-flex;
+    margin: 0 0 18px;
+    padding: 8px 10px;
+    border: 1px solid rgba(97, 192, 113, 0.58);
+    border-radius: 8px;
+    background: rgba(97, 192, 113, 0.14);
+    color: #dff7df;
+    font-weight: 800;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    color: var(--text);
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--green); color: #07130a; border-color: #86dc94; }
+  .field { display: grid; gap: 8px; margin-top: 18px; }
+  label { color: var(--amber); font-size: 13px; font-weight: 800; }
+  input {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #0b1022;
+    color: var(--text);
+    padding: 0 12px;
+    font: inherit;
+  }
+  .status { min-height: 22px; color: var(--rose); font-weight: 800; }
+  .note { border-top: 1px solid var(--line); padding-top: 14px; font-size: 14px; }
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; padding: 22px 0; }
+    .shot { min-height: 210px; }
+    .actions { flex-direction: column; align-items: stretch; }
+    .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <p class="brand">CHALK &amp; CHANCE</p>
+    <h1>CAT100 full access</h1>
+    <p class="course">Class code: UA-CAT100-SUMMER26</p>
+    <p>This course link opens the full live build, not the public taste demo. The CAT100 code is preloaded, so students only enter their name and the course passcode to join or continue their progress.</p>
+    <div class="actions">
+      <button class="btn primary" id="full-access" type="button">Open CAT100 build</button>
+      <a class="btn" href="guidebook.html">Review guidebook</a>
+    </div>
+    <div class="field">
+      <label for="passcode">Optional voice passcode</label>
+      <input id="passcode" type="password" autocomplete="off" placeholder="Enter course voice passcode" />
+      <button class="btn" id="voice-access" type="button">Open with student voice</button>
+      <div class="status" id="status" role="status"></div>
+    </div>
+    <p class="note">Live AI practice, mission progression, lesson import, evidence journal, telemetry, and course progress are available from this link. Student voice uses a short-lived server token, so no passcode is stored in this page.</p>
+  </section>
+  <section class="shot" aria-label="Chalk & Chance mission hub preview">
+    <img src="img/shot_hub.png" alt="Mission hub screenshot" />
+  </section>
+</main>
+<script>
+  const PLAY_URL = "https://educatian.github.io/chalk-and-chance-play/";
+  const API_URL = "https://chalk-and-chance-api.jewoong-moon.workers.dev";
+  const CLASS_CODE = "UA-CAT100-SUMMER26";
+  const passcode = document.getElementById("passcode");
+  const status = document.getElementById("status");
+
+  function playUrl(params) {
+    const url = new URL(PLAY_URL);
+    url.searchParams.set("class_code", CLASS_CODE);
+    url.searchParams.set("cat100", "1");
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+    return url.toString();
+  }
+
+  function openBuild(url) {
+    window.open(url, "_blank", "noopener");
+  }
+
+  document.getElementById("full-access").addEventListener("click", () => {
+    status.textContent = "Opening full CAT100 build with live AI enabled.";
+    openBuild(playUrl({}));
+  });
+
+  document.getElementById("voice-access").addEventListener("click", async () => {
+    const entered = passcode.value.trim();
+    if (!entered) {
+      status.textContent = "Passcode required for student voice.";
+      passcode.focus();
+      return;
+    }
+    status.textContent = "Checking voice access...";
+    try {
+      const response = await fetch(`${API_URL}/voice_token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode: entered }),
+      });
+      if (!response.ok) {
+        status.textContent = "Voice passcode not accepted.";
+        passcode.focus();
+        return;
+      }
+      const data = await response.json();
+      if (!data.token) {
+        status.textContent = "Voice access is unavailable right now.";
+        return;
+      }
+      status.textContent = "Opening CAT100 build with student voice enabled.";
+      openBuild(playUrl({ voice_token: data.token }));
+    } catch (error) {
+      status.textContent = "Could not reach voice gate. Open the full build without voice.";
+    }
+  });
+
+  passcode.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      document.getElementById("voice-access").click();
+    }
+  });
+</script>
+</body>
+</html>

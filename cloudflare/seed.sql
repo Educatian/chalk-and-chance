@@ -2,6 +2,8 @@
 -- Apply:  wrangler d1 execute chalk_db --remote --file cloudflare/seed.sql
 INSERT OR IGNORE INTO classes (class_code, name, join_open)
 VALUES ('UA-CAT531-SUMMER26', 'CAT 531 Summer 2026', 1);
+INSERT OR IGNORE INTO classes (class_code, name, join_open)
+VALUES ('UA-CAT100-SUMMER26', 'CAT 100 Summer 2026', 1);
 
 -- To make yourself the instructor (full-cohort read) AFTER you log in once:
 --   wrangler d1 execute chalk_db --remote --command \

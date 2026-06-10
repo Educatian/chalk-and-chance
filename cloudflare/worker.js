@@ -324,6 +324,9 @@ function passcodeForClass(classCode, env) {
   if (classCode === "UA-CAT531-SUMMER26") {
     return String(env.CAT531_PASSCODE || "CAT5312026").trim();
   }
+  if (classCode === "UA-CAT100-SUMMER26") {
+    return String(env.CAT100_PASSCODE || env.CAT531_PASSCODE || "CAT5312026").trim();
+  }
   return "";
 }
 

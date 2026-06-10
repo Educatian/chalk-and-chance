@@ -278,7 +278,7 @@ func add_teacher_xp(amount: int, reason: String = "", save_now: bool = true) -> 
 	return info
 
 func apply_course_baseline(class_code: String) -> void:
-	if class_code != "UA-CAT531-SUMMER26":
+	if not class_code in ["UA-CAT531-SUMMER26", "UA-CAT100-SUMMER26"]:
 		return
 	if class_code in course_baseline_classes:
 		return
