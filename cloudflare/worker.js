@@ -267,7 +267,7 @@ export default {
 async function voiceToken(req, env) {
   const raw = (await req.text()).replace(/^\uFEFF/, "");
   const { passcode } = JSON.parse(raw || "{}");
-  const accepted = [env.TTS_PASSCODE, env.CAT531_PASSCODE, "CAT5312026"]
+  const accepted = [env.TTS_PASSCODE, env.CAT531_PASSCODE, "CAT5312026", env.CAT100_PASSCODE, "CAT1002026"]
     .map((value) => String(value || "").trim())
     .filter((value, index, values) => value && values.indexOf(value) === index);
   if (!accepted.length) return json({ error: "voice access is not configured" }, 503);
@@ -325,7 +325,7 @@ function passcodeForClass(classCode, env) {
     return String(env.CAT531_PASSCODE || "CAT5312026").trim();
   }
   if (classCode === "UA-CAT100-SUMMER26") {
-    return String(env.CAT100_PASSCODE || env.CAT531_PASSCODE || "CAT5312026").trim();
+    return String(env.CAT100_PASSCODE || "CAT1002026").trim();
   }
   return "";
 }
