@@ -898,13 +898,40 @@ func _open_evidence_journal() -> void:
 		y += 38.0
 
 	var recent := Label.new()
-	recent.text = "RECENT RUN EVIDENCE\n%s" % _recent_evidence_text()
-	recent.position = Vector2(114, 406)
-	recent.size = Vector2(560, 40)
-	recent.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var recent_count := GameState.leaderboard_top(30).size()
+	recent.text = "RECENT RUN EVIDENCE — %d saved run%s; open Board for details." % [
+		recent_count,
+		"" if recent_count == 1 else "s",
+	]
+	recent.position = Vector2(114, 398)
+	recent.size = Vector2(720, 26)
+	recent.autowrap_mode = TextServer.AUTOWRAP_OFF
 	recent.add_theme_font_size_override("font_size", 11 + fd)
 	recent.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	overlay.add_child(recent)
+
+	var download := Button.new()
+	download.text = "Download transcript"
+	download.position = Vector2(492, 430)
+	download.size = Vector2(200, 34)
+	download.add_theme_font_size_override("font_size", 12 + fd)
+	download.disabled = Telemetry.conversation_count() <= 0
+	download.tooltip_text = (
+		"Save this session's teacher moves and simulated learner responses as Markdown."
+		if not download.disabled
+		else "Complete at least one dialogue turn first."
+	)
+	HubUi.apply_button_style(download, true)
+	download.pressed.connect(func():
+		var result := Telemetry.download_conversation()
+		if bool(result.get("ok", false)):
+			download.text = "Transcript saved"
+			download.tooltip_text = str(result.get("path", result.get("filename", "Transcript saved")))
+		else:
+			download.text = "Download failed"
+			download.tooltip_text = str(result.get("error", "Could not save the transcript."))
+	)
+	overlay.add_child(download)
 
 	var close := Button.new()
 	close.text = "Close"

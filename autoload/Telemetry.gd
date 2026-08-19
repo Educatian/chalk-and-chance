@@ -21,6 +21,14 @@ var _last_heartbeat_ms := 0
 const HEARTBEAT_MS := 30000   ## periodic "still here" pulse so engagement/dwell is minable
 
 var _net := true   ## false under the headless driver so automated test runs never hit live D1
+var _conversation_events: Array = []  ## student-facing, current-session dialogue trace
+
+const CONVERSATION_EVENT_TYPES := {
+	"turn": true,
+	"group_turn": true,
+	"lecture_turn": true,
+	"gym_turn": true,
+}
 
 func _ready() -> void:
 	_net = DisplayServer.get_name() != "headless"
@@ -209,6 +217,7 @@ func log_event(d: Dictionary) -> void:
 		d["class_code"] = Auth.class_code
 	else:
 		d["anon_id"] = anon_id
+	_capture_conversation_event(d)
 	_write(d)
 	# Always buffer for cloud upload (signed-in OR anonymous demo). Buffering does not
 	# depend on Auth being loaded yet, so the very first session_start is never lost.
@@ -217,6 +226,178 @@ func log_event(d: Dictionary) -> void:
 		_buffer = _buffer.slice(_buffer.size() - 256)
 	if _buffer.size() >= 8:
 		flush()
+
+## Keep a small, readable dialogue trace separate from raw telemetry. This is the learner's
+## own current-session artifact: no input events, browser metadata, auth token, or class data.
+func _capture_conversation_event(event_data: Dictionary) -> void:
+	var event_name := str(event_data.get("event", ""))
+	if not CONVERSATION_EVENT_TYPES.has(event_name):
+		return
+
+	var move_data = event_data.get("move", {})
+	var move_tag := ""
+	var teacher_text := ""
+	if typeof(move_data) == TYPE_DICTIONARY:
+		var move: Dictionary = move_data
+		move_tag = str(move.get("tag", move.get("menu_tag", "")))
+		teacher_text = str(move.get("text", "")).strip_edges()
+	elif typeof(move_data) == TYPE_STRING:
+		move_tag = str(move_data)
+	if teacher_text == "":
+		teacher_text = _conversation_move_label(move_tag)
+
+	var student_text := str(event_data.get("student_text", "")).strip_edges()
+	var student_speaker := str(event_data.get("speaker", "Student")).strip_edges()
+	var coach_tip := str(event_data.get("coach_tip", "")).strip_edges()
+	if event_name == "lecture_turn":
+		var reaction: Dictionary = event_data.get("reaction", {})
+		student_text = str(reaction.get("text", student_text)).strip_edges()
+		student_speaker = str(reaction.get("speaker", "Class")).strip_edges()
+	if student_text == "":
+		return
+	if student_speaker == "":
+		student_speaker = "Student"
+
+	var scenario_id := str(event_data.get("scenario_id", "")).strip_edges()
+	if scenario_id == "" and "current_scenario_id" in Game:
+		scenario_id = str(Game.current_scenario_id)
+	var judge: Dictionary = event_data.get("judge", {})
+	var has_target := event_data.has("targets") or judge.has("targets")
+	var target_met := bool(event_data.get("targets", judge.get("targets", false)))
+	_conversation_events.append({
+		"event": event_name,
+		"scenario_id": scenario_id,
+		"turn": int(event_data.get("turn", _conversation_events.size() + 1)),
+		"unix": float(event_data.get("unix", Time.get_unix_time_from_system())),
+		"move_tag": move_tag,
+		"teacher_text": teacher_text,
+		"student_speaker": student_speaker,
+		"student_text": student_text,
+		"coach_tip": coach_tip,
+		"has_target": has_target,
+		"target_met": target_met,
+	})
+
+func _conversation_move_label(tag: String) -> String:
+	var labels := {
+		"elicit": "Elicit student reasoning",
+		"extend": "Extend student thinking",
+		"revoice": "Revoice the student's idea",
+		"wait": "Wait and protect thinking time",
+		"redirect": "Redirect with the least intrusive move",
+		"tell": "Tell or explain directly",
+		"praise": "Use behavior-specific praise",
+		"connect": "Connect to a learner asset or context",
+		"observe": "Observe the group before intervening",
+		"probe": "Probe the group's reasoning",
+		"redistribute": "Redistribute participation",
+		"press": "Press the group for deeper reasoning",
+		"ask": "Ask the class to reason",
+		"reexplain": "Re-explain using another approach",
+		"poll": "Run a whole-class check",
+		"present": "Present the next part of the lesson",
+	}
+	if labels.has(tag):
+		return str(labels[tag])
+	if tag != "":
+		return tag.replace("_", " ").capitalize()
+	return "Teacher move"
+
+func conversation_count() -> int:
+	return _conversation_events.size()
+
+func conversation_entries() -> Array:
+	return _conversation_events.duplicate(true)
+
+func conversation_filename() -> String:
+	var dt := Time.get_datetime_dict_from_unix_time(int(Time.get_unix_time_from_system()))
+	return "chalk-and-chance-transcript-%04d%02d%02d-%02d%02d%02d.md" % [
+		int(dt.get("year", 0)), int(dt.get("month", 0)), int(dt.get("day", 0)),
+		int(dt.get("hour", 0)), int(dt.get("minute", 0)), int(dt.get("second", 0)),
+	]
+
+func conversation_markdown() -> String:
+	var lines: Array[String] = [
+		"# Chalk & Chance Conversation Transcript",
+		"",
+		"- Session: `%s`" % session_id,
+		"- Exported: %s" % Time.get_datetime_string_from_system(false, true),
+	]
+	var scenarios: Array[String] = []
+	for entry in _conversation_events:
+		var scenario_id := str(entry.get("scenario_id", "")).strip_edges()
+		if scenario_id != "" and not scenarios.has(scenario_id):
+			scenarios.append(scenario_id)
+	if not scenarios.is_empty():
+		lines.append("- Scenario(s): %s" % ", ".join(scenarios))
+	lines.append_array([
+		"",
+		"> This learner-owned file contains the current session's teacher moves and simulated learner responses. It excludes raw telemetry and account data.",
+		"",
+	])
+	if _conversation_events.is_empty():
+		lines.append("No conversation turns have been recorded in this session yet.")
+		return "\n".join(lines) + "\n"
+
+	for i in range(_conversation_events.size()):
+		var entry: Dictionary = _conversation_events[i]
+		var scenario_label := str(entry.get("scenario_id", "")).strip_edges()
+		var heading := "## Turn %d" % (i + 1)
+		if scenario_label != "":
+			heading += " — " + scenario_label
+		lines.append(heading)
+		lines.append("")
+		var move_tag := str(entry.get("move_tag", "")).strip_edges()
+		var teacher_label := "Teacher"
+		if move_tag != "":
+			teacher_label += " move (%s)" % move_tag
+		lines.append("**%s:** %s" % [teacher_label, _conversation_one_line(str(entry.get("teacher_text", "")))])
+		lines.append("")
+		lines.append("**%s:** %s" % [
+			_conversation_one_line(str(entry.get("student_speaker", "Student"))),
+			_conversation_one_line(str(entry.get("student_text", ""))),
+		])
+		var tip := _conversation_one_line(str(entry.get("coach_tip", "")))
+		if tip != "":
+			lines.append("")
+			lines.append("**Coach note:** " + tip)
+		if bool(entry.get("has_target", false)):
+			lines.append("")
+			lines.append("**Decision signal:** %s" % ("Move addressed the target." if bool(entry.get("target_met", false)) else "Reconsider or revise this move."))
+		lines.append("")
+	return "\n".join(lines) + "\n"
+
+func _conversation_one_line(text: String) -> String:
+	return text.replace("\r", " ").replace("\n", " ").strip_edges()
+
+## Browser builds trigger a normal Markdown download. Desktop builds save to user://exports.
+## The return object is intentionally small so UI and QA can report success without parsing JS.
+func download_conversation() -> Dictionary:
+	if _conversation_events.is_empty():
+		return {"ok": false, "error": "Complete at least one dialogue turn first."}
+	var filename := conversation_filename()
+	var content := conversation_markdown()
+	if OS.has_feature("web") and ClassDB.class_exists("JavaScriptBridge"):
+		var js := """(() => {
+			const blob = new Blob([%s], {type: 'text/markdown;charset=utf-8'});
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url; a.download = %s; a.style.display = 'none';
+			document.body.appendChild(a); a.click(); a.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+			return true;
+		})()""" % [JSON.stringify(content), JSON.stringify(filename)]
+		var ok := bool(JavaScriptBridge.eval(js, true))
+		return {"ok": ok, "filename": filename, "error": "" if ok else "The browser blocked the download."}
+
+	DirAccess.make_dir_recursive_absolute("user://exports")
+	var path := "user://exports/" + filename
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return {"ok": false, "error": "Could not create the transcript file."}
+	file.store_string(content)
+	file.close()
+	return {"ok": true, "filename": filename, "path": ProjectSettings.globalize_path(path)}
 
 func log_player_movement(kind: String, data: Dictionary) -> void:
 	data["event"] = "player_movement"
