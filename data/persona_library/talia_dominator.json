@@ -7,7 +7,10 @@
   "badge": "balance",
   "win_moves": [
     "revoice",
-    "redirect"
+    "redirect",
+    "elicit",
+    "praise",
+    "extend"
   ],
   "opening_line": "Ooh, ooh, I know this one! Can I answer? I always know it!",
   "win_line": "...oh. Yeah. I guess I could let someone else have a turn too.",
@@ -46,5 +49,49 @@
   ],
   "asset_hint": "Talia dominates because she's eager, not selfish - she already helps peers and runs a club. Channel that energy into lifting others, don't just shut it down.",
   "connect_line": "Oh! I could help draw out the quieter folks instead of just answering? ...I'd actually love that.",
-  "connect_resolves": false
+  "connect_resolves": false,
+  "paths": [
+    {
+      "id": "ack_redistribute",
+      "label": "Acknowledge, then share the floor",
+      "steps": [
+        [
+          "revoice"
+        ],
+        [
+          "redirect",
+          "elicit"
+        ]
+      ],
+      "why": "Brief validation meets her need for recognition; then the turn moves on (Dallimore et al., 2012)."
+    },
+    {
+      "id": "credit_redistribute",
+      "label": "Specific credit, then redirect",
+      "steps": [
+        [
+          "praise"
+        ],
+        [
+          "redirect",
+          "revoice"
+        ]
+      ],
+      "why": "Name what she did well, then hand the idea to someone else."
+    },
+    {
+      "id": "raise_bar",
+      "label": "Raise the bar",
+      "steps": [
+        [
+          "extend"
+        ],
+        [
+          "redirect",
+          "revoice"
+        ]
+      ],
+      "why": "Push her to justify, which slows the blurting and opens room for others."
+    }
+  ]
 }

@@ -59,5 +59,49 @@
   ],
   "asset_hint": "Noah is the one who splits the last brownie so his sister can't argue. He already reasons about equal shares - that's fractions in his own world.",
   "connect_line": "Oh - like splitting the brownie! More people means smaller pieces. So 1/8 is the smaller share. I actually get it now.",
-  "connect_resolves": true
+  "connect_resolves": true,
+  "paths": [
+    {
+      "id": "diagnose",
+      "label": "Diagnose, then press",
+      "steps": [
+        [
+          "elicit"
+        ],
+        [
+          "extend",
+          "revoice"
+        ]
+      ],
+      "why": "Surface his 4 > 3 theory first, then press on the crack in it (Jacobs et al., 2010)."
+    },
+    {
+      "id": "think_time",
+      "label": "Think time first",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "elicit",
+          "extend"
+        ]
+      ],
+      "why": "A real pause lets him start doubting his own rule before you ask."
+    },
+    {
+      "id": "public_idea",
+      "label": "Make his idea public",
+      "steps": [
+        [
+          "revoice"
+        ],
+        [
+          "extend",
+          "elicit"
+        ]
+      ],
+      "why": "Restating his claim makes it an idea to test, not a mistake to hide."
+    }
+  ]
 }

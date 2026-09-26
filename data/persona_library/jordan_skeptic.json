@@ -7,7 +7,9 @@
   "badge": "echo",
   "win_moves": [
     "revoice",
-    "extend"
+    "extend",
+    "elicit",
+    "connect"
   ],
   "color": [
     0.4,
@@ -28,5 +30,49 @@
   ],
   "asset_hint": "Jordan keeps asking 'when do we use this?' He rebuilds bikes - gear ratios are exactly this math. The skepticism is a bid for relevance, not defiance.",
   "connect_line": "Wait, this is just gear ratios. I do this on the bike every weekend. Okay, NOW it's worth my time.",
-  "connect_resolves": true
+  "connect_resolves": true,
+  "paths": [
+    {
+      "id": "take_seriously",
+      "label": "Take him seriously",
+      "steps": [
+        [
+          "revoice"
+        ],
+        [
+          "extend",
+          "elicit"
+        ]
+      ],
+      "why": "Treat his question as a real question, then press on the math."
+    },
+    {
+      "id": "relevance_first",
+      "label": "Relevance first",
+      "steps": [
+        [
+          "connect"
+        ],
+        [
+          "extend",
+          "elicit"
+        ]
+      ],
+      "why": "Show where it's useful to him, then raise the demand (Hulleman & Harackiewicz, 2009)."
+    },
+    {
+      "id": "his_use",
+      "label": "Ask where he'd use it",
+      "steps": [
+        [
+          "elicit"
+        ],
+        [
+          "revoice",
+          "extend"
+        ]
+      ],
+      "why": "Let him build the relevance himself, then build on his answer."
+    }
+  ]
 }

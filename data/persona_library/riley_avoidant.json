@@ -7,7 +7,10 @@
   "badge": "insight",
   "win_moves": [
     "elicit",
-    "extend"
+    "extend",
+    "revoice",
+    "wait",
+    "connect"
   ],
   "color": [
     0.58,
@@ -28,5 +31,49 @@
   ],
   "asset_hint": "Riley shrugs at the worksheet, but builds intricate redstone logic at home. So this is avoidance / fear of being wrong, NOT a thinking gap. Read the FUNCTION before you respond.",
   "connect_line": "I mean... I do way harder logic in Minecraft. I guess I just didn't want to mess this up in front of everyone.",
-  "connect_resolves": true
+  "connect_resolves": true,
+  "paths": [
+    {
+      "id": "diagnose_function",
+      "label": "Diagnose the function",
+      "steps": [
+        [
+          "elicit"
+        ],
+        [
+          "extend",
+          "revoice"
+        ]
+      ],
+      "why": "Find out what the avoidance is protecting before responding (Jacobs et al., 2010)."
+    },
+    {
+      "id": "lower_stakes",
+      "label": "Lower the stakes",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "elicit",
+          "revoice"
+        ]
+      ],
+      "why": "Take the audience pressure off first."
+    },
+    {
+      "id": "name_strength",
+      "label": "Name a strength",
+      "steps": [
+        [
+          "connect"
+        ],
+        [
+          "elicit",
+          "extend"
+        ]
+      ],
+      "why": "Start from what Riley can do, so the gap feels safe to show."
+    }
+  ]
 }

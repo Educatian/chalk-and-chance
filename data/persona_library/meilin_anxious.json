@@ -7,7 +7,9 @@
   "badge": "mirror",
   "win_moves": [
     "praise",
-    "extend"
+    "extend",
+    "elicit",
+    "wait"
   ],
   "opening_line": "I think I got it wrong again... I'm just not smart enough for this.",
   "win_line": "Okay... so it's about the strategy I used, not whether I'm smart. I can try that.",
@@ -47,5 +49,49 @@
   ],
   "asset_hint": "Mei-Lin's perfectionism is the same care that makes her redraw art until it's right. Name the effort, not the result - that's what unlocks her.",
   "connect_line": "...you noticed how much I revised it? ...okay. Maybe the mistakes are part of getting it right.",
-  "connect_resolves": false
+  "connect_resolves": false,
+  "paths": [
+    {
+      "id": "process_feedback",
+      "label": "Process feedback",
+      "steps": [
+        [
+          "praise"
+        ],
+        [
+          "extend",
+          "elicit"
+        ]
+      ],
+      "why": "Praise the strategy, not her smarts, then stretch it (Hattie & Timperley, 2007)."
+    },
+    {
+      "id": "normalize",
+      "label": "Normalize the struggle",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "praise",
+          "elicit"
+        ]
+      ],
+      "why": "Time without judgment tells her a hard problem is normal."
+    },
+    {
+      "id": "strategy_talk",
+      "label": "Strategy talk",
+      "steps": [
+        [
+          "elicit"
+        ],
+        [
+          "praise",
+          "extend"
+        ]
+      ],
+      "why": "Make her process visible so the feedback has something concrete to name."
+    }
+  ]
 }

@@ -7,7 +7,9 @@
   "badge": "routine",
   "win_moves": [
     "redirect",
-    "praise"
+    "praise",
+    "elicit",
+    "connect"
   ],
   "opening_line": "(turned around, talking to a friend instead of starting the task)",
   "win_line": "Alright, alright, I'm on it. Sorry.",
@@ -47,5 +49,49 @@
   ],
   "asset_hint": "Deshawn is off-task AND the natural leader the others follow. Build the relationship and channel that leadership - warm demander, not just redirect.",
   "connect_line": "Aight, aight. You actually get me. ...Fine, I'll lead by getting MY work done first.",
-  "connect_resolves": false
+  "connect_resolves": false,
+  "paths": [
+    {
+      "id": "least_to_most",
+      "label": "Least-to-most",
+      "steps": [
+        [
+          "redirect"
+        ],
+        [
+          "praise",
+          "elicit"
+        ]
+      ],
+      "why": "A quiet redirect, then praise the moment he re-engages (Simonsen et al., 2008)."
+    },
+    {
+      "id": "catch_good",
+      "label": "Catch him on task",
+      "steps": [
+        [
+          "praise"
+        ],
+        [
+          "redirect",
+          "elicit"
+        ]
+      ],
+      "why": "Behavior-specific praise first builds the credit that makes the redirect work."
+    },
+    {
+      "id": "relevance_hook",
+      "label": "Relevance hook",
+      "steps": [
+        [
+          "connect"
+        ],
+        [
+          "redirect",
+          "praise"
+        ]
+      ],
+      "why": "Give him a reason to be in the task, then hold the line calmly."
+    }
+  ]
 }

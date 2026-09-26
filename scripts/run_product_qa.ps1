@@ -18,7 +18,8 @@ $scenes = @(
   @{ Name = "Gym capstone"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/GymTest.tscn"); Expect = "GYM TEST: PASS" },
   @{ Name = "Lesson import"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/ImportTest.tscn"); Expect = "IMPORT TEST: PASS" },
   @{ Name = "Telemetry/xAPI"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/TelemetryTest.tscn"); Expect = "TELEMETRY TEST: PASS" },
-  @{ Name = "Overworld ecology"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/OverworldTest.tscn"); Expect = "OVERWORLD OK" }
+  @{ Name = "Overworld ecology"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/OverworldTest.tscn"); Expect = "OVERWORLD OK" },
+  @{ Name = "Multi-path judge + coaching"; Args = @("--headless", "--path", ".", "--scene", "res://scenes/dev/PathJudgeTest.tscn"); Expect = "PATHJUDGE PASS" }
 )
 
 if (-not (Test-Path $GodotPath)) {

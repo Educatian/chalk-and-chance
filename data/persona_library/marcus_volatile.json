@@ -7,7 +7,8 @@
   "badge": "routine",
   "win_moves": [
     "revoice",
-    "wait"
+    "wait",
+    "elicit"
   ],
   "color": [
     0.9,
@@ -28,5 +29,35 @@
   ],
   "asset_hint": "Marcus is escalating. He grounds himself through music and rhythm. Connect to that to bring the temperature down before any academic demand.",
   "connect_line": "...yeah. Music helps me chill. ...Okay. I'm good now. We can do the work.",
-  "connect_resolves": false
+  "connect_resolves": false,
+  "paths": [
+    {
+      "id": "affect_first",
+      "label": "Affect first",
+      "steps": [
+        [
+          "revoice"
+        ],
+        [
+          "wait",
+          "elicit"
+        ]
+      ],
+      "why": "Name the frustration privately before the math (Roorda et al., 2011)."
+    },
+    {
+      "id": "space_then_check",
+      "label": "Space, then check in",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "revoice",
+          "elicit"
+        ]
+      ],
+      "why": "A calm pause lowers the heat; then you reconnect."
+    }
+  ]
 }
