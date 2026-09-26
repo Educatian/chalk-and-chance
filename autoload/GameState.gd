@@ -9,6 +9,8 @@ const DEFAULT_SETTINGS := {
 	"large_text": false,
 	"reduced_motion": false,
 	"text_reveal": "typewriter",
+	"cinematics": true,
+	"music_enabled": true,
 }
 const DEFAULT_UPGRADES := {
 	"steady_presence": 0,
@@ -425,9 +427,20 @@ func record_student(persona_id: String, data: Dictionary) -> void:
 	student_progress[persona_id] = data
 	save_game()
 
+var chapters_seen: Array = []
+## scenario_id -> {tag, count, text}: the focus Coach Vee set for the next rehearsal.
+var coach_focus: Dictionary = {}
+
+func mark_chapter_seen(id: String) -> void:
+	if id != "" and not chapters_seen.has(id):
+		chapters_seen.append(id)
+		save_game()
+
 func save_game() -> void:
 	var data := {
 		"version": SAVE_VERSION,
+		"chapters_seen": chapters_seen,
+		"coach_focus": coach_focus,
 		"badges": badges,
 		"student_progress": student_progress,
 		"attempts": attempts,
@@ -465,6 +478,10 @@ func load_game() -> void:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("GameState: save file unreadable, starting fresh")
 		return
+	var _cf = parsed.get("coach_focus", {})
+	coach_focus = _cf if typeof(_cf) == TYPE_DICTIONARY else {}
+	var _cs = parsed.get("chapters_seen", [])
+	chapters_seen = _cs if typeof(_cs) == TYPE_ARRAY else []
 	var _badges = parsed.get("badges", [])
 	badges = _badges if typeof(_badges) == TYPE_ARRAY else []
 	var _sp = parsed.get("student_progress", {})

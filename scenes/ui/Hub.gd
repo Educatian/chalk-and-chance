@@ -7,6 +7,7 @@ const PixelUi = preload("res://scripts/PixelUi.gd")
 const HubReports = preload("res://scenes/ui/HubReports.gd")
 const HubTraceText = preload("res://scenes/ui/HubTraceText.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
+const Narrative = preload("res://scripts/Narrative.gd")
 
 func _ready() -> void:
 	_build()
@@ -139,11 +140,11 @@ func _build() -> void:
 
 	var legend := Label.new()
 	legend.text = "Badges: Routine=pacing | Echo=reasoning\nBalance=airtime | Mirror=feedback | Insight=capstone"
-	legend.position = Vector2(42, 170)   # below the gold header rule at y=160
-	legend.size = Vector2(maxf(300.0, vp.x - 560.0), 42)
-	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	legend.position = Vector2(42, 168)   # below the gold header rule at y=160
+	legend.size = Vector2(maxf(300.0, vp.x - 560.0), 40)
 	legend.clip_text = true
-	legend.add_theme_font_size_override("font_size", 11 + fd)
+	legend.add_theme_constant_override("line_spacing", -3)
+	legend.add_theme_font_size_override("font_size", 10 + fd)
 	legend.add_theme_color_override("font_color", Color(0.68, 0.76, 0.86))
 	add_child(legend)
 
@@ -272,12 +273,21 @@ func _choose(id: String) -> void:
 	Game.current_scenario_id = id
 	var cfg := _load(id)
 	var mode := str(cfg.get("mode", ""))
+	var next_path := "res://scenes/overworld/Overworld.tscn"
+	var next_data := {}
 	if mode == "gym":
-		SceneRouter.change_scene("res://scenes/encounter/GymEncounter.tscn", {"scenario": cfg})
+		next_path = "res://scenes/encounter/GymEncounter.tscn"
+		next_data = {"scenario": cfg}
 	elif mode == "lecture":
-		SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": cfg})
+		next_path = "res://scenes/encounter/LectureScene.tscn"
+		next_data = {"scenario": cfg}
+	# Story chapter intro first, when this mission has one and cinematics are on.
+	if bool(GameState.get_setting("cinematics", true)) and Narrative.has_intro(id):
+		SceneRouter.change_scene("res://scenes/cinematic/MissionCinematic.tscn", {
+			"scenario": cfg, "next_path": next_path, "next_data": next_data,
+		})
 	else:
-		SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
+		SceneRouter.change_scene(next_path, next_data)
 
 func _open_mission_briefing(id: String) -> void:
 	var cfg := _load(id)
@@ -287,6 +297,7 @@ func _open_mission_briefing(id: String) -> void:
 	overlay.name = "MissionBriefingOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.76)
@@ -627,6 +638,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	overlay.name = "NoticeOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.70)
@@ -681,6 +693,7 @@ func _open_settings() -> void:
 	overlay.name = "SettingsOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.62)
@@ -710,15 +723,17 @@ func _open_settings() -> void:
 	overlay.add_child(notice)
 
 	var options := [
+		{"label": "Music", "key": "music_enabled", "on": "On", "off": "Off"},
 		{"label": "Sound effects", "key": "audio_enabled", "on": "On", "off": "Off"},
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
 		{"label": "Motion", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
+		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
 	]
-	var y := 196.0
+	var y := 184.0
 	for opt in options:
 		var b := Button.new()
 		b.position = Vector2(222, y)
-		b.size = Vector2(516, 38)
+		b.size = Vector2(516, 34)
 		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 		HubUi.apply_button_style(b)
 		overlay.add_child(b)
@@ -727,14 +742,16 @@ func _open_settings() -> void:
 			var key := str(opt["key"])
 			GameState.set_setting(key, not bool(GameState.get_setting(key, false)))
 			_refresh_setting_button(b, opt)
+			if key == "music_enabled":
+				Music.apply_settings()
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)
-		y += 46.0
+		y += 40.0
 
 	var voice := Button.new()
 	voice.position = Vector2(222, y)
-	voice.size = Vector2(516, 38)
+	voice.size = Vector2(516, 34)
 	voice.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	HubUi.apply_button_style(voice)
 	voice.text = TTSClient.voice_status_label()
@@ -742,11 +759,11 @@ func _open_settings() -> void:
 		notice.text = TTSClient.voice_status_detail()
 	)
 	overlay.add_child(voice)
-	y += 46.0
+	y += 40.0
 
 	var reveal := Button.new()
 	reveal.position = Vector2(222, y)
-	reveal.size = Vector2(516, 38)
+	reveal.size = Vector2(516, 34)
 	reveal.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	HubUi.apply_button_style(reveal)
 	overlay.add_child(reveal)
@@ -777,6 +794,7 @@ func _open_upgrades() -> void:
 	overlay.name = "UpgradeOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.66)
@@ -851,6 +869,7 @@ func _open_evidence_journal() -> void:
 	overlay.name = "EvidenceJournalOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.74)
@@ -1054,6 +1073,7 @@ func _open_leaderboard() -> void:
 	overlay.name = "LeaderboardOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.74)
@@ -1111,12 +1131,14 @@ func _open_leaderboard() -> void:
 
 	var class_dash := _footer_button("Class", Vector2(140, 432), _open_class_dashboard)
 	overlay.add_child(class_dash)
-	var quality := _footer_button("Quality", Vector2(278, 432), _open_quality_report)
-	overlay.add_child(quality)
-	var delta := _footer_button("TeacherSim", Vector2(416, 432), _open_teacher_sim_delta)
-	overlay.add_child(delta)
-	var cloud := _footer_button("Cloud Log", Vector2(554, 432), _open_cloud_log_check)
-	overlay.add_child(cloud)
+	# Internal QA reports stay available in the editor only; players never see them.
+	if OS.has_feature("editor"):
+		var quality := _footer_button("Quality", Vector2(278, 432), _open_quality_report)
+		overlay.add_child(quality)
+		var delta := _footer_button("TeacherSim", Vector2(416, 432), _open_teacher_sim_delta)
+		overlay.add_child(delta)
+		var cloud := _footer_button("Cloud Log", Vector2(554, 432), _open_cloud_log_check)
+		overlay.add_child(cloud)
 	var close := _footer_button("Close", Vector2(692, 432), func(): overlay.queue_free())
 	overlay.add_child(close)
 	close.grab_focus()
@@ -1194,6 +1216,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	overlay.name = "TraceDetailOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.78)
@@ -1272,6 +1295,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	overlay.name = node_name
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.78)
@@ -1323,6 +1347,7 @@ func _open_class_dashboard() -> void:
 	overlay.name = "ClassDashboardOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.76)
@@ -1430,6 +1455,7 @@ func _open_items() -> void:
 	overlay.name = "ItemsOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(overlay)
+	HubUi.pop_in(overlay)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.74)
