@@ -25,6 +25,7 @@ Telemetry="*res://autoload/Telemetry.gd"
 Competency="*res://autoload/Competency.gd"
 Sfx="*res://autoload/Sfx.gd"
 VoiceInput="*res://autoload/VoiceInput.gd"
+Music="*res://autoload/Music.gd"
 
 [gui]
 
