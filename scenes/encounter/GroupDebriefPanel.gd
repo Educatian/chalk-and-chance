@@ -11,25 +11,18 @@ static func show(parent: Node, run_record: Dictionary, reward: Dictionary, conte
 	panel.position = Vector2(66, 156)
 	panel.size = Vector2(874, 368)
 	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true)
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true, str(run_record.get("rank", "-")))
 
 	var understanding := float(context.get("understanding", 0.0))
 	var participation := float(context.get("participation", 0.0))
 	_label(overlay, "GROUP DEBRIEF", Vector2(96, 194), 18, Color(0.97, 0.95, 0.86), Vector2(760, 26))
-	_label(overlay, "CLEARED   |   Score %03d   |   Rank %s" % [
-		int(run_record.get("score", context.get("score", 0))),
-		str(run_record.get("rank", "-")),
-	], Vector2(96, 242), 13, Color(0.96, 0.86, 0.50), Vector2(760, 22))
+	var score_lbl := _label(overlay, "", Vector2(96, 242), 13, Color(0.96, 0.86, 0.50), Vector2(600, 22))
+	CompletionFx.count_up(score_lbl, "CLEARED   |   Score {score}", int(run_record.get("score", context.get("score", 0))))
 	_label(overlay, _reward_line(reward, context), Vector2(96, 288), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
-	_label(overlay, "Drivers: monitor %d | press %d | balance %d" % [
-		int(round(understanding * 80.0)),
-		int(round(understanding * 60.0)),
-		int(round(participation * 120.0)),
-	], Vector2(96, 326), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
 	var trace_line := str(run_record.get("evidence_trace", ""))
-	_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored move trace"), Vector2(96, 374), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
-	_label(overlay, "Focus: sample reasoning, press the shared error, rebalance airtime.", Vector2(96, 398), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
-	_label(overlay, Game.evidence_practice_target(false), Vector2(96, 422), 13, Color(0.72, 0.92, 0.78), Vector2(600, 22))
+	_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(96, 326), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
+	_label(overlay, "Focus: sample reasoning, press the shared error, rebalance airtime.", Vector2(96, 360), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
+	_label(overlay, "Next: " + Game.evidence_practice_target(false), Vector2(96, 390), 13, Color(0.72, 0.92, 0.78), Vector2(600, 22))
 
 	var cont := Button.new()
 	cont.text = "Return to room"

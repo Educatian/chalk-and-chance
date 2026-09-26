@@ -96,84 +96,39 @@ static func card_style(is_next: bool, locked: bool, earned: bool) -> StyleBoxFla
 	return style
 
 static func add_report_chrome(parent: Node, origin: Vector2 = Vector2(108, 54), size: Vector2 = Vector2(744, 426)) -> void:
+	# Clean frame: one gold header rule, one teal accent rail, a soft drop shadow.
+	var shadow := ColorRect.new()
+	shadow.position = origin + Vector2(6, 8)
+	shadow.size = size
+	shadow.color = Color(0, 0, 0, 0.35)
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(shadow)
+	if parent.get_child_count() > 2:
+		parent.move_child(shadow, 1) # behind the panel, above the dim
+
 	var header := ColorRect.new()
-	header.position = origin + Vector2(0, 0)
-	header.size = Vector2(size.x, 5)
+	header.position = origin
+	header.size = Vector2(size.x, 4)
 	header.color = Color(0.98, 0.82, 0.28, 0.95)
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(header)
 
 	var left := ColorRect.new()
-	left.position = origin + Vector2(0, 5)
-	left.size = Vector2(5, size.y - 10)
-	left.color = Color(0.30, 0.92, 0.86, 0.70)
+	left.position = origin + Vector2(0, 4)
+	left.size = Vector2(3, size.y - 8)
+	left.color = Color(0.30, 0.92, 0.86, 0.55)
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(left)
 
-	var colors := [
-		Color(0.38, 0.72, 0.48, 0.92),
-		Color(0.62, 0.88, 0.95, 0.92),
-		Color(0.96, 0.42, 0.34, 0.90),
-		Color(0.77, 0.63, 0.98, 0.88),
-		Color(0.98, 0.86, 0.42, 0.90),
-	]
-	for i in range(colors.size()):
-		var chip := ColorRect.new()
-		chip.position = origin + Vector2(584 + i * 24, 30)
-		chip.size = Vector2(16, 16)
-		chip.color = colors[i]
-		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(chip)
-
-	var band_colors := [
-		Color(0.30, 0.92, 0.86, 0.13),
-		Color(0.98, 0.82, 0.28, 0.12),
-		Color(0.38, 0.72, 0.48, 0.12),
-		Color(0.96, 0.42, 0.34, 0.10),
-		Color(0.77, 0.63, 0.98, 0.11),
-		Color(0.62, 0.88, 0.95, 0.11),
-		Color(0.98, 0.58, 0.25, 0.10),
-	]
-	for i in range(band_colors.size()):
-		var band := ColorRect.new()
-		band.position = origin + Vector2(18 + (i % 2) * 26, 72 + i * 42)
-		band.size = Vector2(size.x - 72, 16)
-		band.color = band_colors[i]
-		band.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(band)
-
-	for i in range(5):
-		var lane := ColorRect.new()
-		lane.position = origin + Vector2(32 + i * 136, size.y - 34)
-		lane.size = Vector2(82, 3)
-		lane.color = colors[i].darkened(0.10)
-		lane.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(lane)
-
-	var rail_colors := [
-		Color(0.14, 0.62, 0.95, 0.82),
-		Color(0.10, 0.78, 0.62, 0.82),
-		Color(0.92, 0.74, 0.12, 0.82),
-		Color(0.88, 0.28, 0.24, 0.82),
-		Color(0.52, 0.36, 0.92, 0.82),
-		Color(0.92, 0.44, 0.16, 0.82),
-		Color(0.30, 0.78, 0.34, 0.82),
-		Color(0.64, 0.88, 0.96, 0.82),
-		Color(0.98, 0.54, 0.62, 0.82),
-		Color(0.72, 0.92, 0.28, 0.82),
-	]
-	for i in range(rail_colors.size()):
-		var marker := ColorRect.new()
-		marker.position = origin + Vector2(size.x - 28, 76 + i * 26)
-		marker.size = Vector2(18, 16)
-		marker.color = rail_colors[i].lightened(0.08)
-		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(marker)
-
-	for i in range(6):
-		var marker := ColorRect.new()
-		marker.position = origin + Vector2(12, 92 + i * 38)
-		marker.size = Vector2(18, 18)
-		marker.color = rail_colors[rail_colors.size() - 1 - i].darkened(0.05)
-		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		parent.add_child(marker)
+## Modal entrance: fade the dim + scale the content up from 96%. Skipped for reduced motion.
+static func pop_in(overlay: Control, duration: float = 0.18) -> void:
+	if overlay == null or bool(GameState.get_setting("reduced_motion", false)):
+		return
+	var vp := overlay.get_viewport_rect().size if overlay.is_inside_tree() else Vector2(960, 540)
+	overlay.pivot_offset = vp * 0.5
+	overlay.modulate.a = 0.0
+	overlay.scale = Vector2(0.96, 0.96)
+	var tw := overlay.create_tween().set_parallel(true)
+	tw.tween_property(overlay, "modulate:a", 1.0, duration * 0.8)
+	tw.tween_property(overlay, "scale", Vector2.ONE, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	Sfx.play("open")
