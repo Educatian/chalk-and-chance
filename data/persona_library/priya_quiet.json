@@ -6,8 +6,10 @@
   "target_label": "Equitable participation (the easily-overlooked student)",
   "badge": "balance",
   "win_moves": [
+    "wait",
     "elicit",
-    "wait"
+    "revoice",
+    "extend"
   ],
   "color": [
     0.85,
@@ -28,5 +30,35 @@
   ],
   "asset_hint": "Priya rarely volunteers, but she catches details no one else does. The asset is there; she just needs to be invited into the air-time.",
   "connect_line": "Oh - you actually want to hear what I thought? ...I did notice something nobody mentioned.",
-  "connect_resolves": false
+  "connect_resolves": false,
+  "paths": [
+    {
+      "id": "deliberate_call",
+      "label": "Deliberate call with time",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "elicit",
+          "revoice"
+        ]
+      ],
+      "why": "Pose, pause, then call on her on purpose (Dallimore et al., 2012)."
+    },
+    {
+      "id": "build_on_her",
+      "label": "Build on her idea",
+      "steps": [
+        [
+          "elicit"
+        ],
+        [
+          "revoice",
+          "extend"
+        ]
+      ],
+      "why": "Once she speaks, revoicing gives her idea status in the room."
+    }
+  ]
 }

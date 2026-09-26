@@ -24,6 +24,9 @@ func change_scene(path: String, data: Dictionary = {}) -> void:
 	_stack.add_child(inst)
 	_current = inst
 	_current_path = path
+	var track := Music.track_for_scene(path)
+	if track != "":
+		Music.play(track)
 	_play_wipe()
 	# Defer setup so the instance has finished _ready before receiving data.
 	if inst.has_method("setup"):

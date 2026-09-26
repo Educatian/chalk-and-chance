@@ -6,6 +6,9 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const Narrative = preload("res://scripts/Narrative.gd")
+const CoachCard = preload("res://scenes/ui/CoachCard.gd")
+const Scaffold = preload("res://scripts/Scaffold.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const UI_SCALE := 2.0
 const MOVES := [
@@ -41,6 +44,16 @@ var _coach: Label
 var _result: Label
 var _wait_label: Label
 var _wait_fill: ColorRect
+var _wait_bg: ColorRect
+var _scaffold := {"level": 3, "name": "Full", "reason": ""}
+var _scaffold_badge: Label
+## Evidence contract for lecture turns (Study 1 audit, 2026-09-13): every move is logged
+## with an opportunity id/label, the productive-move judgement, rule version, attempt ids
+## and before/after class state, so the widest sample can join the measurement model.
+const EVIDENCE_RULE_VERSION := "lecture-rules-v2"
+var _attempt_id := ""
+var _scenario_attempt := 0
+var _last_evidence: Dictionary = {}
 var _highlight: ColorRect
 var _buttons: Array = []
 var _text_input: LineEdit = null
@@ -89,6 +102,30 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	var sid := str(scenario.get("id", Game.current_scenario_id))
+	_scenario_attempt = GameState.note_attempt("lecture:" + sid)
+	_attempt_id = "%s-%d-%d" % [sid, int(Time.get_unix_time_from_system()), randi() % 100000]
+	_scaffold = Scaffold.level_for(["elicit_reasoning", "wait_time", "formative_check", "restraint"])
+	_apply_scaffold()
+	CoachCard.show_focus_banner(self, str(scenario.get("id", Game.current_scenario_id)))
+
+## Lecture supports fade with the measured pacing/check/wait skills.
+func _apply_scaffold() -> void:
+	var lvl := int(_scaffold["level"])
+	if _scaffold_badge == null:
+		_scaffold_badge = _label("", Vector2(284, 12), 6, Color.WHITE)
+		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
+		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
+	_scaffold_badge.text = Scaffold.badge_text(lvl, false)
+	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
+	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(lvl, false))
+	if _result != null:
+		_result.text = "Guide: Present -> Wait -> Question/Check. Repair when comprehension lags." if lvl == Scaffold.FULL else ""
+	if _wait_label != null:
+		_wait_label.visible = lvl >= Scaffold.PARTIAL
+	if _wait_fill != null:
+		_wait_fill.visible = lvl >= Scaffold.LIGHT
+		_wait_bg.visible = lvl >= Scaffold.LIGHT
 
 func _apply_adaptive_difficulty() -> void:
 	var d := Game.adaptive_difficulty(["formative_check", "wait_time", "restraint"])
@@ -175,6 +212,7 @@ func _build_ui() -> void:
 
 	_wait_label = _label(_wait_label_text(false), Vector2(284, 24), 7, Color(0.8, 0.85, 0.95))
 	var wbg := ColorRect.new()
+	_wait_bg = wbg
 	wbg.position = Vector2(284, 40)
 	wbg.size = Vector2(90, 8)
 	wbg.color = Color(0, 0, 0, 0.5)
@@ -538,6 +576,8 @@ func _on_move(tag: String) -> void:
 		wait_ok = true
 		_wait_item_ready = false
 	var gap := progress - comprehension
+	var state_before := _lecture_state()
+	var opportunity := _lecture_opportunity(gap)
 	match tag:
 		"present":
 			var old_attention := attention
@@ -615,16 +655,36 @@ func _on_move(tag: String) -> void:
 			_coach.text = "Coach Vee: a whole-class check holds everyone accountable at once."
 			_react_many("thinking", "exclaim", students.size())
 	_observe_lecture_competency(tag, wait_ok, gap)
-	_move_history.append({"turn": _move_history.size() + 1, "tag": tag, "targets": _lecture_move_productive(tag, wait_ok, gap),
-		"construct": _lecture_construct(tag), "reaction": _dialogue.text, "meter": _result.text})
-	Telemetry.log_event({
+	var productive := _lecture_move_productive(tag, wait_ok, gap)
+	_move_history.append({"turn": _move_history.size() + 1, "tag": tag, "targets": productive,
+		"construct": _lecture_construct(tag), "reaction": _dialogue.text, "meter": _result.text,
+		"student": str(students[sel]["name"]) if tag == "ask" and sel >= 0 and sel < students.size() else "",
+		"note": "" if productive else _lecture_miss_note(tag, wait_ok, gap), "scaffold": int(_scaffold["level"])})
+	_last_evidence = {
+		"attempt_id": _attempt_id,
+		"scenario_attempt": _scenario_attempt,
+		"turn_index": _move_history.size(),
+		"opportunity_id": "%s:t%d" % [_attempt_id, _move_history.size()],
+		"opportunity_present": opportunity != "none",
+		"opportunity_type": opportunity,
+		"productive_move": productive,
+		"miss_reason": "" if productive else _lecture_miss_note(tag, wait_ok, gap),
+		"evidence_rule_version": EVIDENCE_RULE_VERSION,
+		"state_before": state_before,
+		"state_after": _lecture_state(),
+		"scaffold_level": int(_scaffold["level"]),
+		"target_student": str(students[sel]["pid"]) if tag == "ask" and sel >= 0 and sel < students.size() else "",
+	}
+	var ev := {
 		"event": "lecture_move",
 		"scenario_id": str(Game.current_scenario_id),
 		"construct_id": _lecture_construct(tag),
 		"move": {"tag": tag, "input_mode": input_mode, "text": free_text, "wait_ms": wait_ms},
 		"wait_ok": wait_ok,
 		"class_state": {"progress": progress, "comprehension": comprehension, "attention": attention, "composure": composure},
-	})
+	}
+	ev.merge(_last_evidence)
+	Telemetry.log_event(ev)
 	_refresh()
 	_check_end()
 	if not _over:
@@ -656,6 +716,37 @@ func _lecture_construct(tag: String) -> String:
 			return "formative_check"
 		"present":
 			return "restraint"
+	return ""
+
+func _lecture_state() -> Dictionary:
+	return {"progress": progress, "comprehension": comprehension, "attention": attention,
+		"composure": composure, "consecutive_present": consec_present, "gap": progress - comprehension}
+
+## What teaching opportunity the class state presented BEFORE the move (rule v2):
+## confusion_gap (content ran ahead of understanding), monologue (2+ Presents in a row),
+## attention_dip, or none. Thresholds mirror _lecture_move_productive().
+func _lecture_opportunity(gap: float) -> String:
+	if gap >= 18.0:
+		return "confusion_gap"
+	if consec_present >= 2:
+		return "monologue"
+	if attention < 60.0:
+		return "attention_dip"
+	return "none"
+
+## Short, concrete reason a lecture move missed, for Coach Vee's "try instead" line.
+func _lecture_miss_note(tag: String, wait_ok: bool, gap_before: float) -> String:
+	match tag:
+		"present":
+			if consec_present > 2:
+				return "that was Present #%d in a row" % consec_present
+			return "the confusion gap was already %d points" % int(gap_before)
+		"ask":
+			return "comprehension was only %d%%" % int(comprehension)
+		"wait":
+			return "you picked before the 3-second ring filled" if not wait_ok else ""
+		"reexplain":
+			return "the room was mostly with you (gap %d)" % int(gap_before)
 	return ""
 
 func _lecture_move_productive(tag: String, wait_ok: bool, gap_before: float) -> bool:
@@ -728,7 +819,7 @@ func _on_lecture_reply(result: int, code: int, _headers: PackedStringArray, body
 	var speaker_pid := _persona_id_for_speaker(speaker)
 	if speaker_pid != "" and text != "":
 		TTSClient.speak(speaker_pid, text, emotion)
-	Telemetry.log_event({
+	var turn_ev := {
 		"event": "lecture_turn",
 		"scenario_id": str(Game.current_scenario_id),
 		"move": _last_turn_payload.get("teacher_move", {}),
@@ -736,7 +827,9 @@ func _on_lecture_reply(result: int, code: int, _headers: PackedStringArray, body
 		"class_state": _last_turn_payload.get("class_state", {}),
 		"reaction": reaction,
 		"coach_tip": tip,
-	})
+	}
+	turn_ev.merge(_last_evidence)
+	Telemetry.log_event(turn_ev)
 
 func _set_move_buttons_disabled(disabled: bool) -> void:
 	for b in _buttons:
@@ -885,30 +978,39 @@ func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary)
 	panel.position = Vector2(34, 78)
 	panel.size = Vector2(436, 184)
 	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), won)
-	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
 	var score := int(run_record.get("score", int(round(comprehension + attention + composure * 0.5 + progress * 0.5))))
 	var rank := str(run_record.get("rank", GameState._rank_for_score(score)))
-	_overlay_label(overlay, "%s   |   Score %03d   |   Rank %s" % ["CLEARED" if won else "TRY AGAIN", score, rank], Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), won, rank)
+	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(300, 16))
+	var score_lbl := _overlay_label(overlay, "", Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	CompletionFx.count_up(score_lbl, "%s   |   Score {score}" % ("CLEARED" if won else "TRY AGAIN"), score)
 	var reward_line := "Comp %d%% | Attention %d%% | Progress %d%%" % [int(comprehension), int(attention), int(progress)]
 	if bool(reward.get("level_up", false)):
 		reward_line += " | +upgrade"
-	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.72, 0.82, 0.96), Vector2(404, 14))
-	_overlay_label(overlay, "Drivers: C%d A%d Calm%d Pace%d" % [
-		int(comprehension), int(attention), int(round(composure * 0.5)), int(round(progress * 0.5))
-	], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
+	_overlay_label(overlay, reward_line, Vector2(48, 140), 7, Color(0.72, 0.82, 0.96), Vector2(300, 28))
 	var trace_line := str(run_record.get("evidence_trace", ""))
-	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored move trace"), Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
-	_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(308, 16))
+	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(48, 172), 7, Color(0.72, 0.78, 0.88), Vector2(300, 16))
+	_overlay_label(overlay, "Next: " + Game.evidence_practice_target(false), Vector2(48, 192), 7, Color(0.72, 0.92, 0.78), Vector2(270, 24))
 	var cont := Button.new()
 	cont.text = "Return to hub"
 	cont.position = Vector2(326, 224)
 	cont.size = Vector2(126, 30)
 	cont.add_theme_font_size_override("font_size", 7)
-	cont.pressed.connect(func(): SceneRouter.change_scene("res://scenes/ui/Hub.tscn"))
+	cont.pressed.connect(func(): Narrative.go_hub_with_outro(scenario, won))
 	overlay.add_child(cont)
+	# Coached rehearsal loop: talk it through with Coach Vee, then re-run immediately.
+	var coach := Button.new()
+	coach.text = "Coach Vee  >"
+	coach.position = Vector2(190, 224)
+	coach.size = Vector2(126, 30)
+	coach.add_theme_font_size_override("font_size", 7)
+	coach.pressed.connect(func():
+		CoachCard.open(self, _move_history, str(scenario.get("id", Game.current_scenario_id)),
+			func(): SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": scenario}),
+			func(): Narrative.go_hub_with_outro(scenario, won)))
+	overlay.add_child(coach)
 	PixelUi.scale_tree(overlay, UI_SCALE)
-	cont.grab_focus()
+	coach.grab_focus()
 
 func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
 	var l := Label.new()

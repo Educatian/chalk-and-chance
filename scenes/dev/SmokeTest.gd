@@ -69,13 +69,14 @@ func _ready() -> void:
 		await get_tree().process_frame
 	var elicit_resolved: bool = enc2._resolved
 	print("DESHAWN via elicit: understanding=%.2f resolved=%s (expect false)" % [enc2.understanding, str(elicit_resolved)])
+	# Least-to-most path: redirect, then praise the re-engagement (alternating, not mashing).
 	for i in range(9):
 		if enc2._resolved:
 			break
-		enc2._on_move("redirect")
+		enc2._on_move("redirect" if i % 2 == 0 else "praise")
 		await get_tree().process_frame
 		await get_tree().process_frame
-	print("DESHAWN via redirect: understanding=%.2f resolved=%s badges=%s" % [enc2.understanding, str(enc2._resolved), str(GameState.badges)])
+	print("DESHAWN via redirect->praise: understanding=%.2f resolved=%s badges=%s" % [enc2.understanding, str(enc2._resolved), str(GameState.badges)])
 	if (not elicit_resolved) and enc2._resolved and ("routine" in GameState.badges):
 		print("DIFFERENTIATION: PASS")
 	else:

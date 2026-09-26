@@ -5,6 +5,8 @@ extends Node2D
 
 const Art = preload("res://scripts/Art.gd")
 const Seating = preload("res://scripts/Seating.gd")
+const Narrative = preload("res://scripts/Narrative.gd")
+const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
 # Student 1.35 tiles ~= 54px (~10% of screen height); teacher 1.7 tiles ~= 68px. This is
@@ -90,6 +92,8 @@ var _attempt := 1
 var _scenario_title := "Lesson"
 var _badge := ""
 var _scenario_cfg: Dictionary = {}
+var _lesson_won := false
+var _last_moves: Array = []
 
 var _walls: Dictionary = {}   # Vector2i -> true
 var _npcs: Dictionary = {}    # Vector2i -> { persona_id, display_name, node, offtask, fill }
@@ -158,6 +162,8 @@ func _ready() -> void:
 	_add_banner()
 	_add_badge_strip()
 	_build_hud()
+	if (Game.lesson.get("moves", []) as Array).is_empty() and Game.lesson.get("disruptions", 0) == 0:
+		CoachCard.show_focus_banner(self, str(Game.current_scenario_id))
 	Telemetry.log_event({
 		"event": "classroom_start", "scenario_id": str(Game.current_scenario_id),
 		"title": _scenario_title, "format": _format, "attempt": _attempt,
@@ -282,8 +288,8 @@ func _add_banner() -> void:
 	label.add_theme_font_size_override("font_size", 15)
 	label.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	label.add_theme_constant_override("outline_size", 5)
-	label.z_index = 50
+	label.add_theme_constant_override("outline_size", 2)
+	label.z_index = 60
 	add_child(label)
 
 ## Shows earned badges as icons in the top-right (GAME_CONCEPT.md gym-badge progression).
@@ -486,14 +492,46 @@ func _spawn_player(tile: Vector2i) -> void:
 
 # --- live classroom management (proximity + withitness) ----------------------
 
+## Translucent rounded plate that groups HUD text so it reads over any floor art.
+func _hud_plate(pos: Vector2, size: Vector2, accent: Color = Color(0.98, 0.82, 0.30, 0.55)) -> Panel:
+	var p := Panel.new()
+	p.position = pos
+	p.size = size
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.06, 0.12, 0.78)
+	sb.border_color = accent
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(6)
+	sb.shadow_color = Color(0, 0, 0, 0.35)
+	sb.shadow_size = 4
+	p.add_theme_stylebox_override("panel", sb)
+	p.z_index = 55
+	add_child(p)
+	return p
+
 func _build_hud() -> void:
+	_hud_plate(Vector2(8, 4), Vector2(456, 156))
+	_hud_plate(Vector2(COLS * TILE - 310, 52), Vector2(302, 104), Color(0.30, 0.92, 0.86, 0.5))
+	_hud_plate(Vector2(8, ROWS * TILE - 60), Vector2(COLS * TILE - 16, 56))
+	var vee_tex := Art.tex("res://assets/portraits/coach_vee_neutral.png")
+	if vee_tex != null:
+		var vee := TextureRect.new()
+		vee.texture = vee_tex
+		vee.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		vee.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		vee.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		vee.position = Vector2(14, ROWS * TILE - 56)
+		vee.size = Vector2(48, 48)
+		vee.z_index = 60
+		add_child(vee)
 	var lbl := Label.new()
 	lbl.text = "CLASS ATTENTION"
 	lbl.position = Vector2(TILE + 4, 58)
 	lbl.add_theme_font_size_override("font_size", 13)
 	lbl.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
 	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	lbl.add_theme_constant_override("outline_size", 5)
+	lbl.add_theme_constant_override("outline_size", 2)
 	lbl.z_index = 60
 	add_child(lbl)
 
@@ -516,7 +554,7 @@ func _build_hud() -> void:
 	_disrupt_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_disrupt_label.add_theme_color_override("font_color", Color(0.97, 0.85, 0.6))
 	_disrupt_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_disrupt_label.add_theme_constant_override("outline_size", 5)
+	_disrupt_label.add_theme_constant_override("outline_size", 2)
 	_disrupt_label.z_index = 60
 	add_child(_disrupt_label)
 
@@ -526,7 +564,7 @@ func _build_hud() -> void:
 	_equity_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_equity_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.95))
 	_equity_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_equity_label.add_theme_constant_override("outline_size", 5)
+	_equity_label.add_theme_constant_override("outline_size", 2)
 	_equity_label.z_index = 60
 	add_child(_equity_label)
 
@@ -538,61 +576,61 @@ func _build_hud() -> void:
 	_risk_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
 	_risk_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.96))
 	_risk_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_risk_label.add_theme_constant_override("outline_size", 5)
+	_risk_label.add_theme_constant_override("outline_size", 2)
 	_risk_label.z_index = 60
 	add_child(_risk_label)
 
 	_objective_label = Label.new()
 	_objective_label.text = ""
 	_objective_label.position = Vector2(COLS * TILE - 300, 58)
-	_objective_label.size = Vector2(260, 90)
+	_objective_label.size = Vector2(284, 92)
 	_objective_label.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
 	_objective_label.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
 	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_objective_label.add_theme_constant_override("outline_size", 5)
+	_objective_label.add_theme_constant_override("outline_size", 2)
 	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_objective_label.z_index = 60
 	add_child(_objective_label)
 
 	_interact_label = Label.new()
 	_interact_label.text = ""
-	_interact_label.position = Vector2(TILE + 4, ROWS * TILE - 54)
-	_interact_label.size = Vector2(COLS * TILE - 2 * TILE, 20)
+	_interact_label.position = Vector2(70, ROWS * TILE - 56)
+	_interact_label.size = Vector2(COLS * TILE - 90, 20)
 	_interact_label.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	_interact_label.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	_interact_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_interact_label.add_theme_constant_override("outline_size", 5)
+	_interact_label.add_theme_constant_override("outline_size", 2)
 	_interact_label.z_index = 60
 	add_child(_interact_label)
 
 	_coach_hint = Label.new()
-	_coach_hint.position = Vector2(TILE + 4, ROWS * TILE - 30)
-	_coach_hint.size = Vector2(COLS * TILE - 2 * TILE, 22)
+	_coach_hint.position = Vector2(70, ROWS * TILE - 32)
+	_coach_hint.size = Vector2(COLS * TILE - 90, 22)
 	_coach_hint.add_theme_font_size_override("font_size", 14)
 	_coach_hint.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	_coach_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_coach_hint.add_theme_constant_override("outline_size", 5)
+	_coach_hint.add_theme_constant_override("outline_size", 2)
 	_coach_hint.z_index = 60
 	add_child(_coach_hint)
 
 	# Period clock (top-right) and Composure bar (under attention).
 	_clock_label = Label.new()
 	_clock_label.text = "Period: 2:30"
-	_clock_label.position = Vector2(TILE + 250, 58)
+	_clock_label.position = Vector2(TILE + 250, 56)
 	_clock_label.add_theme_font_size_override("font_size", 13)
 	_clock_label.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
 	_clock_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_clock_label.add_theme_constant_override("outline_size", 5)
+	_clock_label.add_theme_constant_override("outline_size", 2)
 	_clock_label.z_index = 60
 	add_child(_clock_label)
 
 	var clbl := Label.new()
 	clbl.text = "COMPOSURE"
-	clbl.position = Vector2(TILE + 250, 78)
+	clbl.position = Vector2(TILE + 250, 76)
 	clbl.add_theme_font_size_override("font_size", 11)
 	clbl.add_theme_color_override("font_color", Color(0.95, 0.8, 0.85))
 	clbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	clbl.add_theme_constant_override("outline_size", 5)
+	clbl.add_theme_constant_override("outline_size", 2)
 	clbl.z_index = 60
 	add_child(clbl)
 	var cbg := ColorRect.new()
@@ -803,7 +841,15 @@ func _end_lesson() -> void:
 	})
 	Telemetry.upload_competency()
 	Telemetry.flush()
+	_lesson_won = stars == _objectives.size() and stars > 0
 	var reflection_options := _reflection_options(attention)
+	_last_moves = []
+	var i := 0
+	for m in Game.lesson.get("moves", []):
+		i += 1
+		var mm: Dictionary = (m as Dictionary).duplicate()
+		mm["turn"] = i
+		_last_moves.append(mm)
 	Game.clear_lesson()
 	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
 	_show_overlay("REFLECT 1/2\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.", reflection_options)
@@ -820,6 +866,7 @@ func _on_reflect(opt: Dictionary) -> void:
 	})
 	_close_overlay()
 	_show_overlay("REVIEW 2/2\n\n" + _pending_debrief, [
+		{"label": "Talk it through with Coach Vee", "_action": "coach"},
 		{"label": "Replay this lesson", "_action": "replay"},
 		{"label": "Choose another mission", "_action": "hub"},
 	])
@@ -1036,7 +1083,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	_overlay.add_child(dim)
 
 	var pw := 660.0
-	var ph := 360.0
+	var ph := 360.0 + maxf(0.0, float(options.size() - 2)) * 40.0
 	var px := (_overlay.size.x - pw) / 2.0
 	var py := (_overlay.size.y - ph) / 2.0
 	var panel := Panel.new()   # themed: rounded, bordered, drop shadow
@@ -1072,6 +1119,8 @@ func _show_overlay(text: String, options: Array) -> void:
 			var act := str(opt["_action"])
 			if act == "hub":
 				b.pressed.connect(_go_hub)
+			elif act == "coach":
+				b.pressed.connect(_open_coach)
 			else:
 				b.pressed.connect(_restart_lesson)
 		else:
@@ -1086,13 +1135,20 @@ func _close_overlay() -> void:
 	_overlay = null
 	input_locked = false
 
+func _open_coach() -> void:
+	_close_overlay()
+	CoachCard.open(self, _last_moves, str(Game.current_scenario_id), _restart_lesson, _go_hub)
+
 func _restart_lesson() -> void:
 	Game.clear_lesson()   # fresh period
 	SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
 
 func _go_hub() -> void:
 	Game.clear_lesson()
-	SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
+	if _lesson_over:
+		Narrative.go_hub_with_outro(_scenario_cfg, _lesson_won)
+	else:
+		SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
 
 ## Press Esc / Backspace during a lesson to return to the mission hub.
 func _unhandled_key_input(event: InputEvent) -> void:

@@ -1,0 +1,119 @@
+{
+  "_doc": "Narrative spine: your first year teaching 5th grade at Maple Ridge School. One chapter per mission, ordered by the school calendar. Speakers: vee (Coach Vera Okonkwo), hollis (Mr. Hollis), reyes (Principal Reyes), you (inner voice, italic), narrator (caption), or a persona id from data/persona_library. 'mood' picks a portrait suffix when it exists. intro plays before the mission; outro_win / outro_retry play as Coach Vee's line on the debrief.",
+  "cast": {
+    "vee": {"name": "Coach Vee", "portrait": "coach_vee", "color": "#F2C14E"},
+    "hollis": {"name": "Mr. Hollis", "portrait": "mr_hollis", "color": "#8FB8DE"},
+    "reyes": {"name": "Principal Reyes", "portrait": "principal_reyes", "color": "#E07A5F"},
+    "you": {"name": "You", "portrait": "", "color": "#9BE3C8"},
+    "narrator": {"name": "", "portrait": "", "color": "#D8DEE9"}
+  },
+  "chapters": {
+    "lecture_fractions": {
+      "chapter": 1, "month": "SEPTEMBER", "region": "Classroom Management Town", "title": "The First Bell",
+      "intro": [
+        {"speaker": "narrator", "text": "Maple Ridge School. 7:52 a.m. Your name is on the door for the first time."},
+        {"speaker": "you", "text": "Eight students. One lesson on fractions. I rehearsed this in the car three times."},
+        {"speaker": "vee", "mood": "warm", "text": "I'm Vera Okonkwo. Everyone calls me Coach Vee. I won't grade you today. I'll watch what you do."},
+        {"speaker": "vee", "mood": "serious", "text": "Here's the trap: a calm lecture feels like it's working. Then you look up, and half the room is gone."},
+        {"speaker": "vee", "mood": "neutral", "text": "Present a little. Pause. Check. If you only talk, you'll never know who's still with you."},
+        {"speaker": "narrator", "text": "The bell rings."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "You stopped talking to find out what they knew. Most people take a whole semester to learn that."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "You taught the whole lesson. Did they learn it? Next time, check before you move on."}
+    },
+    "independent_fractions": {
+      "chapter": 2, "month": "LATE SEPTEMBER", "region": "Classroom Management Town", "title": "Quiet Rows",
+      "intro": [
+        {"speaker": "narrator", "text": "Practice day. Worksheets out. The room goes quiet."},
+        {"speaker": "you", "text": "Quiet means it's going well. Right?"},
+        {"speaker": "vee", "mood": "serious", "text": "Quiet is not the same as working. Riley hasn't written a word. Marcus is one erased answer away from a meltdown."},
+        {"speaker": "vee", "mood": "neutral", "text": "Get out from behind the desk. Walk the rows. Stand close. Confer with each of them."},
+        {"speaker": "riley_avoidant", "mood": "withdrawn", "text": "...I'm fine. I'm just thinking."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "You found the struggle nobody said out loud. Being close did more than any warning."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "The rows looked calm. The worksheets didn't. Next time, keep moving and look at what they're writing."}
+    },
+    "discussion_fractions": {
+      "chapter": 3, "month": "OCTOBER", "region": "Questioning Forest", "title": "The Circle",
+      "intro": [
+        {"speaker": "narrator", "text": "You pushed the desks into a U. Now everyone can see everyone."},
+        {"speaker": "talia_dominator", "mood": "excited", "text": "Oh! Me! I know it! Can I go first? I always go first."},
+        {"speaker": "vee", "mood": "warm", "text": "Talia will fill every silence you leave. Sam won't fill any of them."},
+        {"speaker": "vee", "mood": "serious", "text": "Wait three seconds before you pick anyone. Then pick with purpose. The quiet thinkers need time before they'll talk."},
+        {"speaker": "you", "text": "Three seconds. It's going to feel like forever."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "You waited long enough for the quiet ideas to come out. Did you see Sam's face?"},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "The loudest voices set the direction today. Take the wait time back. That's your job."}
+    },
+    "reading_main_idea": {
+      "chapter": 4, "month": "LATE OCTOBER", "region": "Questioning Forest", "title": "The Whole Point",
+      "intro": [
+        {"speaker": "narrator", "text": "Reading block. A short article about honeybees, and six different ideas about what it's really about."},
+        {"speaker": "jordan_skeptic", "mood": "neutral", "text": "It's about bees. Like, obviously. Can we be done?"},
+        {"speaker": "vee", "mood": "thinking", "text": "Jordan's right about the detail and wrong about the point. That's where the teaching is."},
+        {"speaker": "vee", "mood": "neutral", "text": "Don't hand them the main idea. Ask how they got theirs, then build on it."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "They built the main idea together. You held the question and gave them the thinking."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "You told them the main idea. Next time, ask them how they got theirs first."}
+    },
+    "culturally_responsive_intro": {
+      "chapter": 5, "month": "NOVEMBER", "region": "Questioning Forest", "title": "Know Them First",
+      "intro": [
+        {"speaker": "narrator", "text": "Parent conferences were last night. You learned more in two hours than in two months."},
+        {"speaker": "you", "text": "Diego helps run his aunt's food truck. Jordan fixes bikes. I didn't know any of it."},
+        {"speaker": "vee", "mood": "warm", "text": "Every kid walks in already knowing things. Your job is to find where the lesson connects to what they know."},
+        {"speaker": "diego_ell", "mood": "shy", "text": "At the truck, I cut the pizza in eight. Is that... fractions?"},
+        {"speaker": "vee", "mood": "serious", "text": "Connect before you correct. See who they are, then teach."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "You taught fractions with a food truck and a bike chain. They'll remember that lesson."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "You corrected before you connected. Start with what each student already brings."}
+    },
+    "custom_comparing_decimals": {
+      "chapter": 6, "month": "DECEMBER", "region": "Questioning Forest", "title": "Bigger Isn't Longer",
+      "intro": [
+        {"speaker": "narrator", "text": "Snow outside. Decimals inside. Nobody is thrilled."},
+        {"speaker": "noah_g5_fractions", "mood": "confused", "text": "0.25 is bigger than 0.5, because 25 is bigger than 5. ...Isn't it?"},
+        {"speaker": "vee", "mood": "thinking", "text": "That's not a careless mistake. It's a theory, and it makes sense to him. Find out why before you fix it."},
+        {"speaker": "vee", "mood": "neutral", "text": "Let every student put an idea on the table. The wrong ones teach the most."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "You let a wrong idea come out in public and the class took it apart. That's hard to do."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "You fixed the answer, but the wrong idea is still there. Ask about it next time."}
+    },
+    "group_work_fractions": {
+      "chapter": 7, "month": "JANUARY", "region": "Equity Caverns", "title": "The Plateau",
+      "intro": [
+        {"speaker": "narrator", "text": "Back from break. Clusters, fraction strips, and the kind of noise that could go either way."},
+        {"speaker": "hollis", "mood": "weary", "text": "Twenty-eight years, kid. Group work is just recess with worksheets. I stopped doing it in '09."},
+        {"speaker": "you", "text": "Is that where I end up? Tired and certain?"},
+        {"speaker": "vee", "mood": "serious", "text": "Years of experience don't make you better on their own. Practice on purpose does. Hollis stopped practicing."},
+        {"speaker": "vee", "mood": "neutral", "text": "Visit every group. Make sure every kid gets a real turn to talk."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "Every group, every kid, a real turn. Hollis was watching from the door, by the way."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "One group took over and another drifted. Visit all of them, and keep turns even."}
+    },
+    "science_force_motion": {
+      "chapter": 8, "month": "MARCH", "region": "Equity Caverns", "title": "Heavy Things Fall Faster",
+      "intro": [
+        {"speaker": "narrator", "text": "Ramps. Carts. A box of weights. And a very confident misconception."},
+        {"speaker": "hollis", "mood": "sincere", "text": "Mind if I watch? ...I used to love this unit."},
+        {"speaker": "marcus_volatile", "mood": "frustrated", "text": "Heavy stuff goes faster. Everybody knows that. This is dumb."},
+        {"speaker": "vee", "mood": "warm", "text": "Don't argue with Marcus. Let the cart show him. Your job is to get them looking at the results together."}
+      ],
+      "outro_win": {"speaker": "vee", "mood": "proud", "text": "The results changed their minds, not you. Hollis asked to borrow your ramps."},
+      "outro_retry": {"speaker": "vee", "mood": "thinking", "text": "They ran the experiment but kept their old ideas. Get them talking about the results together."}
+    },
+    "gym_capstone": {
+      "chapter": 9, "month": "MAY", "region": "The Capstone", "title": "The Lesson That Went Sideways",
+      "intro": [
+        {"speaker": "narrator", "text": "Formal observation. Principal Reyes, a clipboard, and forty-two minutes."},
+        {"speaker": "reyes", "mood": "neutral", "text": "Pretend I'm not here. I'm only writing down what I see."},
+        {"speaker": "narrator", "text": "Eleven minutes in, the projector dies. Marcus's chair hits the floor. Noah's hand is up. Priya is crying quietly."},
+        {"speaker": "you", "text": "Nobody rehearses this part."},
+        {"speaker": "vee", "mood": "warm", "text": "You've been rehearsing it all year. Order, care, reasoning. One student at a time."},
+        {"speaker": "vee", "mood": "serious", "text": "Breathe. Choose. Go."}
+      ],
+      "outro_win": {"speaker": "reyes", "mood": "pleased", "text": "I've watched a lot of first-years. Most freeze. You picked who to help first, and you were right."},
+      "outro_retry": {"speaker": "vee", "mood": "warm", "text": "It went sideways. That's the job some days. Let's look at the first thirty seconds again."}
+    }
+  }
+}

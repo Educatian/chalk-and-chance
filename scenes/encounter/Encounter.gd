@@ -7,6 +7,9 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const PathJudge = preload("res://scripts/PathJudge.gd")
+const Scaffold = preload("res://scripts/Scaffold.gd")
+const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
@@ -40,6 +43,13 @@ var opening_line := ""
 var win_line := "Oh... I think I get it now!"
 var target_badge := "echo"
 var win_moves: Array = ["elicit", "extend", "revoice", "wait"]  # moves that work for THIS student
+var _persona_data: Dictionary = {}
+var _pj: RefCounted = null  # PathJudge: 2-3 defensible, context-sensitive paths
+var _last_fit: Dictionary = {}
+var _scaffold := {"level": 3, "name": "Full", "reason": ""}   # Scaffold.level_for() result
+var _miss_streak := 0
+var _stepped_in := false
+var _scaffold_badge: Label
 
 # Funds of knowledge / asset framing (Moll & Gonzalez): a student's real-world strengths.
 var assets: Array = []
@@ -113,13 +123,18 @@ func setup(data: Dictionary) -> void:
 	persona_id = str(data.get("persona_id", persona_id))
 	display_name = str(data.get("display_name", display_name))
 	_load_persona()
-	_apply_scenario_overrides()    # a custom (imported) lesson can rewrite lines/targets to its content
+	_apply_scenario_overrides()
+	_pj = PathJudge.for_persona(_persona_data, win_moves)
+	if _persona_data.has("paths"):
+		win_moves = _pj.all_moves()    # a custom (imported) lesson can rewrite lines/targets to its content
 	_refresh_backdrop()
 	Game.note_visit(persona_id)    # equity: this student was called on
 	_apply_relationship_headstart()
 	_apply_adaptive_difficulty()
 	_refresh_intro()
 	_refresh_bond()
+	_scaffold = Scaffold.level_for(Scaffold.skills_for_moves(win_moves))
+	_apply_scaffold()
 
 ## Warm demander / care ethic: a relationship built in earlier periods carries over and
 ## makes this student a little easier to reach (trust precedes risk-taking).
@@ -194,7 +209,7 @@ func _apply_scenario_overrides() -> void:
 		opening_line = str(po["opening_line"])
 	if po.has("win_line"):
 		win_line = str(po["win_line"])
-	if po.has("win_moves"):
+	if po.has("win_moves") and not _persona_data.has("paths"):
 		win_moves = po["win_moves"]
 	_scenario_context = _build_scenario_context(d, po)
 
@@ -234,6 +249,7 @@ func _load_persona() -> void:
 	var data = JSON.parse_string(txt)   # Variant
 	if typeof(data) != TYPE_DICTIONARY:
 		return
+	_persona_data = data
 	target_concept = str(data.get("target_label", target_concept))
 	opening_line = str(data.get("opening_line", opening_line))
 	win_line = str(data.get("win_line", win_line))
@@ -244,11 +260,49 @@ func _load_persona() -> void:
 	connect_line = str(data.get("connect_line", connect_line))
 	connect_resolves = bool(data.get("connect_resolves", connect_resolves))
 
+func _support_level() -> int:
+	return Scaffold.FULL if _stepped_in else int(_scaffold["level"])
+
+## Show/hide supports for the current (skill-contingent) support level.
+func _apply_scaffold() -> void:
+	var lvl := _support_level()
+	if _scaffold_badge == null:
+		_scaffold_badge = _make_label("", Vector2(300, 14), 6, Color.WHITE)
+		_scaffold_badge.size = Vector2(90, 10)
+		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
+		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
+	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)
+	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
+	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(int(_scaffold["level"]), _stepped_in))
+	_refresh_intro()
+	if _wait_label != null:
+		_wait_label.visible = lvl >= Scaffold.PARTIAL
+	if _wait_bar != null:
+		_wait_bar.visible = lvl >= Scaffold.LIGHT
+		_wait_bar_bg.visible = lvl >= Scaffold.LIGHT
+	if _text_input != null:
+		var starter := ""
+		if lvl == Scaffold.FULL and _pj != null and not _pj.paths.is_empty():
+			var opener := str((_pj.paths[0]["steps"] as Array)[0][0])
+			starter = str(CoachFeedback.MOVES.get(opener, {}).get("starter", ""))
+		_text_input.placeholder_text = ("Try: " + starter) if starter != "" and starter.begins_with("\"") else "Type teacher talk..."
+	if lvl < Scaffold.PARTIAL and _result != null and str(_result.text).contains(": "):
+		_set_result("")
+	if not _stepped_in:
+		match lvl:
+			Scaffold.FULL:
+				pass
+			Scaffold.PARTIAL:
+				_set_coach("Read the student.")
+			_:
+				_set_coach("")
+
 func _refresh_intro() -> void:
+	var show_need := _support_level() >= Scaffold.PARTIAL
 	if _name_label != null:
-		_name_label.text = "ENCOUNTER  -  %s  (%s)" % [display_name, target_concept]
+		_name_label.text = ("ENCOUNTER  -  %s  (%s)" % [display_name, target_concept]) if show_need else "ENCOUNTER  -  %s" % display_name
 	if _need_label != null:
-		_need_label.text = "Need: %s" % target_concept
+		_need_label.text = ("Need: %s" % target_concept) if show_need else "Need: read %s's cues" % display_name
 	if _student_name_label != null:
 		_student_name_label.text = display_name
 	if opening_line != "":
@@ -500,8 +554,12 @@ func _use_item(id: String) -> void:
 			_set_result("Student Profile Card used  |  Asset cue revealed  |  Rapport +%d" % int(rapport_gain))
 			_set_coach("Coach Vee: profile cue: %s" % hint)
 		"noticing_lens":
-			_set_result("Noticing Lens used  |  Look for %s" % ", ".join(win_moves))
-			_set_coach("Coach Vee: cue = reasoning need. Try: %s." % ", ".join(win_moves))
+			var ways: Array = []
+			if _pj != null:
+				for p in _pj.paths:
+					ways.append(str(p.get("label", "")))
+			_set_result("Noticing Lens used  |  %d ways in" % ways.size())
+			_set_coach("Coach Vee: more than one approach works for %s: %s. Pick one and follow it through." % [display_name, " / ".join(ways)])
 		"wait_meter_pin":
 			_wait_item_ready = true
 			_set_result("Wait Meter Pin used  |  next move gets full wait-time credit")
@@ -547,7 +605,7 @@ func _start_voice_input() -> void:
 		_set_result("Voice input is not available in this browser.")
 
 func _preview_move(tag: String) -> void:
-	if _busy or _resolved:
+	if _busy or _resolved or _support_level() < Scaffold.PARTIAL:
 		return
 	_set_result(str(MOVE_HELP.get(tag, "")))
 
@@ -739,13 +797,29 @@ func _on_reply(resp: Dictionary) -> void:
 	var tags: Array = judge.get("move_tags", [])
 	var targets: bool = bool(judge.get("targets_misconception", false))
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
+	# Path judge is authoritative for fit: the same move can be right now and early later.
+	var fit := {}
+	if tag0 != "" and _pj != null:
+		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)))
+		targets = str(fit["fit"]) == "advance"
+		var credit := float(fit["credit"])
+		understanding = clampf(understanding - float(deltas.get("understanding", 0.0)) + credit, 0.0, 1.0)
+		deltas["understanding"] = credit
+		_refresh_meters()
+		if str(fit["fit"]) == "early":
+			resp["coach_tip"] = "%s is the right idea for %s, just not yet: %s." % [tag0.capitalize(), display_name, str(fit["note"]).trim_prefix("right idea, too early: ")]
+			_set_coach("Coach Vee: " + str(resp["coach_tip"]))
+	_last_fit = fit
+	_update_contingency(targets, tag0)
 	_set_result(_result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas))
 	Sfx.play("good" if targets else "bad")
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
 	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
 	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
 	_move_history.append({"turn": _turns, "tag": tag0, "targets": targets, "construct": Competency.TAG_SKILL.get(tag0, ""),
-		"reaction": str(utter.get("text", "")), "meter": _result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas)})
+		"reaction": str(utter.get("text", "")), "meter": _result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas),
+		"student": display_name, "fit": str(fit.get("fit", "")), "path": str(fit.get("path_label", "")), "note": str(fit.get("note", "")),
+		"scaffold": _support_level()})
 	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
 	if targets:
 		GameState.add_bond(persona_id, 0.05)
@@ -763,6 +837,8 @@ func _on_reply(resp: Dictionary) -> void:
 		"scenario_id": str(Game.current_scenario_id) if "current_scenario_id" in Game else "",
 		"persona_id": persona_id,
 		"turn": _turns,
+		"scaffold": {"level": int(_scaffold["level"]), "effective": _support_level(), "stepped_in": _stepped_in,
+			"prob": float(_scaffold.get("prob", 0.5)), "evidence": int(_scaffold.get("evidence", 0))},
 		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text},
 		"judge": {"tags": tags, "targets": targets, "wait_ok": bool(judge.get("wait_time_ok", false))},
 		"deltas": deltas,
@@ -810,6 +886,10 @@ func _do_connect() -> void:
 	engagement = clampf(engagement + 12.0, 0.0, 100.0)
 	composure = clampf(composure + 3.0, 0.0, GameState.max_composure())
 	GameState.add_bond(persona_id, 0.18)
+	var cfit: Dictionary = _pj.evaluate("connect") if _pj != null else {}
+	var connect_advances := str(cfit.get("fit", "")) == "advance"
+	if not connect_resolves and connect_advances:
+		understanding = clampf(understanding + float(cfit["credit"]), 0.0, 1.0)
 	if connect_resolves:
 		# A landed asset-bridge is itself a valid route to the insight (the connect_line
 		# states the full understanding), so it crosses the win gate.
@@ -819,9 +899,10 @@ func _do_connect() -> void:
 	var line := connect_line if connect_line != "" else "Oh... when you put it in my world, it actually makes sense."
 	_set_dialogue("%s: \"%s\"" % [display_name, line])
 	TTSClient.speak(persona_id, line, "excited" if connect_resolves else "thinking")
-	Game.log_move("connect", false, connect_resolves)
-	_move_history.append({"turn": _turns, "tag": "connect", "targets": connect_resolves, "construct": "funds_of_knowledge",
-		"reaction": line, "meter": "Rapport up | Engagement up"})
+	Game.log_move("connect", false, connect_resolves or connect_advances)
+	_move_history.append({"turn": _turns, "tag": "connect", "targets": connect_resolves or connect_advances, "construct": "funds_of_knowledge",
+		"reaction": line, "meter": "Rapport up | Engagement up", "student": display_name,
+		"fit": str(cfit.get("fit", "")), "path": str(cfit.get("path_label", ""))})
 	_update_portrait("excited" if connect_resolves else "thinking")
 	if connect_resolves and understanding >= WIN_UNDERSTANDING:
 		_win("connect")
@@ -831,6 +912,28 @@ func _do_connect() -> void:
 	else:
 		_set_coach("Coach Vee: connecting built real trust (bond up). For %s the academic unlock is still the right move, but now they will let you lead." % display_name)
 	_arm_turn()
+
+## Contingent support: three misses in a row -> Coach Vee steps in with the need and
+## one way in; the next fitting move hands control back to the player.
+func _update_contingency(targets: bool, tag: String) -> void:
+	if tag == "":
+		return
+	if targets:
+		_miss_streak = 0
+		if _stepped_in:
+			_stepped_in = false
+			_apply_scaffold()
+		return
+	_miss_streak += 1
+	if _miss_streak >= Scaffold.STEP_IN_AFTER and not _stepped_in and int(_scaffold["level"]) < Scaffold.FULL:
+		_stepped_in = true
+		_apply_scaffold()
+		var way := ""
+		if _pj != null and not _pj.paths.is_empty():
+			var p: Dictionary = _pj.paths[0]
+			way = " One way in: %s (start with %s)." % [str(p.get("label", "")), str((p["steps"] as Array)[0][0]).capitalize()]
+		_set_coach("Coach Vee steps in: %s needs %s.%s" % [display_name, target_concept.to_lower(), way])
+		Telemetry.log_event({"event": "scaffold_step_in", "persona_id": persona_id, "scenario_id": str(Game.current_scenario_id), "level": int(_scaffold["level"])})
 
 func _check_win(targets: bool, tags: Array) -> bool:
 	if understanding < _win_understanding:
@@ -914,14 +1017,11 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	panel.position = Vector2(34, 82)
 	panel.size = Vector2(436, 178)
 	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true)
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true, str(run_record.get("rank", "-")))
 
-	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 98), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
-	_overlay_label(overlay, "Score %03d   |   Rank %s   |   Level %d" % [
-		int(run_record.get("score", 0)),
-		str(run_record.get("rank", "-")),
-		GameState.teacher_level,
-	], Vector2(48, 120), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 98), 10, Color(0.97, 0.95, 0.86), Vector2(300, 16))
+	var score_lbl := _overlay_label(overlay, "", Vector2(48, 120), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	CompletionFx.count_up(score_lbl, "Score {score}   |   Level %d" % GameState.teacher_level, int(run_record.get("score", 0)))
 
 	var reward_line := "Badge %s" % badge_id.to_upper()
 	if bool(reward.get("level_up", false)):
@@ -929,8 +1029,8 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
 	if item_text != "":
 		reward_line += " | +items"
-	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
-	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 152), 7, Color(0.72, 0.82, 0.96), Vector2(404, 12))
+	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 152), 7, Color(0.72, 0.82, 0.96), Vector2(300, 12))
 
 	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
 	rows = rows.slice(0, 3)
@@ -1081,10 +1181,16 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 		parts.append("Rapport %s" % _signed(rapport_delta))
 	if order_delta != 0:
 		parts.append("Order %s" % _signed(order_delta))
+	var fit_kind := str(_last_fit.get("fit", ""))
 	if tag == "wait" and not wait_ok:
 		parts.append("Too soon: hold the pause longer")
 	elif targets:
-		parts.append("This addressed %s's need" % display_name)
+		var path := str(_last_fit.get("path_label", ""))
+		parts.append(("On a path that works: %s" % path) if path != "" and path != "Core move" else "This addressed %s's need" % display_name)
+		if str(_last_fit.get("note", "")) != "":
+			parts.append(str(_last_fit["note"]).capitalize())
+	elif fit_kind == "early":
+		parts.append("Right idea, too early")
 	elif tag != "":
 		parts.append("Not the move %s needs yet" % display_name)
 	if _last_input_mode == "free_text":

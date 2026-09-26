@@ -7,7 +7,10 @@
   "badge": "echo",
   "win_moves": [
     "wait",
-    "revoice"
+    "revoice",
+    "elicit",
+    "extend",
+    "connect"
   ],
   "color": [
     0.9,
@@ -28,5 +31,49 @@
   ],
   "asset_hint": "Diego works it out in Spanish before he'll risk English. Letting him reason in his home language first is a resource, not a deficit (Moll's funds of knowledge).",
   "connect_line": "Oh - 'lo explico en espanol primero'... yes. When I say it my way first, then I can tell you in English. It makes sense.",
-  "connect_resolves": true
+  "connect_resolves": true,
+  "paths": [
+    {
+      "id": "processing_time",
+      "label": "Processing time",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "revoice",
+          "elicit"
+        ]
+      ],
+      "why": "Extended wait time lets him translate and compose his answer (Rowe, 1986)."
+    },
+    {
+      "id": "confirm_meaning",
+      "label": "Revoice to confirm",
+      "steps": [
+        [
+          "revoice"
+        ],
+        [
+          "elicit",
+          "extend"
+        ]
+      ],
+      "why": "Restating shows you understood and models the academic language."
+    },
+    {
+      "id": "his_world",
+      "label": "Start from his world",
+      "steps": [
+        [
+          "connect"
+        ],
+        [
+          "wait",
+          "revoice"
+        ]
+      ],
+      "why": "The food-truck pizza is fractions he already knows."
+    }
+  ]
 }

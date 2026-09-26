@@ -43,6 +43,16 @@ func _find_button(root: Node, txt: String) -> Button:
 func _cur() -> Node:
 	return SceneRouter._current
 
+## Story cinematics sit between the hub and missions; press Skip like a player would.
+func _skip_cinematic(label: String) -> void:
+	var c := _cur()
+	_check("%s plays story cinematic" % label, c != null and c.name == "MissionCinematic")
+	if c != null and c.name == "MissionCinematic":
+		var skip := _find_button(c, "Skip")
+		if skip != null:
+			skip.pressed.emit()
+		await _wait(0.8)
+
 func _press_move(enc: Node, tag: String) -> void:
 	# Press a teaching-move button like a user; honor wait-time for the Wait move.
 	if enc._busy or enc._resolved:
@@ -91,6 +101,7 @@ func _run() -> void:
 	if start_rehearsal != null:
 		start_rehearsal.pressed.emit()
 	await _frames(5)
+	await _skip_cinematic("lecture intro")
 	c = _cur()
 	_check("starting lecture opens playable scene", c != null and c.name == "LectureScene")
 
@@ -114,10 +125,21 @@ func _run() -> void:
 		_check("lecture completes by clicking buttons", c._over)
 		_check("lecture awards badge on win", "routine" in GameState.badges)
 		await _wait(4.0)   # _finish waits ~3.4s (real time) before showing debrief
+		var coach_btn := _find_button(c, "Coach Vee")
+		_check("lecture debrief offers Coach Vee coaching", coach_btn != null)
+		if coach_btn != null:
+			coach_btn.pressed.emit()
+			await _frames(3)
+			var card := c.get_node_or_null("CoachCard")
+			_check("coaching card names a next-round focus", card != null and _find_button(card, "Rehearse") != null)
+			if card != null:
+				card.queue_free()
+				await _frames(2)
 		var return_hub := _find_button(c, "Return to hub")
 		if return_hub != null:
 			return_hub.pressed.emit()
 		await _frames(5)
+		await _skip_cinematic("lecture outro")
 		c = _cur()
 		_check("returns to Hub after lecture", c != null and c.name == "Hub")
 
@@ -128,6 +150,7 @@ func _run() -> void:
 	if c != null and c.has_method("_choose"):
 		c._choose("discussion_fractions")
 	await _frames(6)
+	await _skip_cinematic("discussion intro")
 	c = _cur()
 	_check("opens Overworld", c != null and c.name == "Overworld")
 	if c != null and c.name == "Overworld":

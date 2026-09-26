@@ -20,10 +20,20 @@ func _ready() -> void:
 			if enc.students[i].get("resolved", false):
 				continue
 			enc._select(i)
-			var wm: Array = enc.students[i]["win_moves"]
-			var mv: String = str(wm[0])
-			if mv == "wait" and wm.size() > 1:
-				mv = str(wm[1])
+			# Follow the first path that doesn't open with Wait: step 1 move, then alternate
+			# step 2 moves (a player responding to the student, not mashing one key).
+			var pj = enc.students[i]["pj"]
+			var path: Dictionary = pj.paths[0]
+			for p in pj.paths:
+				if not ("wait" in (p["steps"] as Array)[0]):
+					path = p
+					break
+			var steps: Array = path["steps"]
+			var k := int(enc.students[i].get("_t", 0))
+			enc.students[i]["_t"] = k + 1
+			var mv: String = str(steps[0][0]) if k == 0 else str(steps[1][(k - 1) % (steps[1] as Array).size()])
+			if mv == "wait":
+				mv = str(steps[0][0])
 			enc._on_move(mv)
 			await get_tree().process_frame
 

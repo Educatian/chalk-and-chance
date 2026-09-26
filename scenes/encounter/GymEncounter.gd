@@ -7,6 +7,10 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const Narrative = preload("res://scripts/Narrative.gd")
+const CoachCard = preload("res://scenes/ui/CoachCard.gd")
+const PathJudge = preload("res://scripts/PathJudge.gd")
+const Scaffold = preload("res://scripts/Scaffold.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const UI_SCALE := 2.0
 const WIN_U := 0.80
@@ -42,6 +46,10 @@ var _order_fill: ColorRect
 var _dialogue: Label
 var _coach: Label
 var _result: Label
+var _scaffold := {"level": 3, "name": "Full", "reason": ""}
+var _miss_streak := 0
+var _stepped_in := false
+var _scaffold_badge: Label
 var _highlight: ColorRect
 var _buttons: Array = []
 var _text_input: LineEdit = null
@@ -91,6 +99,14 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	var all_moves: Array = []
+	for st in students:
+		for m in st.get("win_moves", []):
+			if not all_moves.has(m):
+				all_moves.append(m)
+	_scaffold = Scaffold.level_for(Scaffold.skills_for_moves(all_moves))
+	_apply_scaffold()
+	CoachCard.show_focus_banner(self, str(scenario.get("id", Game.current_scenario_id)))
 
 # --- data --------------------------------------------------------------------
 
@@ -100,11 +116,14 @@ func _load_students() -> void:
 		var pid: String = str(entry.get("id", ""))
 		var base := _read_json("res://data/persona_library/%s.json" % pid)
 		var ov: Dictionary = overrides.get(pid, {})
+		var legacy_wm: Array = ov.get("win_moves", base.get("win_moves", ["elicit", "extend"]))
+		var pj = PathJudge.for_persona(base, legacy_wm)
 		students.append({
+			"pj": pj,
 			"pid": pid,
 			"name": str(entry.get("name", base.get("display_name", "Student"))),
 			"u": 0.15, "resolved": false, "restless": 0.0,
-			"win_moves": ov.get("win_moves", base.get("win_moves", ["elicit", "extend"])),
+			"win_moves": pj.all_moves() if base.has("paths") else legacy_wm,
 			"win_line": str(ov.get("win_line", base.get("win_line", "Oh, I get it now!"))),
 			"target_label": str(ov.get("target_label", base.get("target_label", ""))),
 			"opening_line": str(ov.get("opening_line", base.get("opening_line", ""))),
@@ -328,7 +347,10 @@ func _use_item(id: String) -> void:
 			if listener_gain > 0.0 and sel >= 0 and sel < students.size():
 				students[sel]["u"] = clampf(float(students[sel].get("u", 0.0)) + listener_gain, 0.0, 1.0)
 			_result.text = "Student Profile Card  |  %s need revealed%s" % [str(s0.get("name", "Student")), "  |  Understanding +4" if listener_gain > 0.0 else ""]
-			_coach.text = "Coach Vee: %s's current need is %s. Useful moves: %s." % [str(s0.get("name", "Student")), str(s0.get("target_label", "")), ", ".join(s0.get("win_moves", []))]
+			var ways: Array = []
+			for p in s0["pj"].paths:
+				ways.append(str(p.get("label", "")))
+			_coach.text = "Coach Vee: %s's need is %s. Ways in: %s." % [str(s0.get("name", "Student")), str(s0.get("target_label", "")), " / ".join(ways)]
 		"noticing_lens":
 			var s1: Dictionary = students[sel] if sel >= 0 and sel < students.size() else {}
 			_result.text = "Noticing Lens  |  inspect target cue"
@@ -398,6 +420,43 @@ func _tex(path: String) -> Texture2D:
 
 # --- turn logic --------------------------------------------------------------
 
+func _support_level() -> int:
+	return Scaffold.FULL if _stepped_in else int(_scaffold["level"])
+
+func _apply_scaffold() -> void:
+	var lvl := _support_level()
+	if _scaffold_badge == null:
+		_scaffold_badge = _label("", Vector2(250, 14), 6, Color.WHITE)
+		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
+		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
+	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)
+	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
+	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(int(_scaffold["level"]), _stepped_in))
+	if _stepped_in:
+		return
+	if _result != null:
+		_result.text = ["", "", "Select a student, then choose a move.", "Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck."][lvl]
+	if _coach != null:
+		_coach.text = "Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear." if lvl == Scaffold.FULL else ""
+	_refresh()
+
+func _update_contingency(targets: bool, s: Dictionary) -> void:
+	if targets:
+		_miss_streak = 0
+		if _stepped_in:
+			_stepped_in = false
+			_apply_scaffold()
+		return
+	_miss_streak += 1
+	if _miss_streak >= Scaffold.STEP_IN_AFTER and not _stepped_in and int(_scaffold["level"]) < Scaffold.FULL:
+		_stepped_in = true
+		_apply_scaffold()
+		var p: Dictionary = s["pj"].paths[0]
+		_coach.text = "Coach Vee steps in: %s needs %s. One way in: %s (start with %s)." % [
+			s["name"], str(s.get("target_label", "")).to_lower(), str(p.get("label", "")), str((p["steps"] as Array)[0][0]).capitalize()]
+		_refresh()
+		Telemetry.log_event({"event": "scaffold_step_in", "scenario_id": str(Game.current_scenario_id), "persona_id": str(s.get("pid", "")), "level": int(_scaffold["level"])})
+
 func _arm_turn() -> void:
 	_ready_ms = Time.get_ticks_msec()
 	_refresh_item_buttons()
@@ -407,7 +466,7 @@ func _select(i: int) -> void:
 	_refresh()
 	if _result != null and sel >= 0 and sel < students.size():
 		var s: Dictionary = students[sel]
-		_result.text = "Current target: %s. Need: %s." % [s["name"], s.get("target_label", "")]
+		_result.text = ("Current target: %s. Need: %s." % [s["name"], s.get("target_label", "")]) if _support_level() >= Scaffold.PARTIAL else "Current target: %s. Read the cues." % s["name"]
 
 func _toggle_input_mode() -> void:
 	_type_mode = not _type_mode
@@ -485,23 +544,30 @@ func _on_move(tag: String) -> void:
 		wait_ms = max(wait_ms, GameState.wait_threshold_ms())
 		wait_ok = true
 		_wait_item_ready = false
-	var wm: Array = s.get("win_moves", [])
-	var targets := false
-	if tag == "wait":
-		targets = ("wait" in wm) and wait_ok
-	elif tag != "tell":
-		targets = tag in wm
+	# Multi-path judge: right move at the right moment for THIS student.
+	var fit: Dictionary = s["pj"].evaluate(tag, wait_ok)
+	var targets := str(fit["fit"]) == "advance"
+	s["last_fit"] = fit
+	s["scaffold"] = _support_level()
 
 	# Effect on the targeted student.
 	if targets:
 		var old_u := float(s["u"])
-		s["u"] = clampf(float(s["u"]) + 0.18, 0.0, 1.0)
+		s["u"] = clampf(float(s["u"]) + float(fit["credit"]) * 1.5, 0.0, 1.0)
 		s["restless"] = maxf(0.0, float(s["restless"]) - 0.35)
 		composure = clampf(composure + 1.0, 0.0, GameState.max_composure())
 		_dialogue.text = "%s: \"...okay, that helps.\"" % s["name"]
-		_result.text = "%s +%d understanding  |  correct move for this student" % [s["name"], int(round((float(s["u"]) - old_u) * 100.0))]
+		_result.text = "%s +%d understanding  |  %s" % [s["name"], int(round((float(s["u"]) - old_u) * 100.0)), str(fit["path_label"])]
+		if str(fit["note"]) != "":
+			_result.text += "  |  " + str(fit["note"])
 		Sfx.play("good")
-		_coach.text = "Coach Vee: good move for %s." % s["name"]
+		_coach.text = "Coach Vee: that fits %s. Keep following it through." % s["name"]
+	elif str(fit["fit"]) == "early":
+		s["u"] = clampf(float(s["u"]) + 0.04, 0.0, 1.0)
+		_dialogue.text = "%s: \"Hm... I'm not there yet.\"" % s["name"]
+		_result.text = "%s  |  right idea, too early" % s["name"]
+		Sfx.play("bad", -4.0)
+		_coach.text = "Coach Vee: %s is right for %s, but %s." % [tag.capitalize(), s["name"], str(fit["note"]).trim_prefix("right idea, too early: ")]
 	elif tag == "tell":
 		s["restless"] = minf(1.0, float(s["restless"]) + 0.1)
 		composure = clampf(composure - 4.0, 0.0, GameState.max_composure())
@@ -516,6 +582,7 @@ func _on_move(tag: String) -> void:
 		Sfx.play("bad")
 		_coach.text = "Coach Vee: that is not the move %s needs (try: %s)." % [s["name"], s.get("target_label", "")]
 
+	_update_contingency(targets, s)
 	# Resolve?
 	if float(s["u"]) >= _win_u and targets:
 		s["resolved"] = true
@@ -540,7 +607,7 @@ func _on_move(tag: String) -> void:
 		_request_llm_turn(tag, wait_ms, wait_ok, targets, s, input_mode, free_text)
 	else:
 		_move_history.append({"turn": _turns, "tag": tag, "targets": targets, "construct": Competency.TAG_SKILL.get(tag, ""),
-			"reaction": str(s.get("name", "Student")) + " shifts with the room.", "meter": "Order %d%% | Composure %d%%" % [int(order), int(composure)]})
+			"student": str(s.get("name", "")), "fit": str(s.get("last_fit", {}).get("fit", "")), "path": str(s.get("last_fit", {}).get("path_label", "")), "note": str(s.get("last_fit", {}).get("note", "")), "scaffold": int(s.get("scaffold", 3)), "reaction": str(s.get("name", "Student")) + " shifts with the room.", "meter": "Order %d%% | Composure %d%%" % [int(order), int(composure)]})
 		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, s, {}, "")
 
 func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, student: Dictionary, input_mode: String, free_text: String) -> void:
@@ -551,7 +618,7 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 		return
 	_dialogue_tail.append({"speaker": "Teacher", "text": _move_gloss(tag, input_mode, free_text)})
 	_move_history.append({"turn": _turns, "tag": tag, "targets": targets, "construct": Competency.TAG_SKILL.get(tag, ""),
-		"reaction": str(student.get("name", "Student")) + " considers the move.", "meter": "Order %d%% | Composure %d%%" % [int(order), int(composure)]})
+		"student": str(student.get("name", "")), "fit": str(student.get("last_fit", {}).get("fit", "")), "path": str(student.get("last_fit", {}).get("path_label", "")), "note": str(student.get("last_fit", {}).get("note", "")), "scaffold": int(student.get("scaffold", 3)), "reaction": str(student.get("name", "Student")) + " considers the move.", "meter": "Order %d%% | Composure %d%%" % [int(order), int(composure)]})
 	if LLMClient.use_stub:
 		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, student, {}, "")
 		return
@@ -785,28 +852,39 @@ func _show_complete_panel(won: bool, resolved: int, reward: Dictionary, run_reco
 	panel.position = Vector2(34, 78)
 	panel.size = Vector2(436, 184)
 	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), won)
-	_overlay_label(overlay, "GYM DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(404, 16))
 	var score := int(run_record.get("score", resolved * 60 + int(round(composure + order))))
 	var rank := str(run_record.get("rank", GameState._rank_for_score(score)))
-	_overlay_label(overlay, "%s   |   Score %03d   |   Rank %s" % ["CLEARED" if won else "TRY AGAIN", score, rank], Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(404, 14))
+	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), won, rank)
+	_overlay_label(overlay, "GYM DEBRIEF", Vector2(48, 94), 10, Color(0.97, 0.95, 0.86), Vector2(300, 16))
+	var score_lbl := _overlay_label(overlay, "", Vector2(48, 118), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	CompletionFx.count_up(score_lbl, "%s   |   Score {score}" % ("CLEARED" if won else "TRY AGAIN"), score)
 	var reward_line := "Reached %d/%d | Order %d%% | Composure %d%%" % [resolved, students.size(), int(order), int(composure)]
 	if bool(reward.get("level_up", false)):
 		reward_line += " | +upgrade"
-	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.72, 0.82, 0.96), Vector2(404, 14))
-	_overlay_label(overlay, "Drivers: Reach%d Order%d Calm%d" % [resolved * 60, int(order), int(composure)], Vector2(48, 154), 7, Color(0.72, 0.82, 0.96), Vector2(390, 14))
+	_overlay_label(overlay, reward_line, Vector2(48, 140), 7, Color(0.72, 0.82, 0.96), Vector2(300, 28))
 	var trace_line := str(run_record.get("evidence_trace", ""))
-	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored move trace"), Vector2(48, 178), 7, Color(0.72, 0.78, 0.88), Vector2(340, 16))
-	_overlay_label(overlay, Game.evidence_practice_target(false), Vector2(48, 196), 7, Color(0.72, 0.92, 0.78), Vector2(308, 16))
+	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(48, 172), 7, Color(0.72, 0.78, 0.88), Vector2(300, 16))
+	_overlay_label(overlay, "Next: " + Game.evidence_practice_target(false), Vector2(48, 192), 7, Color(0.72, 0.92, 0.78), Vector2(270, 24))
 	var cont := Button.new()
 	cont.text = "Return to hub"
 	cont.position = Vector2(326, 224)
 	cont.size = Vector2(126, 30)
 	cont.add_theme_font_size_override("font_size", 7)
-	cont.pressed.connect(func(): SceneRouter.change_scene("res://scenes/ui/Hub.tscn"))
+	cont.pressed.connect(func(): Narrative.go_hub_with_outro(scenario, won))
 	overlay.add_child(cont)
+	# Coached rehearsal loop: talk it through with Coach Vee, then re-run immediately.
+	var coach := Button.new()
+	coach.text = "Coach Vee  >"
+	coach.position = Vector2(190, 224)
+	coach.size = Vector2(126, 30)
+	coach.add_theme_font_size_override("font_size", 7)
+	coach.pressed.connect(func():
+		CoachCard.open(self, _move_history, str(scenario.get("id", Game.current_scenario_id)),
+			func(): SceneRouter.change_scene("res://scenes/encounter/GymEncounter.tscn", {"scenario": scenario}),
+			func(): Narrative.go_hub_with_outro(scenario, won)))
+	overlay.add_child(coach)
 	PixelUi.scale_tree(overlay, UI_SCALE)
-	cont.grab_focus()
+	coach.grab_focus()
 
 func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:
 	var l := Label.new()
@@ -833,7 +911,7 @@ func _refresh() -> void:
 		var s2: Dictionary = students[sel]
 		_highlight.position = Vector2(float(s2["x"]) - 2.0, float(s2["y"]) - 2.0) * UI_SCALE
 		_highlight.size = Vector2((float(s2["w"]) + 4.0) * UI_SCALE, 100.0 * UI_SCALE)
-		_title.text = "GYM: target = %s  (%s)" % [s2["name"], s2.get("target_label", "")]
+		_title.text = ("GYM: target = %s  (%s)" % [s2["name"], s2.get("target_label", "")]) if _support_level() >= Scaffold.PARTIAL else "GYM: target = %s" % s2["name"]
 
 func _set_fill(fill: ColorRect, frac: float) -> void:
 	if fill == null:

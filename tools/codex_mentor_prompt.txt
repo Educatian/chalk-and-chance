@@ -1,0 +1,34 @@
+You are generating HIGH-DETAIL pixel-art PORTRAIT assets for a Godot game in this working
+directory. Use your image generation tool. Generate large, then POST-PROCESS each with
+Python + Pillow: crop to square, resize with NEAREST-neighbor to EXACTLY 128x128 px, save
+PNG (RGBA) to the EXACT path, overwriting if present. Never bilinear/bicubic. Work fully
+autonomously; do not ask questions. Also save a 512x512 NEAREST upscale of each neutral
+portrait next to it with suffix _large.png (used for cinematic close-ups).
+
+GLOBAL STYLE (must match the existing portraits in assets/portraits/ exactly; look at
+assets/portraits/noah_g5_fractions_neutral.png and talia_dominator_neutral.png first):
+- high-detail 16-bit pixel art, Pokemon HeartGold/SoulSilver (DS) quality, crisp 1px
+  outlines, flat cel shading, no anti-aliasing.
+- HEAD-AND-SHOULDERS down to mid-chest, hands may enter frame for gestures.
+- soft warm key light from the LEFT; deep-navy vignette background (NOT transparent).
+- one ADULT, centered, facing roughly forward.
+
+CHARACTERS (identity locked across all their expressions):
+1. coach_vee -- Dr. Vera Okonkwo, veteran Black woman instructional coach, early 50s, warm
+   but exact. Short natural grey-streaked coils, round tortoiseshell glasses, mustard-yellow
+   cardigan over a teal blouse, small chalk-dust smudge on one sleeve, lanyard with a school ID.
+   Expressions (filename suffix): neutral (calm, attentive), warm (gentle knowing smile),
+   serious (level gaze, one hand raised palm-out as if saying "pause"), proud (small
+   approving nod, hand on chest), thinking (finger on glasses, eyes to the side).
+   Paths: assets/portraits/coach_vee_<suffix>.png
+2. mr_hollis -- veteran teacher, white man late 50s, tired but kind; balding with grey
+   side hair, rolled-up sleeves on a faded blue oxford shirt, loosened brown tie, coffee
+   mug. Expressions: neutral (tired half-smile), weary (rubbing eyes), wry (lopsided grin),
+   sincere (softened eyes, leaning in).
+   Paths: assets/portraits/mr_hollis_<suffix>.png
+3. principal_reyes -- Principal Ana Reyes, Latina woman mid 40s, sleek dark bun, charcoal
+   blazer, clipboard held to chest. Expressions: neutral (professional), stern (raised
+   eyebrow), pleased (brief smile).
+   Paths: assets/portraits/principal_reyes_<suffix>.png
+
+When done, print the list of files written. Do not modify any other file.

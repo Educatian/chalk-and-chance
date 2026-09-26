@@ -7,7 +7,10 @@
   "badge": "balance",
   "win_moves": [
     "wait",
-    "elicit"
+    "elicit",
+    "revoice",
+    "connect",
+    "praise"
   ],
   "color": [
     0.45,
@@ -28,5 +31,49 @@
   ],
   "asset_hint": "Sam has gone quiet, but the margins are full of drawings. There's a door in there - an interest you can open before you ask for thinking.",
   "connect_line": "...you saw my drawings? I could draw the problem instead of writing it... yeah. Okay. I can try that.",
-  "connect_resolves": true
+  "connect_resolves": true,
+  "paths": [
+    {
+      "id": "warm_invite",
+      "label": "Warm invitation",
+      "steps": [
+        [
+          "wait"
+        ],
+        [
+          "elicit",
+          "revoice"
+        ]
+      ],
+      "why": "Low pressure plus time makes it safe for him to be wrong in public (Fredricks et al., 2004)."
+    },
+    {
+      "id": "connect_first",
+      "label": "Connect first",
+      "steps": [
+        [
+          "connect"
+        ],
+        [
+          "wait",
+          "elicit"
+        ]
+      ],
+      "why": "Start from something he already knows so entering the conversation costs less."
+    },
+    {
+      "id": "low_stakes_credit",
+      "label": "Low-stakes credit",
+      "steps": [
+        [
+          "praise"
+        ],
+        [
+          "elicit",
+          "wait"
+        ]
+      ],
+      "why": "Specific credit for effort signals he belongs in the discussion."
+    }
+  ]
 }
