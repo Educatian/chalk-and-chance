@@ -1,4 +1,5 @@
 extends Control
+const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Gym (boss) encounter: several students at once. Pick a TARGET student, then a move.
 ## Helping one student calms them but the others grow restless (orchestration under load).
@@ -173,6 +174,7 @@ func _refresh_backdrop() -> void:
 # --- UI ----------------------------------------------------------------------
 
 func _build_ui() -> void:
+	UiKit.add_scene_frame(_layer, Rect2(4, 2, 472, 17), [Rect2(4, 20, 244, 40), Rect2(6, 158, 468, 46)])
 	_title = _label("GYM: %s" % str(scenario.get("title", "Capstone")), Vector2(10, 6), UiText.S_DISPLAY, Color(0.97, 0.93, 0.85))
 	_title.size = Vector2(460, 14)
 
@@ -223,7 +225,7 @@ func _build_ui() -> void:
 	var dialogue_text := Rect2(Vector2(18, 166), Vector2(444, 24))
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position; dbg.size = dialogue_box.size
-	dbg.color = Color(0.12, 0.15, 0.26); dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dbg.color = Color(0, 0, 0, 0)   # the chalkboard panel behind provides the box; dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(dbg)
 	_dialogue = _label("", dialogue_text.position, 9, Color(0.96, 0.96, 0.92))
 	_dialogue.name = "DialogueText"
@@ -426,6 +428,7 @@ func _bar_at(pos: Vector2, w: float, c: Color) -> ColorRect:
 	return fill
 
 func _tex(path: String) -> Texture2D:
+	path = UiKit.portrait_path(path)
 	if ResourceLoader.exists(path):
 		var r = load(path)
 		if r is Texture2D:

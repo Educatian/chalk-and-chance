@@ -268,12 +268,13 @@ MOVE_ICONS = {
     'connect': ["........", ".XX..XX.", "X..XX..X", "X......X", "X..XX..X", ".XX..XX.", "........", "........"],
     'redirect': ["....XX..", "...X..X.", "XXXX...X", ".XX....X", "..X...X.", "......X.", "....XX..", "........"],
     'wait': ["XXXXXXX.", ".X...X..", "..X.X...", "...X....", "..X.X...", ".X.X.X..", "XXXXXXX.", "........"],
+    'type': ["........", "XXXXXXXX", "X.X.X.XX", "XXXXXXXX", "XX.X.X.X", "XXXXXXXX", ".XXXXXX.", "........"],
 }
 
 
 def move_icon(name):
     img = new(8, 8)
-    stamp(img, MOVE_ICONS[name], 0, 0, {'X': 'wood_dk'})
+    stamp(img, MOVE_ICONS[name], 0, 0, {'X': 'navy'})
     return upscale(img, 2)
 
 
@@ -783,39 +784,39 @@ def teacher_sheet():
 # --------------------------------------------------------------------------- UI kit (drawn x2)
 
 def frame_board():
+    """Slim dark panel (HUD bands, dialogue, encounter panels): slate-navy fill, 1-texel
+    light inner line, ink outline, no wood trim (modern direction, review note 3)."""
     f = new(24, 24)
     rect(f, 1, 0, 22, 24, 'ink')
     rect(f, 0, 1, 24, 22, 'ink')
-    rect(f, 1, 1, 22, 22, 'wood')
-    rect(f, 1, 1, 22, 1, 'wood_lt')
-    rect(f, 3, 3, 18, 18, 'board_lt')
-    rect(f, 4, 4, 16, 16, 'board_dk')
+    rect(f, 1, 1, 22, 22, 'navy')
+    rect(f, 2, 2, 20, 1, 'slate')
+    rect(f, 2, 2, 1, 20, 'slate')
+    rect(f, 2, 21, 20, 1, 'screen')
+    rect(f, 21, 2, 1, 20, 'screen')
     return upscale(f, 2)
 
 
 def frame_paper():
+    """Clean white card (briefings, results, documents): whiteboard face, metal rim."""
     f = new(24, 24)
     rect(f, 1, 0, 22, 24, 'ink')
     rect(f, 0, 1, 24, 22, 'ink')
-    rect(f, 1, 1, 22, 21, 'paper')
-    rect(f, 1, 20, 22, 2, 'paper_sh')
-    rect(f, 1, 1, 22, 1, 'chalk')
-    for (x, y) in [(20, 1), (21, 1), (22, 1), (21, 2), (22, 2), (22, 3)]:
-        put(f, x, y, 'paper_sh')
-    put(f, 19, 1, 'paper_ln'); put(f, 20, 2, 'paper_ln'); put(f, 21, 3, 'paper_ln')
+    rect(f, 1, 1, 22, 22, 'metal')
+    rect(f, 2, 2, 20, 19, 'whiteboard')
+    rect(f, 2, 20, 20, 1, 'tile')
     return upscale(f, 2)
 
 
 def button(state):
     b = new(16, 16)
-    face = {'normal': 'paper', 'hover': 'chalk', 'pressed': 'paper_sh', 'disabled': 'chalk_gy', 'focus': 'paper'}[state]
-    rim = 'neutral' if state == 'disabled' else 'wood'
+    face = {'normal': 'whiteboard', 'hover': 'wall_mod', 'pressed': 'tile', 'disabled': 'tile_ln', 'focus': 'whiteboard'}[state]
+    rim = 'tile_ln' if state == 'disabled' else 'metal'
     dy = 1 if state == 'pressed' else 0
     rect(b, 1, 0 + dy, 14, 16 - dy, 'ink')
     rect(b, 0, 1 + dy, 16, 14 - dy, 'ink')
     rect(b, 1, 1 + dy, 14, 14 - dy, rim)
-    rect(b, 2, 2 + dy, 12, 10 - dy, face)
-    rect(b, 2, 2 + dy, 12, 1, 'chalk' if state != 'disabled' else 'chalk_gy')
+    rect(b, 2, 2 + dy, 12, 11 - dy, face)
     if state == 'focus':
         f = new(16, 16)
         rect(f, 1, 0, 14, 16, 'focus')
@@ -833,13 +834,13 @@ def button(state):
 def board_button(state):
     """Dark (chalkboard) button for cards and lists that carry chalk-coloured text."""
     b = new(16, 16)
-    face = {'normal': 'board_dk', 'hover': 'board', 'pressed': 'board_dk', 'disabled': 'ink'}[state]
+    face = {'normal': 'navy', 'hover': 'slate', 'pressed': 'screen', 'disabled': 'ink'}[state]
     dy = 1 if state == 'pressed' else 0
     rect(b, 1, 0 + dy, 14, 16 - dy, 'ink')
     rect(b, 0, 1 + dy, 16, 14 - dy, 'ink')
-    rect(b, 1, 1 + dy, 14, 14 - dy, 'neutral' if state == 'disabled' else 'wood')
+    rect(b, 1, 1 + dy, 14, 14 - dy, 'neutral' if state == 'disabled' else 'screen')
     rect(b, 2, 2 + dy, 12, 11 - dy, face)
-    rect(b, 2, 2 + dy, 12, 1, 'board_lt' if state != 'disabled' else 'slate')
+    rect(b, 2, 2 + dy, 12, 1, 'slate' if state != 'disabled' else 'slate')
     return upscale(b, 2)
 
 

@@ -136,3 +136,32 @@ static func _add_move_hint(b: Button, hint: String, hint_size: int) -> void:
 		h.add_theme_color_override("font_color", Color("5a3a26"))
 		b.add_child(h)
 		h.size = Vector2(84, 10)   # after the font override, or the default font height wins
+
+## Shared setting for encounter-family screens (480x270 authored space): the dimmed
+## classroom backdrop, a framed title strip and chalkboard panels behind content regions.
+## Call first in _build_ui so everything else draws on top.
+static func add_scene_frame(layer: Control, title_rect: Rect2, panels: Array) -> void:
+	var path := "res://assets/v2/ui/encounter_backdrop_modern.png"
+	if ResourceLoader.exists(path):
+		var bd := TextureRect.new()
+		bd.texture = load(path)
+		bd.size = Vector2(480, 270)
+		bd.stretch_mode = TextureRect.STRETCH_SCALE
+		bd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bd.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bd.modulate = Color(0.55, 0.57, 0.62)
+		bd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(bd)
+	for r in [title_rect] + panels:
+		var p := panel("board")
+		p.position = r.position
+		p.size = r.size
+		layer.add_child(p)
+
+## Prefer the palette-remapped v2 portrait when one exists.
+static func portrait_path(path: String) -> String:
+	if path.contains("/assets/portraits/"):
+		var v2 := path.replace("/assets/portraits/", "/assets/v2/portraits/")
+		if ResourceLoader.exists(v2):
+			return v2
+	return path

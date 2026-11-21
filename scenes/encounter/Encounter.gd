@@ -366,7 +366,7 @@ func _build_ui() -> void:
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
-	var bd_tex := Art.tex("res://assets/v2/ui/encounter_backdrop.png")
+	var bd_tex := Art.tex("res://assets/v2/ui/encounter_backdrop_modern.png")
 	if bd_tex != null:
 		var bd := TextureRect.new()
 		bd.texture = bd_tex
@@ -375,7 +375,7 @@ func _build_ui() -> void:
 		bd.stretch_mode = TextureRect.STRETCH_SCALE
 		bd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		bd.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		bd.modulate = Color(0.42, 0.44, 0.50)
+		bd.modulate = Color(0.55, 0.57, 0.62)
 		bd.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_layer.add_child(bd)
 	var title_frame := UiKit.panel("board")
@@ -478,6 +478,7 @@ func _build_ui() -> void:
 	_outcome_chip.size = Vector2(56, 10)
 	_result = _make_label("", Vector2(10, 164), UiText.S_CAPTION, Color("ffd34e"))
 	_result.size = Vector2(448, 10)
+	_result.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_result.clip_text = true
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_coach = _make_label("", Vector2(10, 175), UiText.S_CAPTION, Color("a8d8b0"))
@@ -545,14 +546,19 @@ func _build_ui() -> void:
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
 	_type_toggle.position = Vector2(392, 190)
-	_type_toggle.size = Vector2(80, 74)
-	UiKit.style_button(_type_toggle, UiText.S_BODY)
+	_type_toggle.size = Vector2(80, 35)
+	UiKit.style_move_button(_type_toggle, UiText.S_CAPTION, "res://assets/v2/ui/move_type.png", "say it your way", UiText.S_TINY)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
 	# Move hints are measured before their font resolves; pin them to their slot.
+	if _type_toggle != null:
+		_type_toggle.size = Vector2(80, 35) * UI_SCALE
+		var th := _type_toggle.get_node_or_null("MoveHint") as Label
+		if th != null:
+			th.size = Vector2(72, 10) * UI_SCALE
 	for b in _buttons:
 		(b as Button).size = Vector2(92, 35) * UI_SCALE   # margins/icon are final-px; pin after scaling
 		var h := (b as Node).get_node_or_null("MoveHint") as Label
@@ -1529,7 +1535,24 @@ func _release_result() -> void:
 	var t := _pending_result
 	_pending_result = ""
 	if t != "" and _result != null:
-		_result.text = t
+		_result.text = _display_result(t)
+
+## Display form of the result line (the stored/logged form is unchanged): the verdict
+## phrase first, then only the changes, without the running "Understanding NN%" total.
+func _display_result(t: String) -> String:
+	var parts: Array = Array(t.split("  |  "))
+	if parts.size() > 1 and str(parts[0]).begins_with("Understanding ") and str(parts[0]).ends_with("%"):
+		parts.pop_front()
+	var verdict := ""
+	for i in range(parts.size() - 1, -1, -1):
+		var ptxt := str(parts[i])
+		if not (ptxt.contains("+") or ptxt.contains("-")) or ptxt.begins_with("On a path") or ptxt.begins_with("Not the move") or ptxt.begins_with("Right idea"):
+			verdict = ptxt
+			parts.remove_at(i)
+			break
+	if verdict != "":
+		parts.push_front(verdict)
+	return "  ·  ".join(parts)
 
 func _release_coach() -> void:
 	var t := _pending_coach
@@ -1549,7 +1572,9 @@ func _float_meter_deltas(before: Dictionary) -> void:
 		if d == 0 or fill == null:
 			continue
 		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
-		var pos := Vector2((228.0 + 150.0 + 2.0) * UI_SCALE, fill.position.y - 4.0 * UI_SCALE)
+		var maxv := GameState.max_composure() if key == "composure" else 100.0
+		var frac := clampf(float(now[key]) / maxf(1.0, maxv), 0.0, 1.0)
+		var pos := Vector2(fill.position.x + 150.0 * UI_SCALE * frac + 4.0, fill.position.y - 3.0 * UI_SCALE)
 		Juice.float_text(_layer, _signed(d), pos, col, int(8 * UI_SCALE))
 
 ## Any press (key, click, pad, touch) first finishes a running text reveal, so impatient

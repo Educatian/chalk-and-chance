@@ -268,22 +268,25 @@ func _build_room() -> void:
 	var left_wall: Array
 	var right_wall: Array
 	var back_wall: Array
+	var ww := "windowwall_%s" if st == "us" else "windowwall_kr_%s"
+	# Left: one continuous window wall in two long runs, plain wall between and at the ends.
+	left_wall = ["wall_cap", ww % "top", ww % "mid", ww % "mid", ww % "bottom", "wall_cap",
+		ww % "top", ww % "mid", ww % "mid", ww % "bottom", "wall_cap"]
 	if st == "us":
-		left_wall = ["window_blinds", "window_blinds", "ac_unit", "window_blinds", "window_blinds", "plant",
-			"window_blinds", "window_blinds", "ac_unit", "window_blinds", "plant"]
-		right_wall = ["bulletin_0", "bulletin_1", "bins_0", "purifier", "bulletin_2", "bins_1", "bookshelf_0",
-			"bookshelf_1", "plant", "sink", "hooks_0"]
-		back_wall = ["wall_cap", "bins_0", "bins_1", "bins_2", "bookshelf_2", "bookshelf_0", "plant", "hooks_1",
-			"hooks_2", "hooks_0", "bulletin_3", "bulletin_0", "bins_2", "bins_0", "bookshelf_1", "plant", "sink",
-			"bins_1", "hooks_1", "hooks_2", "bulletin_1", "bins_0", "plant", "wall_cap"]
+		# Right: a display zone near the front, plain wall, a reading corner at the back.
+		right_wall = ["wall_cap", "bulletin_0", "bulletin_1", "wall_cap", "purifier", "wall_cap", "wall_cap",
+			"plant", "bookshelf_0", "bookshelf_1", "bookshelf_2"]
+		# Back: a cubby bank and a supply station; plain wall elsewhere.
+		back_wall = ["wall_cap", "wall_cap", "wall_cap", "bins_0", "bins_1", "bins_2", "bins_0", "bins_1",
+			"wall_cap", "wall_cap", "wall_cap", "wall_cap", "wall_cap", "wall_cap", "wall_cap", "wall_cap",
+			"wall_cap", "sink", "bins_2", "plant", "wall_cap", "wall_cap", "wall_cap", "wall_cap"]
 	else:
-		left_wall = ["window_curtain", "window_curtain", "ac_unit", "window_curtain", "window_curtain", "plant",
-			"window_curtain", "window_curtain", "purifier", "window_curtain", "plant"]
-		right_wall = ["bulletin_0", "bulletin_1", "purifier", "bulletin_2", "plant", "bulletin_3", "bins_0",
-			"hooks_0", "hooks_1", "sink", "plant"]
-		back_wall = ["wall_cap", "cleaning", "lockers_0", "lockers_1", "lockers_2", "lockers_0", "lockers_1",
-			"lockers_2", "lockers_0", "lockers_1", "bulletin_1", "bulletin_2", "lockers_2", "lockers_0", "lockers_1",
-			"lockers_2", "lockers_0", "lockers_1", "lockers_2", "plant", "bookshelf_0", "bins_1", "plant", "wall_cap"]
+		right_wall = ["wall_cap", "bulletin_0", "bulletin_2", "wall_cap", "purifier", "wall_cap", "wall_cap",
+			"wall_cap", "plant", "bookshelf_0", "wall_cap"]
+		# Back: the locker bank and the cleaning-tool corner.
+		back_wall = ["wall_cap", "cleaning", "wall_cap", "lockers_0", "lockers_1", "lockers_2", "lockers_0",
+			"lockers_1", "lockers_2", "lockers_0", "lockers_1", "lockers_2", "wall_cap", "wall_cap", "wall_cap",
+			"wall_cap", "bulletin_1", "bulletin_3", "wall_cap", "wall_cap", "plant", "wall_cap", "wall_cap", "wall_cap"]
 	for y in range(1, ROWS - 1):
 		_walls[Vector2i(0, y)] = true
 		_walls[Vector2i(COLS - 1, y)] = true

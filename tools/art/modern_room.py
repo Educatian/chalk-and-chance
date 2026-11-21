@@ -65,26 +65,28 @@ def floor_kr(v):
 
 
 def carpet(edge, style):
-    """Low-pile carpet tiles (US) / play mat (KR), nine-piece edges."""
+    """Low-pile carpet: one calm colour with a faint weave, a slim border. Low contrast on
+    purpose, so students and state markers stay the strongest things on screen."""
     l, r, tp, b = edge
     t = new(16, 16)
-    a, bcol, border = {
-        'us': ('teal', 'teal_lt', 'navy'),          # carpet tiles at the front (reading/meeting area)
-        'us_area': ('locker', 'ceiling', 'metal'),  # soft area rug inside the seating group
-        'kr': ('tile_lt', 'tile', 'metal'),
-        'kr_area': ('ceiling', 'tile_lt', 'metal'),
+    base, weave, border = {
+        'us': ('teal_lt', 'teal', 'teal'),
+        'us_area': ('ceiling', 'tile', 'metal'),
+        'kr': ('tile_lt', 'tile', 'tile_ln'),
+        'kr_area': ('tile_lt', 'tile', 'tile_ln'),
     }[style]
-    for y in range(16):
-        for x in range(16):
-            put(t, x, y, a if ((x // 8) + (y // 8)) % 2 == 0 else bcol)
+    rect(t, 0, 0, 16, 16, base)
+    for y in range(1, 16, 4):
+        for x in range((y // 4) % 2 * 2, 16, 4):
+            put(t, x, y, weave)
     if tp:
-        rect(t, 0, 0, 16, 2, border)
+        rect(t, 0, 0, 16, 1, border)
     if b:
-        rect(t, 0, 14, 16, 2, border)
+        rect(t, 0, 15, 16, 1, border)
     if l:
-        rect(t, 0, 0, 2, 16, border)
+        rect(t, 0, 0, 1, 16, border)
     if r:
-        rect(t, 14, 0, 2, 16, border)
+        rect(t, 15, 0, 1, 16, border)
     return t
 
 
@@ -227,6 +229,32 @@ def window_blinds():
     rect(t, 3, 2, 10, 12, 'early')
     for y in range(3, 14, 2):
         rect(t, 3, y, 10, 1, 'chalk')                    # blinds slats
+    return t
+
+
+def window_wall(kind):
+    """Continuous window wall seen from above: glass with blinds, a sill on the room side,
+    a mullion only at the top/bottom end pieces so a run of tiles reads as one window."""
+    t = cap_base()
+    rect(t, 1, 0, 12, 16, 'early')
+    for y in range(1, 16, 2):
+        rect(t, 1, y, 12, 1, 'chalk')                   # blind slats
+    rect(t, 13, 0, 2, 16, 'chalk')                       # sill (room side)
+    rect(t, 15, 0, 1, 16, 'tile_ln')
+    if kind == 'top':
+        rect(t, 1, 0, 12, 2, 'metal')
+    if kind == 'bottom':
+        rect(t, 1, 14, 12, 2, 'metal')
+    if kind == 'mid':
+        rect(t, 1, 15, 12, 1, 'metal')                  # pane joint
+    return t
+
+
+def window_wall_kr(kind):
+    t = window_wall(kind)
+    rect(t, 1, 0, 3, 16, 'notyet')                       # curtain gathered at one end of each pane
+    for y in range(0, 16, 3):
+        put(t, 2, y, 'red')
     return t
 
 
@@ -421,6 +449,9 @@ def build_modern():
     save(clock_speaker(), 'room_common/front_clock.png')
     save(plain_modern(), 'room_common/front_plain.png')
     save(window_blinds(), 'room_common/window_blinds.png')
+    for kind in ('top', 'mid', 'bottom'):
+        save(window_wall(kind), 'room_common/windowwall_%s.png' % kind)
+        save(window_wall_kr(kind), 'room_common/windowwall_kr_%s.png' % kind)
     save(window_curtain(), 'room_common/window_curtain.png')
     save(ac_unit(), 'room_common/ac_unit.png')
     for v in range(4):
@@ -435,3 +466,39 @@ def build_modern():
     save(plant_modern(), 'room_common/plant.png')
     save(purifier(), 'room_common/purifier.png')
     save(cap_base(), 'room_common/wall_cap.png')
+    modern_backdrop()
+
+
+def modern_backdrop(style='us'):
+    """Encounter backdrop: the modern room's front wall and floor, softened. Exempt from the
+    palette check on purpose: it is blurred, then shown dimmed behind the panels."""
+    from PIL import ImageFilter
+    import os
+    import build_art as B
+    bd = new(480, 270)
+    x = 0
+    seq = ['plain', 'anchor_0', 'plain', 'board0', 'board1', 'board2', 'board3', 'board4', 'board5', 'plain',
+           'anchor_2', 'plain', 'clock', 'plain', 'door']
+    i = 0
+    while x < 480:
+        k = seq[i % len(seq)]
+        if k == 'plain':
+            piece = plain_modern()
+        elif k.startswith('anchor'):
+            piece = anchor_chart(int(k[-1]))
+        elif k == 'clock':
+            piece = clock_speaker()
+        elif k == 'door':
+            piece = us_door()
+        else:
+            piece = us_board(int(k[-1]))
+        bd.alpha_composite(upscale(piece, 2), (x, 0))
+        x += 32
+        i += 1
+    for ty in range(64, 270, 32):
+        for tx in range(0, 480, 32):
+            bd.alpha_composite(upscale(floor_us(hashf(tx, ty) % 4), 2), (tx, ty))
+    soft = bd.filter(ImageFilter.GaussianBlur(2.2))
+    path = os.path.join(B.OUT, 'ui', 'encounter_backdrop_modern.png')
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    soft.save(path)
