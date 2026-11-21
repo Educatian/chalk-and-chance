@@ -1176,7 +1176,7 @@ func _show_ladder_card(ev: Dictionary) -> void:
 	for opt in opts:
 		var tier := int(opt.get("tier", 1))
 		var b := Button.new()
-		b.text = str(opt.get("label", "")).format({"a": str(_npcs[who[0]].get("display_name", "")) if not who.is_empty() else tr("you")})
+		b.text = tr(str(opt.get("label", ""))).format({"a": str(_npcs[who[0]].get("display_name", "")) if not who.is_empty() else tr("you")})
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		for st2 in ["normal", "hover", "pressed", "disabled", "focus"]:
 			var sb: StyleBoxTexture = (UiKit.board_button(st2) if st2 != "focus" else UiKit.button("focus")).duplicate()
@@ -1425,12 +1425,12 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 	for o in _objectives:
 		if not _objective_met(o, attention):
 			missed.append(o)
-	var miss_names: Array = missed.map(func(o): return _objective_short_label(o))
+	var miss_names: Array = missed.map(func(o): return tr(_objective_short_label(o)))
 	var reached := _engaged_count()
 	var back := int(round(_back_secs))
 	var parts := [
 		{"label": "Objectives", "frac": float(stars) / n, "value": "%d/%d" % [stars, _objectives.size()],
-			"cause": "all cleared" if missed.is_empty() else "missed: " + ", ".join(miss_names)},
+			"cause": tr("all cleared") if missed.is_empty() else tr("missed: ") + ", ".join(miss_names)},
 		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
 			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept moving and kept facing them"},
 		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
@@ -1445,7 +1445,7 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		title += "  ·  replay #%d (they drift faster each time)" % _attempt
 	var next := "Want more? Hear from every student and keep attention over 90%."
 	if not missed.is_empty():
-		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Go again with this one in mind.")) + " " + tr("It goes first on your list next time (+%d XP).") % Tuning.RETRY_XP_BONUS
+		next = tr(str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Go again with this one in mind."))) + " " + tr("It goes first on your list next time (+%d XP).") % Tuning.RETRY_XP_BONUS
 	return {
 		"title": title,
 		"rank": rank,

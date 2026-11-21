@@ -793,7 +793,7 @@ func _end_thinking(cut: bool) -> void:
 		resp["judge"] = judge
 		resp["cut"] = true
 		resp["meter_deltas"] = Tuning.CUT_DELTAS.duplicate()
-		resp["student_utterance"] = {"text": Tuning.CUT_LINE, "emotion_shown": "frustrated"}
+		resp["student_utterance"] = {"text": tr(Tuning.CUT_LINE), "emotion_shown": "frustrated"}
 		resp["coach_tip"] = "You talked into their thinking time and %s lost the thought. After you ask, let the ring fill." % display_name
 		_ring.shatter()
 		Sfx.play("turn_wrong", -4.0, 1.3)
@@ -1267,7 +1267,7 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
 		"moments": _pivotal_moments(),
-		"next": str(NEXT_TARGET[weak]),
+		"next": tr(str(NEXT_TARGET[weak])),
 		"buttons": [{"label": "Return to room", "primary": true,
 			"cb": func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")}],
 	})
@@ -1347,7 +1347,8 @@ func _moment_line(m: Dictionary) -> Dictionary:
 func _tr_reason(why: String) -> String:
 	var cut := why.find(": ")
 	if cut > 0:
-		return tr(why.substr(0, cut + 2)) + tr(why.substr(cut + 2))
+		var head := why.substr(0, cut)
+		return tr(head) + ": " + tr(why.substr(cut + 2))
 	return tr(why)
 
 func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:

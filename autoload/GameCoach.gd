@@ -1,4 +1,5 @@
 extends RefCounted
+const Content = preload("res://scripts/Content.gd")
 
 static func scenario_signature(cfg: Dictionary) -> String:
 	var mode := str(cfg.get("mode", "overworld"))
@@ -234,6 +235,6 @@ static func _load_scenario_cfg(id: String) -> Dictionary:
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return {}
-	var d = JSON.parse_string(f.get_as_text())
+	var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 	f.close()
 	return d if typeof(d) == TYPE_DICTIONARY else {}
