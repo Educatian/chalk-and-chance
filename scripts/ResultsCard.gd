@@ -30,9 +30,7 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	var rank := str(data.get("rank", "-"))
 	var celebrate := rank in ["S", "A", "B"]
 	var r := RECT
-	if celebrate:
-		CompletionFx.add_completion_burst(root, r, true, rank, false)
-	else:
+	if not celebrate:
 		var dim := ColorRect.new()
 		dim.color = Color(0.02, 0.03, 0.07, 0.62)
 		dim.size = UiText.DESIGN
@@ -42,6 +40,7 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	panel.position = r.position
 	panel.size = r.size
 	root.add_child(panel)
+	var first_card_child := root.get_child_count() - 1   # everything from the panel on is the card
 
 	# Grade disc + verdict.
 	var x0 := r.position.x + 24.0
@@ -117,15 +116,16 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		y += 44.0
 	if moments.is_empty():
 		_label(root, "Nothing landed before the bell.", Vector2(x0 + 24, y), Vector2(r.size.x - 72, 20), UiText.fs(14), MUTED)
+		y += 28.0
 
-	# One next target.
-	y = r.position.y + 336.0
+	# One next target, straight after the moments (no fixed slots, no empty band).
+	y += 10.0
 	_label(root, "Next time", Vector2(x0, y), Vector2(120, 16), UiText.fs(12), NEXT)
 	_label(root, str(data.get("next", "")), Vector2(x0 + 80, y), Vector2(r.size.x - 128, 36), UiText.fs(14), NEXT, true)
 
 	# Rewards as icons. They come last and say what they are for (finishing), so a low grade beside a
 	# new badge does not read as a mixed message.
-	y = r.position.y + 384.0
+	y += 48.0
 	var rw: Dictionary = data.get("rewards", {})
 	_label(root, str(rw.get("caption", "Earned")), Vector2(x0, y + 6), Vector2(150, 16), UiText.fs(12), MUTED)
 	var rx := x0 + 156.0
@@ -144,6 +144,10 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	if rx == x0 + 156.0:
 		_label(root, str(rw.get("none", "Nothing this time.")), Vector2(rx, y + 6), Vector2(r.end.x - rx - 24, 16), UiText.fs(12), MUTED)
 
+	# The card ends under the rewards; centre it on screen.
+	var card_h := y + 40.0 + 56.0 - r.position.y
+	panel.size.y = card_h
+	var bottom := r.position.y + card_h
 	# Actions: secondary on the left, the primary at normal size on the right.
 	var btns: Array = data.get("buttons", [])
 	var bx := r.end.x - 24.0
@@ -162,9 +166,19 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		root.add_child(b)
 		var w := maxf(200.0 if primary else 190.0, b.get_combined_minimum_size().x)
 		bx -= w
-		b.position = Vector2(bx, r.end.y - 46.0)
+		b.position = Vector2(bx, bottom - 46.0)
 		b.size = Vector2(w, 36)
 		bx -= 10.0
+	var dy := floorf((UiText.DESIGN.y - card_h) * 0.5) - r.position.y
+	for i in range(first_card_child, root.get_child_count()):
+		var c := root.get_child(i)
+		if c is Control:
+			(c as Control).position.y += dy
+	if celebrate:   # the burst frames the card at its final size, behind it
+		var n0 := root.get_child_count()
+		CompletionFx.add_completion_burst(root, Rect2(r.position.x, r.position.y + dy, r.size.x, card_h), true, rank, false)
+		for i in range(n0, root.get_child_count()):
+			root.move_child(root.get_child(root.get_child_count() - 1), 0)
 	if focus != null:
 		focus.grab_focus.call_deferred()
 	return root
