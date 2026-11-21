@@ -11,6 +11,7 @@ var _beats: Array = []   # [{owner: Node, beat: TurnBeat}]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	preload("res://scripts/UiKit.gd").apply_to_theme()   # v2 frames for every themed Panel/Button
 
 func motion_ok() -> bool:
 	return not bool(GameState.get_setting("reduced_motion", false))

@@ -7,7 +7,7 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PressStart2P-Regular.ttf"
+const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 const BAR_H := 58.0
 const CHARS_PER_SEC := 48.0
 

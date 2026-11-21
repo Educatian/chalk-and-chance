@@ -30,7 +30,7 @@ static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, ra
 		var d := minf(rect.size.y * 0.42, 84.0)
 		stamp.size = Vector2(d, d)
 		stamp.position = rect.position + Vector2(rect.size.x - d - 18.0, 20.0)
-		stamp.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+		stamp.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 		stamp.add_theme_font_size_override("font_size", int(d * 0.5))
 		stamp.add_theme_color_override("font_color", _rank_color(rank))
 		stamp.add_theme_color_override("font_outline_color", Color(0.05, 0.06, 0.1))

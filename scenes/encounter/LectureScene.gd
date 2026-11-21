@@ -313,6 +313,7 @@ func _build_ui() -> void:
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
+		b.size = Vector2(84, 30)   # re-apply once themed fonts resolve in the tree
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus.call_deferred()

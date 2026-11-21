@@ -20,12 +20,13 @@ const NAME := &"NameTagLabel"
 const BODY_SMALL_ON_BOARD := &"BoardBodyLabel"
 
 ## Label styles drawn in the pixel display face (titles, HUD labels, numbers, names).
-const PIXEL_STYLES := [&"TitleLabel", &"HeadingLabel", &"HudLabel", &"HudValueLabel", &"NameTagLabel"]
+## Small running text (HUD labels, names, hints) stays in the smooth face for legibility.
+const PIXEL_STYLES := [&"TitleLabel", &"HeadingLabel", &"HudValueLabel"]
 const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 
 ## Base pixel sizes (960x540 design space) for each variation, before "Large text".
 const BASE_SIZES := {
-	TITLE: 18, HEADING: 15, BODY: 14, CAPTION: 12, HUD: 12, HUD_VALUE: 15, NAME: 12, BODY_SMALL_ON_BOARD: 13,
+	TITLE: 18, HEADING: 15, BODY: 14, CAPTION: 12, HUD: 12, HUD_VALUE: 18, NAME: 12, BODY_SMALL_ON_BOARD: 13,
 }
 
 ## Tokens for 480x270-authored screens (rendered at x2): 11 -> 22px ... 5 -> 10px.

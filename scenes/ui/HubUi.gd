@@ -1,4 +1,5 @@
 extends RefCounted
+const UiKit = preload("res://scripts/UiKit.gd")
 
 static func add_hub_backdrop(parent: Node, vp: Vector2) -> void:
 	var top_band := ColorRect.new()
@@ -61,20 +62,11 @@ static func plate_style(bg: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 static func apply_button_style(button: Button, accent: bool = false) -> void:
-	var base := Color(0.105, 0.13, 0.24, 0.98)
-	var border := Color(0.24, 0.33, 0.50, 0.90)
+	# v2 kit: chalkboard button; accent buttons (primary calls to action) use the paper face.
 	if accent:
-		base = Color(0.16, 0.17, 0.23, 0.98)
-		border = Color(0.98, 0.80, 0.28, 0.96)
-	button.add_theme_stylebox_override("normal", button_style(base, border))
-	button.add_theme_stylebox_override("hover", button_style(base.lightened(0.10), border.lightened(0.18)))
-	button.add_theme_stylebox_override("pressed", button_style(base.darkened(0.10), Color(0.30, 0.92, 0.86, 0.98)))
-	button.add_theme_stylebox_override("focus", button_style(base.lightened(0.06), Color(0.30, 0.92, 0.86, 1.0)))
-	button.add_theme_stylebox_override("disabled", button_style(Color(0.055, 0.065, 0.10, 0.92), Color(0.18, 0.22, 0.32, 0.82)))
-	button.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90))
-	button.add_theme_color_override("font_hover_color", Color(1.0, 0.94, 0.72))
-	button.add_theme_color_override("font_pressed_color", Color(0.78, 1.0, 0.96))
-	button.add_theme_color_override("font_disabled_color", Color(0.48, 0.54, 0.66))
+		UiKit.style_button(button, button.get_theme_font_size("font_size"))
+	else:
+		UiKit.style_board_button(button, -1, 4)   # compact list buttons: 2-texel frame, tight padding
 
 static func card_style(is_next: bool, locked: bool, earned: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

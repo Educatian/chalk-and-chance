@@ -1,4 +1,5 @@
 extends Control
+const UiKit = preload("res://scripts/UiKit.gd")
 ## Landing and learner sign-in. The demo path stays one click, while class sign-in remains
 ## available for saved course progress.
 
@@ -39,7 +40,7 @@ func _ready() -> void:
 	mark_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mark_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mark_text.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	mark_text.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	mark_text.add_theme_font_size_override("font_size", 14)
 	mark_text.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	mark.add_child(mark_text)
@@ -47,7 +48,7 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(logo_x, logo_y + 72)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.98, 0.92, 0.68))
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.95))
@@ -236,15 +237,11 @@ func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 func _apply_button_style(btn: Button, primary: bool) -> void:
-	var base := _button_style(Color(0.17, 0.28, 0.24, 0.96) if primary else Color(0.08, 0.15, 0.18, 0.94), Color(0.96, 0.80, 0.38, 0.92) if primary else Color(0.48, 0.68, 0.70, 0.58))
-	var hover := _button_style(Color(0.23, 0.38, 0.31, 0.98) if primary else Color(0.12, 0.22, 0.26, 0.96), Color(1.0, 0.88, 0.50, 1.0) if primary else Color(0.68, 0.86, 0.86, 0.78))
-	var pressed := _button_style(Color(0.10, 0.20, 0.17, 1.0), Color(0.96, 0.70, 0.28, 1.0))
-	btn.add_theme_stylebox_override("normal", base)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus", _button_style(Color(0, 0, 0, 0), Color(1.0, 0.92, 0.55, 1.0)))
-	btn.add_theme_color_override("font_color", Color(0.98, 0.94, 0.76) if primary else Color(0.86, 0.94, 0.95))
-	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	# v2 kit: the primary action is a paper button, the rest chalkboard buttons.
+	if primary:
+		UiKit.style_button(btn, btn.get_theme_font_size("font_size"))
+	else:
+		UiKit.style_board_button(btn)
 
 func _field(parent: Node, label: String, placeholder: String, secret: bool) -> LineEdit:
 	var l := Label.new()

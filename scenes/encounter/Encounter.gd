@@ -34,6 +34,12 @@ const MOVES := [
 	["Tell", "tell"], ["Praise", "praise"], ["Connect", "connect"],
 	["Redirect", "redirect"], ["Wait", "wait"],
 ]
+## One-line hints under each move button (interface microcopy, not lesson content).
+const MOVE_HINTS := {
+	"elicit": "ask how they got it", "extend": "push one step further", "revoice": "say it back to them",
+	"tell": "explain it directly", "praise": "name what worked", "connect": "link to their world",
+	"redirect": "bring focus back", "wait": "hold the silence",
+}
 const MOVE_HELP := {
 	"elicit": "Elicit: ask how the student got that answer.",
 	"extend": "Extend: press the idea one step further.",
@@ -284,8 +290,9 @@ func _support_level() -> int:
 func _apply_scaffold() -> void:
 	var lvl := _support_level()
 	if _scaffold_badge == null:
-		_scaffold_badge = _make_label("", Vector2(376, 7), UiText.S_MICRO, Color.WHITE)
-		_scaffold_badge.size = Vector2(90, 10)
+		_scaffold_badge = _make_label("", Vector2(400, 6), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge.clip_text = true
+		_scaffold_badge.size = Vector2(76, 10)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)
@@ -359,14 +366,31 @@ func _build_ui() -> void:
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
+	var bd_tex := Art.tex("res://assets/v2/ui/encounter_backdrop.png")
+	if bd_tex != null:
+		var bd := TextureRect.new()
+		bd.texture = bd_tex
+		bd.position = Vector2.ZERO
+		bd.size = Vector2(480, 270)
+		bd.stretch_mode = TextureRect.STRETCH_SCALE
+		bd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bd.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bd.modulate = Color(0.42, 0.44, 0.50)
+		bd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_layer.add_child(bd)
+	var title_frame := UiKit.panel("board")
+	title_frame.position = Vector2(4, 1)
+	title_frame.size = Vector2(392, 17)
+	_layer.add_child(title_frame)
 	for r in [PORTRAIT_PANEL, METER_PANEL, LINE_PANEL]:
 		var pnl := UiKit.panel("board")
 		pnl.position = r.position
 		pnl.size = r.size
 		_layer.add_child(pnl)
-	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 5), UiText.S_TITLE, Color("f2eedd"))
+	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 4), UiText.S_TITLE, Color("f2eedd"))
 	_name_label.add_theme_font_override("font", UiKit.pixel_font())
-	_name_label.size = Vector2(340, 14)
+	_name_label.size = Vector2(380, 12)
+	_name_label.clip_text = true
 	_need_label = _make_label("Need: surface the student's reasoning", Vector2(156, 98), UiText.S_CAPTION, Color("6fa8e8"))
 	_need_label.size = Vector2(314, 12)
 	_need_label.clip_text = true
@@ -465,25 +489,24 @@ func _build_ui() -> void:
 	# Move buttons: two compact rows with a reserved mode column.
 	var n := MOVES.size()
 	var cols := 4
-	var bw := 80.0
-	var row_y := [188.0, 228.0]
-	var short_labels := {
-		"redirect": "Redir.",
-	}
+	var bw := 92.0
+	var row_y := [190.0, 229.0]
+	var short_labels := {}
 	for i in range(n):
 		var b := Button.new()
 		var tag: String = MOVES[i][1]
 		b.text = str(short_labels.get(tag, MOVES[i][0]))
-		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
-		b.size = Vector2(bw, 30)
+		b.position = Vector2(8 + (i % cols) * (bw + 3.0), row_y[int(i / cols)])
+		b.size = Vector2(bw, 35)
 		b.clip_text = true
-		UiKit.style_button(b, UiText.S_CAPTION)
+		UiKit.style_move_button(b, UiText.S_CAPTION, "res://assets/v2/ui/move_%s.png" % tag, MOVE_HINTS.get(tag, ""), UiText.S_TINY)
 		InputFeel.add_hotkey_badge(b, i, UiText.S_TINY)
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
 		_layer.add_child(b)
+		b.size = Vector2(bw, 35)   # re-apply once themed fonts resolve in the tree
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus()
@@ -521,14 +544,20 @@ func _build_ui() -> void:
 	# Mode toggle uses the reserved right column instead of floating over content.
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(386, 212)
-	_type_toggle.size = Vector2(78, 48)
+	_type_toggle.position = Vector2(392, 190)
+	_type_toggle.size = Vector2(80, 74)
 	UiKit.style_button(_type_toggle, UiText.S_BODY)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
+	# Move hints are measured before their font resolves; pin them to their slot.
+	for b in _buttons:
+		(b as Button).size = Vector2(92, 35) * UI_SCALE   # margins/icon are final-px; pin after scaling
+		var h := (b as Node).get_node_or_null("MoveHint") as Label
+		if h != null:
+			h.size = Vector2(84, 10) * UI_SCALE
 	UiText.keep_centered(_layer)
 
 func _build_item_row() -> void:
@@ -681,8 +710,7 @@ func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Lab
 ## Drawn as ColorRects (like the gym/lecture bars) so the 12px height is exactly
 ## controlled; ProgressBar inflates to its theme minimum and buried the Need line.
 func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
-	var lbl := _make_label(name_txt, Vector2(162, y - 3), UiText.S_CAPTION, Color("f2eedd"))
-	lbl.add_theme_font_override("font", UiKit.pixel_font())
+	_make_label(name_txt, Vector2(162, y - 3), UiText.S_CAPTION, Color("f2eedd"))
 	var bg := ColorRect.new()
 	bg.position = Vector2(228, y)
 	bg.size = Vector2(150, 10)

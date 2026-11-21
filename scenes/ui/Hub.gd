@@ -29,7 +29,7 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(40, 26)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 26 + fd)
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	title.add_theme_color_override("font_outline_color", Color(0.05, 0.07, 0.14))
@@ -344,7 +344,7 @@ func _open_mission_briefing(id: String) -> void:
 	title.position = Vector2(480, 76)
 	title.size = Vector2(344, 48)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 14 + fd)
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -657,7 +657,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	title.position = Vector2(242, 150)
 	title.size = Vector2(476, 34)
 	title.clip_text = true
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 14 + fd)
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -710,7 +710,7 @@ func _open_settings() -> void:
 	var title := Label.new()
 	title.text = "SETTINGS"
 	title.position = Vector2(222, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 18 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -730,12 +730,13 @@ func _open_settings() -> void:
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
 		{"label": "Motion, shake & flashes", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
 		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
+		{"label": "Classroom look", "key": "korean_classroom", "on": "Korea", "off": "US"},
 	]
-	var y := 184.0
+	var y := 188.0
 	for opt in options:
 		var b := Button.new()
 		b.position = Vector2(222, y)
-		b.size = Vector2(516, 34)
+		b.size = Vector2(516, 30)
 		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 		HubUi.apply_button_style(b)
 		overlay.add_child(b)
@@ -751,11 +752,11 @@ func _open_settings() -> void:
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)
-		y += 40.0
+		y += 34.0
 
 	var voice := Button.new()
 	voice.position = Vector2(222, y)
-	voice.size = Vector2(516, 34)
+	voice.size = Vector2(516, 30)
 	voice.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	HubUi.apply_button_style(voice)
 	voice.text = TTSClient.voice_status_label()
@@ -763,11 +764,11 @@ func _open_settings() -> void:
 		notice.text = TTSClient.voice_status_detail()
 	)
 	overlay.add_child(voice)
-	y += 40.0
+	y += 34.0
 
 	var reveal := Button.new()
 	reveal.position = Vector2(222, y)
-	reveal.size = Vector2(516, 34)
+	reveal.size = Vector2(516, 30)
 	reveal.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
 	HubUi.apply_button_style(reveal)
 	overlay.add_child(reveal)
@@ -813,7 +814,7 @@ func _open_upgrades() -> void:
 	var title := Label.new()
 	title.text = "LEVEL UP REWARDS"
 	title.position = Vector2(218, 92)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -888,7 +889,7 @@ func _open_evidence_journal() -> void:
 	var title := Label.new()
 	title.text = "EVIDENCE JOURNAL"
 	title.position = Vector2(112, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 16 + fd)
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1093,7 +1094,7 @@ func _open_leaderboard() -> void:
 	var title := Label.new()
 	title.text = "LEADERBOARD / COACH REPORT"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1236,7 +1237,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	var title := Label.new()
 	title.text = "TRACE DETAIL"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1316,7 +1317,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	var title := Label.new()
 	title.text = title_text
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1369,7 +1370,7 @@ func _open_class_dashboard() -> void:
 	var title := Label.new()
 	title.text = "INSTRUCTOR DASHBOARD"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1484,7 +1485,7 @@ func _open_items() -> void:
 	var title := Label.new()
 	title.text = "ITEM LOADOUT"
 	title.position = Vector2(138, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
 	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)

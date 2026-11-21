@@ -7,7 +7,7 @@ extends CanvasLayer
 
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PressStart2P-Regular.ttf"
+const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 const VP := Vector2(960, 540)
 
 var _root: Control

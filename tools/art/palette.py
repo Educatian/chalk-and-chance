@@ -1,4 +1,4 @@
-"""Chalk & Chance locked palette: 35 core colours + 8 portrait extension (docs/ui-design-plan.md section 3.3).
+"""Chalk & Chance locked palette: 35 core colours + 8 portrait + 15 modern-room materials (docs/ui-design-plan.md section 3.3).
 
 Every generated asset must use only these colours (plus transparency); build_art.py
 fails the build if a pixel falls outside the palette.
@@ -25,9 +25,14 @@ PALETTE = {
     # portrait extension: extra skin depth, pinks, teal, navy, hair highlight, warm cream
     'skin_mid': hx('#bf8560'), 'skin_dk2': hx('#4e3024'), 'pink': hx('#d46a9a'), 'pink_dk': hx('#9c4470'),
     'teal': hx('#3f8f96'), 'navy': hx('#24304f'), 'hair_hl': hx('#8f5a35'), 'cream': hx('#fbe0c4'),
+    # modern classroom materials: painted walls, vinyl tile, laminate, aluminium, screens
+    'wall_mod': hx('#f4f1ea'), 'ceiling': hx('#d9dde2'), 'tile_lt': hx('#eeece6'), 'tile': hx('#dcd8d0'),
+    'tile_ln': hx('#c3beb4'), 'metal': hx('#aab0b8'), 'metal_dk': hx('#6f7781'), 'screen': hx('#1f2b3b'),
+    'whiteboard': hx('#fbfbf7'), 'maple_lt': hx('#efd9b0'), 'maple': hx('#e2c48f'), 'maple_sh': hx('#c7a46c'),
+    'teal_lt': hx('#5fb1b6'), 'cork': hx('#c79a6a'), 'locker': hx('#8fa6bd'),
 }
 
-assert len(PALETTE) <= 44, len(PALETTE)   # 35 core + 8 portrait extension
+assert len(PALETTE) <= 60, len(PALETTE)   # 35 core + 8 portrait + 15 modern-room materials
 
 # Shade ramps: base colour -> darker neighbour inside the palette (for automatic shading).
 SHADE = {

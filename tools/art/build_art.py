@@ -169,6 +169,143 @@ def cubby_cap(variant):
     return t
 
 
+def side_window_cap():
+    t = wall_cap()
+    rect(t, 3, 1, 10, 14, 'wood_lt')
+    rect(t, 4, 2, 8, 12, 'early')
+    rect(t, 4, 2, 8, 1, 'blue')
+    rect(t, 7, 2, 2, 12, 'wood_lt')
+    put(t, 5, 5, 'chalk'); put(t, 6, 4, 'chalk')
+    return t
+
+
+def poster_cap(variant):
+    t = wall_cap()
+    col = ['early', 'ok', 'notyet', 'yellow'][variant % 4]
+    rect(t, 3, 2, 10, 12, 'paper')
+    rect(t, 3, 2, 10, 2, col)
+    for i, y in enumerate((6, 8, 10)):
+        rect(t, 5, y, 4 + (hashf(variant, i) % 4), 1, 'paper_ln')
+    put(t, 4, 2, 'red'); put(t, 12, 2, 'red')     # pins
+    return t
+
+
+def plant_cap():
+    t = wall_cap()
+    rect(t, 5, 9, 6, 5, 'wood')
+    rect(t, 5, 9, 6, 1, 'wood_lt')
+    for (x, y) in [(7, 2), (8, 2), (6, 3), (9, 3), (5, 4), (8, 4), (10, 4), (6, 5), (7, 5), (9, 5), (4, 6), (7, 6),
+                   (8, 6), (11, 6), (5, 7), (6, 7), (9, 7), (10, 7), (7, 8), (8, 8)]:
+        put(t, x, y, 'green')
+    for (x, y) in [(7, 3), (8, 5), (6, 6), (10, 6), (8, 7)]:
+        put(t, x, y, 'ok')
+    return t
+
+
+def hooks_cap(variant):
+    t = wall_cap()
+    rect(t, 1, 2, 14, 1, 'wood')
+    cols = ['red', 'blue', 'yellow', 'purple', 'green']
+    for i, x in enumerate((3, 9)):
+        put(t, x + 1, 3, 'ink')
+        c = cols[hashf(variant, i) % len(cols)]
+        rect(t, x, 4, 4, 7, c)                     # hanging backpack / coat
+        rect(t, x, 4, 4, 1, SHADE.get(c, c))
+        rect(t, x + 1, 7, 2, 2, SHADE.get(c, c))
+    return t
+
+
+def sink_cap():
+    t = wall_cap()
+    rect(t, 2, 3, 12, 10, 'chalk_gy')
+    rect(t, 3, 4, 10, 8, 'chalk')
+    rect(t, 5, 6, 6, 4, 'early')
+    rect(t, 7, 2, 2, 3, 'neutral')
+    return t
+
+
+def rug_full(edge):
+    l, r, tp, b = edge
+    return rug_tile((l, r, tp, b))
+
+
+def chair():
+    """Empty chair behind an unoccupied desk (12x8 texels)."""
+    c = new(12, 9)
+    rect(c, 1, 0, 10, 4, 'wood')        # backrest
+    rect(c, 1, 0, 10, 1, 'wood_lt')
+    rect(c, 2, 4, 8, 2, 'wood_lt')      # seat
+    rect(c, 2, 6, 1, 3, 'wood_dk')
+    rect(c, 9, 6, 1, 3, 'wood_dk')
+    return outline(pad(c, 1))
+
+
+def backpack(variant):
+    cols = ['red', 'blue', 'yellow', 'purple', 'green', 'slate']
+    c = cols[variant % len(cols)]
+    b = new(7, 7)
+    rect(b, 1, 0, 5, 7, c)
+    rect(b, 0, 2, 7, 5, c)
+    rect(b, 1, 0, 5, 1, SHADE.get(c, c))
+    rect(b, 2, 4, 3, 2, SHADE.get(c, c))
+    put(b, 3, 1, 'chalk')
+    return outline(pad(b, 1))
+
+
+def floor_paper():
+    p = new(6, 4)
+    rect(p, 0, 0, 6, 4, 'paper')
+    rect(p, 1, 1, 3, 1, 'paper_ln')
+    return p
+
+
+MOVE_ICONS = {
+    'elicit': ["..XXXX..", ".X....X.", "......X.", "....XX..", "...X....", "........", "...X....", "........"],
+    'extend': ["...XXXXX", "......XX", ".....X.X", "....X..X", "...X....", "..X.....", ".X......", "X......."],
+    'revoice': ["..XXX...", ".X...X..", "X.XX..X.", "X.X.X.X.", "X..XX.X.", ".X...X..", "..XXX...", "........"],
+    'tell': ["...XX...", "...XX...", "...XX...", "...XX...", "...XX...", "........", "...XX...", "...XX..."],
+    'praise': ["...X....", "...X....", "XXXXXXX.", ".XXXXX..", "..XXX...", ".XX.XX..", ".X...X..", "........"],
+    'connect': ["........", ".XX..XX.", "X..XX..X", "X......X", "X..XX..X", ".XX..XX.", "........", "........"],
+    'redirect': ["....XX..", "...X..X.", "XXXX...X", ".XX....X", "..X...X.", "......X.", "....XX..", "........"],
+    'wait': ["XXXXXXX.", ".X...X..", "..X.X...", "...X....", "..X.X...", ".X.X.X..", "XXXXXXX.", "........"],
+}
+
+
+def move_icon(name):
+    img = new(8, 8)
+    stamp(img, MOVE_ICONS[name], 0, 0, {'X': 'wood_dk'})
+    return upscale(img, 2)
+
+
+def encounter_backdrop():
+    """480x270 setting behind the encounter panels: the front wall and floor of the room."""
+    bd = new(480, 270)
+    pieces = ['plain', 'window', 'plain', 'board0', 'board1', 'board2', 'board3', 'board4', 'board5', 'plain',
+              'window', 'plain', 'clock', 'plain', 'door']
+    x = 0
+    i = 0
+    while x < 480:
+        k = pieces[i % len(pieces)]
+        if k == 'plain':
+            piece = plain_front()
+        elif k == 'window':
+            piece = window_piece()
+        elif k == 'clock':
+            piece = clock_piece()
+        elif k == 'door':
+            piece = door_piece()
+        else:
+            n = int(k[-1])
+            piece = board_piece(['L', 'M', 'M', 'M', 'M', 'R'][n], n)
+        bd.alpha_composite(upscale(piece, 2), (x, 0))
+        x += 32
+        i += 1
+    for ty in range(64, 270, 16):
+        for tx in range(0, 480, 16):
+            bd.alpha_composite(floor_tile(hashf(tx, ty) % 4), (tx, ty))
+    return bd
+
+
 def front_wall_base():
     """Front wall face, 16x32: drawn one tile above the room and over row 0."""
     t = new(16, 32)
@@ -457,7 +594,7 @@ def char_map(spec):
 
 
 def student_frame(spec, frame):
-    """frame: 0 neutral, 1 breathe, 2 look-left, 3 look-right, 4 hand-raise, 5 head-down."""
+    """frame: 0 neutral, 1 breathe, 2 look-left, 3 look-right, 4 hand-raise, 5 head-down, 6 blink."""
     img = new(14, 22)
     cmap = char_map(spec)
     head = [row for row in HEADS[spec['style']]]
@@ -487,6 +624,10 @@ def student_frame(spec, frame):
                 put(img, x, y, 'chalk')
     stamp(img, head, 0, head_dy, cmap)
     # eyes: look left/right, or down (closed) on the head-down frame
+    if frame == 6:
+        ey = 6
+        for ex in (4, 9):
+            put(img, ex, ey, cmap['s'])
     if frame in (2, 3, 5):
         dx = -1 if frame == 2 else (1 if frame == 3 else 0)
         ey = 6 + head_dy
@@ -515,7 +656,7 @@ def student_frame(spec, frame):
 
 
 def student_sheet(spec):
-    return hstack([student_frame(spec, f) for f in range(6)])
+    return hstack([student_frame(spec, f) for f in range(7)])
 
 
 # Teacher: 14x26 interior + outline = 16x28. Rows: down, left, right, up; 3 walk frames.
@@ -689,6 +830,19 @@ def button(state):
     return upscale(b, 2)
 
 
+def board_button(state):
+    """Dark (chalkboard) button for cards and lists that carry chalk-coloured text."""
+    b = new(16, 16)
+    face = {'normal': 'board_dk', 'hover': 'board', 'pressed': 'board_dk', 'disabled': 'ink'}[state]
+    dy = 1 if state == 'pressed' else 0
+    rect(b, 1, 0 + dy, 14, 16 - dy, 'ink')
+    rect(b, 0, 1 + dy, 16, 14 - dy, 'ink')
+    rect(b, 1, 1 + dy, 14, 14 - dy, 'neutral' if state == 'disabled' else 'wood')
+    rect(b, 2, 2 + dy, 12, 11 - dy, face)
+    rect(b, 2, 2 + dy, 12, 1, 'board_lt' if state != 'disabled' else 'slate')
+    return upscale(b, 2)
+
+
 ICONS = {
     'ok': ["........", "......X.", ".....XX.", "X...XX..", "XX.XX...", ".XXX....", "..X.....", "........"],
     'early': ["..XXXX..", ".X....X.", "X...X..X", "X...X..X", "X...XXXX", "X......X", ".X....X.", "..XXXX.."],
@@ -746,10 +900,32 @@ def build():
     save(frame_paper(), 'ui/frame_paper.png')
     for st in ('normal', 'hover', 'pressed', 'disabled', 'focus'):
         save(button(st), 'ui/button_%s.png' % st)
+    for st in ('normal', 'hover', 'pressed', 'disabled'):
+        save(board_button(st), 'ui/button_board_%s.png' % st)
     for name, key in {'ok': 'ok', 'early': 'early', 'notyet': 'notyet', 'neutral': 'neutral',
                       'attention': 'chalk', 'composure': 'notyet', 'clock': 'chalk'}.items():
         save(icon(name, key), 'ui/icon_%s.png' % name)
     save(talk_bubble(), 'ui/talk_bubble.png')
+    save(side_window_cap(), 'tiles/side_window.png')
+    for v in range(4):
+        save(poster_cap(v), 'tiles/poster_%d.png' % v)
+    save(plant_cap(), 'tiles/plant.png')
+    for v in range(3):
+        save(hooks_cap(v), 'tiles/hooks_%d.png' % v)
+    save(sink_cap(), 'tiles/sink.png')
+    for name, edge in {'l': (1, 0, 0, 0), 'm': (0, 0, 0, 0), 'r': (0, 1, 0, 0)}.items():
+        save(rug_full(edge), 'tiles/rug_%s.png' % name)
+    save(chair(), 'furniture/chair.png')
+    for v in range(6):
+        save(backpack(v), 'furniture/backpack_%d.png' % v)
+    save(floor_paper(), 'furniture/floor_paper.png')
+    for name in MOVE_ICONS:
+        save(move_icon(name), 'ui/move_%s.png' % name)
+    save(encounter_backdrop(), 'ui/encounter_backdrop.png')
+    import modern_room          # modern US/KR classroom set (imports this module's helpers)
+    import build_art as _ba
+    modern_room.build_modern()
+    WRITTEN.extend(_ba.WRITTEN)
     contact_sheet()
     print('wrote %d assets to %s' % (len(WRITTEN), OUT))
 

@@ -234,11 +234,15 @@ func _build_room() -> void:
 	if Art.tex(V2 + "tiles/floor_0.png") == null:
 		_build_room_legacy()
 		return
-	# Floor: four plank variants, chosen per tile so the grain never visibly repeats.
+	# Modern classroom (docs/ui-design-plan.md 5.1). US is the default; the "Classroom
+	# look" setting switches to the Korean variant. Same grid, seats and walls either way.
+	var st := _room_style()
+	var room := V2 + "room_%s/" % st
+	var common := V2 + "room_common/"
 	for x in range(1, COLS - 1):
 		for y in range(1, ROWS - 1):
-			_v2_tile(Vector2i(x, y), "tiles/floor_%d.png" % (absi(hash(Vector2i(x, y))) % 4), -19)
-	# Reading rug in front of the board (decor only; walkable).
+			_v2_sprite(room + "floor_%d.png" % (absi(hash(Vector2i(x, y))) % 4), Vector2(x * TILE, y * TILE), -19)
+	# Front of the room: carpet area (US) / play mat (KR) in front of the board.
 	for x in range(9, 15):
 		for y in range(1, 3):
 			var piece := ("t" if y == 1 else "b")
@@ -246,32 +250,57 @@ func _build_room() -> void:
 				piece += "l"
 			elif x == 14:
 				piece += "r"
-			_v2_tile(Vector2i(x, y), "tiles/rug_%s.png" % piece, -18)
-	# Front wall: a 1x2-tile face per column, drawn one tile above the room over row 0.
-	var front := {1: "tiles/front_door.png", 6: "tiles/front_window.png", 17: "tiles/front_window.png",
-		20: "tiles/front_clock.png"}
+			_v2_sprite(room + "rug_%s.png" % piece, Vector2(x * TILE, y * TILE), -18)
+	# Front wall, drawn one tile above the room over row 0.
+	var front := {1: room + "front_door.png", 20: common + "front_clock.png"}
+	if st == "us":
+		front.merge({3: common + "anchor_0.png", 5: common + "anchor_1.png", 7: common + "anchor_3.png",
+			16: common + "anchor_2.png", 18: common + "anchor_4.png"})
+	else:
+		front.merge({4: common + "anchor_3.png", 17: common + "anchor_1.png"})
 	for x in range(COLS):
 		_walls[Vector2i(x, 0)] = true
-		var path: String = front.get(x, "tiles/front_plain.png")
+		var path: String = front.get(x, common + "front_plain.png")
 		if x >= 9 and x <= 14:
-			path = "tiles/board_%d.png" % (x - 9)
-		_v2_sprite(V2 + path, Vector2(x * TILE, -TILE), -10)
-	# Side walls carry built-in shelves; the back wall carries cubbies.
-	for y in range(1, ROWS):
-		for x in [0, COLS - 1]:
-			_walls[Vector2i(x, y)] = true
-			var cap := "tiles/wall_cap.png" if y == ROWS - 1 else "tiles/shelf_%d.png" % (y % 3)
-			_v2_tile(Vector2i(x, y), cap, -10)
-	for x in range(1, COLS - 1):
+			path = room + "board_%d.png" % (x - 9)
+		_v2_sprite(path, Vector2(x * TILE, -TILE), -10)
+	# Windows along one side, displays and storage along the other, storage at the back.
+	var left_wall: Array
+	var right_wall: Array
+	var back_wall: Array
+	if st == "us":
+		left_wall = ["window_blinds", "window_blinds", "ac_unit", "window_blinds", "window_blinds", "plant",
+			"window_blinds", "window_blinds", "ac_unit", "window_blinds", "plant"]
+		right_wall = ["bulletin_0", "bulletin_1", "bins_0", "purifier", "bulletin_2", "bins_1", "bookshelf_0",
+			"bookshelf_1", "plant", "sink", "hooks_0"]
+		back_wall = ["wall_cap", "bins_0", "bins_1", "bins_2", "bookshelf_2", "bookshelf_0", "plant", "hooks_1",
+			"hooks_2", "hooks_0", "bulletin_3", "bulletin_0", "bins_2", "bins_0", "bookshelf_1", "plant", "sink",
+			"bins_1", "hooks_1", "hooks_2", "bulletin_1", "bins_0", "plant", "wall_cap"]
+	else:
+		left_wall = ["window_curtain", "window_curtain", "ac_unit", "window_curtain", "window_curtain", "plant",
+			"window_curtain", "window_curtain", "purifier", "window_curtain", "plant"]
+		right_wall = ["bulletin_0", "bulletin_1", "purifier", "bulletin_2", "plant", "bulletin_3", "bins_0",
+			"hooks_0", "hooks_1", "sink", "plant"]
+		back_wall = ["wall_cap", "cleaning", "lockers_0", "lockers_1", "lockers_2", "lockers_0", "lockers_1",
+			"lockers_2", "lockers_0", "lockers_1", "bulletin_1", "bulletin_2", "lockers_2", "lockers_0", "lockers_1",
+			"lockers_2", "lockers_0", "lockers_1", "lockers_2", "plant", "bookshelf_0", "bins_1", "plant", "wall_cap"]
+	for y in range(1, ROWS - 1):
+		_walls[Vector2i(0, y)] = true
+		_walls[Vector2i(COLS - 1, y)] = true
+		_v2_sprite(common + "%s.png" % left_wall[(y - 1) % left_wall.size()], Vector2(0, y * TILE), -10)
+		_v2_sprite(common + "%s.png" % right_wall[(y - 1) % right_wall.size()], Vector2((COLS - 1) * TILE, y * TILE), -10)
+	for x in range(0, COLS):
 		_walls[Vector2i(x, ROWS - 1)] = true
-		_v2_tile(Vector2i(x, ROWS - 1), "tiles/cubby_%d.png" % (x % 3), -10)
+		_v2_sprite(common + "%s.png" % back_wall[x % back_wall.size()], Vector2(x * TILE, (ROWS - 1) * TILE), -10)
 	# Teacher's desk spans two tiles at the front-left.
 	_walls[Vector2i(2, 2)] = true
 	_walls[Vector2i(3, 2)] = true
 	var td := Node2D.new()
 	td.position = Vector2(2 * TILE, 2 * TILE)
 	td.z_index = 1
-	var tdt := Art.tex(V2_TEACHER_DESK)
+	var tdt := Art.tex(V2 + "room_%s/teacher_desk.png" % _room_style())
+	if tdt == null:
+		tdt = Art.tex(V2_TEACHER_DESK)
 	var tds := Sprite2D.new()
 	tds.texture = tdt
 	tds.centered = false
@@ -279,6 +308,10 @@ func _build_room() -> void:
 	tds.position = Vector2(round((2 * TILE - tdt.get_width() * PX_PER_TEXEL) / 2.0), round(TILE - 1 - tdt.get_height() * PX_PER_TEXEL))
 	td.add_child(tds)
 	add_child(td)
+
+## "us" (default) or "kr", from the Classroom look setting.
+func _room_style() -> String:
+	return "kr" if bool(GameState.get_setting("korean_classroom", false)) else "us"
 
 func _v2_tile(tile: Vector2i, rel: String, z: int) -> void:
 	_v2_sprite(V2 + rel, Vector2(tile.x * TILE, tile.y * TILE), z)
@@ -318,6 +351,84 @@ func _build_seating(occupied: Dictionary) -> void:
 	for s in _seats:
 		if not occupied.has(s):
 			_add_desk(s)
+	if Art.tex(V2 + "room_%s/rug_m.png" % _room_style()) != null:
+		_dress_room(occupied)
+
+## Non-blocking set dressing that makes the seating read as an intentional group: a rug
+## spanning the space the desks enclose, empty chairs at empty desks, backpacks by the
+## occupied ones, a few worksheets on the floor. Nothing here touches _walls.
+func _dress_room(occupied: Dictionary) -> void:
+	if _seats.is_empty():
+		return
+	var minx := 99
+	var maxx := -1
+	var miny := 99
+	var maxy := -1
+	for s in _seats:
+		minx = mini(minx, s.x)
+		maxx = maxi(maxx, s.x)
+		miny = mini(miny, s.y)
+		maxy = maxi(maxy, s.y)
+	# Rug inside the seating block (one tile in from the desks), at least 3x2.
+	var rx0 := minx + 1
+	var rx1 := maxx - 1
+	var ry0 := miny + 1
+	var ry1 := maxy - 1
+	if rx1 - rx0 >= 2 and ry1 - ry0 >= 1:
+		for x in range(rx0, rx1 + 1):
+			for y in range(ry0, ry1 + 1):
+				var t := Vector2i(x, y)
+				if _seats.has(t):
+					continue
+				var piece := "m"
+				if y == ry0:
+					piece = "t"
+				elif y == ry1:
+					piece = "b"
+				if x == rx0:
+					piece = (piece + "l") if piece != "m" else "l"
+				elif x == rx1:
+					piece = (piece + "r") if piece != "m" else "r"
+				_v2_tile(t, "room_%s/area_%s.png" % [_room_style(), piece], -18)
+	var i := 0
+	for s in _seats:
+		i += 1
+		if not occupied.has(s):
+			_decor_sprite("room_%s/chair.png" % _room_style(), Vector2(s.x * TILE + 4, s.y * TILE - 2), Vector2i(s.x, s.y))
+		elif i % 2 == 0:
+			_decor_sprite("furniture/backpack_%d.png" % (i % 6), Vector2(s.x * TILE + TILE - 2, s.y * TILE + 14), Vector2i(s.x, s.y))
+	for k in range(4):
+		var h := absi(hash(Vector2i(k * 7 + 3, k * 5 + 1)))
+		var t := Vector2i(2 + h % (COLS - 4), 3 + (h / 7) % (ROWS - 5))
+		if not _walls.has(t) and not _seats.has(t):
+			_v2_sprite(V2 + "furniture/floor_paper.png", Vector2(t.x * TILE + 8 + h % 12, t.y * TILE + 10 + h % 10), -17)
+
+## Pick the idle loop from the student's drift (presentation only; drift itself is
+## computed above and is unchanged). A faced student raises a hand: "you can talk to me".
+func _set_student_state(info: Dictionary, faced: bool) -> void:
+	var a = info.get("anim", null)
+	if not (a is AnimatedSprite2D) or not a.sprite_frames.has_animation("focused"):
+		return
+	var ot := float(info.get("offtask", 0.0))
+	var want := "hand" if faced else ("focused" if ot < 35.0 else ("restless" if ot < 65.0 else "drifting"))
+	if a.animation != want:
+		a.play(want)
+
+## A y-sorted decor sprite (chairs, backpacks) that belongs to a tile row.
+func _decor_sprite(rel: String, pos: Vector2, row_tile: Vector2i) -> void:
+	var t := Art.tex(V2 + rel)
+	if t == null:
+		return
+	var holder := Node2D.new()
+	holder.position = Vector2(row_tile.x * TILE, row_tile.y * TILE)
+	holder.z_index = 1
+	var s := Sprite2D.new()
+	s.texture = t
+	s.centered = false
+	s.scale = Vector2(PX_PER_TEXEL, PX_PER_TEXEL)
+	s.position = pos - holder.position
+	holder.add_child(s)
+	add_child(holder)
 
 ## Standalone (empty) desk on a seat tile; blocks the tile. Same cut-out desk, at the same
 ## texel density and placement, as the desks in front of seated students.
@@ -332,7 +443,9 @@ func _add_desk(tile: Vector2i) -> void:
 ## The desk cut out of desk.png (floor pixels removed), at the room's texel density, sitting
 ## on the bottom of its tile and centred. Falls back to the full tile if the cut-out fails.
 func _desk_sprite() -> Node2D:
-	var v2 := Art.tex(V2_DESK)
+	var v2 := Art.tex(V2 + "room_%s/desk.png" % _room_style())
+	if v2 == null:
+		v2 = Art.tex(V2_DESK)
 	if v2 != null:
 		var d := Sprite2D.new()
 		d.texture = v2
@@ -433,7 +546,8 @@ func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
 		sheet = Art.tex("res://assets/sprites/%s_idle.png" % persona_id)
 	if sheet == null:
 		return null
-	var fw := int(sheet.get_width() / 6.0)
+	var nframes := 7 if sheet.resource_path.contains("/v2/") else 6
+	var fw := int(sheet.get_width() / float(nframes))
 	var fh := int(sheet.get_height())
 	if fw < 8 or fh < 16:
 		return null
@@ -447,6 +561,14 @@ func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
 		"discuss": [0, 1, 4, 0, 2, 1],
 		"work": [0, 5, 0, 1, 5, 0],
 	}
+	if nframes == 7:
+		# v2: animation follows the student's state (see _set_student_state)
+		sets = {
+			"focused": [0, 1, 0, 1, 0, 6, 0, 1],      # breathing + an occasional blink
+			"restless": [2, 0, 3, 0, 2, 3, 0, 6],     # glancing around
+			"drifting": [5, 5, 2, 5, 5, 3],           # head down, looking away
+			"hand": [4],                              # hand up: the teacher is facing them
+		}
 	for anim_name in sets:
 		frames.add_animation(anim_name)
 		frames.set_animation_loop(anim_name, true)
@@ -465,7 +587,9 @@ func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
 	asp.scale = Vector2(sc, sc)
 	asp.position = Vector2(TILE / 2.0 - (float(b0.position.x) + float(b0.size.x) / 2.0) * sc, feety - float(b0.position.y + b0.size.y) * sc)
 	var anim := "idle"
-	if _format == "group_work":
+	if nframes == 7:
+		anim = "focused"
+	elif _format == "group_work":
 		anim = "work"
 	elif _format == "discussion":
 		anim = "discuss"
@@ -565,7 +689,7 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 	add_child(node)
 	_npcs[tile] = {
 		"persona_id": persona_id, "display_name": display_name, "node": node,
-		"offtask": 0.0, "fill": barfill,
+		"offtask": 0.0, "fill": barfill, "anim": char_spr,
 	}
 
 ## A bobbing "!" bubble just above an NPC's head to invite interaction.
@@ -582,7 +706,9 @@ func _add_talk_emote(node: Node2D, head_y: float) -> void:
 	var sc := PX_PER_TEXEL if v2 else 20.0 / float(t.get_width())
 	e.scale = Vector2(sc, sc)
 	# Beside the head (upper right), so it never sits on the row above.
-	e.position = Vector2(TILE / 2.0 + 14.0, head_y + 4.0) if v2 else Vector2(TILE / 2.0 - 10.0, head_y - 32.0)
+	# Reserved slots: the name sits under the desk, the drift bar over the head, and the
+	# bubble to the right of the shoulders, so none of them can land on a neighbour's.
+	e.position = Vector2(TILE + 6.0, head_y + 20.0) if v2 else Vector2(TILE / 2.0 - 10.0, head_y - 32.0)
 	e.z_index = 5
 	node.add_child(e)
 	var y0 := e.position.y
@@ -658,7 +784,7 @@ func _build_hud() -> void:
 	_objective_toggle.position = Vector2(648, top + 6)
 	_objective_toggle.size = Vector2(164, 30)
 	_objective_toggle.focus_mode = Control.FOCUS_NONE
-	UiKit.style_button(_objective_toggle, 13 + GameState.ui_font_delta())
+	UiKit.style_button(_objective_toggle, 14 + GameState.ui_font_delta())
 	_objective_toggle.z_index = 60
 	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
 	_hud_node().add_child(_objective_toggle)
@@ -821,6 +947,8 @@ func _process(delta: float) -> void:
 			_room_cue = "Room cue: settled. Green bars = focused; red = drifting."
 
 		var faced: Vector2i = ptile + _player.facing
+		for st2 in _npcs.keys():
+			_set_student_state(_npcs[st2], st2 == faced)
 		if _interact_label != null:
 			var npc: Dictionary = npc_at(faced)
 			if not npc.is_empty():
