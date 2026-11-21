@@ -90,15 +90,15 @@ func unlock_voice_token(token: String) -> void:
 
 func voice_status_label() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
-		return "Voice: Off (demo gate)"
+		return "Voice: Off (demo)"
 	return "Voice: On" if enabled else "Voice: Off"
 
 func voice_status_detail() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
-		return "Voice is off in the public demo to prevent paid API usage. Use the passcode gate for voice."
+		return "Voice is off in the public demo. Use a voice passcode to turn it on."
 	if enabled:
-		return "Voice is enabled. Sound toggles both SFX and spoken student lines."
-	return "Voice is unavailable because no TTS endpoint is configured."
+		return "Voice is on. The Sound switch mutes effects and student voices together."
+	return "Voice isn't set up on this server."
 
 func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200 or body.size() < 64:

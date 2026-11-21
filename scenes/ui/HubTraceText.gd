@@ -19,15 +19,15 @@ static func trace_detail_text(rec: Dictionary) -> String:
 			var step = steps[i]
 			if typeof(step) != TYPE_DICTIONARY:
 				continue
-			lines.append("Turn %d | Move %s | Evidence %s | %s" % [
+			lines.append("Turn %d | Move %s | Skill %s | %s" % [
 				int(step.get("turn", i + 1)),
 				truncate(str(step.get("move", "Move")), 14),
 				truncate(str(step.get("construct", "Skill")), 18),
-				str(step.get("outcome", "evidence")),
+				str(step.get("outcome", "-")),
 			])
 			var signal_text := str(step.get("signal", ""))
 			if signal_text != "":
-				lines.append("Signal: " + truncate(signal_text, 76))
+				lines.append("Why: " + truncate(signal_text, 76))
 			var reaction := str(step.get("reaction", ""))
 			if reaction != "":
 				lines.append("Reaction: " + truncate(reaction, 76))
@@ -39,7 +39,7 @@ static func trace_detail_text(rec: Dictionary) -> String:
 		if trace != "":
 			lines.append("TRACE " + trace)
 		else:
-			lines.append("No saved trace detail for this older run.")
+			lines.append("This run is too old to have turn-by-turn notes.")
 	lines.append("")
 	var next_step := str(rec.get("coach_next", ""))
 	if next_step != "":

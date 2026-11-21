@@ -62,50 +62,50 @@ const INTERRUPT_MAX := 20.0
 # dnoise = added to every student's off-task, ddis = disruptions added.
 var INTERRUPTS := [
 	{
-		"text": "The intercom crackles: \"Please send attendance to the office.\"",
+		"text": "The intercom crackles. \"Attendance to the office, please.\"",
 		"options": [
-			{"label": "Give the class a 30s task, then handle it", "dcomp": -6.0, "dnoise": 4.0, "ddis": 0,
-			 "coach": "Good. A holding task keeps momentum while you deal with the interruption."},
+			{"label": "Give them a 30-second task, then do it", "dcomp": -6.0, "dnoise": 4.0, "ddis": 0,
+			 "coach": "Good. They had something to do while you dealt with it."},
 			{"label": "Stop teaching and do it now", "dcomp": -12.0, "dnoise": 16.0, "ddis": 0,
 			 "coach": "Dead time. The class drifted while you stopped everything."},
 		],
 	},
 	{
-		"text": "A knock at the door: another teacher needs a quick word.",
+		"text": "Knock at the door. Another teacher needs a quick word.",
 		"options": [
-			{"label": "Set a task, step to the door, stay facing in", "dcomp": -7.0, "dnoise": 6.0, "ddis": 0,
-			 "coach": "Withitness preserved. You stayed aware of the room while at the door."},
-			{"label": "Step fully into the hall", "dcomp": -8.0, "dnoise": 22.0, "ddis": 1,
-			 "coach": "Out of sight, out of control. Off-task spiked while your back was turned."},
+			{"label": "Set a task, go to the door, keep facing in", "dcomp": -7.0, "dnoise": 6.0, "ddis": 0,
+			 "coach": "You could still see the whole room from the door. That's the move."},
+			{"label": "Step out into the hall", "dcomp": -8.0, "dnoise": 22.0, "ddis": 1,
+			 "coach": "The second you left, they were off. Stay where you can see them."},
 		],
 	},
 	{
 		"text": "A student walks in late, mid-lesson.",
 		"ladder": true,
 		"options": [
-			{"label": "Nonverbal nod to an open seat, keep going", "dcomp": -3.0, "dnoise": 5.0, "ddis": 0, "tier": 2, "works": true,
-			 "coach": "Least-intrusive. You kept the lesson's momentum."},
+			{"label": "Nod at an open seat, keep going", "dcomp": -3.0, "dnoise": 5.0, "ddis": 0, "tier": 2, "works": true,
+			 "coach": "Just a nod. The lesson never stopped."},
 			{"label": "Walk them to a seat while you keep talking", "dcomp": -4.0, "dnoise": 8.0, "ddis": 0, "tier": 1, "works": false,
-			 "coach": "Walking over pulled you away from the board; a nod from where you stand was enough here."},
+			 "coach": "You left the board for that. A nod from where you stood would have done it."},
 			{"label": "Say quietly: \"Grab a seat, we're on page 4\"", "dcomp": -4.0, "dnoise": 7.0, "ddis": 0, "tier": 3, "works": true,
 			 "coach": "Fine, but a nod would have done it without a word."},
 			{"label": "Stop and question them in front of everyone", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
-			 "coach": "Public call-out cost momentum and rapport. Handle it privately later."},
+			 "coach": "Doing that in front of everyone cost you, and them. Talk to them after class."},
 		],
 	},
 	{
-		"text": "Two students start a loud side-conversation.",
+		"text": "Two students start a loud side conversation.",
 		"ladder": true,
 		"pair": true,
 		"options": [
-			{"label": "Move toward them (proximity), keep talking", "dcomp": -2.0, "dnoise": -10.0, "ddis": 0, "tier": 1, "works": true,
-			 "coach": "Proximity control. Quietest effective move."},
+			{"label": "Walk toward them, keep talking", "dcomp": -2.0, "dnoise": -10.0, "ddis": 0, "tier": 1, "works": true,
+			 "coach": "You walked over and they stopped. Can't get quieter than that."},
 			{"label": "Catch their eye and pause", "dcomp": -3.0, "dnoise": -4.0, "ddis": 0, "tier": 2, "works": true,
-			 "coach": "The look works, but walking over would have cost nothing at all."},
+			 "coach": "The look worked. Walking over would have cost you nothing, though."},
 			{"label": "Say their names quietly, keep teaching", "dcomp": -4.0, "dnoise": 0.0, "ddis": 0, "tier": 3, "works": true,
-			 "coach": "It worked, and it used words where moving closer would have been enough."},
+			 "coach": "It worked. You didn't need words, though. Walking closer would have done it."},
 			{"label": "Call them out across the room", "dcomp": -9.0, "dnoise": 12.0, "ddis": 1, "tier": 4, "works": true,
-			 "coach": "Shouting across the room escalates and pulls everyone off task."},
+			 "coach": "Yelling across the room just pulled everybody else off task too."},
 		],
 	},
 	{
@@ -114,13 +114,13 @@ var INTERRUPTS := [
 		"pair": true,
 		"options": [
 			{"label": "Move toward them, keep talking", "dcomp": -5.0, "dnoise": 10.0, "ddis": 1, "tier": 1, "works": false,
-			 "coach": "Proximity alone did not stop an argument already under way; a brief word was the smallest step that works here."},
+			 "coach": "Standing close won't stop a fight that's already going. They needed a quick word."},
 			{"label": "Give them a stern look", "dcomp": -5.0, "dnoise": 8.0, "ddis": 1, "tier": 2, "works": false,
-			 "coach": "A look does not settle a dispute over a tool; tell them how to share it, briefly."},
+			 "coach": "A look won't settle who gets the calculator. Tell them how to share it, quick."},
 			{"label": "Say: \"One calculator, take turns, {a} first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
-			 "coach": "Right-sized: the smallest step that actually solves this one."},
+			 "coach": "That's it. Smallest thing that actually fixed it."},
 			{"label": "Stop the class and lecture both about sharing", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
-			 "coach": "It stopped the argument and the lesson. A brief private word would have done it."},
+			 "coach": "Stopped the argument. Stopped the lesson too. A quick quiet word would have done it."},
 		],
 	},
 ]
@@ -1046,13 +1046,13 @@ func _process(delta: float) -> void:
 		# Room cue shares the bottom line with the talk prompt (talk prompt wins when facing a student).
 		# B5: at Light/Off support the HUD stops doing the noticing; read the postures.
 		if worst >= 45.0 and not _room_names_shown():
-			_room_cue = tr("Room cue: read the room. Postures show who is drifting.")
+			_room_cue = tr("Watch how they're sitting. That tells you who's drifting.")
 		elif worst >= 70.0:
-			_room_cue = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
+			_room_cue = "%s is drifting (%d%%). Get over there now." % [worst_name, int(worst)]
 		elif worst >= 45.0:
-			_room_cue = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
+			_room_cue = "%s is starting to drift (%d%%)." % [worst_name, int(worst)]
 		else:
-			_room_cue = "Room cue: settled. Green bars = focused; red = drifting."
+			_room_cue = "Room's settled. Green bar is focused, red is drifting."
 
 		var faced: Vector2i = ptile + _player.facing
 		for st2 in _npcs.keys():
@@ -1081,15 +1081,15 @@ func _process(delta: float) -> void:
 
 		if _coach_hint != null:
 			if facing_up and worst > 30.0:
-				_coach_hint.text = "Coach Vee: eyes on the room. Turning your back lets them drift."
+				_coach_hint.text = "Coach Vee: turn around. They drift when your back is to them."
 			elif worst >= 60.0 and not _room_names_shown():
-				_coach_hint.text = tr("Coach Vee: someone is drifting. Scan, then move closer.")
+				_coach_hint.text = tr("Coach Vee: someone's drifting. Look around, then walk over.")
 			elif worst >= 60.0:
-				_coach_hint.text = "Coach Vee: %s is drifting. Move closer (proximity) or scan the room." % worst_name
+				_coach_hint.text = "Coach Vee: %s is drifting. Go stand near them." % worst_name
 			elif worst >= 35.0:
-				_coach_hint.text = "Coach Vee: a little restlessness building. Keep circulating."
+				_coach_hint.text = "Coach Vee: getting a bit restless in here. Keep moving."
 			else:
-				_coach_hint.text = "Coach Vee: room is settled. Circulate and scan as you teach."
+				_coach_hint.text = "Coach Vee: they're with you. Keep walking the room."
 
 # --- interrupt events + lesson debrief ---------------------------------------
 
@@ -1314,7 +1314,7 @@ func _end_lesson() -> void:
 	_pending_card = _card_data(attention, stars, reward_info)
 	if bool(retry_info.get("met", false)):
 		var rw: Dictionary = _pending_card["rewards"]
-		rw["extra"] = [tr("+%d XP retry focus met") % Tuning.RETRY_XP_BONUS]
+		rw["extra"] = [tr("+%d XP, retry goal met") % Tuning.RETRY_XP_BONUS]
 		if bool(retry_info.get("level_up", false)):
 			rw["level_up"] = true
 			rw["level_after"] = int(retry_info.get("level_after", GameState.teacher_level))
@@ -1339,7 +1339,7 @@ func _end_lesson() -> void:
 		_last_moves.append(mm)
 	Game.clear_lesson()
 	# Reflection-on-action FIRST (Schon): the player names what they noticed before seeing a score.
-	_show_overlay("REFLECT 1/2\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.", reflection_options)
+	_show_overlay("REFLECT 1/2\n\nBefore you see the score. What's sticking with you from that period?", reflection_options)
 
 func _on_reflect(opt: Dictionary) -> void:
 	GameState.log_reflection({
@@ -1402,7 +1402,7 @@ func _show_results_card() -> void:
 	UiText.keep_centered(_overlay)
 	var data := _pending_card.duplicate()
 	data["buttons"] = [
-		{"label": "Choose another mission", "cb": _go_hub},
+		{"label": "Pick another mission", "cb": _go_hub},
 		{"label": "Replay this lesson", "cb": _restart_lesson},
 		{"label": "Talk it through", "cb": _open_coach, "primary": true},
 	]
@@ -1410,12 +1410,12 @@ func _show_results_card() -> void:
 
 ## Teaching-language next step for each objective metric.
 const NEXT_FOR := {
-	"attention_min": "Circulate: stand near drifting students and face the room while you talk.",
-	"disruptions_max": "Handle interruptions with the smallest move that works (a look, moving closer) before stopping the class.",
-	"composure_min": "Keep corrections small and private; public escalations cost you composure.",
-	"engaged_min": "Get every student to explain their thinking (Elicit or Revoice), not only the ones who call out.",
+	"attention_min": "Keep walking. Stand near whoever's drifting, and face the room when you talk.",
+	"disruptions_max": "Try the small stuff first, a look or walking closer, before you stop the class.",
+	"composure_min": "Correct quietly, one on one. Public blowups wear you down.",
+	"engaged_min": "Get everyone explaining, including the ones who never call out. Try Elicit or Revoice.",
 	"waittime_min": "After you ask, wait three seconds before your next move.",
-	"connect_min": "Notice a student's interest first, then bridge it to the lesson (Connect twice).",
+	"connect_min": "Find something a student cares about and tie it to the lesson. Use Connect twice.",
 }
 
 func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
@@ -1431,9 +1431,9 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		{"label": "Objectives", "frac": float(stars) / n, "value": "%d/%d" % [stars, _objectives.size()],
 			"cause": "all cleared" if missed.is_empty() else "missed: " + ", ".join(miss_names)},
 		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
-			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept facing and circulating the room"},
+			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept moving and kept facing them"},
 		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
-			"cause": tr("you heard the thinking of %d of %d students") % [reached, _npcs.size()]},
+			"cause": tr("you heard %d of %d students explain their thinking") % [reached, _npcs.size()]},
 	]
 	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
 	var best := _objectives.size() * 80 + 200 + _npcs.size() * 10
@@ -1441,21 +1441,21 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 	var weak := ResultsCard.weakest(parts)
 	var title := "%s  ·  period review" % _scenario_title
 	if _attempt > 1:
-		title += "  ·  replay #%d (the room drifts faster each attempt)" % _attempt
-	var next := "Stretch: reach every student and keep attention above 90%."
+		title += "  ·  replay #%d (they drift faster each time)" % _attempt
+	var next := "Want more? Hear from every student and keep attention over 90%."
 	if not missed.is_empty():
-		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Try again with this objective in mind.")) + " " + tr("It leads your next try (+%d XP).") % Tuning.RETRY_XP_BONUS
+		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Go again with this one in mind.")) + " " + tr("It goes first on your list next time (+%d XP).") % Tuning.RETRY_XP_BONUS
 	return {
 		"title": title,
 		"rank": rank,
 		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
 		"parts": parts,
 		"rewards": {"badge": _badge if bool(reward.get("badge_new", false)) else "",
-			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Mission badge",
+			"caption": "First clear" if bool(reward.get("badge_new", false)) else "Mission badge",
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", 0)), "items": reward.get("items_awarded", {}),
-			"none": ("%s badge already earned on an earlier clear." % _badge.capitalize()) if not reward.is_empty()
-				else ("Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "No badge in this mission.")},
+			"none": ("You already have the %s badge." % _badge.capitalize()) if not reward.is_empty()
+				else ("Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "This mission has no badge.")},
 		"moments": _classroom_moments(back),
 		"next": next,
 	}
@@ -1472,17 +1472,17 @@ func _classroom_moments(back: int) -> Array:
 		if off < 0 and not bool(moves[i].get("targets", false)):
 			off = i
 	if moves.is_empty():
-		out.append({"kind": "wrong", "text": "No conferences  ->  no student's thinking was heard  ->  ask at least one student to explain."})
+		out.append({"kind": "wrong", "text": "No conferences  ->  you never heard anyone's thinking  ->  get at least one to explain."})
 	if hit >= 0:
-		out.append({"kind": "right", "text": "Move %d  %s  ->  it landed on what the student needed  ->  their understanding moved." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
+		out.append({"kind": "right", "text": "Move %d  %s  ->  it was what they needed  ->  they got further." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
 	if off >= 0:
-		var why := "it came before three seconds of think time" if not bool(moves[off].get("wait_ok", false)) else "it did not answer what they needed yet"
+		var why := "you didn't give them three seconds first" if not bool(moves[off].get("wait_ok", false)) else "it wasn't what they needed yet"
 		out.append({"kind": "early" if not bool(moves[off].get("wait_ok", false)) else "wrong",
-			"text": "Move %d  %s  ->  it did not land  ->  %s." % [off + 1, str(moves[off].get("tag", "")).capitalize(), why]})
+			"text": "Move %d  %s  ->  didn't land  ->  %s." % [off + 1, str(moves[off].get("tag", "")).capitalize(), why]})
 	if back >= 10:
-		out.append({"kind": "early", "text": "%ds facing the board  ->  drift rose about twice as fast  ->  scan the room as you write." % back})
+		out.append({"kind": "early", "text": "%ds facing the board  ->  they drifted twice as fast  ->  look back as you write." % back})
 	elif _disruptions > 0:
-		out.append({"kind": "wrong", "text": "%d flare-up%s  ->  a drifting student boiled over  ->  get there before the bar turns red." % [_disruptions, "" if _disruptions == 1 else "s"]})
+		out.append({"kind": "wrong", "text": "%d flare-up%s  ->  someone who'd drifted blew up  ->  get there before the bar goes red." % [_disruptions, "" if _disruptions == 1 else "s"]})
 	return out
 
 func _reflection_options(attention: float) -> Array:
@@ -1492,25 +1492,25 @@ func _reflection_options(attention: float) -> Array:
 			continue
 		match str(o.get("metric", "")):
 			"engaged_min":
-				opts.append({"label": "Whose thinking I did not hear", "_reflect": "unreached"})
+				opts.append({"label": "Whose thinking I didn't hear", "_reflect": "unreached"})
 			"attention_min":
 				opts.append({"label": "When the room drifted", "_reflect": "attention"})
 			"waittime_min":
-				opts.append({"label": "Where I rushed wait time", "_reflect": "wait_time"})
+				opts.append({"label": "Where I didn't wait long enough", "_reflect": "wait_time"})
 			"connect_min":
-				opts.append({"label": "An asset I could connect to", "_reflect": "asset"})
+				opts.append({"label": "A kid's interest I could have used", "_reflect": "asset"})
 			"disruptions_max":
-				opts.append({"label": "A disruption I would handle smaller", "_reflect": "disruption"})
+				opts.append({"label": "A disruption I'd handle smaller", "_reflect": "disruption"})
 			"composure_min":
-				opts.append({"label": "A moment I would reframe", "_reflect": "reframe"})
+				opts.append({"label": "A moment I'd see differently now", "_reflect": "reframe"})
 	if opts.is_empty():
 		opts = [
 			{"label": "A move that worked", "_reflect": "worked"},
-			{"label": "An asset I connected to", "_reflect": "asset"},
-			{"label": "One stretch goal next time", "_reflect": "stretch"},
+			{"label": "A kid's interest I used", "_reflect": "asset"},
+			{"label": "Something to push for next time", "_reflect": "stretch"},
 		]
 	while opts.size() < 3:
-		opts.append({"label": "One moment to replay", "_reflect": "replay_moment"})
+		opts.append({"label": "A moment I'd replay", "_reflect": "replay_moment"})
 	return opts.slice(0, 3)
 
 ## B6: students whose thinking was heard (see Game.note_voiced), not merely visited.
@@ -1753,9 +1753,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _confirm_leave() -> void:
 	_show_overlay("Leave this lesson?
-The period ends here and this attempt will not be scored.", [
+The period ends now and this try won't count.", [
 		{"label": "Stay in the lesson", "_action": "close"},
-		{"label": "Leave to the mission hub", "_action": "hub"},
+		{"label": "Back to the mission hub", "_action": "hub"},
 	])
 	if _overlay != null:
 		_overlay.set_meta("leave_prompt", true)
@@ -1826,7 +1826,7 @@ func _group_collective_reasoning(pod: Array) -> String:
 		if typeof(po) == TYPE_DICTIONARY and str(po.get("opening_line", "")) != "":
 			return str(po.get("opening_line", ""))
 	if str(_scenario_cfg.get("title", "")) != "":
-		return "The pod is working on %s, but their reasoning has not been surfaced yet." % str(_scenario_cfg.get("title", "the task"))
+		return "This pod is working on %s. Nobody has asked how they're thinking yet." % str(_scenario_cfg.get("title", "the task"))
 	return "The pod is still figuring it out."
 
 func _group_scenario_context(pod: Array) -> Dictionary:

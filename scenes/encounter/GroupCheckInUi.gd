@@ -27,12 +27,12 @@ static func build(host: Node, shared_concept: String, members: Array, understand
 	layer.add_child(member_box)
 	populate_members(member_box, members)
 
-	var status_lbl := label(layer, "Status: hidden (observe or probe to surface it)", Vector2(20, 188), 13, Color(0.8, 0.84, 0.9))
+	var status_lbl := label(layer, "Status: can't tell yet. Observe or Probe to find out.", Vector2(20, 188), 13, Color(0.8, 0.84, 0.9))
 	status_lbl.size = Vector2(920, 16)
 	var reaction_cue := ReactionCue.show_group_cue(layer, null, Vector2(536, 212), understanding, participation, revealed)
 	label(layer, "Group understanding", Vector2(20, 214), 12, Color(0.86, 0.9, 0.96)).size = Vector2(210, 14)
 	var u_bar := bar(layer, Vector2(250, 216), Color(0.35, 0.78, 0.42))
-	label(layer, "Participation balance", Vector2(20, 238), 12, Color(0.86, 0.9, 0.96)).size = Vector2(210, 14)
+	label(layer, "Who's talking", Vector2(20, 238), 12, Color(0.86, 0.9, 0.96)).size = Vector2(210, 14)
 	var p_bar := bar(layer, Vector2(250, 240), Color(0.55, 0.72, 0.95))
 
 	var dialogue_box := Rect2(Vector2(16, 264), Vector2(928, 76))

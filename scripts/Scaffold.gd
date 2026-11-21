@@ -40,18 +40,18 @@ static func level_for(skills: Array) -> Dictionary:
 	var level := FULL
 	var reason := ""
 	if ev < MIN_EVIDENCE:
-		reason = "Not enough evidence yet, so full support is on"
+		reason = "You're new to this, so all the help is on"
 	elif prob < 0.50:
-		reason = "Estimate %d%%, so full support is on" % int(round(prob * 100.0))
+		reason = "Still learning this (%d%%), so all the help is on" % int(round(prob * 100.0))
 	elif prob < 0.62:
 		level = PARTIAL
-		reason = "Estimate %d%%, so some supports are gone" % int(round(prob * 100.0))
+		reason = "Getting there (%d%%), so some help is off" % int(round(prob * 100.0))
 	elif prob < 0.75 or ev < OFF_EVIDENCE:
 		level = LIGHT
-		reason = "Estimate %d%%, so you read the student yourself" % int(round(prob * 100.0))
+		reason = "Pretty solid (%d%%), so you read the student yourself" % int(round(prob * 100.0))
 	else:
 		level = OFF
-		reason = "Estimate %d%% across %d events, so all supports are off" % [int(round(prob * 100.0)), ev]
+		reason = "Solid (%d%% over %d moves), so the help is off" % [int(round(prob * 100.0)), ev]
 	return {"level": level, "name": NAMES[level], "prob": prob, "evidence": ev, "reason": reason}
 
 ## Skills an encounter exercises, from the move tags that can work for this student.

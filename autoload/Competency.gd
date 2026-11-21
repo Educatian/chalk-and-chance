@@ -13,7 +13,7 @@ const SKILLS := ["elicit_reasoning", "extend_thinking", "revoicing", "wait_time"
 	"group_monitoring", "formative_check", "status_treatment", "noticing"]
 const LABELS := {
 	"elicit_reasoning": "Eliciting", "extend_thinking": "Extending", "revoicing": "Revoicing",
-	"wait_time": "Wait time", "behavior_mgmt": "Mgmt (least-intrusive)", "restraint": "Restraint",
+	"wait_time": "Wait time", "behavior_mgmt": "Low-key redirects", "restraint": "Restraint",
 	"behavior_specific_praise": "Specific praise", "funds_of_knowledge": "Asset connect",
 	"group_monitoring": "Group monitoring", "formative_check": "Formative check", "status_treatment": "Status treatment",
 	"noticing": "Noticing",

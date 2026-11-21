@@ -42,7 +42,7 @@ func _build() -> void:
 	lv.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	lv.add_theme_font_size_override("font_size", UiText.fs(18))
 	lv.add_theme_color_override("font_color", Color("ffd34e"))
-	lv.tooltip_text = "Teacher level. Next +1 upgrade point in %d XP." % GameState.xp_to_next_level()
+	lv.tooltip_text = "Your level. %d more XP to the next upgrade point." % GameState.xp_to_next_level()
 	lv.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(lv)
 	var xp_bg := ColorRect.new()
@@ -105,11 +105,11 @@ func _build() -> void:
 		bx += 46.0
 
 	var commands := [
-		["Evidence", _open_evidence_journal, "Your evidence journal: skill estimates from the moves you used."],
-		["Upgrade", _open_upgrades_or_explain, "Spend upgrade points earned from level-ups."],
+		["Skills", _open_evidence_journal, "How each skill is going, from the moves you've made."],
+		["Upgrade", _open_upgrades_or_explain, "Spend the points you get when you level up."],
 		["Profile", null, ""],
-		["Items", _open_items, "Equip classroom items."],
-		["Board", _open_leaderboard, "Run history and reports."],
+		["Items", _open_items, "Pick what to bring to class."],
+		["Board", _open_leaderboard, "Past runs and reports."],
 		["Settings", _open_settings, "Audio, text size, motion, classroom look."],
 	]
 	var cx := vp.x - 42.0 - 6 * 96.0
@@ -345,8 +345,8 @@ func _open_mission_briefing(id: String) -> void:
 
 	_add_brief_label(overlay, "CASE", str(cfg.get("story_hook", "")), Vector2(480, 138), Vector2(344, 76), Color(0.84, 0.82, 0.74), fd, 48)
 	_add_brief_label(overlay, "SUCCESS", _brief_objectives_text(cfg), Vector2(480, 222), Vector2(344, 94), Color(0.90, 0.92, 0.96), fd, 46)
-	_add_brief_label(overlay, "EVIDENCE", Game.scenario_edge_label(cfg), Vector2(480, 324), Vector2(344, 62), Color(0.66, 0.90, 0.78), fd, 48)
-	_add_brief_label(overlay, "ADAPTIVE START", _scenario_adaptive_text(cfg), Vector2(96, 354), Vector2(356, 46), Color(0.96, 0.86, 0.50), fd, 48)
+	_add_brief_label(overlay, "SCORED ON", Game.scenario_edge_label(cfg), Vector2(480, 324), Vector2(344, 62), Color(0.66, 0.90, 0.78), fd, 48)
+	_add_brief_label(overlay, "DIFFICULTY", _scenario_adaptive_text(cfg), Vector2(96, 354), Vector2(356, 46), Color(0.96, 0.86, 0.50), fd, 48)
 	_add_brief_label(overlay, "FIRST MOVE", _mission_first_move(cfg), Vector2(96, 410), Vector2(724, 34), Color(0.72, 0.92, 0.78), fd, 92)
 
 	var back := Button.new()
@@ -402,7 +402,7 @@ func _wrap_words(text: String, max_chars: int) -> String:
 func _brief_objectives_text(cfg: Dictionary) -> String:
 	var objectives: Array = cfg.get("objectives", [])
 	if objectives.is_empty():
-		return "Resolve every learner while class order stays intact."
+		return "Reach every student without losing the room."
 	var labels: Array = []
 	for o in objectives.slice(0, 3):
 		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
@@ -413,12 +413,12 @@ func _mission_first_move(cfg: Dictionary) -> String:
 	var fmt := str(cfg.get("format", "discussion"))
 	match fmt:
 		"lecture":
-			return "Present briefly, wait, then Question a highlighted learner before moving on."
+			return "Present a short chunk. Pause. Then Question a highlighted student before going on."
 		"group_work":
-			return "Visit one pod, surface shared reasoning, then redistribute airtime."
+			return "Sit with one table and hear what they think. Then get a quiet kid talking."
 		"independent":
-			return "Circulate first, use proximity, then confer with a drifting learner."
-	return "Elicit reasoning, use wait-time, then press or revoice without taking over."
+			return "Get up and walk. Stand near whoever's drifting, then talk to them quietly."
+	return "Ask how they got it. Wait. Then push, or say it back, but don't take over."
 
 func _scenario_skill_focus(cfg: Dictionary) -> Array:
 	var mode := str(cfg.get("mode", ""))
@@ -438,7 +438,7 @@ func _scenario_adaptive_text(cfg: Dictionary) -> String:
 	var d := Game.adaptive_difficulty(_scenario_skill_focus(cfg))
 	var p := int(round(float(d.get("prob", 0.5)) * 100.0))
 	var evidence := int(d.get("evidence", 0))
-	return "%s | saved evidence %d | mastery signal %d%% | opening pressure tuned." % [
+	return "%s, from %d past moves. You're at %d%%." % [
 		Game.adaptive_difficulty_label(d),
 		evidence,
 		p,
@@ -581,7 +581,7 @@ func _mission_meta(cfg: Dictionary) -> String:
 func _mission_focus(cfg: Dictionary) -> String:
 	var objectives: Array = cfg.get("objectives", [])
 	if objectives.is_empty():
-		return "Focus: resolve every learner while class order stays intact."
+		return "Focus: reach everyone without losing the room."
 	var labels: Array = []
 	for o in objectives.slice(0, 2):
 		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
@@ -590,7 +590,7 @@ func _mission_focus(cfg: Dictionary) -> String:
 
 func _mission_reward_text(badge: String, earned: bool) -> String:
 	if badge == "":
-		return "Reward: practice data and competency evidence"
+		return "Reward: practice (no badge here)"
 	var reward_bits := ["+%d XP" % GameState.badge_xp(badge)]
 	var items: Dictionary = Items.BADGE_REWARDS.get(badge, {})
 	for id in items.keys():
@@ -606,8 +606,8 @@ func _open_upgrades_or_explain() -> void:
 		return
 	_open_notice(
 		"NO UPGRADE POINTS YET",
-		"Level up by clearing missions. Each level-up grants one upgrade point for steadier presence, better wait-time, or stronger relationship sense.",
-		"Play the NEXT mission, earn XP, then come back to spend the point."
+		"Level up by clearing missions. Each level gives you one point to put into presence, wait time, or how well you read a room.",
+		"Play the next mission to earn XP, then come back and spend the point."
 	)
 
 func _open_locked_mission_notice(id: String, cfg: Dictionary) -> void:
@@ -615,7 +615,7 @@ func _open_locked_mission_notice(id: String, cfg: Dictionary) -> void:
 	_open_notice(
 		"MISSION LOCKED",
 		"%s opens after you earn the %s badge." % [str(cfg.get("title", id)), _badge_name(required)],
-		"Clear the earlier mission that practices %s, then this classroom becomes available." % _badge_desc(required)
+		"Clear the earlier mission first (the one where you %s)." % _badge_desc(required)
 	)
 
 func _open_notice(title_text: String, body_text: String, next_text: String) -> void:
@@ -700,7 +700,7 @@ func _open_settings() -> void:
 	overlay.add_child(title)
 
 	var notice := Label.new()
-	notice.text = "Click Voice status if spoken lines are silent."
+	notice.text = "No voices? Click Voice status."
 	notice.position = Vector2(222, 122)
 	notice.size = Vector2(516, 64)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -871,7 +871,7 @@ func _open_evidence_journal() -> void:
 	overlay.add_child(panel)
 
 	var title := Label.new()
-	title.text = "EVIDENCE JOURNAL"
+	title.text = "SKILL NOTEBOOK"
 	title.position = Vector2(112, 74)
 	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(16))
@@ -879,7 +879,7 @@ func _open_evidence_journal() -> void:
 	overlay.add_child(title)
 
 	var summary := Label.new()
-	summary.text = "Live ECD model: each turn updates a competency estimate, evidence count, and uncertainty."
+	summary.text = "Every move you make nudges these bars. More moves, steadier numbers."
 	summary.position = Vector2(114, 106)
 	summary.size = Vector2(720, 34)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -902,12 +902,12 @@ func _open_evidence_journal() -> void:
 	var y := 176.0
 	for i in range(mini(rows.size(), 6)):
 		var row: Dictionary = rows[i]
-		_add_evidence_row(overlay, row, str(anchors.get(str(row.get("skill", "")), "session evidence model")), y)
+		_add_evidence_row(overlay, row, str(anchors.get(str(row.get("skill", "")), "from your play")), y)
 		y += 38.0
 
 	var recent := Label.new()
 	var recent_count := GameState.leaderboard_top(30).size()
-	recent.text = "RECENT RUN EVIDENCE — %d saved run%s; open Board for details." % [
+	recent.text = "RECENT RUNS: %d saved run%s. Open Board for more." % [
 		recent_count,
 		"" if recent_count == 1 else "s",
 	]
@@ -925,9 +925,9 @@ func _open_evidence_journal() -> void:
 	download.add_theme_font_size_override("font_size", UiText.fs(12))
 	download.disabled = Telemetry.conversation_count() <= 0
 	download.tooltip_text = (
-		"Save this session's teacher moves and simulated learner responses as Markdown."
+		"Save what you said and what the students said back, as Markdown."
 		if not download.disabled
-		else "Complete at least one dialogue turn first."
+		else "Talk to a student first. Nothing to save yet."
 	)
 	HubUi.apply_button_style(download, true)
 	download.pressed.connect(func():
@@ -985,7 +985,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = "%3d%%  ev %02d  unc %.2f" % [pct, n, unc]
+	stat.text = "%3d%%  %02d moves  +-%.2f" % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))
@@ -1041,15 +1041,15 @@ func _short_anchor(anchor: String) -> String:
 	if a.find("Reinke") != -1:
 		return "Reinke et al. 2008"
 	if a.find("formative") != -1:
-		return "Formative evidence"
+		return "Formative checks"
 	if a.length() <= 32:
 		return a
-	return "Evidence model"
+	return "From your play"
 
 func _recent_evidence_text() -> String:
 	var rows := GameState.leaderboard_top(3)
 	if rows.is_empty():
-		return "No posted run yet. Clear a lesson to turn moves into evidence."
+		return "No runs yet. Finish a lesson and it shows up here."
 	var bits: Array = []
 	for r in rows.slice(0, 2):
 		var coach_next := str(r.get("coach_next", ""))
@@ -1475,7 +1475,7 @@ func _open_items() -> void:
 	overlay.add_child(title)
 
 	var help := Label.new()
-	help.text = "Base starts empty. Items are earned from mission rewards."
+	help.text = "Nothing here yet. You earn items by clearing missions."
 	help.position = Vector2(140, 106)
 	help.size = Vector2(680, 24)
 	help.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1570,9 +1570,9 @@ func _badge_desc(id: String) -> String:
 		"routine":
 			return "manage pacing"
 		"echo":
-			return "surface reasoning"
+			return "get kids explaining"
 		"balance":
-			return "share airtime"
+			return "share the talking"
 		"mirror":
 			return "give useful feedback"
 		"insight":

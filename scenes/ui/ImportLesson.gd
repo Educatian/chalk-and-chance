@@ -39,7 +39,7 @@ func _build() -> void:
 	add_child(title)
 
 	var sub := Label.new()
-	sub.text = "Paste your plan (or load a .txt/.md). Activity format sets seating; duration sets the period.\nObjectives become goals, and 'AI' rewrites student dialogue to match your content."
+	sub.text = "Paste a plan or load a .txt/.md. The format picks the seating, the duration sets the period.\nObjectives become goals. With AI, the students talk about your content."
 	sub.position = Vector2(42, 66)
 	sub.size = Vector2(vp.x - 84, 44)
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -129,7 +129,7 @@ func _on_generate_ai() -> void:
 		_status.text = "Paste or load a lesson plan first."
 		return
 	_pending_text = txt
-	_status.text = "Contacting AI backend..."
+	_status.text = "Asking the AI..."
 	# Lock both generate paths while the request is in flight so a double-click
 	# cannot fire a second request (HTTPRequest would return ERR_BUSY and silently
 	# degrade to the offline conversion).
@@ -138,17 +138,17 @@ func _on_generate_ai() -> void:
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	var err := _http.request(ENDPOINT, headers, HTTPClient.METHOD_POST, JSON.stringify({"plan_text": txt}))
 	if err != OK:
-		_status.text = "Backend unreachable; using offline conversion."
+		_status.text = "Couldn't reach the AI. Building it offline."
 		_go_preview(LessonImport.plan_to_scenario(txt))
 
 func _on_ai_completed(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result == HTTPRequest.RESULT_SUCCESS and code == 200:
 		var parsed = JSON.parse_string(body.get_string_from_utf8())
 		if typeof(parsed) == TYPE_DICTIONARY and parsed.has("roster") and not parsed.has("error"):
-			_status.text = "AI scenario ready."
+			_status.text = "Done. Your lesson is ready."
 			_go_preview(parsed)
 			return
-	_status.text = "Backend unavailable; used offline conversion."
+	_status.text = "Couldn't reach the AI, so it was built offline."
 	_go_preview(LessonImport.plan_to_scenario(_pending_text))
 
 func _go_preview(scenario: Dictionary) -> void:

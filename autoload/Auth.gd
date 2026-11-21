@@ -30,7 +30,7 @@ func signed_in() -> bool:
 
 func login(p_class: String, p_name: String, p_password: String) -> void:
 	if not configured():
-		login_failed.emit("login not set up yet")
+		login_failed.emit("Sign-in isn't set up yet.")
 		return
 	_post("/auth/login", {"class_code": p_class, "name": p_name, "password": p_password}, false,
 		func(ok: bool, data):
@@ -44,7 +44,7 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 					GameState.apply_course_baseline(class_code)
 				_unlock_voice_then_login(p_password)
 			else:
-				var msg := "login failed"
+				var msg := "Sign-in didn't work. Check your name and passcode."
 				if typeof(data) == TYPE_DICTIONARY:
 					msg = str(data.get("error", msg))
 				login_failed.emit(msg))

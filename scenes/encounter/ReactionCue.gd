@@ -55,12 +55,12 @@ static func _new_cue(parent: Node) -> Control:
 
 static func _group_text(understanding: float, participation: float, revealed: bool) -> String:
 	if not revealed:
-		return "Read the table: hidden group state"
+		return "Read the table first. Can't tell yet"
 	if participation < 0.55:
-		return "Airtime imbalance: invite a quieter voice"
+		return "One voice is taking over. Ask a quiet kid"
 	if understanding < 0.55:
-		return "Shared misconception: press for reasoning"
-	return "Group momentum: ready to consolidate"
+		return "They share a mistake. Press on it"
+	return "They're rolling. Time to wrap it up"
 
 static func _group_color(understanding: float, participation: float, revealed: bool) -> Color:
 	if not revealed:

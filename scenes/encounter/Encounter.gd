@@ -45,12 +45,12 @@ const MOVE_HINTS := {
 const MOVE_HELP := {
 	"elicit": "Elicit: ask how the student got that answer.",
 	"extend": "Extend: press the idea one step further.",
-	"revoice": "Revoice: restate their thinking so it is public and checkable.",
-	"tell": "Tell: explain it directly. Useful sometimes, but it can take over their thinking.",
-	"praise": "Praise: name a specific useful behavior, not just 'good job'.",
-	"connect": "Connect: notice the student's world, then bridge the content to it.",
-	"redirect": "Redirect: bring attention back with the least-intrusive move that works.",
-	"wait": "Wait: hold silence until the Wait-Time bar turns green, then choose a move.",
+	"revoice": "Revoice: say their idea back so everyone can check it.",
+	"tell": "Tell: explain it yourself. Sometimes you have to. Often it does their thinking for them.",
+	"praise": "Praise: say exactly what they did. 'Good job' doesn't count.",
+	"connect": "Connect: find out what they're into, then hook the lesson to it.",
+	"redirect": "Redirect: get them back on task with the smallest move that works.",
+	"wait": "Wait: stay quiet until the Wait-Time bar goes green. Then pick a move.",
 }
 
 var persona_id := "noah_g5_fractions"
@@ -149,7 +149,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_meters()
 	_set_dialogue("You walk over to %s's desk." % display_name)
-	_set_coach("Read the student. Surface reasoning before correcting. After you ask, let the ring on them fill: that is their thinking time.")
+	_set_coach("Look at them first. Find out what they think before you correct it. After you ask, let the ring fill. That's their thinking time.")
 	_update_portrait("neutral")
 	_meters_live = true
 	_arm_turn()
@@ -213,7 +213,7 @@ func _apply_adaptive_difficulty() -> void:
 	else:
 		_win_understanding = WIN_UNDERSTANDING
 	if level != "standard" and _coach != null:
-		_set_coach("%s from saved evidence. Read the student, then choose the fit move." % Game.adaptive_difficulty_label(d))
+		_set_coach("%s, based on your past rounds. Read them, then pick the move that fits." % Game.adaptive_difficulty_label(d))
 	_refresh_meters()
 
 ## Lesson-plan import / any scenario may override a persona's lines and targets for its
@@ -318,7 +318,7 @@ func _apply_scaffold() -> void:
 		if lvl == Scaffold.FULL and _pj != null and not _pj.paths.is_empty():
 			var opener := str((_pj.paths[0]["steps"] as Array)[0][0])
 			starter = str(CoachFeedback.MOVES.get(opener, {}).get("starter", ""))
-		_text_input.placeholder_text = ("Try: " + starter) if starter != "" and starter.begins_with("\"") else "Type teacher talk..."
+		_text_input.placeholder_text = ("Try: " + starter) if starter != "" and starter.begins_with("\"") else "Type what you'd say..."
 	if lvl < Scaffold.PARTIAL and _result != null and str(_result.text).contains(": "):
 		_set_result("")
 	if not _stepped_in:
@@ -326,7 +326,7 @@ func _apply_scaffold() -> void:
 			Scaffold.FULL:
 				pass
 			Scaffold.PARTIAL:
-				_set_coach("Read the student.")
+				_set_coach("Watch them first.")
 			_:
 				_set_coach("")
 
@@ -401,7 +401,7 @@ func _build_ui() -> void:
 	_name_label.size = Vector2(380, 12)
 	_name_label.clip_text = true
 	# The most important guidance sits inside the line panel, in the focus colour.
-	_need_label = _make_label("Need: surface the student's reasoning", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
+	_need_label = _make_label("Need: find out how they're thinking", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
 	_need_label.size = Vector2(298, 12)
 	_need_label.clip_text = true
 
@@ -512,7 +512,7 @@ func _build_ui() -> void:
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(8, 228)
 	_text_input.size = Vector2(270, 30)
-	_text_input.placeholder_text = "Type teacher talk..."
+	_text_input.placeholder_text = "Type what you'd say..."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
 	_text_input.text_submitted.connect(func(_t): _on_type_submit())
@@ -607,45 +607,45 @@ func _use_item(id: String) -> void:
 		"item_id": id, "scope": "encounter", "persona_id": persona_id, "turn": _turns,
 		"remaining": int(result.get("remaining", GameState.item_count(id)))})
 	if not bool(result.get("ok", false)):
-		_set_result("Item unavailable.")
+		_set_result("You can't use that right now.")
 		return
 	match id:
 		"breathing_reset":
 			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			composure = clampf(composure + gain, 0.0, GameState.max_composure())
 			_set_result("Breathing Reset used  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""])
-			_set_coach("Coach Vee: regulated first. Now choose a smaller, cleaner next move.")
+			_set_coach("Coach Vee: good, you breathed first. Now try something smaller.")
 		"student_profile_card":
 			_asset_learned = true
 			var rapport_gain := 8.0 if GameState.teacher_profile_id == "listener" else 4.0
 			rapport = clampf(rapport + rapport_gain, 0.0, 100.0)
-			var hint := asset_hint if asset_hint != "" else "%s needs you to learn their thinking before correcting it." % display_name
+			var hint := asset_hint if asset_hint != "" else "%s needs you to hear their thinking before you correct it." % display_name
 			if hint.length() > 72:
 				hint = hint.substr(0, 69) + "..."
-			_set_result("Student Profile Card used  |  Asset cue revealed  |  Rapport +%d" % int(rapport_gain))
-			_set_coach("Coach Vee: profile cue: %s" % hint)
+			_set_result("Student Profile Card used  |  New cue  |  Rapport +%d" % int(rapport_gain))
+			_set_coach("Coach Vee: worth knowing. %s" % hint)
 		"noticing_lens":
 			var ways: Array = []
 			if _pj != null:
 				for p in _pj.paths:
 					ways.append(str(p.get("label", "")))
 			_set_result("Noticing Lens used  |  %d ways in" % ways.size())
-			_set_coach("Coach Vee: more than one approach works for %s: %s. Pick one and follow it through." % [display_name, " / ".join(ways)])
+			_set_coach("Coach Vee: a few things could work with %s: %s. Pick one and stick with it." % [display_name, " / ".join(ways)])
 		"wait_meter_pin":
 			_wait_item_ready = true
-			_set_result("Wait Meter Pin used  |  next move gets full wait-time credit")
-			_set_coach("Coach Vee: next move gets full think-time credit.")
+			_set_result("Wait Meter Pin used  |  next move counts as a full pause")
+			_set_coach("Coach Vee: your next move counts as if you waited.")
 		"lesson_map":
 			understanding = clampf(understanding + 0.04, 0.0, 1.0)
 			composure = clampf(composure + 4.0, 0.0, GameState.max_composure())
 			_set_result("Lesson Map used  |  Understanding +4  |  Composure +4")
-			_set_coach("Coach Vee: lesson path checked. Now choose the learner-fit move.")
+			_set_coach("Coach Vee: map checked. Now, what does this student need?")
 		"practice_goal_card":
 			_practice_goal_active = true
-			_set_result("Practice Goal set  |  clear this encounter for bonus XP")
-			_set_coach("Coach Vee: focus goal: make one evidence-rich move before resolving the misconception.")
+			_set_result("Practice Goal set  |  finish this one for bonus XP")
+			_set_coach("Coach Vee: goal. Get them to show their thinking once before you fix the mistake.")
 		_:
-			_set_result("%s cannot be used in this encounter." % Items.name_for(id))
+			_set_result("%s doesn't work here." % Items.name_for(id))
 	_refresh_meters()
 	_refresh_bond()
 	_refresh_item_buttons()
@@ -667,15 +667,15 @@ func _toggle_input_mode() -> void:
 		elif not _buttons.is_empty():
 			_buttons[0].grab_focus()
 	if _type_mode:
-		_set_result("Type mode: the offline demo classifies common teacher moves locally.")
+		_set_result("Type it out. Offline, the game guesses which move you meant.")
 
 func _start_voice_input() -> void:
 	if _text_input == null:
 		return
 	if VoiceInput.start_for_line_edit(_text_input):
-		_set_result("Listening... speak your teacher talk.")
+		_set_result("Listening... go ahead.")
 	else:
-		_set_result("Voice input is not available in this browser.")
+		_set_result("This browser can't use the mic.")
 
 func _preview_move(tag: String) -> void:
 	if _busy or _resolved or _support_level() < Scaffold.PARTIAL:
@@ -793,7 +793,7 @@ func _end_thinking(cut: bool) -> void:
 		resp["cut"] = true
 		resp["meter_deltas"] = Tuning.CUT_DELTAS.duplicate()
 		resp["student_utterance"] = {"text": Tuning.CUT_LINE, "emotion_shown": "frustrated"}
-		resp["coach_tip"] = "You spoke into their thinking time, so %s dropped the thought. After a question, let the ring fill." % display_name
+		resp["coach_tip"] = "You talked into their thinking time and %s lost the thought. After you ask, let the ring fill." % display_name
 		_ring.shatter()
 		Sfx.play("turn_wrong", -4.0, 1.3)
 		if _student_tex != null:
@@ -969,11 +969,11 @@ func _on_notice(chip: String) -> void:
 		"turn": _turns, "chip": chip, "shown": _shown_emotion, "right": right, "prompt_n": _notice_prompts})
 	if right:
 		Sfx.play("tick")
-		_set_result(tr("You read them right. Your next move that lands counts a little more."))
+		_set_result(tr("You read them right. If your next move lands, it counts a bit more."))
 		_release_result()
 	else:
 		Sfx.play("turn_neutral")
-		_set_coach("Coach Vee: " + tr("Look again: their face and posture say %s. Pick the move that answers that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
+		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
 		_release_coach()
 	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
 
@@ -981,7 +981,7 @@ func _refresh_praise_hint() -> void:
 	if _praise_btn != null:
 		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
 		if ph != null:
-			ph.text = tr("names what they just did") if _praise_specific() else tr("generic: nothing to name yet")
+			ph.text = tr("names what they just did") if _praise_specific() else tr("nothing to name yet")
 
 ## B3: praise is specific only when there is something nameable: the last move landed, or
 ## praise fits the student's path now (a designed "catch them doing it right" moment).
@@ -998,7 +998,7 @@ func _on_reply(resp: Dictionary) -> void:
 		resp["judge"] = pj
 		if pj["praise_kind"] == "generic":
 			resp["meter_deltas"] = Tuning.PRAISE_GENERIC_DELTAS.duplicate()
-			resp["coach_tip"] = "That was generic praise: there was nothing specific to name yet. Praise right after they show their thinking, and say what they did."
+			resp["coach_tip"] = "That praise was generic. They hadn't done anything yet to name. Praise right after they show their thinking, and say what they did."
 	var before := _meter_snapshot()
 	_hold_text = true
 	_meter_delay = TURN_CUE_AT
@@ -1021,7 +1021,7 @@ func _on_reply(resp: Dictionary) -> void:
 	# Path judge is authoritative for fit: the same move can be right now and early later.
 	var fit := {}
 	if str(judge.get("praise_kind", "")) == "generic":
-		fit = {"fit": "miss", "credit": 0.0, "path_id": "", "path_label": "", "done": false, "note": "generic praise names nothing they did"}
+		fit = {"fit": "miss", "credit": 0.0, "path_id": "", "path_label": "", "done": false, "note": "the praise named nothing they did"}
 		targets = false
 	elif tag0 != "" and _pj != null:
 		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)), bool(resp.get("cut", false)))
@@ -1110,9 +1110,9 @@ func _do_connect() -> void:
 		GameState.add_bond(persona_id, 0.10)
 		_refresh_meters()
 		_refresh_bond()
-		var hint := asset_hint if asset_hint != "" else "You pause to learn what %s cares about beyond this task." % display_name
-		_set_dialogue("You take a beat to notice %s, not just the task." % display_name)
-		_set_coach("Coach Vee (notice): %s  Press Connect again to bridge the content to it." % hint)
+		var hint := asset_hint if asset_hint != "" else "You ask %s what they're into outside of class." % display_name
+		_set_dialogue("You stop and actually look at %s." % display_name)
+		_set_coach("Coach Vee: %s  Press Connect again to tie the lesson to it." % hint)
 		_update_portrait("thinking")
 		_play_turn_beat(TurnBeat.NEUTRAL, before)
 		_arm_turn()
@@ -1146,9 +1146,9 @@ func _do_connect() -> void:
 		_win("connect")
 		return
 	if connect_resolves:
-		_set_coach("Coach Vee: you connected it to %s's world (funds of knowledge). Keep going, they are with you." % display_name)
+		_set_coach("Coach Vee: you hooked it to something %s cares about. They're with you now. Keep going." % display_name)
 	else:
-		_set_coach("Coach Vee: connecting built real trust (bond up). For %s the academic unlock is still the right move, but now they will let you lead." % display_name)
+		_set_coach("Coach Vee: that built some trust. %s still needs the lesson move, but now they'll let you lead." % display_name)
 	_arm_turn()
 
 ## Contingent support: three misses in a row -> Coach Vee steps in with the need and
@@ -1221,14 +1221,14 @@ func _present_win(route: String, warm: bool, reward: Dictionary, run_record: Dic
 	Sfx.play("win")
 	if route == "connect":
 		# The connect_line is already shown as the resolving dialogue.
-		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
+		_set_coach("Coach Vee: you got to %s through something they already know. You never had to tell them. Badge: %s." % [display_name, target_badge.to_upper()])
 	else:
 		_set_dialogue("%s: \"%s\"" % [display_name, win_line])
 		TTSClient.speak(persona_id, win_line, "excited")
 		if warm:
-			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
+			_set_coach("Coach Vee: you were kind and you didn't lower the bar. They trusted you to hold it. Badge: %s." % target_badge.to_upper())
 		else:
-			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
+			_set_coach("Coach Vee: they got there on their own. Solid. Get to know them a bit next time, it makes tomorrow easier. Badge: %s." % target_badge.to_upper())
 	_show_session_complete_panel(target_badge, reward, run_record)
 
 ## Product-grade end-of-encounter readout: reward, level, score, rank, evidence, next focus.
@@ -1256,13 +1256,13 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var weak := ResultsCard.weakest(parts)
 	var rank := str(run_record.get("rank", "-"))
 	var card := ResultsCard.build(_layer, {
-		"title": "Session complete with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
+		"title": "Done with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
 		"rank": rank,
 		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
 		"parts": parts,
 		"rewards": {"badge": badge_id if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Completion",
-			"none": "%s badge already earned on an earlier clear." % badge_id.capitalize(),
+			"none": "You already have the %s badge." % badge_id.capitalize(),
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
 		"moments": _pivotal_moments(),
@@ -1277,8 +1277,8 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 ## Teaching-language next target for the weakest part (understanding, pace, bond).
 const NEXT_TARGET := [
 	"Ask for their thinking first (Elicit), then build on what they said (Extend) before you explain anything.",
-	"Read the Need line and choose the move it points to: fewer detours, fewer turns.",
-	"Connect to something from their world, and keep the bar high with warmth.",
+	"Read the Need line and pick the move it points to. You'll get there in fewer turns.",
+	"Hook it to something they care about. Stay warm and keep the bar high.",
 ]
 
 ## The three score parts the run score is made of, each with the decision behind it.
@@ -1296,7 +1296,7 @@ func _result_parts() -> Array:
 		{"label": "Pace", "frac": pace / 42.0, "value": "%d" % pace,
 			"cause": "reached it in %d turn%s" % [_turns, "" if _turns == 1 else "s"]},
 		{"label": "Bond", "frac": bond_pts / 30.0, "value": "%d" % bond_pts,
-			"cause": "trust grew from connecting and warm pressing" if bond_pts >= 10 else "little warmth or connection yet"},
+			"cause": "they trust you more now" if bond_pts >= 10 else "not much connection yet"},
 	]
 
 ## A4: up to three turning points from this encounter: the first move that landed, the
@@ -1331,13 +1331,13 @@ func _moment_line(m: Dictionary) -> Dictionary:
 	match fit:
 		"advance":
 			kind = "right"
-			why = "it met them where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
+			why = "it fit where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
 		"early":
 			kind = "early"
 			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "right idea, too early"
 		"miss":
 			kind = "wrong"
-			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it did not answer what they needed"
+			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it wasn't what they needed"
 		_:
 			why = "it kept the conversation open"
 	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tag.capitalize(), said, why]}
@@ -1367,7 +1367,7 @@ func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 func _force_recover() -> void:
 	composure = minf(40.0, GameState.max_composure())
 	_refresh_meters()
-	_set_coach("Coach Vee: Composure bottomed out. Take a breath. This is data, not failure. Re-attempt the segment.")
+	_set_coach("Coach Vee: you're running on empty. Breathe. It happens to everyone. Try that part again.")
 	_arm_turn()
 
 func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary) -> String:
@@ -1386,10 +1386,10 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 		parts.append("Order %s" % _signed(order_delta))
 	var fit_kind := str(_last_fit.get("fit", ""))
 	if tag == "wait" and not wait_ok:
-		parts.append("Too soon: hold the pause longer")
+		parts.append("Too soon. Hold the pause longer")
 	elif targets:
 		var path := str(_last_fit.get("path_label", ""))
-		parts.append(("On a path that works: %s" % path) if path != "" and path != "Core move" else "This addressed %s's need" % display_name)
+		parts.append(("On a path that works: %s" % path) if path != "" and path != "Core move" else "That's what %s needed" % display_name)
 		if str(_last_fit.get("note", "")) != "":
 			parts.append(str(_last_fit["note"]).capitalize())
 	elif fit_kind == "early":
@@ -1397,7 +1397,7 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 	elif tag != "":
 		parts.append("Not the move %s needs yet" % display_name)
 	if _last_input_mode == "free_text":
-		parts.append("classified as %s" % tag.capitalize())
+		parts.append("read as %s" % tag.capitalize())
 	return "  |  ".join(parts)
 
 func _items_awarded_text(items) -> String:
@@ -1509,13 +1509,13 @@ func _emotion_for(emotion_shown: String, tags: Array) -> String:
 func _move_gloss(tag: String) -> String:
 	match tag:
 		"elicit": return "Can you walk me through how you got that?"
-		"extend": return "Okay, and what happens if you push that idea further?"
+		"extend": return "Okay. And what if you take that one step further?"
 		"revoice": return "So what you're saying is..."
-		"tell": return "Here's how it actually works: let me show you."
-		"praise": return "You just walked me through how you got that. That is the thinking I want to see." if _praise_specific() else "Good job!"
-		"redirect": return "Let's bring our focus back to the problem."
-		"wait": return "(waits quietly, giving you time to think)"
-		"connect": return "Tell me about something you're really good at outside class."
+		"tell": return "Here, let me just show you how it works."
+		"praise": return "You walked me through how you got that. That's what I want to see." if _praise_specific() else "Good job!"
+		"redirect": return "Hey, eyes back on the problem."
+		"wait": return "(waits quietly)"
+		"connect": return "What are you really good at outside of school?"
 		_: return "(addresses the student)"
 
 func _affect_for(tags: Array) -> String:

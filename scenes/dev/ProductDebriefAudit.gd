@@ -106,4 +106,4 @@ static func _require_reaction_cue(issues: Array, label: String, root: Node) -> v
 	if cue == null:
 		issues.append("%s missing ReactionCue feedback" % label)
 		return
-	issues.append_array(ProductAuditSupport.assert_text_issues(label + " reaction cue", cue, ["Airtime imbalance"]))
+	issues.append_array(ProductAuditSupport.assert_text_issues(label + " reaction cue", cue, ["One voice is taking over"]))

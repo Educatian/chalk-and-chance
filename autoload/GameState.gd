@@ -24,7 +24,7 @@ const TEACHER_PROFILE_DEFS := {
 	"base": {
 		"name": "Base",
 		"short": "Base",
-		"desc": "Baseline rehearsal with no profile bonus.",
+		"desc": "No bonus. Just you and the class.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.0,
@@ -32,7 +32,7 @@ const TEACHER_PROFILE_DEFS := {
 	"steady": {
 		"name": "Steady Lead",
 		"short": "Steady",
-		"desc": "Safer recovery and order tools.",
+		"desc": "Extra composure, plus tools for keeping order.",
 		"composure_bonus": 10.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.0,
@@ -40,7 +40,7 @@ const TEACHER_PROFILE_DEFS := {
 	"listener": {
 		"name": "Deep Listener",
 		"short": "Listen",
-		"desc": "Starts with profile and noticing tools.",
+		"desc": "Starts with the profile card and noticing tools.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.05,
@@ -48,7 +48,7 @@ const TEACHER_PROFILE_DEFS := {
 	"equity": {
 		"name": "Equity Scout",
 		"short": "Equity",
-		"desc": "Defaults toward airtime and wait-time control.",
+		"desc": "Geared for wait time and sharing the floor.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 300,
 		"relationship_bonus": 0.0,
@@ -62,12 +62,12 @@ const UPGRADE_DEFS := {
 	},
 	"wait_mastery": {
 		"name": "Wait Mastery",
-		"desc": "Wait-time readiness is 0.25s faster each rank.",
+		"desc": "Wait time counts 0.25s sooner each rank.",
 		"max": 3,
 	},
 	"relationship_sense": {
 		"name": "Relationship Sense",
-		"desc": "Start encounters with more rapport and engagement.",
+		"desc": "Kids start out a little warmer to you.",
 		"max": 3,
 	},
 }
@@ -158,7 +158,7 @@ func teacher_profile_mechanic_text() -> String:
 	if rel > 0:
 		parts.append("+%d%% starting rapport" % rel)
 	if parts.is_empty():
-		return "Baseline: no bonus, no starter items"
+		return "No bonus, no starting items"
 	return " | ".join(parts)
 
 func set_teacher_profile(id: String, apply_default_loadout: bool = true) -> void:
@@ -313,7 +313,7 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"coach_focus": str(report.get("focus", "")),
 		"coach_next": str(report.get("next", "")),
 		"coach_evidence": int(report.get("evidence", 0)),
-		"adaptive_level": str(report.get("adaptive_level", "Adaptive: standard start")),
+		"adaptive_level": str(report.get("adaptive_level", "Starting at normal")),
 		"evidence_trace": str(entry.get("trace", "")),
 		"evidence_trace_steps": entry.get("trace_steps", []),
 		"unix": Time.get_unix_time_from_system(),
@@ -336,8 +336,8 @@ func _coach_report_fields() -> Dictionary:
 	var difficulty := Game.adaptive_difficulty(Competency.SKILLS)
 	if weakest.is_empty():
 		return {
-			"focus": "Collect first evidence",
-			"next": "Clear one mission to produce a coachable trace.",
+			"focus": "Nothing yet",
+			"next": "Clear a mission so Coach Vee has something to go on.",
 			"evidence": 0,
 			"adaptive_level": Game.adaptive_difficulty_label(difficulty),
 		}

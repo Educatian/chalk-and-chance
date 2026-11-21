@@ -110,7 +110,7 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		_label(root, str(m.get("text", "")), Vector2(x0 + 24, y), Vector2(r.size.x - 72, 38), UiText.fs(14), INK, true)
 		y += 44.0
 	if moments.is_empty():
-		_label(root, "No turning points yet: the period ended before a move landed.", Vector2(x0 + 24, y), Vector2(r.size.x - 72, 20), UiText.fs(14), MUTED)
+		_label(root, "Nothing landed before the bell.", Vector2(x0 + 24, y), Vector2(r.size.x - 72, 20), UiText.fs(14), MUTED)
 
 	# One next target.
 	y = r.position.y + 336.0
@@ -210,14 +210,14 @@ static func _label(root: Control, text: String, pos: Vector2, size: Vector2, fs:
 static func verdict(rank: String, weak: String) -> String:
 	match rank:
 		"S":
-			return "Excellent work: every part of this held up."
+			return "Clean run. Nothing to fix."
 		"A":
-			return "Strong session. Small gains left in %s." % weak
+			return "Really good. A little room left in %s." % weak
 		"B":
 			return "Solid. %s held the score back a little." % weak.capitalize()
 		"C":
-			return "You got there, with detours. %s is the part to practise." % weak.capitalize()
-	return "%s held the score down. That is the place to start." % weak.capitalize()
+			return "You got there the long way. %s is the thing to practice." % weak.capitalize()
+	return "%s pulled the score down. Start there." % weak.capitalize()
 
 ## Classroom grade from the share of the best possible period score. Honest caps: a
 ## missed objective means no badge, so at most C; under half the objectives met is D.

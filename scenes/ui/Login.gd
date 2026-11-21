@@ -105,9 +105,9 @@ func _ready() -> void:
 	box.add_child(demo)
 
 	var demo_hint := Label.new()
-	demo_hint.text = "Demo path: choose a mission, rehearse teacher moves, then review evidence."
+	demo_hint.text = "Pick a mission, teach the class, then see how it went."
 	if is_course:
-		demo_hint.text = "%s course access: enter your name and the course passcode to save progress and evidence." % course_label
+		demo_hint.text = "%s: enter your name and the course passcode so your progress saves." % course_label
 	demo_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	demo_hint.add_theme_font_size_override("font_size", UiText.fs(12))
 	demo_hint.add_theme_color_override("font_color", Color(0.76, 0.86, 0.88))
@@ -122,9 +122,9 @@ func _ready() -> void:
 	box.add_child(divider)
 
 	var signin_hint := Label.new()
-	signin_hint.text = "Class sign in keeps progress tied to a course account."
+	signin_hint.text = "Sign in with your class so your progress follows you."
 	if is_course:
-		signin_hint.text = "The %s class code is already loaded. Students only need their own name and the course passcode." % course_label
+		signin_hint.text = "The %s class code is already filled in. Just add your name and the course passcode." % course_label
 	signin_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	signin_hint.add_theme_font_size_override("font_size", UiText.fs(11))
 	signin_hint.add_theme_color_override("font_color", Color(0.70, 0.78, 0.84))
@@ -147,7 +147,7 @@ func _ready() -> void:
 	_btn = Button.new()
 	_btn.text = "Sign in / Join"
 	if is_course:
-		_btn.text = "Join %s / Continue" % course_label
+		_btn.text = "Sign in to %s" % course_label
 	_btn.custom_minimum_size = Vector2(0, 36)
 	_apply_button_style(_btn, false)
 	_btn.pressed.connect(_on_sign_in)
@@ -176,11 +176,11 @@ func _ready() -> void:
 	Auth.login_ok.connect(_go_hub)
 	Auth.login_failed.connect(func(m): _set_status(m, true); if _btn != null: _btn.disabled = false)
 	if not Auth.configured():
-		_set_status("Offline mode is ready.", false)
+		_set_status("Playing offline.", false)
 	elif is_course:
-		_set_status("%s ready. Enter your name + course passcode." % course_label, false)
+		_set_status("%s is ready. Enter your name and the course passcode." % course_label, false)
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
-		_set_status("Public demo ready. Voice is off to prevent ElevenLabs overuse.", false)
+		_set_status("Public demo. Voice is off here to keep costs down.", false)
 
 func _add_landing_background(vp: Vector2) -> void:
 	var art := TextureRect.new()
@@ -275,7 +275,7 @@ func _on_sign_in() -> void:
 		if COURSE_CODES.has(_class_in.text.strip_edges()):
 			_set_status("Enter your name and course passcode.", true)
 		else:
-			_set_status("Enter class code, name, and password.", true)
+			_set_status("Enter your class code, name, and passcode.", true)
 		return
 	_btn.disabled = true
 	_set_status("Signing in...", false)

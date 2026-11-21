@@ -141,7 +141,7 @@ func _run() -> void:
 			coach_btn.pressed.emit()
 			await _frames(3)
 			var card := c.get_node_or_null("CoachCard")
-			_check("coaching card names a next-round focus", card != null and _find_button(card, "Rehearse") != null)
+			_check("coaching card names a next-round focus", card != null and _find_button(card, "Try again") != null)
 			if card != null:
 				card.queue_free()
 				await _frames(2)

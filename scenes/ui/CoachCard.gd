@@ -120,7 +120,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 			GameState.coach_focus.erase(scenario_id)
 
 	if fb.is_empty():
-		var none := _label("No moves were recorded this round. Next time, try one move that asks for a student's thinking.", Vector2(230, y), Vector2(660, 40), 14, Color(0.9, 0.9, 0.9))
+		var none := _label("You didn't make any moves this round. Next time, try one that asks a student how they're thinking.", Vector2(230, y), Vector2(660, 40), 14, Color(0.9, 0.9, 0.9))
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_root.add_child(none)
 		_sections.append(none)
@@ -157,14 +157,14 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	focus_box.size = Vector2(848, 40)
 	focus_box.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.10, 0.16, 0.20, 0.95), Color(0.30, 0.92, 0.86, 0.8)))
 	_root.add_child(focus_box)
-	var ftext := "NEXT ROUND FOCUS:  " + (str(focus.get("text", "")) if not focus.is_empty() else "Repeat what worked, on purpose.")
+	var ftext := "NEXT ROUND FOCUS:  " + (str(focus.get("text", "")) if not focus.is_empty() else "Do what worked again, on purpose.")
 	var fl := _label(ftext, Vector2(70, 414), Vector2(820, 22), 14, Color(0.70, 1.0, 0.94))
 	_root.add_child(fl)
 	_sections.append(focus_box)
 	_sections.append(fl)
 
 	var rehearse := Button.new()
-	rehearse.text = "Rehearse with this focus"
+	rehearse.text = "Try again with this focus"
 	rehearse.position = Vector2(56, 456)
 	rehearse.size = Vector2(420, 40)
 	rehearse.add_theme_font_size_override("font_size", UiText.fs(14))
