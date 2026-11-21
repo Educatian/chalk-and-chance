@@ -22,7 +22,7 @@ const UI_SCALE := 2.0
 const WIN_U := 0.80
 const MOVES := [
 	["Elicit", "elicit"], ["Extend", "extend"], ["Revoice", "revoice"],
-	["Tell", "tell"], ["Praise", "praise"], ["Redir.", "redirect"], ["Wait", "wait"],
+	["Tell", "tell"], ["Praise", "praise"], ["Redirect", "redirect"], ["Wait", "wait"],
 ]
 
 var scenario: Dictionary = {}
