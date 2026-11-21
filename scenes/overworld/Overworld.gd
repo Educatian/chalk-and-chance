@@ -1209,9 +1209,12 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		"rank": rank,
 		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
 		"parts": parts,
-		"rewards": {"badge": _badge if not reward.is_empty() else "", "level_up": bool(reward.get("level_up", false)),
+		"rewards": {"badge": _badge if bool(reward.get("badge_new", false)) else "",
+			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Mission badge",
+			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", 0)), "items": reward.get("items_awarded", {}),
-			"none": "Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "No badge in this mission."},
+			"none": ("%s badge already earned on an earlier clear." % _badge.capitalize()) if not reward.is_empty()
+				else ("Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "No badge in this mission.")},
 		"moments": _classroom_moments(back),
 		"next": next,
 	}

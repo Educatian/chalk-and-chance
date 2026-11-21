@@ -20,8 +20,8 @@ const INK := Color("f2eedd")
 const MUTED := Color("aab6c8")
 const NEXT := Color("9fe3b0")
 
-## data: title, rank, verdict, parts [{label, frac, value, cause}] (3), rewards {badge, level_up,
-## level_after, items}, moments [{kind, text}], next, buttons [{label, cb, primary}].
+## data: title, rank, verdict, parts [{label, frac, value, cause}] (3), rewards {badge, caption,
+## none, level_up, level_after, items}, moments [{kind, text}], next, buttons [{label, cb, primary}].
 static func build(parent: Node, data: Dictionary) -> Control:
 	var root := Control.new()
 	root.name = "ResultsCard"
@@ -94,26 +94,8 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		root.add_child(fill)
 		_label(root, str(p.get("cause", "")), Vector2(px, y + 34), Vector2(cw, 34), UiText.fs(12), MUTED, true)
 
-	# Rewards as icons.
-	y = r.position.y + 180.0
-	_label(root, "Earned", Vector2(x0, y + 6), Vector2(70, 16), UiText.fs(12), MUTED)
-	var rx := x0 + 72.0
-	var rw: Dictionary = data.get("rewards", {})
-	var badge := str(rw.get("badge", ""))
-	if badge != "":
-		rx = _icon_chip(root, "res://assets/ui/badge_%s.png" % badge, badge.capitalize() + " badge", Vector2(rx, y))
-	if bool(rw.get("level_up", false)):
-		rx = _icon_chip(root, "", "Lv %d  +1 upgrade" % int(rw.get("level_after", 0)), Vector2(rx, y))
-	var items = rw.get("items", {})
-	if typeof(items) == TYPE_DICTIONARY:
-		for id in items.keys():
-			if int(items[id]) > 0 and rx < r.end.x - 120:
-				rx = _icon_chip(root, Items.icon_for(str(id)), "%s x%d" % [Items.short_name_for(str(id)), int(items[id])], Vector2(rx, y))
-	if rx == x0 + 72.0:
-		_label(root, str(rw.get("none", "Nothing this time.")), Vector2(rx, y + 6), Vector2(r.end.x - rx - 24, 16), UiText.fs(12), MUTED)
-
 	# Moments that decided it (A4): what you did -> how they reacted -> why it mattered.
-	y = r.position.y + 222.0
+	y = r.position.y + 182.0
 	_label(root, "Moments that decided it", Vector2(x0, y), Vector2(400, 16), UiText.fs(12), MUTED)
 	y += 20.0
 	var moments: Array = data.get("moments", [])
@@ -133,9 +115,28 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		_label(root, "No turning points yet: the period ended before a move landed.", Vector2(x0 + 24, y), Vector2(r.size.x - 72, 20), UiText.fs(14), MUTED)
 
 	# One next target.
-	y = r.position.y + 382.0
+	y = r.position.y + 336.0
 	_label(root, "Next time", Vector2(x0, y), Vector2(120, 16), UiText.fs(12), NEXT)
 	_label(root, str(data.get("next", "")), Vector2(x0 + 80, y), Vector2(r.size.x - 128, 36), UiText.fs(14), NEXT, true)
+
+	# Rewards as icons. They come last and say what they are for (finishing), so a low grade beside a
+	# new badge does not read as a mixed message.
+	y = r.position.y + 384.0
+	var rw: Dictionary = data.get("rewards", {})
+	_label(root, str(rw.get("caption", "Earned")), Vector2(x0, y + 6), Vector2(150, 16), UiText.fs(12), MUTED)
+	var rx := x0 + 156.0
+	var badge := str(rw.get("badge", ""))
+	if badge != "":
+		rx = _icon_chip(root, "res://assets/ui/badge_%s.png" % badge, badge.capitalize() + " badge", Vector2(rx, y))
+	if bool(rw.get("level_up", false)):
+		rx = _icon_chip(root, "", "Lv %d  +1 upgrade" % int(rw.get("level_after", 0)), Vector2(rx, y))
+	var items = rw.get("items", {})
+	if typeof(items) == TYPE_DICTIONARY:
+		for id in items.keys():
+			if int(items[id]) > 0 and rx < r.end.x - 120:
+				rx = _icon_chip(root, Items.icon_for(str(id)), "%s x%d" % [Items.short_name_for(str(id)), int(items[id])], Vector2(rx, y))
+	if rx == x0 + 156.0:
+		_label(root, str(rw.get("none", "Nothing this time.")), Vector2(rx, y + 6), Vector2(r.end.x - rx - 24, 16), UiText.fs(12), MUTED)
 
 	# Actions: secondary on the left, the primary at normal size on the right.
 	var btns: Array = data.get("buttons", [])
