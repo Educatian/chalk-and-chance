@@ -1448,7 +1448,19 @@ func _reveal_label(label: Label, txt: String, is_dialogue: bool) -> void:
 	label.visible_characters = 0
 	var duration := clampf(float(txt.length()) / 72.0, 0.18, 1.8)
 	tween_ref = create_tween()
-	tween_ref.tween_property(label, "visible_characters", txt.length(), duration)
+	if is_dialogue:
+		# Soft per-student "voice" blips while the line types out (pitch fixed per student).
+		var base_pitch := 0.88 + float(absi(hash(persona_id)) % 30) / 100.0
+		var last := [0]
+		tween_ref.tween_method(func(v: float):
+			var c := int(v)
+			label.visible_characters = c
+			if c - last[0] >= 3:
+				last[0] = c
+				Sfx.play("type", -12.0, base_pitch * randf_range(0.96, 1.04)),
+			0.0, float(txt.length()), duration)
+	else:
+		tween_ref.tween_property(label, "visible_characters", txt.length(), duration)
 	if is_dialogue:
 		_dialogue_tween = tween_ref
 	else:

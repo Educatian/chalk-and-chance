@@ -37,6 +37,9 @@ func _ready() -> void:
 	_build_library()
 	get_tree().node_added.connect(_on_node_added)
 
+## Cues that already vary (blips) or must stay crisp (UI ticks) are left untouched.
+const NO_VARIATION := ["type", "tick", "hover"]
+
 func play(cue: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 	if not enabled or not bool(GameState.get_setting("audio_enabled", true)):
 		return
@@ -51,8 +54,10 @@ func play(cue: String, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 	var p := _pool[_next]
 	_next = (_next + 1) % _pool.size()
 	p.stream = stream
-	p.volume_db = volume_db
-	p.pitch_scale = pitch
+	# Tiny per-play variation so repeated cues do not sound machine-identical.
+	var vary := not (cue in NO_VARIATION)
+	p.volume_db = volume_db + (randf_range(-1.0, 0.5) if vary else 0.0)
+	p.pitch_scale = pitch * (randf_range(0.97, 1.03) if vary else 1.0)
 	p.play()
 
 ## Short randomized pitch blip, for typewriter text and count-up ticks.

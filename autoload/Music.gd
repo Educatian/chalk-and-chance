@@ -21,6 +21,7 @@ func _ready() -> void:
 		AudioServer.set_bus_send(idx, "Master")
 	_a = _make_player()
 	_b = _make_player()
+	_add_master_limiter()
 	apply_settings()
 
 func _make_player() -> AudioStreamPlayer:
@@ -74,3 +75,27 @@ func track_for_scene(path: String) -> String:
 	if path.contains("/dev/"):
 		return ""
 	return "hub"
+
+const DUCK_DB := -8.0
+var _duck_tw: Tween = null
+
+## Lower the music bus while a student voice plays; restore after.
+func duck(on: bool) -> void:
+	var idx := AudioServer.get_bus_index(BUS)
+	if idx == -1:
+		return
+	if _duck_tw != null and _duck_tw.is_valid():
+		_duck_tw.kill()
+	var from := AudioServer.get_bus_volume_db(idx)
+	var to := DUCK_DB if on else 0.0
+	_duck_tw = create_tween()
+	_duck_tw.tween_method(func(v: float): AudioServer.set_bus_volume_db(idx, v), from, to, 0.25 if on else 0.6)
+
+## A gentle limiter on Master so stacked cues (win + stamp + music) never clip.
+func _add_master_limiter() -> void:
+	for i in AudioServer.get_bus_effect_count(0):
+		if AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter:
+			return
+	var lim := AudioEffectHardLimiter.new()
+	lim.ceiling_db = -0.5
+	AudioServer.add_bus_effect(0, lim)
