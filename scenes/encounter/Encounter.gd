@@ -14,6 +14,8 @@ const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
+const Tuning = preload("res://scripts/Tuning.gd")
+const ThinkRing = preload("res://scripts/ThinkRing.gd")
 const ResultsCard = preload("res://scripts/ResultsCard.gd")
 ## v2 layout (480x270 authored = 1 unit per texel): portrait panel left, meters and the
 ## student's line in chalkboard panels right, verdict + coach line, move buttons below.
@@ -93,9 +95,11 @@ var _port_tween: Tween = null    # portrait bounce on emotion change
 var _last_wait_ms: int = 0       # wait time of the move in flight (for telemetry)
 var _last_input_mode := "menu"
 var _last_free_text := ""
-var _think: Panel                # A1: think-time bubble on the portrait
-var _think_dots: Array = []
-var _think_ready := false
+var _ring: Control                # B1: think-time ring around the student (ThinkRing)
+var _thinking := false           # WT-I: the student is thinking after a question
+var _think_resp: Dictionary = {} # their answer, held until the think time is over
+var _think_t0 := 0
+var _long_fired := false         # idle past Tuning.WT_LONG_MS already cost engagement
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -111,9 +115,6 @@ var _coach: Label
 var _result: Label
 var _dialogue_tween: Tween
 var _coach_tween: Tween
-var _wait_label: Label
-var _wait_bar: ColorRect             # fill; drawn as ColorRects so height is exact
-var _wait_bar_bg: ColorRect
 var _bond_fill: ColorRect
 var _bond_label: Label
 var _bars: Dictionary = {}   # key -> ColorRect fill
@@ -140,7 +141,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_meters()
 	_set_dialogue("You walk over to %s's desk." % display_name)
-	_set_coach("Read the student. Surface reasoning before correcting. Wait for green to earn a bonus.")
+	_set_coach("Read the student. Surface reasoning before correcting. After you ask, let the ring on them fill: that is their thinking time.")
 	_update_portrait("neutral")
 	_meters_live = true
 	_arm_turn()
@@ -302,11 +303,6 @@ func _apply_scaffold() -> void:
 	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
 	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(int(_scaffold["level"]), _stepped_in))
 	_refresh_intro()
-	if _wait_label != null:
-		_wait_label.visible = lvl >= Scaffold.PARTIAL
-	if _wait_bar != null:
-		_wait_bar.visible = lvl >= Scaffold.LIGHT
-		_wait_bar_bg.visible = lvl >= Scaffold.LIGHT
 	if _text_input != null:
 		var starter := ""
 		if lvl == Scaffold.FULL and _pj != null and not _pj.paths.is_empty():
@@ -457,53 +453,6 @@ func _build_ui() -> void:
 	_emote.visible = false
 	_layer.add_child(_emote)
 
-	# A1: think-time bubble. Three dots fill over the wait threshold, then "now".
-	_think = Panel.new()
-	_think.name = "ThinkBubble"
-	_think.position = PORTRAIT_PANEL.position + Vector2(6, 6)
-	_think.size = Vector2(46, 14)
-	_think.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tsb := StyleBoxFlat.new()
-	tsb.bg_color = Color("f2eedd")
-	tsb.border_color = Color("14131c")
-	tsb.set_border_width_all(2)
-	tsb.set_corner_radius_all(6)
-	_think.add_theme_stylebox_override("panel", tsb)
-	_layer.add_child(_think)
-	for i in range(3):
-		var d := ColorRect.new()
-		d.position = Vector2(5 + i * 7, 5)
-		d.size = Vector2(4, 4)
-		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_think.add_child(d)
-		_think_dots.append(d)
-	var now := Label.new()
-	now.name = "Now"
-	now.text = "now"
-	now.position = Vector2(25, 1)
-	now.size = Vector2(20, 10)
-	now.add_theme_font_size_override("font_size", UiText.S_TINY + GameState.ui_font_delta())
-	now.add_theme_color_override("font_color", Color("2f7d3a"))
-	now.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_think.add_child(now)
-	_set_think(0.0)
-
-	# Wait-Time Ring (a bar in M1).
-	_wait_label = _make_label(_wait_label_text(false), Vector2(392, 24), UiText.S_CAPTION, Color("f2eedd"))
-	_wait_label.size = Vector2(76, 12)
-	_wait_bar_bg = ColorRect.new()
-	_wait_bar_bg.position = Vector2(392, 37)
-	_wait_bar_bg.size = Vector2(70, 8)
-	_wait_bar_bg.color = Color(0, 0, 0, 0.5)
-	_wait_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_layer.add_child(_wait_bar_bg)
-	_wait_bar = ColorRect.new()
-	_wait_bar.position = Vector2(392, 37)
-	_wait_bar.size = Vector2(0, 8)
-	_wait_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_wait_bar_ready(false)
-	_layer.add_child(_wait_bar)
-
 	# Student utterance shown in a speech bubble (9-slice) when art is present.
 	_build_dialogue_box()
 
@@ -588,6 +537,13 @@ func _build_ui() -> void:
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
+	# B1: the think-time ring sits on the student, in final pixels (built after scaling).
+	_ring = ThinkRing.new()
+	_ring.name = "ThinkRing"
+	_ring.position = PORTRAIT_PANEL.position * UI_SCALE
+	_ring.size = PORTRAIT_PANEL.size * UI_SCALE
+	_ring.visible = false
+	_layer.add_child(_ring)
 	# Move hints are measured before their font resolves; pin them to their slot.
 	if _type_toggle != null:
 		_type_toggle.size = Vector2(80, 35) * UI_SCALE
@@ -712,11 +668,6 @@ func _preview_move(tag: String) -> void:
 		return
 	_set_result(str(MOVE_HELP.get(tag, "")))
 
-func _set_wait_bar_ready(ready: bool) -> void:
-	if _wait_bar == null:
-		return
-	_wait_bar.color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
-
 func _build_dialogue_box() -> void:
 	# The student's line sits in the chalkboard panel (LINE_PANEL), written in chalk.
 	var box_rect := LINE_PANEL
@@ -771,46 +722,86 @@ func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
 func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
-	_set_think(0.0)
-	if _wait_label != null:
-		_wait_label.text = _wait_label_text(false)
+	_long_fired = false
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
-	if _busy or _resolved:
-		if _think != null:
-			_think.visible = false
+	if _resolved:
+		if _ring != null:
+			_ring.visible = false
 		return
-	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
-	var threshold := float(GameState.wait_threshold_ms())
-	_set_think(elapsed / maxf(1.0, threshold))
-	if _wait_bar != null:
-		_wait_bar.size = Vector2(70.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 8.0 * UI_SCALE)
-	var ready := elapsed >= threshold
-	_set_wait_bar_ready(ready)
-	if _wait_label != null:
-		_wait_label.text = _wait_label_text(ready)
-
-## A1: fill the think bubble (0..1 of the wait threshold); a pulse when it reaches "now".
-func _set_think(frac: float) -> void:
-	if _think == null:
+	if _ring == null:
 		return
-	_think.visible = true
-	var ready := frac >= 1.0
-	var lit := int(clampf(frac, 0.0, 1.0) * 3.0)
-	for i in range(_think_dots.size()):
-		(_think_dots[i] as ColorRect).color = Color("2f7d3a") if ready else (Color("14131c") if i < lit else Color("c9c4b0"))
-	(_think.get_node("Now") as Label).visible = ready
-	if ready and not _think_ready:
-		Juice.punch(_think, 0.15)
-	_think_ready = ready
+	var now := Time.get_ticks_msec()
+	if _thinking:
+		# WT-I: the student thinks; the answer arrives when the ring is full.
+		var t := float(GameState.wait_threshold_ms())
+		_ring.show_state(ThinkRing.THINK, float(now - _think_t0) / t, tr("thinking..."))
+		if now - _think_t0 >= int(t):
+			_end_thinking(false)
+		return
+	if _busy:
+		return
+	# WT-II: let the answer land, then the go cue. Long silence costs a little engagement.
+	var idle := now - _ready_at_ms
+	if idle < Tuning.WT2_WINDOW_MS:
+		_ring.show_state(ThinkRing.LAND, float(idle) / Tuning.WT2_WINDOW_MS, tr("let it land"))
+	elif idle < Tuning.WT_LONG_MS or _turns == 0:   # the opening line is reading time
+		_ring.show_state(ThinkRing.READY, 1.0, tr("your move"))
+	else:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")
+		if not _long_fired:
+			_long_fired = true
+			engagement = clampf(engagement + Tuning.WT_LONG_ENGAGEMENT, 0.0, 100.0)
+			_refresh_meters()
+			Juice.float_text(_layer, tr("drifting"), _ring.position + Vector2(_ring.size.x * 0.5 - 30, _ring.size.y - 40), Color("aab6c8"), UiText.fs(14))
+			Telemetry.log_event({"event": "wait_too_long", "scenario_id": str(Game.current_scenario_id),
+				"persona_id": persona_id, "turn": _turns, "idle_ms": idle, "engagement_delta": Tuning.WT_LONG_ENGAGEMENT})
 
-func _wait_label_text(ready: bool) -> String:
-	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
-	# Short enough for the meter panel; the bar beneath shows the countdown itself.
-	return ("Wait %.1fs: READY" if ready else "Wait %.1fs first") % seconds
+## WT-I over: reveal the held answer. cut = the teacher spoke into the think time, so the
+## thought breaks (ring shatters, student drops it) and the question earns no wait credit.
+func _end_thinking(cut: bool) -> void:
+	_thinking = false
+	var resp := _think_resp
+	_think_resp = {}
+	var held_ms := Time.get_ticks_msec() - _think_t0
+	if cut:
+		var judge: Dictionary = resp.get("judge", {})
+		judge["wait_time_ok"] = false
+		resp["judge"] = judge
+		resp["cut"] = true
+		resp["meter_deltas"] = Tuning.CUT_DELTAS.duplicate()
+		resp["student_utterance"] = {"text": Tuning.CUT_LINE, "emotion_shown": "frustrated"}
+		resp["coach_tip"] = "You spoke into their thinking time, so %s dropped the thought. After a question, let the ring fill." % display_name
+		_ring.shatter()
+		Sfx.play("turn_wrong", -4.0, 1.3)
+		if _student_tex != null:
+			Juice.shake(_student_tex, 6.0, 6)
+	else:
+		_ring.show_state(ThinkRing.READY, 1.0, "")
+		Sfx.play("tick")
+	Telemetry.log_event({"event": "think_time", "scenario_id": str(Game.current_scenario_id),
+		"persona_id": persona_id, "turn": _turns, "held_ms": held_ms, "cut": cut,
+		"threshold_ms": GameState.wait_threshold_ms()})
+	_on_reply(resp)
+
+## Reply arrives: after a question (Tuning.THINK_TAGS) the student thinks first (WT-I).
+func _on_reply_gate(resp: Dictionary) -> void:
+	var tags: Array = resp.get("judge", {}).get("move_tags", [])
+	var tag0 := str(tags[0]) if tags.size() > 0 else ""
+	if tag0 in Tuning.THINK_TAGS and not _resolved:
+		_think_resp = resp
+		_thinking = true
+		_think_t0 = Time.get_ticks_msec()
+		_update_portrait("thinking")
+		_set_dialogue(tr("%s is thinking...") % display_name)
+		return
+	_on_reply(resp)
 
 func _on_move(tag: String) -> void:
+	if _thinking:
+		_end_thinking(true)   # the press is spent speaking over them
+		return
 	if _busy or _resolved:
 		return
 	# Connect is handled locally: it is deterministic asset/relationship state, not an
@@ -824,6 +815,9 @@ func _on_move(tag: String) -> void:
 ## move tag via the LLM judge, then the SAME pipeline runs. The raw line is what the
 ## student model and coach see, so it is what goes into the transcript.
 func _on_type_submit(text: String = "") -> void:
+	if _thinking:
+		_end_thinking(true)
+		return
 	if _busy or _resolved:
 		return
 	var line := (text if text != "" else (_text_input.text if _text_input != null else "")).strip_edges()
@@ -842,11 +836,15 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 	if _wait_item_ready:
 		wait_ms = max(wait_ms, GameState.wait_threshold_ms())
 		_wait_item_ready = false
+	# B1 WT-II: a pause of Tuning.WT2_WINDOW_MS after their answer counts as waited (sent
+	# as a full wait so backend/stub judge it the same way); think time is checked after.
+	if wait_ms >= Tuning.WT2_WINDOW_MS:
+		wait_ms = maxi(wait_ms, maxi(int(WAIT_FULL_MS), GameState.wait_threshold_ms()))
+	elif _ring != null:
+		Juice.float_text(_layer, tr("too soon"), _ring.position + Vector2(_ring.size.x * 0.5 - 30, _ring.size.y - 40), Color("ffb27a"), UiText.fs(14))
 	_last_wait_ms = wait_ms
-	if wait_ms < GameState.wait_threshold_ms() and _think != null:
-		# A1: pressing before the bubble fills cuts the student's thinking off.
-		Juice.flash(_think, Color(1.0, 0.45, 0.4))
-		Juice.float_text(_layer, "cut off", _think.position + Vector2(0, _think.size.y), Color("ec8a6e"), UiText.fs(14))
+	if _ring != null:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")
 	var is_free := free_text != ""
 	_last_input_mode = "free_text" if is_free else "menu"
 	_last_free_text = free_text
@@ -874,8 +872,8 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		"move_history": _move_history.slice(maxi(0, _move_history.size() - 6)),
 		"model_profile": "openrouter_gemini",
 	}
-	if not LLMClient.reply_ready.is_connected(_on_reply):
-		LLMClient.reply_ready.connect(_on_reply, CONNECT_ONE_SHOT)
+	if not LLMClient.reply_ready.is_connected(_on_reply_gate):
+		LLMClient.reply_ready.connect(_on_reply_gate, CONNECT_ONE_SHOT)
 	LLMClient.send_move(payload)
 
 func _on_reply(resp: Dictionary) -> void:
@@ -901,7 +899,7 @@ func _on_reply(resp: Dictionary) -> void:
 	# Path judge is authoritative for fit: the same move can be right now and early later.
 	var fit := {}
 	if tag0 != "" and _pj != null:
-		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)))
+		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)), bool(resp.get("cut", false)))
 		targets = str(fit["fit"]) == "advance"
 		var credit := float(fit["credit"])
 		understanding = clampf(understanding - float(deltas.get("understanding", 0.0)) + credit, 0.0, 1.0)

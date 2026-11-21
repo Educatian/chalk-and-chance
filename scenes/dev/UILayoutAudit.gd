@@ -144,9 +144,14 @@ func _audit_encounter(prefix: String) -> void:
 	for m in ["elicit", "extend", "elicit", "wait", "extend", "elicit", "revoice", "elicit", "extend"]:
 		if sc._resolved:
 			break
+		sc._ready_at_ms -= 2000   # as if the answer had landed (B1 WT-II)
 		sc._on_move(m)
 		for i in range(6):
 			await get_tree().process_frame
+		if sc._thinking:
+			sc._end_thinking(false)   # fast-forward the student's think time (B1 WT-I)
+			for i in range(6):
+				await get_tree().process_frame
 	await get_tree().process_frame
 	if sc._resolved:
 		_scan("%s Encounter completion" % prefix, sc)

@@ -85,15 +85,16 @@ func _dev_room_hook() -> bool:
 		Game.current_scenario_id = room if room != "" else "discussion_fractions"
 		Game.start_lesson(Game.current_scenario_id, 120.0)
 		SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {"persona_id": win, "display_name": win.split("_")[0].capitalize()})
-		# ?dev_moves=elicit,tell,extend plays those moves 1.6 s apart before the win.
+		# ?dev_moves=elicit,tell,extend plays those moves dev_gap s apart (1.6) before the win.
 		var moves: Array = Array(str(JavaScriptBridge.eval(q + ".get('dev_moves') || ''", true)).split(",", false))
+		var gap := float(str(JavaScriptBridge.eval(q + ".get('dev_gap') || '1.6'", true)))
 		var t := 2.0
 		for mv in moves:
 			get_tree().create_timer(t).timeout.connect(func():
 				var e = SceneRouter._current
 				if e != null and e.has_method("_on_move"):
 					e._on_move(str(mv)))
-			t += 1.6
+			t += gap
 		get_tree().create_timer(t).timeout.connect(func():
 			var enc = SceneRouter._current
 			if enc != null and enc.has_method("_win"):
