@@ -1,4 +1,5 @@
 extends Node
+const Tuning = preload("res://scripts/Tuning.gd")
 ## Single source of truth for save data: earned badges and per-student progress.
 ## See GAME_CONCEPT.md section 9.2.
 
@@ -301,7 +302,7 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"title": str(entry.get("title", "Lesson")),
 		"mode": str(entry.get("mode", "Practice")),
 		"score": score,
-		"rank": _rank_for_score(score),
+		"rank": _rank_for_score(score, str(entry.get("mode", ""))),
 		"level": teacher_level,
 		"xp": teacher_xp,
 		"badge": str(entry.get("badge", "")),
@@ -352,7 +353,14 @@ func leaderboard_top(limit: int = 8) -> Array:
 	rows.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
 	return rows.slice(0, maxi(0, limit))
 
-func _rank_for_score(score: int) -> String:
+const RANK_ORDER := ["D", "C", "B", "A", "S"]
+
+func _rank_for_score(score: int, mode: String = "") -> String:
+	if mode == Tuning.ENCOUNTER_MODE:
+		for r in ["S", "A", "B", "C"]:
+			if score >= int(Tuning.ENCOUNTER_RANKS[r]):
+				return r
+		return "D"
 	if score >= 260:
 		return "S"
 	if score >= 210:
@@ -362,6 +370,18 @@ func _rank_for_score(score: int) -> String:
 	if score >= 120:
 		return "C"
 	return "D"
+
+## Saved encounter records were graded on the general scale. Re-grade them from their
+## stored score on the encounter scale and keep whichever letter is better: a rank a
+## player already has is never lowered. Other modes are left as stored.
+func upgrade_saved_ranks(records: Array) -> void:
+	for rec in records:
+		if typeof(rec) != TYPE_DICTIONARY or str(rec.get("mode", "")) != Tuning.ENCOUNTER_MODE:
+			continue
+		var old := str(rec.get("rank", "D"))
+		var now := _rank_for_score(int(rec.get("score", 0)), Tuning.ENCOUNTER_MODE)
+		if RANK_ORDER.find(now) > RANK_ORDER.find(old):
+			rec["rank"] = now
 
 func badge_xp(_badge_id: String) -> int:
 	return 120
@@ -502,6 +522,7 @@ func load_game() -> void:
 	upgrade_points = maxi(0, int(parsed.get("upgrade_points", 0)))
 	var _lr = parsed.get("leaderboard_records", [])
 	leaderboard_records = _lr if typeof(_lr) == TYPE_ARRAY else []
+	upgrade_saved_ranks(leaderboard_records)
 	upgrades = DEFAULT_UPGRADES.duplicate()
 	var loaded_upgrades = parsed.get("upgrades", {})
 	if typeof(loaded_upgrades) == TYPE_DICTIONARY:

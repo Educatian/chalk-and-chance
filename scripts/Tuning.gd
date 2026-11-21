@@ -55,3 +55,11 @@ const NOTICE_TRUTH := {
 const NOTICE_MAX_PROMPTS := 3
 ## A correct read adds this to the understanding credit of the next move that lands.
 const NOTICE_CREDIT_BONUS := 0.03
+
+# --- Encounter grades on their own scale ---------------------------------------------
+## Encounter score = understanding (0-100) + pace (42 - 4 per turn) + bond (0-30), max ~172.
+## Probe, first meeting (8 students x their paths, stub judge): flawless wins 114-133
+## (median 120), one detour 107-129 (113), several detours 97-121 (97), failed 22-46.
+## Minimum score per letter; below C is D. Other modes keep GameState's general scale.
+const ENCOUNTER_MODE := "1:1 Encounter"
+const ENCOUNTER_RANKS := {"S": 120, "A": 112, "B": 104, "C": 95}

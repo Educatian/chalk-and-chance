@@ -36,6 +36,7 @@ func _ready() -> void:
 	_check_voiced()
 	_check_retry_focus()
 	_check_ladder()
+	_check_encounter_grades()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -100,6 +101,21 @@ func _check_ladder() -> void:
 					named.append("%s in '%s'" % [n, str(o["label"])])
 	_ok("no interrupt option names a fixed student (%s)" % ", ".join(named), named.is_empty())
 	ow.free()
+
+## Encounter grades use their own scale; saved ranks are only ever raised.
+func _check_encounter_grades() -> void:
+	var m := "1:1 Encounter"
+	_ok("flawless encounter (120) is S", GameState._rank_for_score(120, m) == "S")
+	_ok("solid win (113) is A", GameState._rank_for_score(113, m) == "A")
+	_ok("one-detour floor (107) is B", GameState._rank_for_score(107, m) == "B")
+	_ok("scraped win (97) is C", GameState._rank_for_score(97, m) == "C")
+	_ok("weak score (60) is D", GameState._rank_for_score(60, m) == "D")
+	_ok("classroom keeps the general scale", GameState._rank_for_score(120, "Classroom") == "C")
+	var recs := [{"mode": m, "score": 121, "rank": "D"}, {"mode": m, "score": 40, "rank": "B"}, {"mode": "Lecture", "score": 121, "rank": "C"}]
+	GameState.upgrade_saved_ranks(recs)
+	_ok("saved encounter rank is raised from its score", recs[0]["rank"] == "S")
+	_ok("saved encounter rank is never lowered", recs[1]["rank"] == "B")
+	_ok("other modes are left as stored", recs[2]["rank"] == "C")
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)
