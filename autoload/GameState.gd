@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS := {
 	"cinematics": true,
 	"music_enabled": true,
 	"korean_classroom": false,   # Classroom look: false = US (default), true = Korean variant
+	"language": "en",            # "en" or "ko"; Korean defaults the classroom look to Korea
 }
 const DEFAULT_UPGRADES := {
 	"steady_presence": 0,
@@ -114,6 +115,26 @@ func get_setting(key: String, fallback = null):
 	if fallback == null:
 		fallback = DEFAULT_SETTINGS.get(key, null)
 	return settings.get(key, fallback)
+
+## Switch the game language: locale, UI catalogue, and the Korean classroom by default.
+func set_language(lang: String) -> void:
+	settings["language"] = lang
+	settings["korean_classroom"] = lang == "ko"
+	save_game()
+	apply_language()
+
+func apply_language() -> void:
+	var lang := str(get_setting("language", "en"))
+	TranslationServer.set_locale(lang)
+	if lang != "en" and not _catalogues.has(lang):
+		var t = load("res://scripts/PatternTranslation.gd").new()
+		if t.load_catalogue("res://i18n/ui_%s.json" % lang, lang):
+			TranslationServer.add_translation(t)
+			_catalogues[lang] = t
+	var n = load("res://scripts/Narrative.gd")
+	n._data = {}   # story text is cached per language
+
+var _catalogues: Dictionary = {}
 
 func set_setting(key: String, value) -> void:
 	settings[key] = value

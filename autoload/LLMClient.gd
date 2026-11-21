@@ -139,8 +139,10 @@ func _emit_stub(payload: Dictionary) -> void:
 
 	# Resolution only advances on the move that works for THIS student (differentiated win).
 	deltas["understanding"] = 0.12 if targets else 0.0
+	coach = tr(coach)   # offline replies follow the game language
+	text = tr(text)
 	if not targets and tag != "" and tag != "tell":
-		coach += "  (Maybe not the move this student needs. Check the goal up top.)"
+		coach += tr("  (Maybe not the move this student needs. Check the goal up top.)")
 
 	var resp := {
 		"judge": {

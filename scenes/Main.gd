@@ -8,6 +8,7 @@ var _rotate_layer: CanvasLayer = null
 
 func _ready() -> void:
 	GameState.load_game()
+	GameState.apply_language()
 	UiText.apply_text_scale()
 	# Stretch aspect "expand" can show margins around fixed 960x540 screens; keep them dark.
 	RenderingServer.set_default_clear_color(Color(0.04, 0.05, 0.09))

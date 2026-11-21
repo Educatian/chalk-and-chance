@@ -1,5 +1,6 @@
 extends Control
 const NetGuard = preload("res://scripts/NetGuard.gd")
+const Content = preload("res://scripts/Content.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Gym (boss) encounter: several students at once. Pick a TARGET student, then a move.
@@ -159,7 +160,7 @@ func _read_json(path: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d

@@ -1,4 +1,5 @@
 extends Node2D
+const Content = preload("res://scripts/Content.gd")
 ## Top-down classroom (US-style rows of individual desks; students seated facing the
 ## viewer with a desk in front). Exposes walkability + NPC lookup for the grid-moving
 ## Player. See GAME_CONCEPT.md sections 3.1 and 9.1.
@@ -241,7 +242,7 @@ func _load_scenario(id: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d

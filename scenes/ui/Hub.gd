@@ -1,4 +1,5 @@
 extends Control
+const Content = preload("res://scripts/Content.gd")
 const BrandLogo = preload("res://scripts/BrandLogo.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Mission-select hub. Lists the scenarios from Game.SCENARIOS (reading each JSON for its
@@ -257,7 +258,7 @@ func _load(id: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
@@ -701,7 +702,7 @@ func _open_settings() -> void:
 	var notice := Label.new()
 	notice.text = "No voices? Click Voice status."
 	notice.position = Vector2(222, 122)
-	notice.size = Vector2(516, 64)
+	notice.size = Vector2(516, 44)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.add_theme_font_size_override("font_size", UiText.fs(12))
 	notice.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
@@ -715,7 +716,7 @@ func _open_settings() -> void:
 		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
 		{"label": "Classroom look", "key": "korean_classroom", "on": "Korea", "off": "US"},
 	]
-	var y := 188.0
+	var y := 170.0
 	for opt in options:
 		var b := Button.new()
 		b.position = Vector2(222, y)
@@ -735,7 +736,23 @@ func _open_settings() -> void:
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)
-		y += 34.0
+		y += 32.0
+
+	var lang := Button.new()
+	lang.position = Vector2(222, y)
+	lang.size = Vector2(516, 30)
+	lang.add_theme_font_size_override("font_size", UiText.fs(14))
+	lang.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	HubUi.apply_button_style(lang)
+	lang.text = "Language / 언어: %s" % ("한국어" if str(GameState.get_setting("language", "en")) == "ko" else "English")
+	lang.pressed.connect(func():
+		GameState.set_language("en" if str(GameState.get_setting("language", "en")) == "ko" else "ko")
+		for child in get_children():
+			child.queue_free()
+		_build()
+		_open_settings())
+	overlay.add_child(lang)
+	y += 32.0
 
 	var voice := Button.new()
 	voice.position = Vector2(222, y)
@@ -747,7 +764,7 @@ func _open_settings() -> void:
 		notice.text = TTSClient.voice_status_detail()
 	)
 	overlay.add_child(voice)
-	y += 34.0
+	y += 32.0
 
 	var reveal := Button.new()
 	reveal.position = Vector2(222, y)

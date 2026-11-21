@@ -1,4 +1,5 @@
 extends Control
+const Content = preload("res://scripts/Content.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## The classroom encounter: read-act-observe loop against one LLM-driven student.
 ## Four meters (Engagement / Order / Rapport class-side, Composure = your HP), the
@@ -283,7 +284,7 @@ func _load_persona() -> void:
 		return
 	var txt := f.get_as_text()
 	f.close()
-	var data = JSON.parse_string(txt)   # Variant
+	var data = Content.localize(path, JSON.parse_string(txt))   # Variant, with the language overlay
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	_persona_data = data
