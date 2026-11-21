@@ -103,6 +103,7 @@ static func prepare_overworld_clear(sc: Node) -> void:
 	for st in sc._npcs.keys():
 		sc._npcs[st]["offtask"] = 0.0
 		Game.note_visit(str(sc._npcs[st].get("persona_id", "")))
+		Game.note_voiced(str(sc._npcs[st].get("persona_id", "")))
 	Game.log_move("wait", true, true)
 	Game.log_move("connect", true, true)
 	if sc._objective_label != null:

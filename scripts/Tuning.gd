@@ -20,3 +20,9 @@ const CUT_LINE := "...oh. Never mind."
 ## praise fits the student's path now. Generic praise: this much trust, no understanding, no path progress, and
 ## it is not evidence of behaviour-specific praise.
 const PRAISE_GENERIC_DELTAS := {"understanding": 0.0, "trust": 0.02, "engagement": 0.0, "order": 0.0, "composure": 0.0}
+
+# --- B6 equity of voice: "every student contributes" means their thinking was heard -----
+## A student counts toward engaged_min only once one of these landed with them (1:1).
+const VOICE_TAGS := ["elicit", "revoice"]
+## Group check-in: a productive one of these counts every member of that pod as heard.
+const GROUP_VOICE_TAGS := ["probe", "redistribute"]

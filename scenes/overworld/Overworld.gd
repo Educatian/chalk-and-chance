@@ -842,7 +842,7 @@ func _build_hud() -> void:
 	_clock_label = _hud_text("2:00", Vector2(402, top + 17), UiText.HUD_VALUE)
 	_hud_text("DISRUPTIONS", Vector2(472, top + 3), UiText.HUD)
 	_disrupt_label = _hud_text("0", Vector2(472, top + 17), UiText.HUD_VALUE, Color("e0a93a"))
-	_hud_text("ENGAGED", Vector2(572, top + 3), UiText.HUD)
+	_hud_text(tr("HEARD"), Vector2(572, top + 3), UiText.HUD)
 	_equity_label = _hud_text("0/0", Vector2(572, top + 17), UiText.HUD_VALUE, Color("6fa8e8"))
 
 	_objective_toggle = Button.new()
@@ -1184,7 +1184,7 @@ const NEXT_FOR := {
 	"attention_min": "Circulate: stand near drifting students and face the room while you talk.",
 	"disruptions_max": "Handle interruptions with the smallest move that works (a look, moving closer) before stopping the class.",
 	"composure_min": "Keep corrections small and private; public escalations cost you composure.",
-	"engaged_min": "Hold a short conference with every student, not only the ones who call out.",
+	"engaged_min": "Get every student to explain their thinking (Elicit or Revoice), not only the ones who call out.",
 	"waittime_min": "After you ask, wait three seconds before your next move.",
 	"connect_min": "Notice a student's interest first, then bridge it to the lesson (Connect twice).",
 }
@@ -1204,7 +1204,7 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
 			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept facing and circulating the room"},
 		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
-			"cause": "you spoke with %d of %d students" % [reached, _npcs.size()]},
+			"cause": tr("you heard the thinking of %d of %d students") % [reached, _npcs.size()]},
 	]
 	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
 	var best := _objectives.size() * 80 + 200 + _npcs.size() * 10
@@ -1243,7 +1243,7 @@ func _classroom_moments(back: int) -> Array:
 		if off < 0 and not bool(moves[i].get("targets", false)):
 			off = i
 	if moves.is_empty():
-		out.append({"kind": "wrong", "text": "No conferences  ->  no student's thinking was heard  ->  talk to at least one student."})
+		out.append({"kind": "wrong", "text": "No conferences  ->  no student's thinking was heard  ->  ask at least one student to explain."})
 	if hit >= 0:
 		out.append({"kind": "right", "text": "Move %d  %s  ->  it landed on what the student needed  ->  their understanding moved." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
 	if off >= 0:
@@ -1263,7 +1263,7 @@ func _reflection_options(attention: float) -> Array:
 			continue
 		match str(o.get("metric", "")):
 			"engaged_min":
-				opts.append({"label": "Who I did not reach", "_reflect": "unreached"})
+				opts.append({"label": "Whose thinking I did not hear", "_reflect": "unreached"})
 			"attention_min":
 				opts.append({"label": "When the room drifted", "_reflect": "attention"})
 			"waittime_min":
@@ -1284,13 +1284,9 @@ func _reflection_options(attention: float) -> Array:
 		opts.append({"label": "One moment to replay", "_reflect": "replay_moment"})
 	return opts.slice(0, 3)
 
+## B6: students whose thinking was heard (see Game.note_voiced), not merely visited.
 func _engaged_count() -> int:
-	var n := 0
-	var v: Dictionary = Game.lesson.get("visited", {})
-	for k in v.keys():
-		if int(v[k]) > 0:
-			n += 1
-	return n
+	return Game.voiced_count()
 
 func _waittime_count() -> int:
 	var c := 0

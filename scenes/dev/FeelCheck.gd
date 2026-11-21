@@ -33,6 +33,7 @@ func _ready() -> void:
 	_check_text_scale()
 	_check_results_grade()
 	_check_praise_kinds()
+	_check_voiced()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -50,6 +51,18 @@ func _check_praise_kinds() -> void:
 	_ok("generic praise scores 0 for specific-praise skill", Competency.score_y("praise", {"praise_kind": "generic"}, {"trust": 0.02}) == 0)
 	_ok("specific praise with trust gain scores 1", Competency.score_y("praise", {"praise_kind": "specific"}, {"trust": 0.08}) == 1)
 	_ok("generic praise moves no understanding", float(load("res://scripts/Tuning.gd").PRAISE_GENERIC_DELTAS["understanding"]) == 0.0)
+
+## B6: a visit alone is not a heard voice; each student counts once however often heard.
+func _check_voiced() -> void:
+	var keep := Game.lesson
+	Game.start_lesson("discussion_fractions", 60.0)
+	Game.note_visit("noah_g5_fractions")
+	_ok("a visit alone does not count as heard", Game.voiced_count() == 0)
+	Game.note_voiced("noah_g5_fractions")
+	Game.note_voiced("noah_g5_fractions")
+	Game.note_voiced("priya_quiet")
+	_ok("heard students count once each", Game.voiced_count() == 2)
+	Game.lesson = keep
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

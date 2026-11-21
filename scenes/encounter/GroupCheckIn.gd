@@ -1,4 +1,5 @@
 extends Control
+const Tuning = preload("res://scripts/Tuning.gd")
 const UiText = preload("res://scripts/UiText.gd")
 const GroupDebriefPanel = preload("res://scenes/encounter/GroupDebriefPanel.gd")
 const GroupCheckInUi = preload("res://scenes/encounter/GroupCheckInUi.gd")
@@ -153,6 +154,8 @@ func _on_reply(result: int, code: int, _h: PackedStringArray, body: PackedByteAr
 		"emotion_shown": str(u.get("emotion_shown", ""))})
 	if "current_scenario_id" in Game:
 		Competency.observe_group(tag, bool(j.get("targets", false)))
+	if bool(j.get("targets", false)) and tag in Tuning.GROUP_VOICE_TAGS:
+		_note_pod_voiced()
 	_refresh()
 	_check_win()
 
@@ -178,8 +181,15 @@ func _local_fallback(tag: String) -> void:
 		"targets": productive, "understanding": understanding, "participation": participation, "offline": true,
 		"student_text": "(group keeps working)"})
 	Competency.observe_group(tag, productive)
+	if productive and tag in Tuning.GROUP_VOICE_TAGS:
+		_note_pod_voiced()
 	_refresh()
 	_check_win()
+
+## B6: a productive Probe/Redistribute heard this pod's thinking.
+func _note_pod_voiced() -> void:
+	for m in members:
+		Game.note_voiced(str((m as Dictionary).get("persona_id", "")))
 
 func _group_button_hint(tag: String, productive: bool) -> String:
 	if not revealed:

@@ -946,6 +946,8 @@ func _on_reply(resp: Dictionary) -> void:
 		"reaction": str(utter.get("text", "")), "meter": _result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas),
 		"student": display_name, "fit": str(fit.get("fit", "")), "path": str(fit.get("path_label", "")), "note": str(fit.get("note", "")),
 		"scaffold": _support_level()})
+	if targets and tag0 in Tuning.VOICE_TAGS:
+		Game.note_voiced(persona_id)   # B6: their thinking was heard
 	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
 	if targets:
 		GameState.add_bond(persona_id, 0.05)
