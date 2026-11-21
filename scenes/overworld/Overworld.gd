@@ -151,7 +151,7 @@ var _player: Node2D = null
 var _attention_fill: ColorRect = null
 var _disrupt_label: Label = null
 var _equity_label: Label = null
-var _objective_label: Label = null
+var _objective_label: RichTextLabel = null   # BBCode table: wrapped lines keep their indent
 var _objective_toggle: Button = null
 var _hud: Node2D = null
 var _objective_plate: Panel = null
@@ -891,11 +891,25 @@ func _build_hud() -> void:
 	_hud_node().add_child(_objective_toggle)
 
 	# Expanded objectives: over the left wall columns, clear of every seat.
-	_objective_plate = _hud_plate(Vector2(4, ROOM_ORIGIN.y - 30), Vector2(ROOM_ORIGIN.x + 3 * TILE, 300))
-	_objective_label = _hud_text("", Vector2(18, ROOM_ORIGIN.y - 18), UiText.HUD, Color("f2eedd"))
-	_objective_label.size = Vector2(ROOM_ORIGIN.x + 3 * TILE - 28, 276)
-	_objective_label.clip_text = true
-	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_objective_plate = _hud_plate(Vector2(4, ROOM_ORIGIN.y - 30), Vector2(OBJ_PANEL_W, 300))
+	# Each objective is a two-column row (mark | skill, count and rule), so a line that
+	# wraps stays under its own text instead of falling back to the left edge.
+	_objective_label = RichTextLabel.new()
+	_objective_label.bbcode_enabled = true
+	_objective_label.scroll_active = false
+	_objective_label.clip_contents = true
+	_objective_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objective_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED   # built from tr() parts
+	_objective_label.position = Vector2(18, ROOM_ORIGIN.y - 18)
+	_objective_label.size = Vector2(OBJ_PANEL_W - 28, 276)
+	_objective_label.fit_content = true   # the plate follows the text (see _fit_objective_plate)
+	_objective_label.add_theme_font_size_override("normal_font_size", UiText.fs(12))
+	_objective_label.add_theme_font_size_override("bold_font_size", UiText.fs(12))
+	_objective_label.add_theme_color_override("default_color", Color("f2eedd"))
+	_objective_label.add_theme_constant_override("table_h_separation", 6)
+	_objective_label.add_theme_constant_override("line_separation", 1)
+	_objective_label.z_index = 60
+	_hud_node().add_child(_objective_label)
 	_set_objectives_open(false, false)
 
 	var vee_tex := Art.tex("res://assets/portraits/coach_vee_neutral.png")
@@ -962,6 +976,14 @@ func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
 
 ## Collapsed: one line in the top band. Open: list on the left wall. `toast` = auto-open
 ## for a few seconds (an objective changed), then close again unless the player opened it.
+## Wide enough that a rule wraps to two lines at most, tall enough for every row: the
+## plate is sized from the text so nothing is clipped in either language.
+const OBJ_PANEL_W := 236.0
+
+func _fit_objective_plate() -> void:
+	if _objective_plate != null and _objective_label != null:
+		_objective_plate.size.y = maxf(60.0, _objective_label.get_content_height() + 24.0)
+
 func _toggle_objectives_by_player() -> void:
 	_set_objectives_open(not _objectives_open, false)
 	_objective_quiet_left = OBJ_PLAYER_QUIET_SECONDS
@@ -1077,6 +1099,7 @@ func _process(delta: float) -> void:
 		if _objective_label != null:
 			var attention_now := 100.0 - total / float(_npcs.size())
 			_objective_label.text = _objectives_status(attention_now)
+			_fit_objective_plate()
 			var met := _objectives_met_count(attention_now)
 			if met != _last_objectives_met:
 				var first := _last_objectives_met < 0
@@ -1573,7 +1596,8 @@ const OBJ_SKILL := {
 func _objectives_status(attention: float) -> String:
 	if _objectives.is_empty():
 		return ""
-	var lines := [tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()]]
+	var lines := [_bb(tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()])]
+	var rows: Array = []
 	for o in _objectives:
 		var metric := str(o.get("metric", ""))
 		var target := int(o.get("target", 0))
@@ -1592,11 +1616,16 @@ func _objectives_status(attention: float) -> String:
 			"connect_min":
 				current = _connect_count()
 		var ok := _objective_met(o, attention)
-		var mark := "OK" if ok else "  "
 		# A2: each objective names the teaching skill it practises, then the rule and count.
-		var focus_tag := tr("RETRY FOCUS  ") if bool(o.get("retry", false)) else ""
-		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, tr(str(OBJ_SKILL.get(metric, "Practice"))), current, target, tr(str(o.get("label", metric)))])
-	return "\n".join(lines)
+		var focus_tag := ("[color=#f2c14e]%s[/color]" % _bb(tr("RETRY FOCUS  "))) if bool(o.get("retry", false)) else ""
+		rows.append("[cell]%s[/cell][cell]%s%s  %d/%d\n[color=#b9b7a8]%s[/color][/cell]" % [
+			"[color=#7fd08a][lb]OK[rb][/color]" if ok else "[lb]    [rb]", focus_tag,
+			_bb(tr(str(OBJ_SKILL.get(metric, "Practice")))), current, target, _bb(tr(str(o.get("label", metric))))])
+	return "\n".join(lines) + "\n[table=2]" + "".join(rows) + "[/table]"
+
+## Literal text inside the objectives BBCode ("[OK]", a "[" in a label) must not parse as tags.
+static func _bb(t: String) -> String:
+	return t.replace("[", "[lb]")
 
 func _objectives_met_count(attention: float) -> int:
 	var n := 0
