@@ -2,6 +2,8 @@ extends Node
 ## Dev: plays a mission cinematic and saves frames to tools/cine/.
 
 func _ready() -> void:
+	# Audit the 960x540 design space regardless of the host window shape (stretch aspect is "expand").
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	get_window().size = Vector2i(960, 540)
 	var id := "lecture_fractions"
 	var mode := "intro"

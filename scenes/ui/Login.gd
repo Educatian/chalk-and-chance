@@ -82,6 +82,7 @@ func _ready() -> void:
 	scroll.position = Vector2(panel_x + 22, panel_y + 20)
 	scroll.size = Vector2(panel_w - 44, panel_h - 40)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	add_child(scroll)
 
 	var box := VBoxContainer.new()
@@ -164,6 +165,12 @@ func _ready() -> void:
 	_status.add_theme_color_override("font_color", Color(0.95, 0.6, 0.55))
 	box.add_child(_status)
 
+	# Keyboard/gamepad players start on the main action; course builds start on the name field.
+	if demo.visible:
+		demo.grab_focus.call_deferred()
+	else:
+		_name_in.grab_focus.call_deferred()
+
 	Auth.login_ok.connect(_go_hub)
 	Auth.login_failed.connect(func(m): _set_status(m, true); if _btn != null: _btn.disabled = false)
 	if not Auth.configured():
@@ -235,6 +242,7 @@ func _apply_button_style(btn: Button, primary: bool) -> void:
 	btn.add_theme_stylebox_override("normal", base)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("focus", _button_style(Color(0, 0, 0, 0), Color(1.0, 0.92, 0.55, 1.0)))
 	btn.add_theme_color_override("font_color", Color(0.98, 0.94, 0.76) if primary else Color(0.86, 0.94, 0.95))
 	btn.add_theme_color_override("font_hover_color", Color.WHITE)
 

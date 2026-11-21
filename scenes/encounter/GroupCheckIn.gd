@@ -1,7 +1,9 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 const GroupDebriefPanel = preload("res://scenes/encounter/GroupDebriefPanel.gd")
 const GroupCheckInUi = preload("res://scenes/encounter/GroupCheckInUi.gd")
 const ReactionCue = preload("res://scenes/encounter/ReactionCue.gd")
+const InputFeel = preload("res://scripts/InputFeel.gd")
 ## Group check-in: a DISTINCT mechanic from the 1:1 encounter. You sample a pod, reveal
 ## its hidden collective state (observe/probe), press the group's shared reasoning, and
 ## rebalance who participates (redistribute) - breadth + group dynamics, then move on.
@@ -82,6 +84,9 @@ func _build_ui() -> void:
 	_dialogue = refs["dialogue"]
 	_coach = refs["coach"]
 	_buttons = refs["buttons"]
+	UiText.keep_centered(_layer)
+	if not _buttons.is_empty():
+		(_buttons[0] as Button).grab_focus.call_deferred()
 
 func _populate_members() -> void:
 	if _member_box == null:
@@ -276,3 +281,6 @@ func _persona_id_for_speaker(speaker: String) -> String:
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("ui_cancel"):
 		_leave()
+		return
+	if not (_busy or _done) and InputFeel.press_hotkey(_buttons, e):
+		get_viewport().set_input_as_handled()

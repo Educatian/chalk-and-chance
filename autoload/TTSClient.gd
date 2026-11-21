@@ -20,7 +20,8 @@ func _ready() -> void:
 	_http.timeout = timeout_seconds
 	_http.request_completed.connect(_on_done)
 	_player = AudioStreamPlayer.new()
-	_player.bus = "Master"
+	_player.bus = _ensure_voice_bus()
+	_player.finished.connect(func(): Music.duck(false))
 	add_child(_player)
 	# Web build speaks through the hosted Worker /tts (ElevenLabs proxy); desktop uses
 	# the local backend. Both return raw mp3 -> AudioStreamMP3.
@@ -70,6 +71,7 @@ func speak(persona_id: String, text: String, emotion: String = "neutral") -> voi
 	_http.cancel_request()
 	if _player.playing:
 		_player.stop()
+		Music.duck(false)
 	var payload := {"persona_id": persona_id, "text": text, "emotion": emotion}
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	if OS.has_feature("web") and _voice_token != "" and voice_gate_unlocked:
@@ -104,4 +106,14 @@ func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedB
 	var stream := AudioStreamMP3.new()
 	stream.data = body
 	_player.stream = stream
+	Music.duck(true)   # student voice sits on top of the music
 	_player.play()
+
+## Student voices get their own bus so music can duck under them.
+func _ensure_voice_bus() -> String:
+	if AudioServer.get_bus_index("Voice") == -1:
+		AudioServer.add_bus()
+		var idx := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(idx, "Voice")
+		AudioServer.set_bus_send(idx, "Master")
+	return "Voice"

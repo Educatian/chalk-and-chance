@@ -5,7 +5,8 @@ extends Node2D
 
 const Art = preload("res://scripts/Art.gd")
 const STEP_TIME := 0.12
-const TEACHER_TILES_TALL := 1.7   # adult: taller than the ~1.35-tall students
+## Drawn at the room's texel density (Overworld.PX_PER_TEXEL), not normalised to a height.
+const DEFAULT_PX_PER_TEXEL := 1.25
 const WALK_SHEET := "res://assets/sprites/teacher_ow.png"   # static fallback base name
 const WALK_ANIM_SHEET := "res://assets/sprites/teacher_walk.png"
 
@@ -14,6 +15,29 @@ var tile := 32                    # synced from overworld.TILE in _ready
 var facing := Vector2i(0, 1)
 var _moving := false
 var _anim: AnimatedSprite2D = null
+const InputFeel = preload("res://scripts/InputFeel.gd")
+const TURN_HOLD := 0.08           # hold this long after a turn-in-place before walking
+const BUMP_COOLDOWN_MS := 260
+var _buffer := InputFeel.MoveBuffer.new()
+var _walking := false             # true while a held/buffered walk is in progress
+var _turn_hold := 0.0
+var _last_bump_ms := -10000
+var _bump_tween: Tween = null
+var _path: Array = []             # tap/click-to-walk: remaining tiles to step through
+var _path_face := Vector2i.ZERO   # after the path, face this way (toward a tapped student)
+var _path_talk := false           # ...and talk to them
+
+## Walk along a tile path (from InputFeel.grid_path); optionally face and talk at the end.
+func walk_path(path: Array, face: Vector2i = Vector2i.ZERO, talk: bool = false) -> void:
+	_path = path.duplicate()
+	if not _path.is_empty() and _path[0] == current_tile():
+		_path.pop_front()
+	_path_face = face
+	_path_talk = talk
+
+func cancel_path() -> void:
+	_path.clear()
+	_path_talk = false
 
 func _ready() -> void:
 	if overworld != null:
@@ -28,7 +52,7 @@ func _build_visual() -> void:
 		# Scale by the DRAWN figure (stand frame), not the cell, so every character is the
 		# same on-screen height regardless of how much of the cell the art fills.
 		var b := Art.opaque_bounds(sheet, Rect2i(cw, 0, cw, ch))
-		var sc := (TEACHER_TILES_TALL * tile) / float(b.size.y)
+		var sc := _px_per_texel()
 		_anim = AnimatedSprite2D.new()
 		_anim.sprite_frames = _make_frames(sheet)
 		_anim.centered = false
@@ -43,7 +67,7 @@ func _build_visual() -> void:
 	var t := Art.tex(WALK_SHEET)
 	if t != null:
 		var tb := Art.opaque_bounds(t, Rect2i(0, 0, t.get_width(), t.get_height()))
-		var sc2 := (TEACHER_TILES_TALL * tile) / float(tb.size.y)
+		var sc2 := _px_per_texel() * (64.0 / float(maxi(1, t.get_height())))
 		var s := Sprite2D.new()
 		s.texture = t
 		s.centered = false
@@ -57,6 +81,9 @@ func _build_visual() -> void:
 	spr.color = Color(0.25, 0.55, 0.95)
 	spr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(spr)
+
+func _px_per_texel() -> float:
+	return float(overworld.PX_PER_TEXEL) if overworld != null else DEFAULT_PX_PER_TEXEL
 
 ## Slice a 3-col x 4-row sheet into walk_down/left/right/up animations.
 func _make_frames(sheet: Texture2D) -> SpriteFrames:
@@ -80,31 +107,91 @@ func _make_frames(sheet: Texture2D) -> SpriteFrames:
 			sf.add_frame(anim_name, at)
 	return sf
 
-func _process(_delta: float) -> void:
+func _held_dir() -> Vector2i:
+	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
+		return Vector2i(0, -1)
+	if Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
+		return Vector2i(0, 1)
+	if Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
+		return Vector2i(-1, 0)
+	if Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
+		return Vector2i(1, 0)
+	return Vector2i.ZERO
+
+## Taps that land while a step is still tweening are buffered, not dropped.
+func _unhandled_input(event: InputEvent) -> void:
+	if not _moving or not (event is InputEventKey or event is InputEventJoypadButton or event is InputEventAction):
+		return
+	if not event.is_pressed() or event.is_echo():
+		return
+	var d := Vector2i.ZERO
+	if event.is_action("ui_up") or (event is InputEventKey and event.keycode == KEY_W):
+		d = Vector2i(0, -1)
+	elif event.is_action("ui_down") or (event is InputEventKey and event.keycode == KEY_S):
+		d = Vector2i(0, 1)
+	elif event.is_action("ui_left") or (event is InputEventKey and event.keycode == KEY_A):
+		d = Vector2i(-1, 0)
+	elif event.is_action("ui_right") or (event is InputEventKey and event.keycode == KEY_D):
+		d = Vector2i(1, 0)
+	_buffer.press(d, Time.get_ticks_msec())
+
+func _process(delta: float) -> void:
 	if _moving:
 		return
 	if overworld != null and overworld.input_locked:
+		_buffer.clear()
 		_go_idle()
 		return
-	var dir := Vector2i.ZERO
-	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
-		dir = Vector2i(0, -1)
-	elif Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
-		dir = Vector2i(0, 1)
-	elif Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
-		dir = Vector2i(-1, 0)
-	elif Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
-		dir = Vector2i(1, 0)
+	var dir := _held_dir()
+	if dir != Vector2i.ZERO:
+		cancel_path()   # keys always win over a tap path
+	elif not _path.is_empty():
+		var nxt: Vector2i = _path.pop_front()
+		var step := nxt - current_tile()
+		if absi(step.x) + absi(step.y) == 1 and overworld != null and overworld.is_walkable(nxt):
+			facing = step
+			_walking = true
+			_start_walk()
+			_try_move(step)
+		else:
+			cancel_path()   # the room changed under the path; stop cleanly
+		return
+	elif _path_face != Vector2i.ZERO:
+		facing = _path_face
+		_path_face = Vector2i.ZERO
+		_go_idle()
+		if _path_talk:
+			_path_talk = false
+			_try_interact()
+		return
+	var buffered := _buffer.take(Time.get_ticks_msec())
+	if dir == Vector2i.ZERO and buffered != Vector2i.ZERO:
+		dir = buffered
+		_walking = true   # a buffered tap continues the walk; no turn pause
 
 	if dir != Vector2i.ZERO:
+		# From a standstill, a new direction first turns in place; holding it walks.
+		if not _walking and dir != facing:
+			facing = dir
+			_turn_hold = TURN_HOLD
+			_go_idle()
+			return
+		if _turn_hold > 0.0:
+			_turn_hold -= delta
+			return
 		facing = dir
+		_walking = true
 		_start_walk()
 		_try_move(dir)
 	elif Input.is_action_just_pressed("ui_accept"):
 		# ui_accept already covers Enter and Space; a raw is_key_pressed check here
 		# would re-trigger the interaction every frame while the key is held.
+		_walking = false
+		_turn_hold = 0.0
 		_try_interact()
 	else:
+		_walking = false
+		_turn_hold = 0.0
 		_go_idle()
 
 func _dir_name() -> String:
@@ -146,6 +233,7 @@ func _try_move(dir: Vector2i) -> void:
 			"position": {"x": position.x, "y": position.y},
 		})
 		_go_idle()
+		_bump(dir)
 		return
 	Telemetry.log_player_movement("step_start", {
 		"from": _tile_dict(from_tile),
@@ -178,6 +266,26 @@ func _try_move(dir: Vector2i) -> void:
 		"dir": _tile_dict(dir),
 		"position": {"x": position.x, "y": position.y},
 	})
+
+## Walking into a desk, wall or student: a soft thud and a 3px nudge, rate-limited so
+## holding the key against a wall does not machine-gun the sound.
+func _bump(dir: Vector2i) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_bump_ms < BUMP_COOLDOWN_MS:
+		return
+	_last_bump_ms = now
+	Sfx.play("bump", -6.0)
+	var visual: Node2D = _anim
+	if visual == null or bool(GameState.get_setting("reduced_motion", false)):
+		return
+	if _bump_tween != null and _bump_tween.is_valid():
+		_bump_tween.kill()
+	var base := visual.position
+	visual.set_meta("rest_pos", visual.get_meta("rest_pos", base))
+	base = visual.get_meta("rest_pos")
+	_bump_tween = create_tween()
+	_bump_tween.tween_property(visual, "position", base + Vector2(dir) * 3.0, 0.05).set_ease(Tween.EASE_OUT)
+	_bump_tween.tween_property(visual, "position", base, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 func _try_interact() -> void:
 	if overworld == null:

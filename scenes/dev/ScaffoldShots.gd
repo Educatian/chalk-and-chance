@@ -2,6 +2,8 @@ extends Node
 ## Dev: the same encounter at Full vs Light support -> tools/cine/scaffold_*.png
 
 func _ready() -> void:
+	# Audit the 960x540 design space regardless of the host window shape (stretch aspect is "expand").
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	get_window().size = Vector2i(960, 540)
 	LLMClient.use_stub = true
 	TTSClient.enabled = false

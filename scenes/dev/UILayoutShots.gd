@@ -3,6 +3,8 @@ extends Node
 const OUT_DIR := "res://tools/"
 
 func _ready() -> void:
+	# Audit the 960x540 design space regardless of the host window shape (stretch aspect is "expand").
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	print("UI shots start")
 	get_window().size = Vector2i(960, 540)
 	LLMClient.use_stub = true

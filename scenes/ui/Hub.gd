@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## Mission-select hub. Lists the scenarios from Game.SCENARIOS (reading each JSON for its
 ## title/badge), shows which badges are earned, and routes to the chosen scenario.
 
@@ -172,6 +173,7 @@ func _build() -> void:
 
 	var list_top := 212.0
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(42, list_top)
 	scroll.size = Vector2(vp.x - 84, maxf(148.0, vp.y - list_top - 22.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -726,7 +728,7 @@ func _open_settings() -> void:
 		{"label": "Music", "key": "music_enabled", "on": "On", "off": "Off"},
 		{"label": "Sound effects", "key": "audio_enabled", "on": "On", "off": "Off"},
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
-		{"label": "Motion", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
+		{"label": "Motion, shake & flashes", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
 		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
 	]
 	var y := 184.0
@@ -744,6 +746,8 @@ func _open_settings() -> void:
 			_refresh_setting_button(b, opt)
 			if key == "music_enabled":
 				Music.apply_settings()
+			if key == "large_text":
+				UiText.apply_text_scale()
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)
@@ -1238,6 +1242,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 120)
 	scroll.size = Vector2(680, 286)
 	overlay.add_child(scroll)
@@ -1317,6 +1322,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 120)
 	scroll.size = Vector2(680, 286)
 	overlay.add_child(scroll)
@@ -1369,6 +1375,7 @@ func _open_class_dashboard() -> void:
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 118)
 	scroll.size = Vector2(680, 290)
 	overlay.add_child(scroll)

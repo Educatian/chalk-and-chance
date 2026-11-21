@@ -21,13 +21,19 @@ func change_scene(path: String, data: Dictionary = {}) -> void:
 		push_error("SceneRouter: could not load scene %s" % path)
 		return
 	var inst: Node = packed.instantiate()
+	var from_path := _current_path
 	_stack.add_child(inst)
 	_current = inst
 	_current_path = path
 	var track := Music.track_for_scene(path)
 	if track != "":
 		Music.play(track)
-	_play_wipe()
+	# Context-aware transition: stepping up to a student (or back to the room) is a quick
+	# "lean in" fade inside the same lesson; leaving or entering a mission keeps the wipe.
+	if _is_close_up(path) or (_is_close_up(from_path) and path.contains("/overworld/")):
+		_play_lean_in(inst, _is_close_up(path))
+	else:
+		_play_wipe()
 	# Defer setup so the instance has finished _ready before receiving data.
 	if inst.has_method("setup"):
 		inst.call_deferred("setup", data)
@@ -95,3 +101,30 @@ func _play_wipe() -> void:
 		if is_instance_valid(layer):
 			layer.queue_free()
 	)
+
+func _is_close_up(p: String) -> bool:
+	return p.ends_with("/Encounter.tscn") or p.ends_with("/GroupCheckIn.tscn")
+
+## Short fade from dark; entering a close-up also eases the new screen in from 103%.
+func _play_lean_in(inst: Node, entering: bool) -> void:
+	if _stack == null or bool(GameState.get_setting("reduced_motion", false)):
+		return
+	Sfx.play("whoosh", -12.0 if entering else -16.0)
+	var layer := CanvasLayer.new()
+	layer.layer = 90
+	var shade := ColorRect.new()
+	shade.color = Color(0.02, 0.025, 0.045, 1.0)
+	shade.size = _stack.get_viewport().get_visible_rect().size
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(shade)
+	_stack.add_child(layer)
+	var tw := create_tween()
+	tw.tween_property(shade, "color:a", 0.0, 0.24).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(func():
+		if is_instance_valid(layer):
+			layer.queue_free())
+	if entering and inst is Control:
+		var c := inst as Control
+		c.pivot_offset = c.get_viewport_rect().size * 0.5
+		c.scale = Vector2(1.03, 1.03)
+		create_tween().tween_property(c, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

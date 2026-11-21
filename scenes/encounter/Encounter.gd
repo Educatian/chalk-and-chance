@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## The classroom encounter: read-act-observe loop against one LLM-driven student.
 ## Four meters (Engagement / Order / Rapport class-side, Composure = your HP), the
 ## seven teaching moves, and a Wait-Time Ring that rewards a 3 to 5s pause.
@@ -11,6 +12,8 @@ const PathJudge = preload("res://scripts/PathJudge.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
+const InputFeel = preload("res://scripts/InputFeel.gd")
+const TurnBeat = preload("res://scripts/TurnBeat.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -109,6 +112,13 @@ var _type_mode: bool = false
 var _item_buttons: Array = []
 var _wait_item_ready := false
 var _practice_goal_active := false
+# Turn-resolution beat: while a beat plays, result/coach text is held and revealed in order.
+var _hold_text := false
+var _pending_result := ""
+var _pending_coach := ""
+var _outcome_chip: Label = null
+var _meters_live := false      # false while building: bars snap; true after: bars animate
+var _meter_delay := 0.0
 
 func _ready() -> void:
 	_apply_upgrade_baselines()
@@ -117,6 +127,7 @@ func _ready() -> void:
 	_set_dialogue("You walk over to %s's desk." % display_name)
 	_set_coach("Read the student. Surface reasoning before correcting. Wait for green to earn a bonus.")
 	_update_portrait("neutral")
+	_meters_live = true
 	_arm_turn()
 
 func setup(data: Dictionary) -> void:
@@ -267,7 +278,7 @@ func _support_level() -> int:
 func _apply_scaffold() -> void:
 	var lvl := _support_level()
 	if _scaffold_badge == null:
-		_scaffold_badge = _make_label("", Vector2(300, 14), 6, Color.WHITE)
+		_scaffold_badge = _make_label("", Vector2(300, 14), UiText.S_MICRO, Color.WHITE)
 		_scaffold_badge.size = Vector2(90, 10)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
@@ -342,9 +353,9 @@ func _build_ui() -> void:
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
-	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 6), 9, Color(0.95, 0.93, 0.85))
+	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 6), UiText.S_TITLE, Color(0.95, 0.93, 0.85))
 	_name_label.size = Vector2(340, 14)
-	_need_label = _make_label("Need: surface the student's reasoning", Vector2(10, 104), 7, Color(0.78, 0.88, 0.96))
+	_need_label = _make_label("Need: surface the student's reasoning", Vector2(10, 104), UiText.S_CAPTION, Color(0.78, 0.88, 0.96))
 	_need_label.size = Vector2(350, 12)
 	_need_label.clip_text = true
 
@@ -373,12 +384,12 @@ func _build_ui() -> void:
 	_student_tex.visible = false
 	_layer.add_child(_student_tex)
 
-	_student_name_label = _make_label(display_name, Vector2(372, 108), 9, Color.WHITE)
+	_student_name_label = _make_label(display_name, Vector2(372, 108), UiText.S_TITLE, Color.WHITE)
 	_student_name_label.size = Vector2(84, 12)
 
 	# Persistent relationship (warm demander). Carries across periods, unlike the class meters.
 	# Drawn as ColorRects (like the gym bars) so the height is exactly controlled.
-	_bond_label = _make_label("Bond", Vector2(372, 122), 8, Color(0.96, 0.76, 0.86))
+	_bond_label = _make_label("Bond", Vector2(372, 122), UiText.S_BODY, Color(0.96, 0.76, 0.86))
 	var bondbg := ColorRect.new()
 	bondbg.position = Vector2(372, 134)
 	bondbg.size = Vector2(84, 8)
@@ -404,7 +415,7 @@ func _build_ui() -> void:
 	_layer.add_child(_emote)
 
 	# Wait-Time Ring (a bar in M1).
-	_wait_label = _make_label(_wait_label_text(false), Vector2(300, 26), 7, Color(0.8, 0.85, 0.95))
+	_wait_label = _make_label(_wait_label_text(false), Vector2(300, 26), UiText.S_CAPTION, Color(0.8, 0.85, 0.95))
 	_wait_label.size = Vector2(68, 12)
 	_wait_bar_bg = ColorRect.new()
 	_wait_bar_bg.position = Vector2(300, 40)
@@ -423,14 +434,16 @@ func _build_ui() -> void:
 	_build_dialogue_box()
 
 	# Result chip + coach tip box.
-	_result = _make_label("", Vector2(16, 164), 7, Color(0.96, 0.86, 0.50))
+	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(16, 164), Vector2(56, 10), 6)
+	_result = _make_label("", Vector2(16, 164), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 10)
 	_result.clip_text = true
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _make_label("", Vector2(16, 174), 7, Color(0.70, 0.90, 0.75))
+	_coach = _make_label("", Vector2(16, 174), UiText.S_CAPTION, Color(0.70, 0.90, 0.75))
 	_coach.size = Vector2(448, 14)
 	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_outcome_chip.set_meta("shift_labels", [_result, _coach])
 
 	# Move buttons: two compact rows with a reserved mode column.
 	var n := MOVES.size()
@@ -447,7 +460,9 @@ func _build_ui() -> void:
 		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
 		b.size = Vector2(bw, 30)
 		b.clip_text = true
-		CompactButtonStyle.apply(b, 7)
+		CompactButtonStyle.apply(b, UiText.S_CAPTION)
+		InputFeel.add_hotkey_badge(b, i, UiText.S_TINY)
+		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
@@ -470,7 +485,7 @@ func _build_ui() -> void:
 	_mic_btn.text = "Mic"
 	_mic_btn.position = Vector2(286, 228)
 	_mic_btn.size = Vector2(38, 30)
-	CompactButtonStyle.apply(_mic_btn, 7)
+	CompactButtonStyle.apply(_mic_btn, UiText.S_CAPTION)
 	_mic_btn.visible = false
 	_mic_btn.disabled = not VoiceInput.is_supported()
 	_mic_btn.tooltip_text = "Speak teacher talk" if VoiceInput.is_supported() else "Voice input is not supported in this browser."
@@ -481,7 +496,7 @@ func _build_ui() -> void:
 	_send_btn.text = "Say"
 	_send_btn.position = Vector2(340, 228)
 	_send_btn.size = Vector2(46, 30)
-	CompactButtonStyle.apply(_send_btn, 8)
+	CompactButtonStyle.apply(_send_btn, UiText.S_BODY)
 	_send_btn.visible = false
 	_send_btn.pressed.connect(func(): _on_type_submit())
 	_layer.add_child(_send_btn)
@@ -491,12 +506,13 @@ func _build_ui() -> void:
 	_type_toggle.text = "Type"
 	_type_toggle.position = Vector2(386, 212)
 	_type_toggle.size = Vector2(78, 48)
-	CompactButtonStyle.apply(_type_toggle, 8, true)
+	CompactButtonStyle.apply(_type_toggle, UiText.S_BODY, true)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
+	UiText.keep_centered(_layer)
 
 func _build_item_row() -> void:
 	var x := 234.0
@@ -509,14 +525,14 @@ func _build_item_row() -> void:
 		b.set_meta("item_id", item_id)
 		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "encounter")
-		CompactButtonStyle.apply(b, 7)
+		CompactButtonStyle.apply(b, UiText.S_CAPTION)
 		b.pressed.connect(_use_item.bind(item_id))
 		var tex := Art.tex(Items.icon_for(item_id))
 		if tex != null:
 			PixelUi.add_centered_icon(b, tex, 4.0)
 		else:
 			b.text = Items.short_name_for(item_id)
-			CompactButtonStyle.apply(b, 6)
+			CompactButtonStyle.apply(b, UiText.S_MICRO)
 		_layer.add_child(b)
 		_item_buttons.append(b)
 		x += 35.0
@@ -675,7 +691,7 @@ func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Lab
 ## Drawn as ColorRects (like the gym/lecture bars) so the 12px height is exactly
 ## controlled; ProgressBar inflates to its theme minimum and buried the Need line.
 func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
-	_make_label(name_txt, Vector2(10, y - 2), 8, Color(0.85, 0.88, 0.95))
+	_make_label(name_txt, Vector2(10, y - 2), UiText.S_BODY, Color(0.85, 0.88, 0.95))
 	var bg := ColorRect.new()
 	bg.position = Vector2(86, y)
 	bg.size = Vector2(150, 12)
@@ -741,7 +757,6 @@ func _on_type_submit(text: String = "") -> void:
 ## Shared send path for both menu moves and free text.
 func _dispatch_move(tag: String, free_text: String) -> void:
 	_busy = true
-	Sfx.play("click")
 	_turns += 1
 	var raw_wait_ms := Time.get_ticks_msec() - _ready_at_ms
 	var wait_ms := GameState.effective_wait_ms(raw_wait_ms)
@@ -781,6 +796,9 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 	LLMClient.send_move(payload)
 
 func _on_reply(resp: Dictionary) -> void:
+	var before := _meter_snapshot()
+	_hold_text = true
+	_meter_delay = TURN_CUE_AT
 	var deltas: Dictionary = resp.get("meter_deltas", {})
 	understanding = clampf(understanding + float(deltas.get("understanding", 0.0)), 0.0, 1.0)
 	engagement = clampf(engagement + float(deltas.get("engagement", 0.0)) * 100.0, 0.0, 100.0)
@@ -812,7 +830,7 @@ func _on_reply(resp: Dictionary) -> void:
 	_last_fit = fit
 	_update_contingency(targets, tag0)
 	_set_result(_result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas))
-	Sfx.play("good" if targets else "bad")
+	var kind := TurnBeat.outcome(targets, str(fit.get("fit", "")))
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
 	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
 	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
@@ -854,20 +872,24 @@ func _on_reply(resp: Dictionary) -> void:
 	# Live ECD competency estimate (in-engine multivariate Elo over the same evidence).
 	Competency.observe(tag0, persona_id, win_moves, judge, deltas)
 
+	# Judgment, scoring and logging are done. Game state continues immediately (same
+	# timing as before); only the presentation is staged by the beat.
+	_play_turn_beat(kind, before)
 	if composure <= 0.0:
 		_force_recover()
 		return
-
 	if _check_win(targets, tags):
 		_win("reasoning")
 		return
-
 	_arm_turn()
 
 ## Connect: notice a student's funds of knowledge, then bridge the content to it.
 ## A second, asset-based route to reaching some students (softens single-right-move).
 func _do_connect() -> void:
 	_busy = true
+	var before := _meter_snapshot()
+	_meter_delay = TURN_CUE_AT
+	_hold_text = true
 	if not _asset_learned:
 		_asset_learned = true
 		rapport = clampf(rapport + 6.0, 0.0, 100.0)
@@ -879,6 +901,7 @@ func _do_connect() -> void:
 		_set_dialogue("You take a beat to notice %s, not just the task." % display_name)
 		_set_coach("Coach Vee (notice): %s  Press Connect again to bridge the content to it." % hint)
 		_update_portrait("thinking")
+		_play_turn_beat(TurnBeat.NEUTRAL, before)
 		_arm_turn()
 		return
 	# Bridge content to the now-known asset.
@@ -904,6 +927,8 @@ func _do_connect() -> void:
 		"reaction": line, "meter": "Rapport up | Engagement up", "student": display_name,
 		"fit": str(cfit.get("fit", "")), "path": str(cfit.get("path_label", ""))})
 	_update_portrait("excited" if connect_resolves else "thinking")
+	var ckind := TurnBeat.RIGHT if (connect_resolves or connect_advances) else TurnBeat.NEUTRAL
+	_play_turn_beat(ckind, before)
 	if connect_resolves and understanding >= WIN_UNDERSTANDING:
 		_win("connect")
 		return
@@ -953,7 +978,6 @@ func _win(route: String = "reasoning") -> void:
 	_resolved = true
 	_busy = true
 	_disable_moves()
-	_update_portrait("excited")
 	Telemetry.log_event({"event": "resolve", "persona_id": persona_id, "route": route,
 		"turns": _turns, "understanding": understanding, "badge": target_badge,
 		"bond": GameState.bond(persona_id)})
@@ -973,9 +997,15 @@ func _win(route: String = "reasoning") -> void:
 		"trace": Game.evidence_trace_from_moves(_move_history),
 		"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 	})
-	Sfx.play("badge")
 	var warm := GameState.bond(persona_id) >= 0.4
 	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
+	# Land the turn beat now (its cue is muted once resolved) and go straight to the win.
+	Juice.skip_beats(self)
+	_present_win(route, warm, reward, run_record)
+
+func _present_win(route: String, warm: bool, reward: Dictionary, run_record: Dictionary) -> void:
+	_update_portrait("excited")
+	Sfx.play("win")
 	if route == "connect":
 		# The connect_line is already shown as the resolving dialogue.
 		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
@@ -1014,13 +1044,13 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	_layer.add_child(overlay)
 
 	var panel := Panel.new()
-	panel.position = Vector2(34, 82)
-	panel.size = Vector2(436, 178)
+	panel.position = Vector2(34, 74)
+	panel.size = Vector2(436, 190)
 	overlay.add_child(panel)
 	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true, str(run_record.get("rank", "-")))
 
-	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 98), 10, Color(0.97, 0.95, 0.86), Vector2(300, 16))
-	var score_lbl := _overlay_label(overlay, "", Vector2(48, 120), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 88), UiText.S_DISPLAY - 1, Color(0.97, 0.95, 0.86), Vector2(300, 16))
+	var score_lbl := _overlay_label(overlay, "", Vector2(48, 108), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
 	CompletionFx.count_up(score_lbl, "Score {score}   |   Level %d" % GameState.teacher_level, int(run_record.get("score", 0)))
 
 	var reward_line := "Badge %s" % badge_id.to_upper()
@@ -1029,15 +1059,15 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
 	if item_text != "":
 		reward_line += " | +items"
-	_overlay_label(overlay, reward_line, Vector2(48, 136), 7, Color(0.96, 0.86, 0.50), Vector2(300, 14))
-	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 152), 7, Color(0.72, 0.82, 0.96), Vector2(300, 12))
+	_overlay_label(overlay, reward_line, Vector2(48, 122), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
+	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 136), UiText.S_CAPTION, Color(0.72, 0.82, 0.96), Vector2(300, 12))
 
 	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
 	rows = rows.slice(0, 3)
-	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 168), 7, Color(0.72, 0.78, 0.88), Vector2(404, 12))
-	var y := 186
+	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 152), UiText.S_CAPTION, Color(0.72, 0.78, 0.88), Vector2(404, 12))
+	var y := 168
 	for r in rows:
-		_overlay_label(overlay, str(r["label"]), Vector2(50, y), 7, Color(0.86, 0.90, 0.96), Vector2(132, 11))
+		_overlay_label(overlay, str(r["label"]), Vector2(50, y), UiText.S_CAPTION, Color(0.86, 0.90, 0.96), Vector2(132, 11))
 		var bg := ColorRect.new()
 		bg.position = Vector2(188, y + 2)
 		bg.size = Vector2(170, 8)
@@ -1051,17 +1081,17 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		overlay.add_child(fill)
-		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(250, y), 7, Color(0.6, 0.66, 0.74), Vector2(36, 11))
+		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(364, y), UiText.S_CAPTION, Color(0.70, 0.76, 0.84), Vector2(40, 11))
 		y += 15
 	if rows.is_empty():
-		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 186), 7, Color(0.72, 0.92, 0.78), Vector2(390, 22))
+		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 168), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(390, 22))
 	else:
-		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 232), 7, Color(0.66, 0.90, 0.78), Vector2(260, 12))
-		_overlay_label(overlay, _short_practice_target(), Vector2(48, 246), 7, Color(0.72, 0.92, 0.78), Vector2(260, 18))
+		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 214), UiText.S_CAPTION, Color(0.66, 0.90, 0.78), Vector2(260, 12))
+		_overlay_label(overlay, _short_practice_target(), Vector2(48, 228), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(260, 28))
 
 	_continue_btn = Button.new()
 	_continue_btn.text = "Return to room"
-	_continue_btn.position = Vector2(320, 226)
+	_continue_btn.position = Vector2(320, 224)
 	_continue_btn.size = Vector2(126, 30)
 	_continue_btn.add_theme_font_size_override("font_size", 7)
 	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
@@ -1152,7 +1182,7 @@ func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 		text += "\nLEVEL %d  +1 UPGRADE" % int(reward.get("level_after", GameState.teacher_level))
 	if item_text != "":
 		text += "\nITEMS %s" % item_text
-	var lbl := _make_label(text, Vector2(306, 122), 8, Color(0.96, 0.86, 0.50))
+	var lbl := _make_label(text, Vector2(306, 122), UiText.S_BODY, Color(0.96, 0.86, 0.50))
 	lbl.size = Vector2(150, 76)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if not bool(GameState.get_setting("reduced_motion", false)):
@@ -1241,13 +1271,22 @@ func _refresh_meters() -> void:
 ## Fill widths are set in post-scale_tree pixels (all callers run after _build_ui).
 func _set_meter_fill(key: String, frac: float) -> void:
 	var fill: ColorRect = _bars.get(key, null)
-	if fill != null:
-		fill.size = Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
+	if fill == null:
+		return
+	var target := Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
+	if _meters_live:
+		Juice.bar_to(fill, target, 0.35, _meter_delay)
+	else:
+		fill.size = target
 
 func _refresh_bond() -> void:
 	var b := GameState.bond(persona_id)
 	if _bond_fill != null:
-		_bond_fill.size = Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
+		var target := Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
+		if _meters_live:
+			Juice.bar_to(_bond_fill, target, 0.35, _meter_delay)
+		else:
+			_bond_fill.size = target
 	if _bond_label != null:
 		_bond_label.text = "Bond %d%%" % int(round(b * 100.0))
 
@@ -1392,6 +1431,9 @@ func _set_dialogue(txt: String) -> void:
 		_reveal_label(_dialogue, txt, true)
 
 func _set_coach(txt: String) -> void:
+	if _hold_text:
+		_pending_coach = txt
+		return
 	if _coach != null:
 		_reveal_label(_coach, txt, false)
 
@@ -1406,22 +1448,97 @@ func _reveal_label(label: Label, txt: String, is_dialogue: bool) -> void:
 	label.visible_characters = 0
 	var duration := clampf(float(txt.length()) / 72.0, 0.18, 1.8)
 	tween_ref = create_tween()
-	tween_ref.tween_property(label, "visible_characters", txt.length(), duration)
+	if is_dialogue:
+		# Soft per-student "voice" blips while the line types out (pitch fixed per student).
+		var base_pitch := 0.88 + float(absi(hash(persona_id)) % 30) / 100.0
+		var last := [0]
+		tween_ref.tween_method(func(v: float):
+			var c := int(v)
+			label.visible_characters = c
+			if c - last[0] >= 3:
+				last[0] = c
+				Sfx.play("type", -12.0, base_pitch * randf_range(0.96, 1.04)),
+			0.0, float(txt.length()), duration)
+	else:
+		tween_ref.tween_property(label, "visible_characters", txt.length(), duration)
 	if is_dialogue:
 		_dialogue_tween = tween_ref
 	else:
 		_coach_tween = tween_ref
 
 func _set_result(txt: String) -> void:
+	if _hold_text:
+		_pending_result = txt
+		return
 	if _result != null:
 		_result.text = txt
 
-## Click anywhere that is not a button to finish the typewriter reveal instantly,
-## so impatient readers are never stuck watching text trickle in.
-func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton and event.pressed):
+# --- turn-resolution beat ------------------------------------------------------
+
+const TURN_CUE_AT := 0.12     # outcome cue, chip, meter motion, deltas
+const TURN_COACH_AT := 0.42   # coach line starts revealing
+const TURN_END_AT := 0.75     # control returns (wait-time ring restarts here)
+
+func _meter_snapshot() -> Dictionary:
+	return {"engagement": engagement, "order": order, "rapport": rapport, "composure": composure}
+
+## Student reaction is already showing (portrait + line). Then: outcome cue + chip + meters
+## easing + floating deltas, then the coach line, then control comes back. Any press skips.
+func _play_turn_beat(kind: String, before: Dictionary) -> void:
+	Juice.skip_beats(self)
+	_hold_text = true
+	# Clear last turn's coach line so the old advice never sits next to the new verdict.
+	if _coach != null:
+		_coach.text = ""
+	var beat := TurnBeat.new()
+	beat.at(TURN_CUE_AT, func():
+		if not _resolved:
+			Sfx.play(TurnBeat.cue(kind))
+		_show_outcome(kind)
+		_release_result()
+		_float_meter_deltas(before))
+	beat.at(TURN_COACH_AT, _release_coach)
+	beat.at(TURN_END_AT, func():
+		_hold_text = false
+		_meter_delay = 0.0)
+	Juice.play_beat(self, beat)
+
+func _release_result() -> void:
+	var t := _pending_result
+	_pending_result = ""
+	if t != "" and _result != null:
+		_result.text = t
+
+func _release_coach() -> void:
+	var t := _pending_coach
+	_pending_coach = ""
+	if t != "" and _coach != null:
+		_reveal_label(_coach, t, false)
+
+func _show_outcome(kind: String) -> void:
+	Juice.show_outcome(_outcome_chip, kind)
+
+## "+6" / "-10" next to each meter that moved, coloured by direction.
+func _float_meter_deltas(before: Dictionary) -> void:
+	var now := _meter_snapshot()
+	for key in ["engagement", "order", "rapport", "composure"]:
+		var d := int(round(float(now[key]) - float(before.get(key, now[key]))))
+		var fill: ColorRect = _bars.get(key, null)
+		if d == 0 or fill == null:
+			continue
+		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
+		var pos := Vector2((86.0 + 150.0 + 4.0) * UI_SCALE, fill.position.y - 3.0 * UI_SCALE)
+		Juice.float_text(_layer, _signed(d), pos, col, int(8 * UI_SCALE))
+
+## Any press (key, click, pad, touch) first finishes a running text reveal, so impatient
+## readers are never stuck watching text trickle in. Handled in _input so the same press
+## does not also fire the focused move button. Typing in the free-text box is left alone.
+func _input(event: InputEvent) -> void:
+	if not InputFeel.is_skip_press(event):
 		return
-	var skipped := false
+	if event is InputEventKey and _text_input != null and _text_input.has_focus():
+		return
+	var skipped := Juice.skip_beats(self)
 	for tw in [_dialogue_tween, _coach_tween]:
 		if tw != null and tw.is_valid() and tw.is_running():
 			tw.kill()
@@ -1431,4 +1548,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dialogue.visible_characters = -1
 		if _coach != null:
 			_coach.visible_characters = -1
+		get_viewport().set_input_as_handled()
+
+## Number keys 1-8 choose a move directly (menu mode only).
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _busy or _resolved or _type_mode:
+		return
+	if InputFeel.press_hotkey(_buttons, event):
 		get_viewport().set_input_as_handled()
