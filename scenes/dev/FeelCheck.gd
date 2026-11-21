@@ -87,6 +87,18 @@ func _check_ladder() -> void:
 			for o in ev["options"]:
 				tiers[int(o["tier"])] = true
 			_ok("ladder card '%s' has all four steps and a working one" % str(ev["text"]).left(24), tiers.size() == 4 and Ow.lowest_working_tier(ev["options"]) > 0)
+	# No card text may name a roster student: the card fills names in from the students shown.
+	var names: Array = []
+	for f in DirAccess.get_files_at("res://data/persona_library"):
+		if f.ends_with(".json"):
+			names.append(str(JSON.parse_string(FileAccess.get_file_as_string("res://data/persona_library/" + f)).get("display_name", "")))
+	var named := []
+	for ev in ow.INTERRUPTS:
+		for o in ev["options"]:
+			for n in names:
+				if n != "" and (str(o["label"]).contains(n) or str(o.get("coach", "")).contains(n)):
+					named.append("%s in '%s'" % [n, str(o["label"])])
+	_ok("no interrupt option names a fixed student (%s)" % ", ".join(named), named.is_empty())
 	ow.free()
 
 func _check_hotkeys() -> void:

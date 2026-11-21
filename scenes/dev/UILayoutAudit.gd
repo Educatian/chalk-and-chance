@@ -244,6 +244,12 @@ func _audit_overworld_debrief(prefix: String) -> void:
 		sc._trigger_interrupt(i)
 		await get_tree().process_frame
 		_scan("%s Overworld interrupt %d" % [prefix, i], sc._overlay)
+		var shown: Array = sc._overlay.get_meta("who_names", []) if sc._overlay.has_meta("who_names") else []
+		for b in sc._overlay.find_children("*", "Button", true, false):
+			for st in sc._npcs.keys():
+				var nm := str(sc._npcs[st].get("display_name", ""))
+				if nm != "" and (b as Button).text.contains(nm) and not nm in shown:
+					_issues.append("%s interrupt %d option names %s who is not on the card" % [prefix, i, nm])
 		sc._close_overlay()
 		await get_tree().process_frame
 	_prepare_overworld_clear(sc)

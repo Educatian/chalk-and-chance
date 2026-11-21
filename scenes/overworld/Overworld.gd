@@ -1102,7 +1102,9 @@ func _trigger_interrupt(idx: int = -1) -> void:
 		return
 	_show_overlay(str(ev["text"]), ev["options"])
 
-const TIER_COLORS := [Color("3f8a54"), Color("3c6fb4"), Color("e0a93a"), Color("c2453c")]
+## One neutral chip colour for every step: colour must not hint which step is right; the
+## outcome in the room teaches that.
+const LADDER_CHIP_COLOR := Color("4a5a72")
 
 ## B4: a behaviour card on paper. The students involved are named and shown (and look
 ## restless in the room); options come in a shuffled order, each tagged with its ladder
@@ -1122,6 +1124,7 @@ func _show_ladder_card(ev: Dictionary) -> void:
 	for st in who:
 		_npcs[st]["offtask"] = maxf(float(_npcs[st].get("offtask", 0.0)), 72.0)
 		_set_student_state(_npcs[st], false)
+	_overlay.set_meta("who_names", who.map(func(t): return str(_npcs[t].get("display_name", ""))))
 	var lowest := lowest_working_tier(ev["options"])
 	var opts: Array = []
 	for o in ev["options"]:
@@ -1188,7 +1191,7 @@ func _show_ladder_card(ev: Dictionary) -> void:
 		chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		var csb := StyleBoxFlat.new()
-		csb.bg_color = TIER_COLORS[tier - 1]
+		csb.bg_color = LADDER_CHIP_COLOR
 		csb.set_corner_radius_all(4)
 		chip.add_theme_stylebox_override("normal", csb)
 		chip.add_theme_font_size_override("font_size", UiText.fs(12))
