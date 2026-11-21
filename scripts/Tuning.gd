@@ -38,3 +38,20 @@ const LADDER_STEPS := ["Proximity", "Nonverbal", "Brief word", "Public correctio
 const LADDER_BONUS_COMPOSURE := 3.0
 ## The period clock keeps running this long while an interrupt card is open.
 const INTERRUPT_CLOCK_SECONDS := 2.0
+
+# --- B2 professional noticing (Jacobs, Lamb & Philipp, 2010) ----------------------------
+## The chips, in hotkey order (1-4).
+const NOTICE_CHIPS := ["confused", "gets_it", "withdrawn", "distracted"]
+const NOTICE_LABELS := {"confused": "Confused", "gets_it": "Gets it", "withdrawn": "Withdrawn", "distracted": "Distracted"}
+## Shown emotion -> chips that read it correctly (first = the category that, when it
+## changes, prompts a new noticing step).
+const NOTICE_TRUTH := {
+	"confused": ["confused"], "thinking": ["confused", "gets_it"],
+	"curious": ["gets_it"], "engaged": ["gets_it"], "excited": ["gets_it"], "proud": ["gets_it"], "warming": ["gets_it"],
+	"shy": ["withdrawn"], "withdrawn": ["withdrawn"], "anxious": ["withdrawn", "confused"],
+	"frustrated": ["withdrawn", "distracted"], "neutral": ["distracted", "confused"],
+}
+## At most this many noticing prompts per encounter (uncapped probe: mean 3.5, max 7).
+const NOTICE_MAX_PROMPTS := 3
+## A correct read adds this to the understanding credit of the next move that lands.
+const NOTICE_CREDIT_BONUS := 0.03

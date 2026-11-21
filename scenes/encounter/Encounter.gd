@@ -101,6 +101,13 @@ var _think_resp: Dictionary = {} # their answer, held until the think time is ov
 var _think_t0 := 0
 var _long_fired := false         # idle past Tuning.WT_LONG_MS already cost engagement
 var _praise_btn: Button          # B3: its hint says live whether praise would be specific
+var _shown_emotion := "neutral"   # the portrait state the player can read
+var _noticed_cat := ""            # B2: category last noticed (prompt again when it changes)
+var _notice_panel: Control        # B2: "what do you notice?" strip over the move row
+var _notice_btns: Array = []
+var _notice_hidden: Array = []    # move buttons hidden while the strip is up
+var _notice_bonus := false        # B2: a correct read boosts the next landed move
+var _notice_prompts := 0          # B2: extra inputs this encounter (reported)
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -642,6 +649,8 @@ func _use_item(id: String) -> void:
 	_refresh_item_buttons()
 
 func _toggle_input_mode() -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return   # B2: read the student first
 	_type_mode = not _type_mode
 	_type_toggle.text = "Menu" if _type_mode else "Type"
 	for b in _buttons:
@@ -726,6 +735,7 @@ func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
 	_long_fired = false
+	_maybe_prompt_notice()
 	if _praise_btn != null:
 		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
 		if ph != null:
@@ -808,6 +818,8 @@ func _on_reply_gate(resp: Dictionary) -> void:
 	_on_reply(resp)
 
 func _on_move(tag: String) -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return
 	if _thinking:
 		_end_thinking(true)   # the press is spent speaking over them
 		return
@@ -824,6 +836,8 @@ func _on_move(tag: String) -> void:
 ## move tag via the LLM judge, then the SAME pipeline runs. The raw line is what the
 ## student model and coach see, so it is what goes into the transcript.
 func _on_type_submit(text: String = "") -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return
 	if _thinking:
 		_end_thinking(true)
 		return
@@ -885,6 +899,79 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		LLMClient.reply_ready.connect(_on_reply_gate, CONNECT_ONE_SHOT)
 	LLMClient.send_move(payload)
 
+## B2: when the student's readable state changes (and at the start), ask what you notice
+## before the next move. One tap; the move row is covered until you answer.
+func _maybe_prompt_notice() -> void:
+	if _resolved or _thinking:
+		return
+	var truth: Array = Tuning.NOTICE_TRUTH.get(_shown_emotion, ["distracted"])
+	var cat := str(truth[0])
+	if cat == _noticed_cat or _notice_prompts >= Tuning.NOTICE_MAX_PROMPTS:
+		return
+	_notice_prompts += 1
+	if _notice_panel == null:
+		_build_notice_panel()
+	(_notice_panel.get_node("Q") as Label).text = tr("Read %s first: what do you notice?") % display_name
+	_notice_panel.visible = true
+	_notice_hidden = []
+	for b in _buttons + [_text_input, _send_btn, _mic_btn, _type_toggle]:   # the strip replaces the move row until you answer
+		if b != null and (b as Control).visible:
+			(b as Control).visible = false
+			_notice_hidden.append(b)
+	_notice_btns[0].grab_focus()
+
+func _build_notice_panel() -> void:
+	_notice_panel = UiKit.panel("board")
+	_notice_panel.name = "NoticePanel"
+	_notice_panel.position = Vector2(8, 188) * UI_SCALE
+	_notice_panel.size = Vector2(380, 76) * UI_SCALE
+	_notice_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_layer.add_child(_notice_panel)
+	var q := Label.new()
+	q.name = "Q"
+	q.position = Vector2(14, 8)
+	q.add_theme_font_size_override("font_size", UiText.fs(14))
+	q.add_theme_color_override("font_color", Color("f2eedd"))
+	_notice_panel.add_child(q)
+	q.size = Vector2(_notice_panel.size.x - 28, 22)
+	var bw := (_notice_panel.size.x - 28 - 3 * 8) / 4.0
+	for i in range(Tuning.NOTICE_CHIPS.size()):
+		var chip := str(Tuning.NOTICE_CHIPS[i])
+		var b := Button.new()
+		b.text = tr(str(Tuning.NOTICE_LABELS[chip]))
+		UiKit.style_button(b, UiText.fs(14))
+		InputFeel.add_hotkey_badge(b, i, UiText.fs(12))
+		b.pressed.connect(_on_notice.bind(chip))
+		_notice_panel.add_child(b)
+		b.position = Vector2(14 + i * (bw + 8), 40)
+		b.size = Vector2(bw, 52)
+		_notice_btns.append(b)
+
+func _on_notice(chip: String) -> void:
+	var truth: Array = Tuning.NOTICE_TRUTH.get(_shown_emotion, ["distracted"])
+	var right := chip in truth
+	_noticed_cat = str(truth[0])
+	_notice_panel.visible = false
+	for b in _notice_hidden:
+		if is_instance_valid(b):
+			(b as Control).visible = true
+	_notice_hidden = []
+	_notice_bonus = right
+	Competency.observe_skill("noticing", "notice::%s" % persona_id, right)
+	Telemetry.log_event({"event": "notice", "scenario_id": str(Game.current_scenario_id), "persona_id": persona_id,
+		"turn": _turns, "chip": chip, "shown": _shown_emotion, "right": right, "prompt_n": _notice_prompts})
+	if right:
+		Sfx.play("tick")
+		_set_result(tr("You read them right. Your next move that lands counts a little more."))
+		_release_result()
+	else:
+		Sfx.play("turn_neutral")
+		_set_coach("Coach Vee: " + tr("Look again: their face and posture say %s. Pick the move that answers that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
+		_release_coach()
+	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
+	if _buttons.size() > 0:
+		_buttons[0].grab_focus()
+
 ## B3: praise is specific only when there is something nameable: the last move landed, or
 ## praise fits the student's path now (a designed "catch them doing it right" moment).
 func _praise_specific() -> bool:
@@ -929,6 +1016,10 @@ func _on_reply(resp: Dictionary) -> void:
 		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)), bool(resp.get("cut", false)))
 		targets = str(fit["fit"]) == "advance"
 		var credit := float(fit["credit"])
+		if _notice_bonus and str(fit["fit"]) == "advance":
+			credit += Tuning.NOTICE_CREDIT_BONUS   # B2: you read them right first
+			fit["credit"] = credit
+		_notice_bonus = false
 		understanding = clampf(understanding - float(deltas.get("understanding", 0.0)) + credit, 0.0, 1.0)
 		deltas["understanding"] = credit
 		_refresh_meters()
@@ -1432,6 +1523,7 @@ func _affect_for(tags: Array) -> String:
 ## Swap to the best AVAILABLE imagegen2 portrait for the given emotion; if none of the
 ## fallback chain exists yet, tint the placeholder rect so state is still legible.
 func _update_portrait(emotion: String) -> void:
+	_shown_emotion = emotion
 	if _student_tex == null:
 		return
 	var chain: Array = EMOTION_FALLBACK.get(emotion, [emotion, "neutral", "thinking"])
@@ -1644,6 +1736,10 @@ func _input(event: InputEvent) -> void:
 
 ## Number keys 1-8 choose a move directly (menu mode only).
 func _unhandled_key_input(event: InputEvent) -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		if InputFeel.press_hotkey(_notice_btns, event):
+			get_viewport().set_input_as_handled()
+		return
 	if _busy or _resolved or _type_mode:
 		return
 	if InputFeel.press_hotkey(_buttons, event):

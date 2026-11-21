@@ -52,6 +52,8 @@ def success(turn: dict, y_from: str) -> int:
         return int(float(d.get("order", 0)) > 0)
     if y_from == "trust_up":
         return int(float(d.get("trust", 0)) > 0)
+    if y_from == "specific_praise":  # B3: generic praise is not specific-praise evidence
+        return int(float(d.get("trust", 0)) > 0 and turn.get("move", {}).get("praise_kind", "") != "generic")
     if y_from == "const1":
         return 1
     if y_from == "const0":

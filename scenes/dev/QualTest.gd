@@ -36,9 +36,11 @@ func _run() -> void:
 	# 1) Connect resolves a connect_resolves student (Noah): notice, then bridge.
 	var noah := await _new_encounter("noah_g5_fractions", "Noah")
 	_check("Noah loads connect_resolves=true + has assets", noah.connect_resolves and noah.assets.size() > 0)
+	_notice(noah)
 	noah._on_move("connect")          # NOTICE the asset
 	await _frames(2)
 	_check("first Connect notices the asset (not resolved yet)", noah._asset_learned and not noah._resolved)
+	_notice(noah)
 	noah._on_move("connect")          # BRIDGE content to the asset
 	await _frames(2)
 	_check("second Connect resolves Noah via the asset path", noah._resolved)
@@ -57,8 +59,10 @@ func _run() -> void:
 	# 3) Connect on a non-connect_resolves student builds the bond but does NOT resolve.
 	var talia := await _new_encounter("talia_dominator", "Talia")
 	_check("Talia loads connect_resolves=false", not talia.connect_resolves)
+	_notice(talia)
 	talia._on_move("connect")
 	await _frames(2)
+	_notice(talia)
 	talia._on_move("connect")
 	await _frames(2)
 	_check("Connect does not resolve a non-asset-path student", not talia._resolved)
@@ -90,3 +94,8 @@ func _run() -> void:
 	print("QUAL | RESULT: %d / %d checks passed" % [passed, results.size()])
 	print("QUAL | %s" % ("ALL PASS" if passed == results.size() else "SOME FAILED"))
 	get_tree().quit()
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")

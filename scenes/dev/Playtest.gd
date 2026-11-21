@@ -60,6 +60,8 @@ func _await_turn(enc: Node) -> void:
 	while is_instance_valid(enc) and (enc._busy or enc._thinking) and not enc._resolved and t < 80:
 		await _wait(0.1)
 		t += 1
+	if is_instance_valid(enc) and enc.has_method("_on_notice"):
+		_notice(enc)
 	await _wait(1.6)
 
 func _press_move(enc: Node, tag: String) -> void:
@@ -244,3 +246,8 @@ func _finish() -> void:
 	print("PLAYTEST | RESULT: %d / %d checks passed" % [passed, results.size()])
 	print("PLAYTEST | %s" % ("ALL PASS" if passed == results.size() else "SOME FAILED"))
 	get_tree().quit()
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")

@@ -10,12 +10,13 @@ extends Node
 
 const SKILLS := ["elicit_reasoning", "extend_thinking", "revoicing", "wait_time",
 	"behavior_mgmt", "restraint", "behavior_specific_praise", "funds_of_knowledge",
-	"group_monitoring", "formative_check", "status_treatment"]
+	"group_monitoring", "formative_check", "status_treatment", "noticing"]
 const LABELS := {
 	"elicit_reasoning": "Eliciting", "extend_thinking": "Extending", "revoicing": "Revoicing",
 	"wait_time": "Wait time", "behavior_mgmt": "Mgmt (least-intrusive)", "restraint": "Restraint",
 	"behavior_specific_praise": "Specific praise", "funds_of_knowledge": "Asset connect",
 	"group_monitoring": "Group monitoring", "formative_check": "Formative check", "status_treatment": "Status treatment",
+	"noticing": "Noticing",
 }
 # group check-in monitoring move -> the competency it evidences
 const GROUP_TAG_SKILL := {

@@ -136,6 +136,9 @@ func _audit_encounter(prefix: String) -> void:
 	await get_tree().process_frame
 	sc.setup({"persona_id": "noah_g5_fractions", "display_name": "Noah"})
 	await get_tree().process_frame
+	_scan("%s Encounter notice" % prefix, sc)   # B2 strip over the move row
+	_notice(sc)
+	await get_tree().process_frame
 	_scan("%s Encounter menu" % prefix, sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
@@ -144,6 +147,7 @@ func _audit_encounter(prefix: String) -> void:
 	for m in ["elicit", "extend", "elicit", "wait", "extend", "elicit", "revoice", "elicit", "extend"]:
 		if sc._resolved:
 			break
+		_notice(sc)
 		sc._ready_at_ms -= 2000   # as if the answer had landed (B1 WT-II)
 		sc._on_move(m)
 		for i in range(6):
@@ -483,3 +487,8 @@ func _visible_in_scroll(c: Control) -> bool:
 
 func _node_name(c: Control) -> String:
 	return "%s(%s)" % [c.name, c.get_class()]
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")

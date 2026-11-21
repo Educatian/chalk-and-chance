@@ -43,6 +43,7 @@ func _ready() -> void:
 	for m in script_moves:
 		if enc._resolved:
 			break
+		_notice(enc)
 		enc._on_move(m)
 		await get_tree().process_frame
 		await get_tree().process_frame
@@ -64,6 +65,7 @@ func _ready() -> void:
 	enc2.setup({"persona_id": "deshawn_offtask", "display_name": "Deshawn"})
 	await get_tree().process_frame
 	for i in range(6):
+		_notice(enc2)
 		enc2._on_move("elicit")
 		await get_tree().process_frame
 		await get_tree().process_frame
@@ -73,6 +75,7 @@ func _ready() -> void:
 	for i in range(9):
 		if enc2._resolved:
 			break
+		_notice(enc2)
 		enc2._on_move("redirect" if i % 2 == 0 else "praise")
 		await get_tree().process_frame
 		await get_tree().process_frame
@@ -82,3 +85,8 @@ func _ready() -> void:
 	else:
 		print("DIFFERENTIATION: FAIL")
 	get_tree().quit()
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")
