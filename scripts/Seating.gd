@@ -11,6 +11,10 @@ static func seats_for(arrangement: String) -> Array:
 			return _ushape()
 		"ushape6":
 			return _ushape6()
+		"clusters8":
+			return _clusters8()
+		"rows8":
+			return _rows8()
 		"rows":
 			return _rows()
 		"clusters":
@@ -36,6 +40,20 @@ static func _ushape6() -> Array:
 		Vector2i(7, 4), Vector2i(7, 6),      # left arm
 		Vector2i(10, 8), Vector2i(13, 8),    # back row
 		Vector2i(16, 4), Vector2i(16, 6),    # right arm
+	]
+
+## Two full pods of 4 for 8-learner group work (owner-approved 2026-11-21).
+static func _clusters8() -> Array:
+	return [
+		Vector2i(7, 5), Vector2i(9, 5), Vector2i(7, 7), Vector2i(9, 7),       # left pod
+		Vector2i(14, 5), Vector2i(16, 5), Vector2i(14, 7), Vector2i(16, 7),   # right pod
+	]
+
+## Two rows of 4 with a centre aisle for 8-learner independent work (owner-approved).
+static func _rows8() -> Array:
+	return [
+		Vector2i(6, 5), Vector2i(8, 5), Vector2i(15, 5), Vector2i(17, 5),
+		Vector2i(6, 8), Vector2i(8, 8), Vector2i(15, 8), Vector2i(17, 8),
 	]
 
 static func _rows() -> Array:
