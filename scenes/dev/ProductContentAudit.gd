@@ -17,8 +17,9 @@ func _ready() -> void:
 	await _frames(1)
 	hub._build()
 	await _frames(1)
+	if hub.find_child("BrandLogo", true, false) == null:
+		_issue("Hub base missing the BrandLogo header")
 	_assert_text("Hub base", hub, [
-		"CHALK & CHANCE",
 		"Coach Vee:",
 		"Skills",
 		"Lv ",          # v2 hub: compact level chip (was "Teacher Level ...")

@@ -1,4 +1,5 @@
 extends Control
+const BrandLogo = preload("res://scripts/BrandLogo.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Mission-select hub. Lists the scenarios from Game.SCENARIOS (reading each JSON for its
 ## title/badge), shows which badges are earned, and routes to the chosen scenario.
@@ -28,13 +29,11 @@ func _build() -> void:
 
 	# Header (plan 4.6): title, a compact level chip with an XP meter, badges as icons,
 	# one row of commands. The badge legend and status sentence moved into tooltips.
-	var title := Label.new()
-	title.text = "CHALK & CHANCE"
-	title.position = Vector2(40, 20)
-	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
-	title.add_theme_font_size_override("font_size", UiText.fs(24))
-	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
-	add_child(title)
+	var logo := BrandLogo.new(1)   # brand lockup, static (the title screen animates it)
+	logo.name = "BrandLogo"
+	logo.position = Vector2(36, 18)
+	logo.tooltip_text = "Chalk & Chance"
+	add_child(logo)
 
 	var lv := Label.new()
 	lv.text = "Lv %d" % GameState.teacher_level

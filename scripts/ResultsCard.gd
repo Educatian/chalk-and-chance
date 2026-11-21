@@ -64,7 +64,13 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	ring.set_corner_radius_all(32)
 	disc.add_theme_stylebox_override("normal", ring)
 	root.add_child(disc)
-	_label(root, str(data.get("title", "")), Vector2(x0 + 80, y), Vector2(530, 18), UiText.fs(12), MUTED)
+	_label(root, str(data.get("title", "")), Vector2(x0 + 80, y), Vector2(500, 18), UiText.fs(12), MUTED)
+	var brand := TextureRect.new()   # the brand mark, small, in the card's corner
+	brand.texture = Art.tex("res://assets/brand/mark/mark_color_32.png")
+	brand.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	brand.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(brand)
+	brand.position = Vector2(r.end.x - 24 - 32, y - 4)
 	_label(root, str(data.get("verdict", "")), Vector2(x0 + 80, y + 18), Vector2(530, 48), UiText.fs(18), INK, true)
 
 	# Three score parts: label + value, bar, cause.
