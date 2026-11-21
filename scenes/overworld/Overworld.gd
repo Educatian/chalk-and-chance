@@ -96,6 +96,7 @@ var INTERRUPTS := [
 	{
 		"text": "Two students start a loud side-conversation.",
 		"ladder": true,
+		"pair": true,
 		"options": [
 			{"label": "Move toward them (proximity), keep talking", "dcomp": -2.0, "dnoise": -10.0, "ddis": 0, "tier": 1, "works": true,
 			 "coach": "Proximity control. Quietest effective move."},
@@ -110,12 +111,13 @@ var INTERRUPTS := [
 	{
 		"text": "Two students start arguing over a shared calculator, voices rising.",
 		"ladder": true,
+		"pair": true,
 		"options": [
 			{"label": "Move toward them, keep talking", "dcomp": -5.0, "dnoise": 10.0, "ddis": 1, "tier": 1, "works": false,
 			 "coach": "Proximity alone did not stop an argument already under way; a brief word was the smallest step that works here."},
 			{"label": "Give them a stern look", "dcomp": -5.0, "dnoise": 8.0, "ddis": 1, "tier": 2, "works": false,
 			 "coach": "A look does not settle a dispute over a tool; tell them how to share it, briefly."},
-			{"label": "Say: \"One calculator, take turns, Sam first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
+			{"label": "Say: \"One calculator, take turns, {a} first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
 			 "coach": "Right-sized: the smallest step that actually solves this one."},
 			{"label": "Stop the class and lecture both about sharing", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
 			 "coach": "It stopped the argument and the lesson. A brief private word would have done it."},
@@ -1095,17 +1097,140 @@ func _trigger_interrupt(idx: int = -1) -> void:
 	Sfx.play("interrupt")
 	var ev: Dictionary = INTERRUPTS[idx if idx >= 0 and idx < INTERRUPTS.size() else randi() % INTERRUPTS.size()]
 	_interrupt_clock_left = Tuning.INTERRUPT_CLOCK_SECONDS
-	var opts: Array = ev["options"]
 	if bool(ev.get("ladder", false)):
-		# B4: show the ladder lowest step first, each option labelled with its step.
-		opts = []
-		for o in ev["options"]:
-			var oo: Dictionary = (o as Dictionary).duplicate()
-			oo["_lowest_working"] = lowest_working_tier(ev["options"])
-			oo["display"] = "%d %s:  %s" % [int(o["tier"]), tr(str(Tuning.LADDER_STEPS[int(o["tier"]) - 1])), str(o["label"])]
-			opts.append(oo)
-		opts.sort_custom(func(a, b): return int(a["tier"]) < int(b["tier"]))
-	_show_overlay(str(ev["text"]), opts)
+		_show_ladder_card(ev)
+		return
+	_show_overlay(str(ev["text"]), ev["options"])
+
+const TIER_COLORS := [Color("3f8a54"), Color("3c6fb4"), Color("e0a93a"), Color("c2453c")]
+
+## B4: a behaviour card on paper. The students involved are named and shown (and look
+## restless in the room); options come in a shuffled order, each tagged with its ladder
+## step, so the vocabulary is taught without the order giving the answer away.
+func _show_ladder_card(ev: Dictionary) -> void:
+	input_locked = true
+	_overlay = Control.new()
+	_overlay.position = -ROOM_ORIGIN
+	_overlay.size = DESIGN
+	_overlay.z_index = 100
+	add_child(_overlay)
+	var dim := ColorRect.new()
+	dim.size = DESIGN
+	dim.color = Color(0, 0, 0, 0.45)
+	_overlay.add_child(dim)
+	var who: Array = _ladder_pair() if bool(ev.get("pair", false)) else []
+	for st in who:
+		_npcs[st]["offtask"] = maxf(float(_npcs[st].get("offtask", 0.0)), 72.0)
+		_set_student_state(_npcs[st], false)
+	var lowest := lowest_working_tier(ev["options"])
+	var opts: Array = []
+	for o in ev["options"]:
+		var oo: Dictionary = (o as Dictionary).duplicate()
+		oo["_lowest_working"] = lowest
+		oo["_who"] = who
+		opts.append(oo)
+	opts.shuffle()
+	var pw := 640.0
+	var ph := 96.0 + (64.0 if not who.is_empty() else 0.0) + opts.size() * 46.0 + 16.0
+	var card := UiKit.panel("paper")
+	card.position = Vector2((DESIGN.x - pw) / 2.0, (DESIGN.y - ph) / 2.0)
+	card.size = Vector2(pw, ph)
+	_overlay.add_child(card)
+	var ink := Color("14131c")
+	var head := Label.new()
+	head.text = str(ev["text"])
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	head.custom_minimum_size = Vector2(pw - 48, 0)   # wrap width fixed before the height resolves
+	head.add_theme_font_size_override("font_size", UiText.fs(18))
+	head.add_theme_color_override("font_color", ink)
+	card.add_child(head)
+	head.position = Vector2(24, 18)
+	head.size = Vector2(pw - 48, 48)
+	var y := 72.0
+	if not who.is_empty():
+		var x := 24.0
+		for st in who:
+			var info: Dictionary = _npcs[st]
+			var pid := str(info.get("persona_id", ""))
+			var pt := TextureRect.new()
+			pt.texture = Art.tex(UiKit.portrait_path("res://assets/portraits/%s_neutral.png" % pid))
+			pt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			pt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			pt.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			card.add_child(pt)
+			pt.position = Vector2(x, y)
+			pt.size = Vector2(52, 52)
+			var nm := Label.new()
+			nm.text = str(info.get("display_name", ""))
+			nm.add_theme_font_size_override("font_size", UiText.fs(14))
+			nm.add_theme_color_override("font_color", ink)
+			card.add_child(nm)
+			nm.position = Vector2(x + 58, y + 16)
+			x += 180.0
+		y += 64.0
+	var first: Button = null
+	for opt in opts:
+		var tier := int(opt.get("tier", 1))
+		var b := Button.new()
+		b.text = str(opt.get("label", "")).format({"a": str(_npcs[who[0]].get("display_name", "")) if not who.is_empty() else tr("you")})
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		for st2 in ["normal", "hover", "pressed", "disabled", "focus"]:
+			var sb: StyleBoxTexture = (UiKit.board_button(st2) if st2 != "focus" else UiKit.button("focus")).duplicate()
+			sb.content_margin_left = 150
+			b.add_theme_stylebox_override(st2, sb)
+		b.add_theme_font_size_override("font_size", UiText.fs(14))
+		b.pressed.connect(_on_ladder_choice.bind(opt))
+		card.add_child(b)
+		b.position = Vector2(24, y)
+		b.size = Vector2(pw - 48, 40)
+		var chip := Label.new()
+		chip.text = tr(str(Tuning.LADDER_STEPS[tier - 1]))
+		chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = TIER_COLORS[tier - 1]
+		csb.set_corner_radius_all(4)
+		chip.add_theme_stylebox_override("normal", csb)
+		chip.add_theme_font_size_override("font_size", UiText.fs(12))
+		chip.add_theme_color_override("font_color", Color.WHITE)
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(chip)
+		chip.position = Vector2(8, 8)
+		chip.size = Vector2(132, 24)
+		if first == null:
+			first = b
+		y += 46.0
+	Juice.pop_in(card)
+	if first != null:
+		first.grab_focus()
+
+## Two seated students next to each other (the closest pair), for pair cards.
+func _ladder_pair() -> Array:
+	var keys: Array = _npcs.keys()
+	if keys.size() < 2:
+		return keys
+	keys.shuffle()
+	var a: Vector2i = keys[0]
+	var best: Vector2i = keys[1]
+	for k in keys.slice(1):
+		if absi(k.x - a.x) + absi(k.y - a.y) < absi(best.x - a.x) + absi(best.y - a.y):
+			best = k
+	return [a, best]
+
+## The choice plays out on the students involved, not only in the numbers.
+func _on_ladder_choice(opt: Dictionary) -> void:
+	var works := bool(opt.get("works", true))
+	for st in opt.get("_who", []):
+		if not _npcs.has(st):
+			continue
+		var info: Dictionary = _npcs[st]
+		info["offtask"] = maxf(0.0, float(info.get("offtask", 0.0)) - 55.0) if works else maxf(float(info.get("offtask", 0.0)), 88.0)
+		_set_student_state(info, false)
+		var fill: ColorRect = info.get("fill", null)
+		if fill != null:
+			Juice.float_text(info["node"], tr("settled") if works else tr("still at it"), fill.position + Vector2(-8, -18),
+				Color("7fe08a") if works else Color("ff8a70"), UiText.fs(12))
+	_resolve_interrupt(opt)
 
 ## B4: the lowest ladder step that works for this card (0 if none is marked).
 static func lowest_working_tier(options: Array) -> int:
@@ -1142,6 +1267,7 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 		"composure": _composure, "disruptions": _disruptions,
 		"player_tile": {"x": ptile.x, "y": ptile.y},
 		"tier": int(opt.get("tier", 0)), "lowest_working_tier": lowest, "ladder_bonus": ladder_bonus,
+		"students": (opt.get("_who", []) as Array).map(func(t): return str(_npcs[t].get("persona_id", "")) if _npcs.has(t) else ""),
 		"works": bool(opt.get("works", true)),
 	})
 	_close_overlay()
@@ -1526,7 +1652,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	for i in range(btns.size()):
 		var opt: Dictionary = btns[i]
 		var b := Button.new()
-		b.text = str(opt.get("display", opt.get("label", "OK")))
+		b.text = str(opt.get("label", "OK"))
 		b.position = Vector2(px + 22, by + i * 40.0)
 		b.size = Vector2(pw - 44, 34)
 		b.add_theme_font_size_override("font_size", UiText.fs(14))

@@ -93,6 +93,8 @@ func _dev_room_hook() -> bool:
 			get_tree().create_timer(t).timeout.connect(func():
 				var e = SceneRouter._current
 				if e != null and e.has_method("_on_move"):
+					if e._notice_panel != null and e._notice_panel.visible:
+						e._on_notice("confused")
 					e._on_move(str(mv)))
 			t += gap
 		get_tree().create_timer(t).timeout.connect(func():
