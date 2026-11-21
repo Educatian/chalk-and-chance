@@ -4,10 +4,11 @@ extends RefCounted
 ## Support is set from the learner's MEASURED competency on the skills this encounter
 ## exercises, not from chapter progress:
 ##
-##   FULL    Need line, move explanations on hover, guide line, sentence starter, wait bar + timer
-##   PARTIAL Need line, move explanations on hover, wait bar + timer
-##   LIGHT   Student cue only ("read the student"), wait bar without timer text
-##   OFF     No need line, no hover help, no wait bar: you count the pause yourself
+##   FULL    Need line, move explanations on hover, guide line, sentence starter
+##   PARTIAL Need line, move explanations on hover
+##   LIGHT   Student cue only ("read the student"); the room HUD stops naming drifters (B5)
+##   OFF     No need line, no hover help, no "let it land" cue: you count the pause yourself
+## The think-time ring while a student thinks (B1) shows at every level: it is the student.
 ##
 ## Contingency: three misses in a row temporarily restores support ("Coach Vee steps in"),
 ## and one fitting move hands control back.

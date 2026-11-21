@@ -11,6 +11,7 @@ const InputFeel = preload("res://scripts/InputFeel.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 const ResultsCard = preload("res://scripts/ResultsCard.gd")
+const Scaffold = preload("res://scripts/Scaffold.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
 # Student 1.35 tiles ~= 54px (~10% of screen height); teacher 1.7 tiles ~= 68px. This is
@@ -145,11 +146,13 @@ var _lesson_over := false
 var _overlay: Control = null
 var _pending_card := {}   # results card data, shown after the reflection step
 var _back_secs := 0.0      # time spent facing the board (A5: the cause behind attention)
+var _room_support := 3     # B5: Scaffold level for room management (behavior_mgmt estimate)
 
 func _ready() -> void:
 	var cfg := _load_scenario(Game.current_scenario_id)
 	_scenario_cfg = cfg
 	_scenario_title = str(cfg.get("title", "Lesson"))
+	_room_support = int(Scaffold.level_for(["behavior_mgmt"])["level"])
 	_format = str(cfg.get("format", ""))
 	_offtask_rise = float(cfg.get("offtask_rise", OFFTASK_RISE))
 	# Resume the in-progress period (returning from an encounter) or start a fresh one.
@@ -462,6 +465,10 @@ func _room_feedback(info: Dictionary, ot: float, near: bool, unseen: bool) -> vo
 		info["q"] = q
 	if q != null:
 		q.visible = unseen
+
+## B5: name the drifting student in HUD text only while room support is Partial/Full.
+func _room_names_shown() -> bool:
+	return _room_support >= Scaffold.PARTIAL
 
 func _set_student_state(info: Dictionary, faced: bool) -> void:
 	var a = info.get("anim", null)
@@ -1000,7 +1007,10 @@ func _process(delta: float) -> void:
 			_equity_label.text = "%d/%d" % [_engaged_count(), _npcs.size()]
 
 		# Room cue shares the bottom line with the talk prompt (talk prompt wins when facing a student).
-		if worst >= 70.0:
+		# B5: at Light/Off support the HUD stops doing the noticing; read the postures.
+		if worst >= 45.0 and not _room_names_shown():
+			_room_cue = tr("Room cue: read the room. Postures show who is drifting.")
+		elif worst >= 70.0:
 			_room_cue = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
 		elif worst >= 45.0:
 			_room_cue = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
@@ -1035,6 +1045,8 @@ func _process(delta: float) -> void:
 		if _coach_hint != null:
 			if facing_up and worst > 30.0:
 				_coach_hint.text = "Coach Vee: eyes on the room. Turning your back lets them drift."
+			elif worst >= 60.0 and not _room_names_shown():
+				_coach_hint.text = tr("Coach Vee: someone is drifting. Scan, then move closer.")
 			elif worst >= 60.0:
 				_coach_hint.text = "Coach Vee: %s is drifting. Move closer (proximity) or scan the room." % worst_name
 			elif worst >= 35.0:

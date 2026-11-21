@@ -744,7 +744,9 @@ func _process(_delta: float) -> void:
 		return
 	# WT-II: let the answer land, then the go cue. Long silence costs a little engagement.
 	var idle := now - _ready_at_ms
-	if idle < Tuning.WT2_WINDOW_MS:
+	if _support_level() == Scaffold.OFF and idle < Tuning.WT_LONG_MS:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")   # B5: count the pause yourself
+	elif idle < Tuning.WT2_WINDOW_MS:
 		_ring.show_state(ThinkRing.LAND, float(idle) / Tuning.WT2_WINDOW_MS, tr("let it land"))
 	elif idle < Tuning.WT_LONG_MS or _turns == 0:   # the opening line is reading time
 		_ring.show_state(ThinkRing.READY, 1.0, tr("your move"))
