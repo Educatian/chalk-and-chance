@@ -41,6 +41,7 @@ func _ready() -> void:
 	_check_net_guard()
 	_check_korean_catalogue()
 	await _check_objectives_toggle()
+	await _check_instructor_panels()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -334,3 +335,32 @@ func _check_objectives_toggle() -> void:
 	_ok("O still opens the panel", ow._objectives_open)
 	ow.queue_free()
 	await get_tree().process_frame
+
+## Instructor panels: only a signed-in account whose server-issued role is
+## "instructor" sees the Class dashboard button; learners and the public demo do not.
+func _check_instructor_panels() -> void:
+	var A = load("res://autoload/Auth.gd")
+	_ok("role: not signed in (public demo) -> no instructor panels", not A.instructor_role(false, "instructor"))
+	_ok("role: signed-in learner -> no instructor panels", not A.instructor_role(true, "learner"))
+	_ok("role: signed-in, empty role -> no instructor panels", not A.instructor_role(true, ""))
+	_ok("role: signed-in instructor -> instructor panels", A.instructor_role(true, "instructor"))
+	var saved := [Auth.token, Auth.role]
+	for case in [["", "", false], ["t", "learner", false], ["t", "instructor", true]]:
+		Auth.token = case[0]
+		Auth.role = case[1]
+		var hub: Node = load("res://scenes/ui/Hub.tscn").instantiate()
+		add_child(hub)
+		await get_tree().process_frame
+		hub._open_leaderboard()
+		await get_tree().process_frame
+		var lb: Node = hub.get_node_or_null("LeaderboardOverlay")
+		var has_class := false
+		if lb != null:
+			for c in lb.get_children():
+				if c is Button and (c as Button).text == "Class":
+					has_class = true
+		_ok("leaderboard Class button for %s: %s" % [case[1] if case[1] != "" else "public demo", "shown" if case[2] else "hidden"], has_class == case[2])
+		hub.queue_free()
+		await get_tree().process_frame
+	Auth.token = saved[0]
+	Auth.role = saved[1]

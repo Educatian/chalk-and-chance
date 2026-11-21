@@ -1144,8 +1144,10 @@ func _open_leaderboard() -> void:
 			_add_leaderboard_row(overlay, rows[i], i + 1, y)
 			y += 38.0
 
-	var class_dash := _footer_button("Class", Vector2(140, 432), _open_class_dashboard)
-	overlay.add_child(class_dash)
+	# The class dashboard is for instructors only (learners and the public demo never see it).
+	if Auth.is_instructor():
+		var class_dash := _footer_button("Class", Vector2(140, 432), _open_class_dashboard)
+		overlay.add_child(class_dash)
 	# Internal QA reports stay available in the editor only; players never see them.
 	if OS.has_feature("editor"):
 		var quality := _footer_button("Quality", Vector2(278, 432), _open_quality_report)
@@ -1360,6 +1362,9 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	return body
 
 func _open_class_dashboard() -> void:
+	# Instructors only; the editor keeps it for content audits (never in an export).
+	if not (Auth.is_instructor() or OS.has_feature("editor")):
+		return
 	var overlay := Control.new()
 	overlay.name = "ClassDashboardOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

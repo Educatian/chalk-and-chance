@@ -148,7 +148,16 @@ func _scan_leaderboard_reports(sc: Node, prefix: String) -> void:
 	await _scan_button_overlay(sc, board, "%s Hub quality report" % prefix, "Quality", "QualityReportOverlay")
 	await _scan_button_overlay(sc, board, "%s Hub TeacherSim delta" % prefix, "TeacherSim", "TeacherSimDeltaOverlay")
 	await _scan_button_overlay(sc, board, "%s Hub cloud log" % prefix, "Cloud Log", "CloudLogOverlay")
-	await _scan_button_overlay(sc, board, "%s Hub class dashboard" % prefix, "Class", "ClassDashboardOverlay")
+	# The Class button is instructor-only (FeelCheck covers who sees it); lay out the
+	# dashboard itself by opening it directly, offline, without signing anyone in.
+	sc._open_class_dashboard()
+	await get_tree().process_frame
+	var dash := sc.get_node_or_null("ClassDashboardOverlay")
+	if dash == null:
+		_issues.append("%s Hub class dashboard missing overlay" % prefix)
+	else:
+		_scan("%s Hub class dashboard" % prefix, dash)
+		dash.queue_free()
 	board.queue_free()
 	await get_tree().process_frame
 
