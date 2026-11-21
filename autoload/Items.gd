@@ -96,11 +96,11 @@ func def(id: String) -> Dictionary:
 
 
 func name_for(id: String) -> String:
-	return str(def(id).get("name", id.capitalize()))
+	return tr(str(def(id).get("name", id.capitalize())))
 
 
 func short_name_for(id: String) -> String:
-	return str(def(id).get("short", name_for(id)))
+	return tr(str(def(id).get("short", def(id).get("name", id.capitalize()))))
 
 
 func icon_for(id: String) -> String:

@@ -1,0 +1,169 @@
+english	korean
+Read %s first: what do you notice?	%s 먼저 읽어 봐요. 지금 어떤 모습이에요?
+thinking...	생각 중…
+drifting	집중이 흐트러져요
+settled	조용해졌어요
+you	너
+say it your way	내 말로 하기
+boss	실전
+Badge: %s	배지: %s
+No badge	배지 없음
+Capstone	종합 실전
+Discussion	토의 수업
+Lecture	강의식 수업
+Group Work	모둠 활동
+Independent	개별 활동
+Routine	루틴
+Echo	메아리
+Balance	균형
+Mirror	거울
+Insight	통찰
+Bridge	다리
+%s badge	%s 배지
+You already have the %s badge.	%s 배지는 이미 받았어요.
+Clear every objective to earn the %s badge.	목표를 다 이루면 %s 배지를 받아요.
+show	보기
+hide	숨기기
+Dialogue text: %s	대사 표시: %s
+Instant	한 번에
+Typewriter	한 글자씩
+%s  Rank %d/%d\n%s	%s  %d/%d단계\n%s
+Lesson Map	수업 지도
+Map	지도
+Breathing Reset	숨 고르기
+Breathe	숨 고르기
+Student Profile Card	학생 카드
+Profile	학생 카드
+Quiet Signal	조용한 신호
+Signal	신호
+Noticing Lens	관찰 렌즈
+Notice	관찰
+Equity Snapshot	발언 기록표
+Equity	고른 발언
+Wait Meter Pin	기다림 핀
+Practice Goal Card	연습 목표 카드
+Goal	목표
+Steady Presence	차분한 존재감
+Wait Mastery	기다림 숙련
+Relationship Sense	관계 감각
+Base	기본
+Steady	차분함
+Listen	경청
+Steady Lead	차분한 리더
+Deep Listener	깊이 듣는 교사
+Equity Scout	고른 발언 지킴이
+Profile: %s	프로필: %s
+Eliciting	생각 끌어내기
+Extending	생각 넓히기
+Revoicing	되말하기
+Wait time	기다려 주기
+Low-key redirects	최소 개입
+Restraint	설명 아끼기
+Specific praise	구체적 칭찬
+Asset connect	삶의 지식 잇기
+Group monitoring	모둠 살피기
+Formative check	형성평가
+Status treatment	발언 고르게 하기
+Noticing	학생 읽기
+Music	음악
+On	켬
+Off	끔
+Sound effects	효과음
+Text size	글자 크기
+Normal	보통
+Large	크게
+Motion, shake & flashes	움직임·흔들림·번쩍임
+Reduced	줄임
+Story cinematics	이야기 장면
+Classroom look	교실 모습
+Korea	한국
+US	미국
+CLEARED	통과
+Need: %s	필요: %s
+Need: read %s's cues	필요: %s 표정 읽기
+Type	입력
+Mic	음성
+Play	시작
+all cleared	다 이뤘어요
+missed: 	놓친 목표: 
+voices heard	생각 들음
+wait-time	기다려 주기
+on-task	집중도
+composure	평정심
+disruptions	소란
+asset connect	삶의 지식 잇기
+%d upgrade point	성장 포인트 %d개
+%d upgrade points	성장 포인트 %d개
+%3d%%  %02d moves  +-%.2f	%3d%%  %02d번  ±%.2f
+CLEARED   |   Score {score}	통과   |   점수 {score}
+Understanding %d%% | Participation %d%% | Revealed	이해도 %d%% | 참여 %d%% | 드러남
+ | Badge %s	 | 배지 %s
+ | Level %d | +upgrade	 | Lv %d | 성장 포인트 +1
+ | +items	 | 아이템 +
+%s (group): \"%s\"	%s(모둠): \"%s\"
+LANDED	통했어요
+TOO EARLY	아직 일러요
+NOT YET	아직이에요
+NOTED	확인
+Support: %s	도움: %s
+Support: Coach Vee stepped in	도움: 한 선생님이 거들었어요
+Full	많이
+Partial	보통
+Light	조금
+Off	없음
+Equipped	장착
+Board	순위표
+{landed} of {total} moves landed on their path	{total}번 중 {landed}번 통했어요
+reached it in %d turn	%d턴 만에 도달했어요
+reached it in %d turns	%d턴 만에 도달했어요
+%d flare-up  ->  someone who'd drifted blew up  ->  get there before the bar goes red.	소란 %d번  ->  흐트러진 아이가 결국 터졌어요  ->  막대가 빨개지기 전에 가 봐요.
+%d flare-ups  ->  someone who'd drifted blew up  ->  get there before the bar goes red.	소란 %d번  ->  흐트러진 아이가 결국 터졌어요  ->  막대가 빨개지기 전에 가 봐요.
+RECENT RUNS: %d saved run. Open Board for more.	최근 기록 %d개. 더 보려면 순위표를 열어요.
+RECENT RUNS: %d saved runs. Open Board for more.	최근 기록 %d개. 더 보려면 순위표를 열어요.
+Bond pulled the score down. Start there.	아이와 아직 서먹해요. 거기부터 풀어 봐요.
+Understanding pulled the score down. Start there.	아이가 아직 이해하지 못했어요. 거기부터 다시 봐요.
+Pace pulled the score down. Start there.	돌아오느라 오래 걸렸어요. 거기부터 줄여 봐요.
+Objectives pulled the score down. Start there.	놓친 목표가 많아요. 하나씩 다시 잡아 봐요.
+Attention pulled the score down. Start there.	교실이 자꾸 흐트러졌어요. 거기부터 잡아요.
+Reach pulled the score down. Start there.	아이들 생각을 거의 못 들었어요. 거기부터 해요.
+You got there the long way. Bond is the thing to practice.	해내긴 했어요. 다음엔 아이와 거리를 좁히는 걸 연습해 봐요.
+You got there the long way. Understanding is the thing to practice.	돌아서 해냈어요. 아이 생각을 끌어내는 걸 연습해 봐요.
+You got there the long way. Pace is the thing to practice.	해냈지만 오래 걸렸어요. 바로 필요한 수를 고르는 걸 연습해 봐요.
+You got there the long way. Objectives is the thing to practice.	끝까지 왔지만 놓친 목표가 있어요. 그걸 연습해 봐요.
+You got there the long way. Attention is the thing to practice.	끝까지 왔지만 집중이 자주 흩어졌어요. 교실 살피기를 연습해 봐요.
+You got there the long way. Reach is the thing to practice.	끝까지 왔지만 못 들은 아이가 많아요. 고르게 묻는 걸 연습해 봐요.
+Solid. Bond held the score back a little.	탄탄해요. 아이와 조금 더 가까워지면 돼요.
+Solid. Understanding held the score back a little.	탄탄해요. 이해만 조금 더 다지면 돼요.
+Solid. Pace held the score back a little.	탄탄해요. 시간이 조금 걸린 게 아쉬워요.
+Solid. Objectives held the score back a little.	탄탄해요. 목표 하나가 아쉬워요.
+Solid. Attention held the score back a little.	탄탄해요. 집중이 가끔 흩어진 게 아쉬워요.
+Solid. Reach held the score back a little.	탄탄해요. 몇 명 생각을 못 들은 게 아쉬워요.
+Really good. A little room left in bond.	아주 좋아요. 아이와 조금만 더 가까워지면 돼요.
+Really good. A little room left in understanding.	아주 좋아요. 이해만 조금 더 다지면 돼요.
+Really good. A little room left in pace.	아주 좋아요. 조금만 더 빨리 가면 돼요.
+Really good. A little room left in objectives.	아주 좋아요. 목표만 조금 더 챙기면 돼요.
+Really good. A little room left in attention.	아주 좋아요. 집중만 조금 더 붙잡으면 돼요.
+Really good. A little room left in reach.	아주 좋아요. 몇 명만 더 들으면 돼요.
+%3d%%  %02d moves  +-%.2f	%3d%%  %d번  ±%.2f
+Look again. Their face and posture say %s. Answer that.	다시 봐요. 표정이랑 자세를 보면 %s 쪽이에요. 그걸 골라 봐요.
+you heard {reached} of {total} students explain their thinking	{total}명 중 {reached}명의 생각을 들었어요
+Comp %d%% | Attention %d%% | Progress %d%%	이해 %d%% | 집중 %d%% | 진도 %d%%
+Reached %d/%d | Order %d%% | Composure %d%%	도달 %d/%d | 질서 %d%% | 평정심 %d%%
+ | +upgrade	 | 성장 포인트 +1
+TRY AGAIN   |   Score {score}	다시 해 봐요   |   점수 {score}
+Look again. Their face and posture say confused. Answer that.	다시 봐요. 표정이랑 자세를 보면 헷갈려 하는 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say gets it. Answer that.	다시 봐요. 표정이랑 자세를 보면 이해한 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say withdrawn. Answer that.	다시 봐요. 표정이랑 자세를 보면 움츠러든 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say distracted. Answer that.	다시 봐요. 표정이랑 자세를 보면 딴짓하는 쪽이에요. 그걸 골라 봐요.
+it fit where they were (%s)	'%s' 흐름에 딱 맞는 수였어요
+link to their world	아이가 아는 것에 빗대기
+bring focus back	하던 일로 다시 데려오기
+hold the silence	끼어들지 않고 기다리기
+Bond pulled the score down. Start there.	수는 통했어요. 다만 아이와 아직 서먹해서 점수가 낮아요. 거기부터 풀어 봐요.
+Pace pulled the score down. Start there.	수는 통했지만 돌아오느라 오래 걸려서 점수가 낮아요. 거기부터 줄여 봐요.
+Turn your device sideways\n\nChalk & Chance plays in landscape.	기기를 가로로 돌려 주세요\n\nChalk & Chance는 가로 화면에서 해요.
+Leave this lesson?\nThe period ends now and this try won't count.	수업을 여기서 끝낼까요?\n지금 나가면 이번 시도는 기록되지 않아요.
+Coach Vee	한 선생님
+U-shape	ㄷ자 배치
+Rows	줄 배치
+Clusters	모둠 배치

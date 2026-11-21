@@ -1,4 +1,5 @@
 extends Control
+const Content = preload("res://scripts/Content.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## The classroom encounter: read-act-observe loop against one LLM-driven student.
 ## Four meters (Engagement / Order / Rapport class-side, Composure = your HP), the
@@ -283,10 +284,12 @@ func _load_persona() -> void:
 		return
 	var txt := f.get_as_text()
 	f.close()
-	var data = JSON.parse_string(txt)   # Variant
+	var data = Content.localize(path, JSON.parse_string(txt))   # Variant, with the language overlay
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	_persona_data = data
+	if str(data.get("display_name", "")) != "":
+		display_name = str(data["display_name"])   # localized name, whatever the caller passed
 	target_concept = str(data.get("target_label", target_concept))
 	opening_line = str(data.get("opening_line", opening_line))
 	win_line = str(data.get("win_line", win_line))
@@ -792,7 +795,7 @@ func _end_thinking(cut: bool) -> void:
 		resp["judge"] = judge
 		resp["cut"] = true
 		resp["meter_deltas"] = Tuning.CUT_DELTAS.duplicate()
-		resp["student_utterance"] = {"text": Tuning.CUT_LINE, "emotion_shown": "frustrated"}
+		resp["student_utterance"] = {"text": tr(Tuning.CUT_LINE), "emotion_shown": "frustrated"}
 		resp["coach_tip"] = "You talked into their thinking time and %s lost the thought. After you ask, let the ring fill." % display_name
 		_ring.shatter()
 		Sfx.play("turn_wrong", -4.0, 1.3)
@@ -973,7 +976,8 @@ func _on_notice(chip: String) -> void:
 		_release_result()
 	else:
 		Sfx.play("turn_neutral")
-		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
+		# One whole sentence per reading (a label dropped into a sentence reads badly in Korean).
+		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that." % str(Tuning.NOTICE_LABELS[str(truth[0])]).to_lower()))
 		_release_coach()
 	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
 
@@ -1258,15 +1262,15 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var card := ResultsCard.build(_layer, {
 		"title": "Done with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"])),
 		"parts": parts,
 		"rewards": {"badge": badge_id if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Completion",
-			"none": "You already have the %s badge." % badge_id.capitalize(),
+			"none": tr("You already have the %s badge.") % tr(badge_id.capitalize()),
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
 		"moments": _pivotal_moments(),
-		"next": str(NEXT_TARGET[weak]),
+		"next": tr(str(NEXT_TARGET[weak])),
 		"buttons": [{"label": "Return to room", "primary": true,
 			"cb": func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")}],
 	})
@@ -1292,9 +1296,9 @@ func _result_parts() -> Array:
 	var bond_pts := int(round(GameState.bond(persona_id) * 30.0))
 	return [
 		{"label": "Understanding", "frac": u / 100.0, "value": "%d" % u,
-			"cause": "%d of %d moves landed on their path" % [landed, _move_history.size()]},
+			"cause": tr("{landed} of {total} moves landed on their path").format({"landed": landed, "total": _move_history.size()})},
 		{"label": "Pace", "frac": pace / 42.0, "value": "%d" % pace,
-			"cause": "reached it in %d turn%s" % [_turns, "" if _turns == 1 else "s"]},
+			"cause": (tr("reached it in %d turn") if _turns == 1 else tr("reached it in %d turns")) % _turns},
 		{"label": "Bond", "frac": bond_pts / 30.0, "value": "%d" % bond_pts,
 			"cause": "they trust you more now" if bond_pts >= 10 else "not much connection yet"},
 	]
@@ -1331,7 +1335,7 @@ func _moment_line(m: Dictionary) -> Dictionary:
 	match fit:
 		"advance":
 			kind = "right"
-			why = "it fit where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
+			why = ("it fit where they were (%s)" % str(m["path"]).to_lower()) if str(m.get("path", "")) != "" else "it fit where they were"
 		"early":
 			kind = "early"
 			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "right idea, too early"
@@ -1340,7 +1344,15 @@ func _moment_line(m: Dictionary) -> Dictionary:
 			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it wasn't what they needed"
 		_:
 			why = "it kept the conversation open"
-	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tag.capitalize(), said, why]}
+	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tr(tag.capitalize()), said, _tr_reason(why)]}
+
+## A reason built from a PathJudge note or path label, translated piece by piece.
+func _tr_reason(why: String) -> String:
+	var cut := why.find(": ")
+	if cut > 0:
+		var head := why.substr(0, cut)
+		return tr(head) + ": " + tr(why.substr(cut + 2))
+	return tr(why)
 
 func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 	if badge_id == "":
@@ -1398,7 +1410,8 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 		parts.append("Not the move %s needs yet" % display_name)
 	if _last_input_mode == "free_text":
 		parts.append("read as %s" % tag.capitalize())
-	return "  |  ".join(parts)
+	# Each part is its own catalogue key; the joined line would match none.
+	return "  |  ".join(parts.map(func(p): return tr(str(p))))
 
 func _items_awarded_text(items) -> String:
 	if typeof(items) != TYPE_DICTIONARY:

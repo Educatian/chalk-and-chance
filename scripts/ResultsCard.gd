@@ -131,7 +131,7 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	var rx := x0 + 156.0
 	var badge := str(rw.get("badge", ""))
 	if badge != "":
-		rx = _icon_chip(root, "res://assets/ui/badge_%s.png" % badge, badge.capitalize() + " badge", Vector2(rx, y))
+		rx = _icon_chip(root, "res://assets/ui/badge_%s.png" % badge, TranslationServer.translate("%s badge") % TranslationServer.translate(badge.capitalize()), Vector2(rx, y))
 	if bool(rw.get("level_up", false)):
 		rx = _icon_chip(root, "", "Lv %d  +1 upgrade" % int(rw.get("level_after", 0)), Vector2(rx, y))
 	var items = rw.get("items", {})
@@ -213,7 +213,11 @@ static func _label(root: Control, text: String, pos: Vector2, size: Vector2, fs:
 	return l
 
 ## Verdict sentence for a grade; `weak` names the part that held it back.
-static func verdict(rank: String, weak: String) -> String:
+static func verdict(rank: String, part: String) -> String:
+	return TranslationServer.translate(_verdict_en(rank, part))
+
+static func _verdict_en(rank: String, part: String) -> String:
+	var weak := part.to_lower()
 	match rank:
 		"S":
 			return "Clean run. Nothing to fix."

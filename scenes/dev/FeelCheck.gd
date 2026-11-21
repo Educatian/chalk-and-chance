@@ -39,6 +39,7 @@ func _ready() -> void:
 	_check_encounter_grades()
 	_check_roster_safe_lines()
 	_check_net_guard()
+	_check_korean_catalogue()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -141,6 +142,23 @@ func _check_net_guard() -> void:
 	_ok("release build is unchanged (hosted API allowed)", G.decide(api, false, false))
 	_ok("local backend stays allowed in debug", G.decide("http://127.0.0.1:8008/turn", true, false) and G.decide("http://localhost:8008/turn", true, false))
 	_ok("this headless debug run is not opted in", not G.allowed(api))
+
+## The Korean catalogue translates exact text, formatted text and "Prefix: rest" text,
+## picking the template that leaves nothing in English.
+func _check_korean_catalogue() -> void:
+	var T = load("res://scripts/PatternTranslation.gd").new()
+	_ok("Korean catalogue loads", T.load_catalogue("res://i18n/ui_ko.json", "ko"))
+	TranslationServer.add_translation(T)
+	var keep := TranslationServer.get_locale()
+	TranslationServer.set_locale("ko")
+	_ok("exact key", tr("Play") == "시작")
+	_ok("formatted line keeps its numbers in Korean order", tr("Turn 3  Elicit  ->  \"Hi\"  ->  why.").begins_with("3턴"))
+	_ok("coach prefix + formatted tip both translate", tr("Coach Vee:  Start with X. Wait longer than feels normal, and get everyone talking.").contains("부터 시작해요"))
+	_ok("unknown text passes through unchanged", tr("Zzqx unknown line.") == "Zzqx unknown line.")
+	TranslationServer.set_locale(keep)
+	TranslationServer.remove_translation(T)
+	var C = load("res://scripts/Content.gd")
+	_ok("overlay merge keeps English where Korean is null", C.merge({"l": [{"t": "a", "k": 1}, {"t": "b"}]}, {"l": [null, {"t": "나"}]}) == {"l": [{"t": "a", "k": 1}, {"t": "나"}]})
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

@@ -1,5 +1,6 @@
 extends Control
 const NetGuard = preload("res://scripts/NetGuard.gd")
+const Content = preload("res://scripts/Content.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Lecture (direct-instruction) mode: the rhythm of PRESENT vs CHECK-FOR-UNDERSTANDING.
@@ -194,7 +195,7 @@ func _read_persona(pid: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
@@ -831,7 +832,7 @@ func _on_lecture_reply(result: int, code: int, _headers: PackedStringArray, body
 	var speaker := str(reaction.get("speaker", "Class"))
 	var text := str(reaction.get("text", ""))
 	if text != "":
-		_dialogue.text = "%s: \"%s\"" % [speaker, text]
+		_dialogue.text = "%s: \"%s\"" % [speaker, tr(text)]
 		_lecture_history.append({"speaker": speaker, "text": text})
 	var tip := str(resp.get("coach_tip", ""))
 	if tip != "":
@@ -1007,9 +1008,9 @@ func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary)
 	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), UiText.S_DISPLAY - 1, Color(0.97, 0.95, 0.86), Vector2(300, 16))
 	var score_lbl := _overlay_label(overlay, "", Vector2(48, 118), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
 	CompletionFx.count_up(score_lbl, "%s   |   Score {score}" % ("CLEARED" if won else "TRY AGAIN"), score)
-	var reward_line := "Comp %d%% | Attention %d%% | Progress %d%%" % [int(comprehension), int(attention), int(progress)]
+	var reward_line := tr("Comp %d%% | Attention %d%% | Progress %d%%") % [int(comprehension), int(attention), int(progress)]
 	if bool(reward.get("level_up", false)):
-		reward_line += " | +upgrade"
+		reward_line += tr(" | +upgrade")
 	_overlay_label(overlay, reward_line, Vector2(48, 140), UiText.S_CAPTION, Color(0.72, 0.82, 0.96), Vector2(300, 28))
 	var trace_line := str(run_record.get("evidence_trace", ""))
 	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(48, 172), UiText.S_CAPTION, Color(0.72, 0.78, 0.88), Vector2(300, 16))

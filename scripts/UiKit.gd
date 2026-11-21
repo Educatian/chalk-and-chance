@@ -78,6 +78,13 @@ static func style_board_button(b: Button, font_size: int = -1, pad: int = 8) -> 
 ## Push the kit into the project theme so every screen that relies on theme defaults
 ## (Panel, PanelContainer, Button) gets the v2 frames. Called once at boot (Juice._ready).
 static func apply_to_theme() -> void:
+	var base := ThemeDB.fallback_font
+	if base != null and ResourceLoader.exists("res://ui/fonts/Pretendard-Medium.ttf"):
+		var fb: Array[Font] = base.fallbacks.duplicate()
+		var ko: Font = load("res://ui/fonts/Pretendard-Medium.ttf")
+		if not fb.has(ko):
+			fb.append(ko)
+			base.fallbacks = fb
 	var theme := ThemeDB.get_project_theme()
 	if theme == null or not ResourceLoader.exists(BOARD):
 		return

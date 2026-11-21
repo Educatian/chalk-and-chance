@@ -36,17 +36,17 @@ static func show(parent: Node, run_record: Dictionary, reward: Dictionary, conte
 	return overlay
 
 static func _reward_line(reward: Dictionary, context: Dictionary) -> String:
-	var line := "Understanding %d%% | Participation %d%% | Revealed" % [
+	var line := TranslationServer.translate("Understanding %d%% | Participation %d%% | Revealed") % [
 		int(round(float(context.get("understanding", 0.0)) * 100.0)),
 		int(round(float(context.get("participation", 0.0)) * 100.0)),
 	]
 	var badge := str(context.get("target_badge", ""))
 	if badge != "":
-		line += " | Badge %s" % badge.to_upper()
+		line += TranslationServer.translate(" | Badge %s") % TranslationServer.translate(badge.capitalize())
 	if bool(reward.get("level_up", false)):
-		line += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
+		line += TranslationServer.translate(" | Level %d | +upgrade") % int(reward.get("level_after", GameState.teacher_level))
 	if _items_awarded_text(reward.get("items_awarded", {})) != "":
-		line += " | +items"
+		line += TranslationServer.translate(" | +items")
 	return line
 
 static func _items_awarded_text(items) -> String:

@@ -12,6 +12,17 @@ func _ready() -> void:
 	TTSClient.enabled = false
 	await _run_suite("normal", false)
 	await _run_suite("large text", true)
+	# Korean: the same screens, laid out with Korean text; English left on screen is listed.
+	GameState.set_language("ko")
+	_korean = true
+	await _run_suite("korean", false)
+	_korean = false
+	GameState.set_language("en")
+	var left := _english_left.keys()
+	left.sort()
+	print("KOREAN LEFTOVER %d string(s)" % left.size())
+	for t in left:
+		print("KOREAN LEFTOVER | %s | %s" % [t, _english_left[t]])
 
 	if _issues.is_empty():
 		print("UIAUDIT PASS")
@@ -20,6 +31,51 @@ func _ready() -> void:
 		for i in _issues:
 			print(i)
 	get_tree().quit()
+
+var _korean := false
+var _english_left: Dictionary = {}   # visible English in the Korean pass: text -> where
+const _EN_OK := ["XP", "Lv", "OK", "S", "A", "B", "C", "D", "Chalk & Chance", "CHALK & CHANCE"]
+
+func _note_english(label: String, c: Control) -> void:
+	var t := ""
+	if c is Label:
+		t = (c as Label).text
+	elif c is Button:
+		t = (c as Button).text
+	else:
+		return
+	var shown := c.atr(t) if c.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED else t
+	var re := RegEx.new()
+	re.compile("[A-Za-z]{3,}")
+	var m := re.search(shown)
+	if m == null or shown.strip_edges() in _EN_OK:
+		return
+	_english_left[shown.strip_edges().left(90)] = label
+
+const _EN_NAMES := ["Noah", "Talia", "Mei-Lin", "Deshawn", "Diego", "Jordan", "Marcus", "Priya", "Riley", "Sam"]
+
+## Korean screens: no English student names, no Latin letters glued to Hangul
+## ("도달s"), no '.턴' debris from a template split in the wrong place.
+func _korean_text_issues(label: String, c: Control) -> void:
+	var t := ""
+	if c is Label:
+		t = (c as Label).text
+	elif c is Button:
+		t = (c as Button).text
+	else:
+		return
+	var shown := c.atr(t) if c.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED else t
+	for n in _EN_NAMES:
+		var rn := RegEx.new()
+		rn.compile("\\b%s\\b" % n)
+		if rn.search(shown) != null:
+			_issues.append("%s English student name '%s' on a Korean screen: %s" % [label, n, shown.left(70)])
+	var glue := RegEx.new()
+	glue.compile("[\\x{AC00}-\\x{D7A3}][a-z]|[a-z][\\x{AC00}-\\x{D7A3}]")   # "XP를" is fine, "도달s" is not
+	if glue.search(shown) != null:
+		_issues.append("%s Latin glued to Hangul: %s" % [label, shown.left(70)])
+	if shown.contains(".턴") or shown.contains(".번"):
+		_issues.append("%s template debris: %s" % [label, shown.left(70)])
 
 func _run_suite(prefix: String, large_text: bool) -> void:
 	GameState.settings["large_text"] = large_text
@@ -172,7 +228,7 @@ func _audit_lecture(prefix: String) -> void:
 	sc.setup({"scenario": _json("res://data/scenarios/lecture_fractions.json")})
 	await get_tree().process_frame
 	_scan("%s Lecture menu" % prefix, sc)
-	sc._dialogue.text = "Noah: \"I think the denominator names the equal parts, but I am still mixing it up when the picture changes.\""
+	sc._dialogue.text = _pname("noah_g5_fractions") + ": \"I think the denominator names the equal parts, but I am still mixing it up when the picture changes.\""
 	await get_tree().process_frame
 	_scan("%s Lecture long dialogue" % prefix, sc)
 	sc._toggle_input_mode()
@@ -196,7 +252,7 @@ func _audit_gym(prefix: String) -> void:
 	sc.setup({"scenario": _json("res://data/scenarios/gym_capstone.json")})
 	await get_tree().process_frame
 	_scan("%s Gym menu" % prefix, sc)
-	sc._dialogue.text = "Priya: \"I can explain my fraction if I get a second, but everyone is moving on before I finish the whole idea.\""
+	sc._dialogue.text = _pname("priya_quiet") + ": \"I can explain my fraction if I get a second, but everyone is moving on before I finish the whole idea.\""
 	await get_tree().process_frame
 	_scan("%s Gym long dialogue" % prefix, sc)
 	sc._toggle_input_mode()
@@ -220,7 +276,7 @@ func _audit_group_checkin(prefix: String) -> void:
 	sc.setup({"scenario_context": {"id": "group_work_fractions", "title": "Group Investigation", "badge": "balance"}})
 	await get_tree().process_frame
 	_scan("%s GroupCheckIn" % prefix, sc)
-	sc._dialogue.text = "Talia: \"We all agree that eighths are bigger because eight is bigger than four, but Sam has another idea and is not getting airtime.\""
+	sc._dialogue.text = _pname("talia_dominator") + ": \"We all agree that eighths are bigger because eight is bigger than four, but " + _pname("sam_withdrawn") + " has another idea and is not getting airtime.\""
 	await get_tree().process_frame
 	_scan("%s GroupCheckIn long dialogue" % prefix, sc)
 	sc.understanding = 0.82
@@ -285,6 +341,10 @@ func _audit_scene(label: String, sc: Node) -> void:
 	await get_tree().process_frame
 
 func _json(path: String) -> Dictionary:
+	# Same as the game: the current language overlay applies (the Korean pass sees Korean).
+	var loc = load("res://scripts/Content.gd").json(path)
+	if typeof(loc) == TYPE_DICTIONARY:
+		return loc
 	var f := FileAccess.open(path, FileAccess.READ)
 	var d = JSON.parse_string(f.get_as_text())
 	f.close()
@@ -318,6 +378,9 @@ func _scan(label: String, root: Node) -> void:
 			_issues.append("%s clipped: %s %s" % [label, _node_name(c), str(r)])
 		_scan_text_fit(label, c)
 		_scan_pixel_sentence(label, c)
+		if _korean:
+			_note_english(label, c)
+			_korean_text_issues(label, c)
 	var interactives := controls.filter(func(c): return _is_interactive(c) and (not _inside_scroll(c) or _visible_in_scroll(c)))
 	for i in range(interactives.size()):
 		for j in range(i + 1, interactives.size()):
@@ -523,3 +586,8 @@ func _scan_pixel_sentence(label: String, c: Control) -> void:
 	var f := c.get_theme_font("font")
 	if f != null and str(f.resource_path).contains("Galmuri"):
 		_issues.append("%s pixel-face sentence: %s \"%s\"" % [label, _node_name(c), t.left(60)])
+
+## A student's name as the game shows it in the current language (fixtures use it too).
+func _pname(pid: String) -> String:
+	var d = load("res://scripts/Content.gd").json("res://data/persona_library/%s.json" % pid)
+	return str(d.get("display_name", pid)) if typeof(d) == TYPE_DICTIONARY else pid

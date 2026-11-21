@@ -128,25 +128,32 @@ func _draw_equipped_items(pos: Vector2) -> void:
 			PixelUi.add_centered_icon(slot, tex, 3.0)
 		x += 38.0
 
+const FORMAT_NAMES := {"discussion": "Discussion", "lecture": "Lecture", "group_work": "Group Work", "independent": "Independent"}
+const SEATING_NAMES := {"ushape": "U-shape", "ushape6": "U-shape", "rows": "Rows", "rows8": "Rows", "clusters8": "Clusters"}
+
 func _refresh() -> void:
 	if _summary == null:
 		return
 	var names: Array = []
 	for r in _scenario.get("roster", []):
-		names.append(str(r.get("name", "?")))
+		# The student's name in the current language comes from their persona file.
+		var pd = load("res://scripts/Content.gd").json("res://data/persona_library/%s.json" % str(r.get("id", "")))
+		names.append(str(pd.get("display_name", r.get("name", "?"))) if typeof(pd) == TYPE_DICTIONARY else str(r.get("name", "?")))
 	var objs := ""
 	for o in _scenario.get("objectives", []):
-		objs += "  -  %s\n" % str(o.get("label", ""))
-	var src := "AI (fits your content)" if _scenario.get("persona_overrides", null) != null else "offline (from format and objectives)"
+		objs += "  -  %s\n" % tr(str(o.get("label", "")))
+	var src := tr("AI (fits your content)") if _scenario.get("persona_overrides", null) != null else tr("offline (from format and objectives)")
 	var first_move := _first_recommended_move()
 	var errors := _validate_scenario(_scenario)
-	_summary.text = "%s\n\nYour class: %d students (%s)\nThe job: keep the room with you and hear from everyone.\nTo win: check off every objective before the period ends.\nTry first: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nBuilt: %s\n\nObjectives:\n%s" % [
-		str(_scenario.get("title", "Lesson")),
-		names.size(), ", ".join(names), first_move,
-		Game.scenario_signature(_scenario),
-		Game.scenario_edge_label(_scenario),
-		str(_scenario.get("format", "?")), str(_scenario.get("arrangement", "?")),
-		int(_scenario.get("period_seconds", 120)), str(_scenario.get("badge", "")),
+	_summary.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED   # translated piece by piece here
+	_summary.text = tr("%s\n\nYour class: %d students (%s)\nThe job: keep the room with you and hear from everyone.\nTo win: check off every objective before the period ends.\nTry first: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nBuilt: %s\n\nObjectives:\n%s") % [
+		tr(str(_scenario.get("title", "Lesson"))),
+		names.size(), ", ".join(names), tr(first_move),
+		tr(Game.scenario_signature(_scenario)),
+		tr(Game.scenario_edge_label(_scenario)),
+		tr(FORMAT_NAMES.get(str(_scenario.get("format", "")), str(_scenario.get("format", "?")))),
+		tr(SEATING_NAMES.get(str(_scenario.get("arrangement", "")), str(_scenario.get("arrangement", "?")))),
+		int(_scenario.get("period_seconds", 120)), tr(str(_scenario.get("badge", "")).capitalize()),
 		src, objs]
 	if _validation != null:
 		if errors.is_empty():

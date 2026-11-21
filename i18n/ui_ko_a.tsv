@@ -1,0 +1,521 @@
+english	korean
+Click / Space  ▸	클릭 / Space  ▸
+Skip ▸▸	건너뛰기 ▸▸
+CHAPTER %d  ·  %s	%d장  ·  %s
+CHAPTER %d COMPLETE	%d장 완료
+CHAPTER %d  ·  NOT YET	%d장  ·  아직이에요
+Run it again when you're ready. Vee will be there.	준비되면 다시 해 봐요. 한 선생님이 옆에 있을 거예요.
+The school year goes on.	한 해는 계속 흘러가요.
+NEXT  ·  CHAPTER %d  ·  %s  ·  %s	다음  ·  %d장  ·  %s  ·  %s
+COACH VEE'S FOCUS  ·  	한 선생님이 정한 목표  ·  
+COACHING	코칭
+Coach Vee  ·  	한 선생님  ·  
+no moves recorded	기록된 행동이 없어요
+Last focus: %s   %s  (%d/%d)	지난 목표: %s   %s  (%d/%d)
+MET	달성
+NOT YET	아직
+You didn't make any moves this round. Next time, try one that asks a student how they're thinking.	이번 판엔 아무것도 안 했어요. 다음엔 학생한테 어떻게 생각했냐고 한번 물어봐요.
+WHAT WORKED	통한 것
+%s  ·  %s  ->  try %s	%s  ·  %s  ->  추천: %s
+TRY INSTEAD	이렇게 해 봐요
+NEXT ROUND FOCUS:  	다음 판 목표:  
+Do what worked again, on purpose.	통했던 걸, 이번엔 일부러 한 번 더.
+Try again with this focus	이 목표로 다시 하기
+Continue	계속
+Try saying:  	이렇게 말해 봐요:  
+Your level. %d more XP to the next upgrade point.	지금 레벨이에요. 다음 성장 포인트까지 %d XP 남았어요.
+   %d upgrade point%s	   성장 포인트 %d%s
+Badges %d/5	배지 %d/5
+%s badge: %s%s	%s 배지: %s%s
+  (not earned yet)	  (아직 못 받았어요)
+Skills	기술
+How each skill is going, from the moves you've made.	내가 한 행동을 보고 기술마다 얼마나 늘었는지 보여 줘요.
+Upgrade	성장
+Spend the points you get when you level up.	레벨이 오르면 받는 포인트를 여기서 써요.
+Profile	프로필
+Items	아이템
+Pick what to bring to class.	수업에 챙겨 갈 걸 골라요.
+Board	기록판
+Past runs and reports.	지난 수업 기록과 리포트를 봐요.
+Settings	설정
+Audio, text size, motion, classroom look.	소리, 글자 크기, 화면 효과, 교실 모습.
+Coach Vee:  	한 선생님:  
++  Import a lesson plan...	+  수업 계획 가져오기...
+Move: arrows or WASD. Select/talk: Z, Enter, or Space.	이동: 방향키 또는 WASD. 선택/대화: Z, Enter, Space.
+CASE	상황
+SUCCESS	성공 조건
+SCORED ON	채점 기준
+DIFFICULTY	난이도
+FIRST MOVE	먼저 해 볼 것
+Back	뒤로
+Start rehearsal	연습 시작
+Reach every student without losing the room.	교실을 놓치지 않으면서 한 명도 빠짐없이 챙겨요.
+Present a short chunk. Pause. Then Question a highlighted student before going on.	짧게 설명하고 잠깐 멈춰요. 넘어가기 전에 표시된 학생에게 질문해요.
+Sit with one table and hear what they think. Then get a quiet kid talking.	한 모둠에 앉아서 무슨 생각인지 들어 봐요. 그다음 조용한 아이가 입을 열게 해요.
+Get up and walk. Stand near whoever's drifting, then talk to them quietly.	일어나서 돌아다녀요. 딴생각하는 아이 옆에 서서 조용히 말을 걸어요.
+Ask how they got it. Wait. Then push, or say it back, but don't take over.	어떻게 풀었는지 묻고 기다려요. 그다음 더 묻거나 되말해 줘요. 대신 풀어 주지는 말고요.
+%s, from %d past moves. You're at %d%%.	%s. 지금까지 한 %d번을 보고 정했어요. 지금 %d%%예요.
+Locked	잠김
+Click to see how to unlock this mission.	누르면 이 수업을 여는 방법이 나와요.
+Earn the %s badge	%s 배지 받기
+Replay	다시 하기
+Start	시작
+CLEARED	완료
+LOCKED	잠김
+NEXT	다음
+OPEN	열림
+Badge: %s	배지: %s
+No badge	배지 없음
+Capstone	종합 실전
+%s  |  %s  |  %d learners  |  %s	%s  |  %s  |  학생 %d명  |  %s
+Focus: reach everyone without losing the room.	목표: 교실을 놓치지 않고 모두 챙기기.
+Focus: 	목표: 
+Reward: practice (no badge here)	보상: 연습 (배지 없음)
++%d XP	+%d XP
+Collected: 	받음: 
+Reward: 	보상: 
+NO UPGRADE POINTS YET	아직 성장 포인트가 없어요
+Level up by clearing missions. Each level gives you one point to put into presence, wait time, or how well you read a room.	수업을 마치면 레벨이 올라요. 한 번 오를 때마다 포인트가 1개 생기는데, 존재감이나 기다려 주기, 교실 읽는 눈에 쓸 수 있어요.
+Play the next mission to earn XP, then come back and spend the point.	다음 수업에서 XP를 모은 뒤 돌아와서 포인트를 써요.
+MISSION LOCKED	잠긴 수업
+%s opens after you earn the %s badge.	%s: %s 배지를 받으면 열려요.
+Clear the earlier mission first (the one where you %s).	앞 수업부터 마쳐요. (연습할 것: %s)
+Got it	알겠어요
+SETTINGS	설정
+No voices? Click Voice status.	목소리가 안 나오면 음성 버튼을 눌러요.
+Music	음악
+On	켬
+Off	끔
+Sound effects	효과음
+Text size	글자 크기
+Large	크게
+Normal	보통
+Motion, shake & flashes	움직임·흔들림·번쩍임
+Reduced	줄임
+Story cinematics	스토리 영상
+Classroom look	교실 모습
+Korea	한국
+Close	닫기
+LEVEL UP REWARDS	레벨 업 보상
+Upgrade Points: %d	성장 포인트: %d
+%s  Rank %d/%d\n%s	%s  %d/%d단계\n%s
+SKILL NOTEBOOK	기술 수첩
+Every move you make nudges these bars. More moves, steadier numbers.	행동 하나하나가 이 막대를 조금씩 움직여요. 많이 할수록 숫자가 덜 흔들려요.
+from your play	내 플레이 기록
+RECENT RUNS: %d saved run%s. Open Board for more.	최근 기록: %d판 저장됨%s. 더 보려면 기록판을 열어요.
+Download transcript	대화 기록 받기
+Save what you said and what the students said back, as Markdown.	내가 한 말과 학생 대답을 마크다운 파일로 저장해요.
+Talk to a student first. Nothing to save yet.	아직 저장할 게 없어요. 먼저 학생과 이야기를 나눠야 해요.
+Transcript saved	대화 기록을 저장했어요
+Download failed	저장 실패
+Could not save the transcript.	대화 기록을 저장하지 못했어요.
+%3d%%  %02d moves  +-%.2f	%3d%%  %02d번  ±%.2f
+Least-intrusive management: use the smallest move that stops it (a look, moving closer) before a word, and a word before calling it out.	최소 개입: 멈추게 할 수 있는 가장 작은 행동부터 써요. 말보다 눈빛이나 다가가기가 먼저고, 공개 지적보다 짧은 한마디가 먼저예요.
+Funds of knowledge: what a student already knows from home, family and their own interests, used as a way into the lesson.	삶의 지식: 아이가 집과 가족, 좋아하는 것에서 이미 아는 것. 이걸 수업으로 들어가는 길로 써요.
+least-intrusive, Simonsen 2008	최소 개입, Simonsen 2008
+funds of knowledge, Moll	삶의 지식, Moll
+Chapin/O'Connor moves	Chapin/O'Connor 토의 발문
+Formative checks	형성평가
+From your play	내 플레이 기록
+No runs yet. Finish a lesson and it shows up here.	아직 기록이 없어요. 수업을 하나 마치면 여기에 떠요.
+Run	기록
+LEADERBOARD / COACH REPORT	기록판 / 코칭 리포트
+Level %d  |  XP %d  |  next upgrade in %d XP	Lv %d  |  XP %d  |  다음 성장 포인트까지 %d XP
+Rank   Score   Mission                         Coach Report	등급   점수   수업                            코칭 리포트
+Clear a lesson or encounter to post your first run.	수업이나 1:1 대화를 하나 마치면 첫 기록이 올라가요.
+Lesson	수업
+LEVEL UP  	레벨 업  
+Focus 	목표 
+ | TRACE 	 | 기록 
+TRACE 	기록 
+Trace	기록
+TRACE DETAIL	수업 기록 자세히
+Equipped	챙김
+None	없음
+ITEM LOADOUT	아이템 챙기기
+Nothing here yet. You earn items by clearing missions.	아직 아무것도 없어요. 수업을 마치면 아이템이 생겨요.
+Unequip	빼기
+Equip	챙기기
+Profile: %s	프로필: %s
+Steady	차분
+Dialogue text: %s	대사 표시: %s
+Instant	한 번에
+Typewriter	한 글자씩
+manage pacing	수업 속도 조절
+get kids explaining	아이들이 직접 설명하게 하기
+share the talking	발언 고르게 나누기
+give useful feedback	쓸모 있는 피드백 주기
+handle the capstone	종합 실전 해내기
+connect to students	학생 삶과 잇기
+clear earlier lessons	앞 수업 마치기
+%s | Rank %s | Score %03d	%s | 등급 %s | 점수 %03d
+Coach focus: 	코칭 목표: 
+Turn %d | Move %s | Skill %s | %s	%d턴 | 행동 %s | 기술 %s | %s
+Move	행동
+Skill	기술
+Why: 	이유: 
+Reaction: 	반응: 
+Meter: 	수치: 
+This run is too old to have turn-by-turn notes.	오래된 기록이라 턴별 메모가 없어요.
+Next: 	다음: 
+IMPORT A LESSON PLAN	수업 계획 가져오기
+Paste a plan or load a .txt/.md. The format picks the seating, the duration sets the period.\nObjectives become goals. With AI, the students talk about your content.	수업 계획을 붙여 넣거나 .txt/.md 파일을 불러와요. 수업 형태로 자리 배치가, 수업 시간으로 진행 시간이 정해져요.\n적어 둔 목표는 그대로 수업 목표가 돼요. AI를 쓰면 학생들이 내 수업 내용으로 이야기해요.
+e.g.\nGrade: 5\nSubject: Comparing Decimals\nDuration: 45 minutes\nFormat: whole-class discussion / number talk\nObjectives: compare decimals by place value...	예:\n학년: 5\n과목: 소수의 크기 비교\n수업 시간: 45분\n수업 형태: 전체 토의 / 수 이야기\n목표: 자릿값으로 소수의 크기 비교하기...
+Use sample	예시 쓰기
+Load file	파일 불러오기
+Generate (offline)	만들기 (오프라인)
+Generate with AI	AI로 만들기
+*.txt, *.md ; Lesson plan (text)	*.txt, *.md ; 수업 계획 (텍스트)
+Loaded the sample plan.	예시 계획을 불러왔어요.
+Loaded %s	%s 파일을 불러왔어요.
+Paste or load a lesson plan first (a few lines is enough).	먼저 수업 계획을 붙여 넣거나 불러와요. 몇 줄이면 돼요.
+Paste or load a lesson plan first.	먼저 수업 계획을 붙여 넣거나 불러와요.
+Asking the AI...	AI에게 묻는 중…
+Couldn't reach the AI. Building it offline.	AI에 연결이 안 돼요. 오프라인으로 만들게요.
+Done. Your lesson is ready.	다 됐어요. 수업이 준비됐어요.
+Couldn't reach the AI, so it was built offline.	AI에 연결이 안 돼서 오프라인으로 만들었어요.
+Practice the moments you can't plan.	계획대로 안 되는 순간까지, 미리 연습해요.
+Play	바로 하기
+Sign in with your class	우리 반으로 로그인
+%s sign in	%s 로그인
+Class code	반 코드
+e.g. UA-CAT531-SUMMER26	예: UA-CAT531-SUMMER26
+Your name	이름
+First Last	홍길동
+Course passcode	수업 암호
+enter course passcode	수업 암호 입력
+Sign in / Join	로그인 / 참여
+Sign in to %s	%s 로그인하기
+Enter your name and the course passcode.	이름과 수업 암호를 입력해요.
+Voice is off	음성 꺼짐
+Enter your name and course passcode.	이름과 수업 암호를 넣어 주세요.
+Enter your class code, name, and passcode.	반 코드, 이름, 암호를 입력해요.
+Signing in...	로그인 중…
+REVIEW & ADJUST	확인하고 고치기
+Remove a student	학생 한 명 빼기
+Play this lesson	이 수업 하기
+Loadout	챙길 아이템
+AI (fits your content)	AI (내 수업 내용에 맞춤)
+offline (from format and objectives)	오프라인 (수업 형태와 목표로 만듦)
+%s\n\nYour class: %d students (%s)\nThe job: keep the room with you and hear from everyone.\nTo win: check off every objective before the period ends.\nTry first: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nBuilt: %s\n\nObjectives:\n%s	%s\n\n우리 반: 학생 %d명 (%s)\n할 일: 교실을 붙잡고, 모두의 생각을 들어요.\n통과하려면: 수업 시간이 끝나기 전에 목표를 전부 채워요.\n먼저 해 볼 것: %s\n%s\n%s\n\n수업 형태: %s     자리 배치: %s     수업 시간: %d초     배지: %s\n만든 방식: %s\n\n목표:\n%s
+Looks good. Ready to play.	문제없어요. 바로 할 수 있어요.
+Fix before playing: 	하기 전에 고칠 것: 
+Present a short chunk, wait, then Question a highlighted student.	짧게 설명하고 기다린 다음, 표시된 학생에게 질문해요.
+Visit one pod, Listen, Surface, then Redistribute airtime.	한 모둠에 가서 듣고, 생각을 끌어낸 다음, 발언을 고르게 나눠요.
+Walk the room first, then confer with whoever's drifting.	먼저 교실을 돌고, 딴생각하는 아이와 따로 이야기해요.
+Talk to one student, Elicit their thinking, then Wait before you push.	한 아이와 이야기하며 생각을 묻고, 더 묻기 전에 기다려 줘요.
+missing %s	%s 없음
+unknown format	알 수 없는 수업 형태
+unknown mode	알 수 없는 모드
+needs at least 2 students	학생이 2명 이상 있어야 해요
+each student needs an id	학생마다 id가 있어야 해요
+persona override incomplete for %s	%s 학생 설정이 덜 채워졌어요
+needs objectives	목표가 있어야 해요
+period too short	수업 시간이 너무 짧아요
+Reach every student (%d)	모든 학생 챙기기 (%d명)
+Elicit	생각 묻기
+You asked instead of telling. Now you can see their thinking and teach to it.	알려 주지 않고 물었어요. 이제 아이 생각이 보이니까 거기에 맞춰 가르치면 돼요.
+The question came before they were ready, so it didn't open anything up.	준비도 안 됐는데 물어서 생각이 안 나왔어요.
+\"Walk me through how you got that.\"	\"어떻게 그렇게 됐는지 차근차근 말해 줄래?\"
+Extend	더 묻기
+You pushed on an idea that was already out there. That's how a partial answer turns into an argument.	이미 나온 생각을 더 파고들었어요. 반쪽짜리 답이 근거 있는 주장으로 자라는 게 이런 순간이에요.
+You pushed before there was an idea on the table to push on.	파고들 생각이 아직 안 나왔는데 먼저 밀어붙였어요.
+\"Say more. Why does that work?\"	\"조금 더 말해 볼래? 왜 그렇게 되지?\"
+Revoice	되말하기
+You said their idea back to them in clearer words, and they kept ownership of it.	아이 생각을 더 또렷한 말로 돌려줬어요. 생각 주인은 여전히 그 아이고요.
+You restated an idea nobody had actually said yet.	아직 아무도 안 한 말을 되말했어요.
+\"So you're saying... did I get that right?\"	\"그러니까 네 말은… 선생님이 제대로 알아들은 거 맞아?\"
+Tell	설명하기
+You gave a direct explanation at a point where they needed it.	꼭 필요한 순간에 바로 설명해 줬어요.
+You gave the answer, and their reasoning never came out. Now you don't know what they understand.	답을 먼저 줘 버려서 아이 생각은 끝내 안 나왔어요. 이제 뭘 이해했는지 알 길이 없어요.
+\"Before I show you, what's your hunch, and why?\"	\"선생님이 보여 주기 전에, 네 짐작은 뭐야? 왜 그렇게 생각해?\"
+Praise	칭찬하기
+You named exactly what they did, so they know what to do again.	아이가 한 행동을 콕 집어 말해 줘서, 다음에 뭘 또 하면 되는지 알아요.
+That praise was about them, not what they did. It doesn't tell them anything.	아이가 한 일 말고 아이 자체를 칭찬했어요. 그러면 뭘 잘했는지 모르고 지나가요.
+\"You checked your answer against the picture. That's exactly what I want to see.\"	\"그림이랑 맞춰 보면서 답을 확인했구나. 선생님이 보고 싶던 게 딱 그거야.\"
+Connect	삶과 잇기
+You tied the lesson to something from their own life. Now you have something to build on.	수업을 아이 생활 속 경험과 이었어요. 이제 그걸 발판 삼아 쌓아 가면 돼요.
+The connection felt forced because you didn't know enough about them yet.	아이를 아직 잘 몰라서 연결이 억지스러웠어요.
+\"Where have you seen something split into equal parts before?\"	\"똑같이 나누는 거, 전에 어디서 본 적 있어?\"
+Redirect	주의 돌리기
+Quiet redirect, right size. The lesson kept going.	조용하게, 딱 필요한 만큼 주의를 돌렸어요. 수업도 안 끊겼고요.
+The redirect was stronger than the moment called for. Try a quieter step first.	그 순간에 필요한 것보다 세게 나갔어요. 더 조용한 단계부터 써요.
+(Move closer, make eye contact, then a quiet: \"Pencil on problem two, please.\")	(다가가서 눈을 맞추고 조용히: \"2번 문제부터 풀자.\")
+Wait	기다려 주기
+You held the silence. That time is where their thinking happened.	침묵을 견뎠어요. 아이 생각은 바로 그 시간에 자라요.
+You moved on before the thinking time was over.	생각할 시간이 끝나기도 전에 넘어갔어요.
+(Count three in your head. Then: \"Take your time.\")	(속으로 셋을 세요. 그다음: \"천천히 해도 돼.\")
+Present	제시하기
+You kept it short, so the room could keep up.	짧게 끊어서 반 전체가 따라왔어요.
+Too many Presents in a row. You were talking into confusion you couldn't see.	제시하기만 계속 이어졌어요. 아이들이 헷갈리는 걸 못 본 채 혼자 말한 셈이에요.
+(One idea, under a minute. Then stop and check.)	(개념 하나를 1분 안에. 그다음 멈추고 확인해요.)
+Question	질문하기
+You asked at the right moment, so their answer showed you what they understood.	딱 맞는 때에 물어서, 대답만 듣고도 뭘 이해했는지 보였어요.
+You asked while they were still confused. It showed the confusion but didn't fix it.	아직 헷갈려할 때 물었어요. 헷갈림은 드러났지만 풀리진 않았어요.
+\"Who can explain why the denominator names the parts?\"	\"분모를 보면 전체를 몇 조각으로 나눴는지 알 수 있지? 왜 그런지 설명해 볼 사람?\"
+Repair	다시 설명하기
+You noticed confusion and fixed it before moving on.	헷갈리는 걸 알아채고, 넘어가기 전에 풀어 줬어요.
+You re-explained when there wasn't much confusion to fix.	헷갈린 아이가 별로 없는데 다시 설명했어요.
+\"Let me show it a different way, with the fraction strips.\"	\"이번엔 분수 막대로 다르게 보여 줄게.\"
+Check	확인하기
+You checked the whole room. Now you know instead of guessing.	반 전체를 확인했어요. 이제 짐작 대신 알고 가요.
+The check didn't lead to anything. Use what it shows you.	확인만 하고 끝났어요. 확인해서 보인 걸 써먹어요.
+\"Thumbs up, sideways, or down: which fraction is bigger, 1/3 or 1/4?\"	\"3분의 1이랑 4분의 1 중에 뭐가 더 커? 자신 있으면 엄지 위, 애매하면 옆, 모르겠으면 아래.\"
+Observe	지켜보기
+You watched before stepping in, so your next move fit the group.	끼어들기 전에 지켜봐서 다음 행동이 그 모둠에 맞았어요.
+You watched for too long. The mistake was already out there.	너무 오래 지켜봤어요. 실수는 벌써 다 드러나 있었어요.
+(Stand back, listen for 20 seconds, then step in.)	(한 발 물러서서 20초 듣고, 그다음 들어가요.)
+Probe	근거 묻기
+Your question got the group's mistake out where you could see it.	질문 하나로 모둠이 잘못 생각한 게 드러났어요.
+You probed a group that had already shown its thinking.	이미 생각을 다 보여 준 모둠에 또 캐물었어요.
+\"How did you all decide that?\"	\"너희 그거 어떻게 정했어?\"
+Press	더 파고들기
+You pressed on the shared mistake once everyone could see it.	다 같이 잘못 생각한 게 모두 눈에 보이고 나서 파고들었어요.
+You pressed before the mistake was out in the open. Probe first.	실수가 드러나기도 전에 파고들었어요. 근거부터 물어요.
+\"Eight is bigger than four, but is an eighth bigger than a fourth?\"	\"8이 4보다 크긴 한데, 그럼 8분의 1도 4분의 1보다 클까?\"
+Redistribute	발언 넘기기
+You gave the floor to a quieter voice. That changes who gets to think out loud.	조용하던 아이에게 말할 기회를 줬어요. 소리 내어 생각하는 사람이 바뀌어요.
+Everyone was already getting a turn, so there was nothing to rebalance.	이미 다들 돌아가며 말하고 있어서 나눌 게 없었어요.
+\"Sam, what do you think about Talia's idea?\"	\"시우야, 예린이 말 들어 보니까 어때?\"
+You used %s %d times and it didn't land. The move's fine. It's how you're using it. Look at the example below.	%s, %d번 했는데 안 통했어요. 행동 자체는 괜찮아요. 쓰는 방식이 문제예요. 아래 예시를 봐요.
+You fell back on %s %d times and it didn't land. Next time, try %s instead.	%s만 %d번 붙잡았는데 안 통했어요. 다음엔 %s 쪽으로 가요.
+%d of %d moves landed	통한 행동 %d / 전체 %d
+%s: you took \"%s\".	%s: \"%s\" 길로 갔어요.
+  Also works: 	  이것도 돼요: 
+Turn %d	%d턴
+, with %s	, 상대: %s
+That move works for %s, just not yet. Set it up first.	%s한테 맞는 행동인데 아직 때가 아니에요. 밑작업부터 해요.
+this student	이 아이
+ first	부터
+Make %d %s moves land this time.	이번엔 %d번 통하게 해 봐요: %s
+Talia	예린
+Sam	시우
+Diego	민호
+Jordan	지훈
+Priya	하은
+Noah	도윤
+Mei-Lin	수아
+Deshawn	준서
+Riley	유진
+Marcus	태민
+Keep attention at 65%+	집중도 65% 이상 유지
+Finish with composure at 50%+	평정심 50% 이상으로 마치기
+At most 3 disruptions	소란 3번 이하
+Use wait time at least 2 times	기다려 주기 2번 이상
+Imported Lesson	가져온 수업
+Lecture	강의식 수업
+Group Work	모둠 활동
+Independent Work	개별 활동
+Discussion	토의 수업
+A short mini-lesson. Easy to lose them unless you keep checking who's still with you.	짧은 설명 수업이에요. 누가 아직 따라오는지 계속 보지 않으면 금방 놓쳐요.
+Groups are working and materials are everywhere. Find out what each group thinks before one kid takes over.	모둠마다 활동 중이고 준비물이 여기저기 널려 있어요. 한 아이가 다 가져가기 전에 모둠마다 무슨 생각인지 알아봐요.
+It looks quiet. Walk the room anyway and catch the confusion early.	조용해 보여도 교실을 한 바퀴 돌아요. 헷갈리는 아이를 일찍 찾아야 해요.
+Everyone has an idea about %s. Get those ideas out where the class can test them.	%s, 다들 나름 생각이 있어요. 그 생각을 꺼내서 반 전체가 따져 보게 해요.
+Student	학생
+you cut off their thinking time	생각할 시간을 끊었어요
+the pause was under three seconds	3초도 안 기다렸어요
+same move twice in a row, so it landed softer	같은 행동을 두 번 연달아 해서 효과가 줄었어요
+right idea, too early: first %s	방향은 맞는데 너무 일러요. 먼저: %s
+ or 	 또는 
+Grade	등급
+Moments that decided it	결과를 가른 순간
+Nothing landed before the bell.	종이 칠 때까지 통한 게 없었어요.
+Next time	다음에는
+Earned	받은 것
+Lv %d  +1 upgrade	Lv %d  성장 포인트 +1
+Nothing this time.	이번엔 없어요.
+Clean run. Nothing to fix.	깔끔했어요. 고칠 게 없어요.
+Really good. A little room left in %s.	아주 좋아요. %s 쪽만 조금 더 다듬으면 돼요.
+Solid. %s held the score back a little.	탄탄해요. %s 쪽에서 점수가 조금 깎였어요.
+You got there the long way. %s is the thing to practice.	돌고 돌아 해냈어요. 연습할 건 %s 쪽이에요.
+%s pulled the score down. Start there.	%s 쪽에서 점수가 많이 깎였어요. 거기부터 해요.
+Light	조금
+Partial	일부
+Full	전부
+You're new to this, so all the help is on	처음이라 도움을 다 켰어요
+Still learning this (%d%%), so all the help is on	아직 익히는 중이라(%d%%) 도움을 다 켰어요
+Getting there (%d%%), so some help is off	감이 오고 있어서(%d%%) 도움을 조금 껐어요
+Pretty solid (%d%%), so you read the student yourself	꽤 탄탄해서(%d%%) 학생은 직접 읽어 봐요
+Solid (%d%% over %d moves), so the help is off	탄탄해서(%d%%, %d번 기준) 도움을 껐어요
+Support: Coach Vee stepped in	도움: 한 선생님이 나섰어요
+Support: %s	도움: %s
+cut off	말을 끊었어요
+...oh. Never mind.	…아. 아니에요.
+Proximity	다가가기
+Nonverbal	눈빛·몸짓
+Brief word	짧은 한마디
+Public correction	공개 지적
+Confused	헷갈려 함
+Gets it	이해함
+Withdrawn	움츠러듦
+Distracted	딴짓함
+LANDED	통함
+TOO EARLY	일러요
+NOTED	기록함
+Sign-in isn't set up yet.	아직 로그인을 쓸 수 없어요.
+Sign-in didn't work. Check your name and passcode.	로그인이 안 됐어요. 이름과 암호를 확인해 봐요.
+Eliciting	생각 끌어내기
+Extending	생각 넓히기
+Low-key redirects	최소 개입
+Group monitoring	모둠 살피기
+Noticing	학생 읽기
+The test: several kids need you at once, and the room won't wait.	관건: 여러 아이가 한꺼번에 나를 찾아요. 교실은 기다려 주지 않고요.
+The test: keep the talking short and keep checking who's with you.	관건: 설명은 짧게, 누가 따라오는지는 계속 확인하기.
+The test: read each table, and don't let one kid do all the talking.	관건: 모둠마다 분위기를 읽고, 한 아이가 말을 독차지하지 못하게 하기.
+The test: get up, walk the rows, talk to kids one at a time.	관건: 일어나서 줄 사이를 돌며 한 명씩 말 걸기.
+The test: run the room and still hear each student's thinking.	관건: 교실을 이끌면서도 아이 한 명 한 명 생각을 놓치지 않기.
+Scored: the whole class at once, all of them live.	채점: 반 전체를 한꺼번에, 실시간으로.
+Scored: how each group reasons, and who gets to talk.	채점: 모둠마다 어떻게 추론하는지, 누가 말할 기회를 얻는지.
+Scored: how often you stop talking and check.	채점: 얼마나 자주 말을 멈추고 확인하는지.
+Scored: how long you wait, who you call on, what you catch.	채점: 얼마나 기다리는지, 누구를 부르는지, 무엇을 알아채는지.
+Scored: each move, against the skill it practices.	채점: 행동마다, 그 행동이 연습하는 기술에 비춰서.
+Start with %s. Wait longer than feels normal, and get everyone talking.	%s부터 시작해요. 생각보다 오래 기다리고, 모두가 말하게 해요.
+Try %s next. Work on %s. You're at %d%% after %d moves.	다음은 %s 차례예요. %s 쪽을 연습해요. 지금 %d%%예요(%d번 기준).
+your weak spot	약한 부분
+Starting with extra help	도움을 더 받고 시작
+Starting harder	더 어렵게 시작
+Starting at normal	보통으로 시작
+Practice target: finish one mission first. Then you'll get a real one.	연습 목표: 먼저 수업 하나를 마쳐요. 그래야 제대로 된 목표가 나와요.
+Practice target: you haven't tried %s yet. Try: %s.	연습 목표: %s, 아직 안 해 봤어요. 해 볼 것: %s.
+Practice target: %s is your weakest spot (%d%% after %d moves). Try: %s.	연습 목표: 제일 약한 곳은 %s(%d%%, %d번 기준). 해 볼 것: %s.
+Practice: %s %d%% -> %s	연습: %s %d%% -> %s
+the pause gave more kids a way in	기다려 준 덕에 더 많은 아이가 말을 꺼냈어요
+they trust you a little more now	나를 조금 더 믿게 됐어요
+a quieter kid got the floor	조용한 아이가 말할 기회를 얻었어요
+the mix-up came out where you can teach it	헷갈린 부분이 드러나서 가르칠 수 있게 됐어요
+right move for what they needed	필요한 걸 정확히 짚었어요
+you gave the answer, so they stopped thinking	답을 줘 버려서 생각이 멈췄어요
+pushed before the group had settled on an idea	모둠 생각이 모이기도 전에 밀어붙였어요
+didn't fit yet. Go smaller, or wait a beat	아직 안 맞았어요. 더 작게 가거나 잠깐 기다려요
+That one fit.	딱 맞았어요.
+You told them before they'd worked it out.	아이들이 풀기도 전에 알려 줬어요.
+Not what they needed most right then.	그때 제일 필요한 건 아니었어요.
+ask how they got it before you say if it's right	맞는지 말하기 전에 어떻게 풀었는지 먼저 묻기
+ask for another way to show it, or a 'because'	다른 방법으로 보여 달라거나 '왜냐하면'을 붙여 달라고 하기
+say their idea back in your words, then check you got it	아이 생각을 내 말로 되말하고, 제대로 알아들었는지 확인하기
+after you ask, wait. Longer than feels okay	물어본 다음엔 기다리기. 좀 불편할 만큼 오래
+walk over or give a quiet cue before anything louder	더 크게 나서기 전에 다가가거나 조용히 신호 주기
+hold the answer back and hint at the next step	답은 아껴 두고 다음 단계만 살짝 알려 주기
+name exactly what they did that you want again	다시 했으면 하는 행동을 콕 집어 말하기
+tie the task to something from their own life	과제를 아이 생활 속 경험과 잇기
+watch the table first so you know where they're stuck	먼저 모둠을 지켜보고 어디서 막혔는지 알기
+have a few students show their work. A thumbs-up won't tell you much	몇 명에게 풀이를 직접 보여 달라고 하기. 엄지만 봐서는 잘 몰라요
+hand the floor to a quiet student who knows their stuff	잘 아는데 조용한 아이에게 발언 넘기기
+why?	왜?
+another way	다른 방법
+revoice then check	되말하고 확인
+hold the pause	침묵 견디기
+quiet cue	조용한 신호
+hint, don't tell	답 대신 힌트
+specific praise	구체적 칭찬
+their world	아이 삶과 잇기
+watch first	먼저 지켜보기
+show me	풀이 보여 주기
+share the floor	발언 나누기
+make one move that fits	맞는 행동 하나 하기
+Wait-time	기다려 주기
+Redirects	최소 개입
+Monitoring	모둠 살피기
+the capstone again	종합 실전 한 번 더
+Base	기본
+No bonus. Just you and the class.	보너스 없음. 나와 우리 반뿐이에요.
+Steady Lead	차분한 리더
+Extra composure, plus tools for keeping order.	평정심이 넉넉하고, 질서 잡는 도구를 챙겨 가요.
+Deep Listener	잘 듣는 교사
+Listen	경청
+Starts with the profile card and noticing tools.	학생 카드와 관찰 도구를 들고 시작해요.
+Equity Scout	고른 발언 지킴이
+Equity	고른 발언
+Geared for wait time and sharing the floor.	기다려 주기와 발언 나누기에 맞춘 구성이에요.
+Steady Presence	흔들림 없는 존재감
++10 max Composure each rank.	단계마다 최대 평정심 +10.
+Wait Mastery	기다림 달인
+Wait time counts 0.25s sooner each rank.	단계마다 기다려 주기가 0.25초 더 빨리 인정돼요.
+Relationship Sense	관계 감각
+Kids start out a little warmer to you.	아이들이 처음부터 조금 더 살갑게 대해요.
++%d Composure	평정심 +%d
+Wait window -%.1fs	기다림 인정 시간 -%.1f초
++%d%% starting rapport	시작 신뢰 +%d%%
+No bonus, no starting items	보너스 없음, 시작 아이템 없음
+Practice	연습
+Nothing yet	아직 없음
+Clear a mission so Coach Vee has something to go on.	수업을 하나 마쳐야 한 선생님이 봐 줄 게 생겨요.
+Focus	목표
+Lesson Map	수업 지도
+Map	지도
+See the lesson's steps.	수업 단계를 봐요.
+Breathing Reset	숨 고르기
+Breathe	숨
+Breathe. Get composure back.	숨을 고르고 평정심을 되찾아요.
+Student Profile Card	학생 카드
+Learn what one student needs.	한 아이에게 뭐가 필요한지 알아봐요.
+Quiet Signal	조용한 신호
+Signal	신호
+Settle the room with a cue.	신호 하나로 교실을 가라앉혀요.
+Noticing Lens	관찰 돋보기
+Notice	관찰
+Points out what to notice.	눈여겨볼 걸 짚어 줘요.
+Equity Snapshot	발언 현황
+See who hasn't talked yet.	아직 말 안 한 아이가 보여요.
+Wait Meter Pin	기다림 타이머
+Makes sure you really wait.	정말 기다렸는지 챙겨 줘요.
+Practice Goal Card	연습 목표 카드
+Goal	목표
+Pick one goal for bonus XP.	목표 하나를 고르면 보너스 XP를 받아요.
+Okay, um... so how I was thinking was...	아, 음… 그러니까 제가 생각한 건요…
+You asked how they got it instead of fixing it. Now press on the weak spot.	고쳐 주지 않고 어떻게 풀었는지 물었네요. 이제 흔들리는 데를 더 물어봐요.
+Hmm. Wait. Now I'm not sure.	음… 잠깐만요. 이제 잘 모르겠어요.
+Good push. They're working it out on their own.	한 번 더 물은 게 통했어요. 혼자 답을 찾아가고 있어요.
+Yeah. That's what I meant.	네, 그거요. 제 말이 그거예요.
+Saying it back builds trust and puts their idea in the room. New teachers skip this one.	되말해 주니까 믿음이 생기고, 그 아이 생각이 반 전체에 들려요. 초임 때 많이들 건너뛰는 거예요.
+Oh. Okay, I guess.	아… 네. 그런가 봐요.
+You did the thinking for them, and they checked out. Sometimes you have to. Ask first.	생각을 대신 해 줬더니 아이가 손을 놨어요. 그래야 할 때도 있지만, 먼저 물어봐요.
+Name what they actually did. Plain 'good job' barely moves anything.	아이가 실제로 한 걸 짚어서 말해요. 그냥 '잘했어'로는 거의 안 움직여요.
+Okay, sorry.	아, 네… 죄송해요.
+Quietest fix first. Walk over, or give a look, before you say anything.	제일 조용한 방법부터요. 말하기 전에 다가가거나 눈빛을 줘요.
+...oh wait. Maybe I had it backwards?	…어? 잠깐만요. 제가 거꾸로 생각했나?
+The wait worked. They filled the quiet with their own thinking. Three to five seconds.	기다린 게 통했어요. 그 조용한 틈을 아이가 자기 생각으로 채웠어요. 3초에서 5초면 돼요.
+You jumped in too soon. Hold it at least three seconds.	너무 빨리 끼어들었어요. 적어도 3초는 참아요.
+Pick a teaching move.	수업 행동을 하나 골라요.
+  (Maybe not the move this student needs. Check the goal up top.)	  (이 아이한테 필요한 행동이 아닐 수도 있어요. 위에 있는 목표를 봐요.)
+LOADING REHEARSAL	연습 준비 중
+Voice: Off (demo)	음성: 끔 (체험판)
+Voice: On	음성: 켬
+Voice: Off	음성: 끔
+Voice is off in the public demo. Use a voice passcode to turn it on.	공개 체험판에서는 음성이 꺼져 있어요. 음성 암호를 넣으면 켤 수 있어요.
+Voice is on. The Sound switch mutes effects and student voices together.	음성이 켜져 있어요. 효과음 스위치를 끄면 효과음과 학생 목소리가 같이 꺼져요.
+Voice isn't set up on this server.	이 서버에는 음성이 준비돼 있지 않아요.
+Elicit student reasoning	학생에게 생각 묻기
+Extend student thinking	학생 생각 더 넓히기
+Revoice the student's idea	학생 생각 되말하기
+Wait and protect thinking time	기다려 주며 생각할 시간 지키기
+Redirect with the least intrusive move	가장 작은 행동으로 주의 돌리기
+Tell or explain directly	직접 설명하기
+Use behavior-specific praise	행동을 짚어 구체적으로 칭찬하기
+Connect to a learner asset or context	학생 삶의 경험과 잇기
+Observe the group before intervening	끼어들기 전에 모둠 지켜보기
+Probe the group's reasoning	모둠에 근거 묻기
+Redistribute participation	발언 고르게 나누기
+Press the group for deeper reasoning	모둠 생각 더 파고들기
+Ask the class to reason	반 전체에 생각 묻기
+Re-explain using another approach	다른 방법으로 다시 설명하기
+Run a whole-class check	반 전체 이해 확인하기
+Present the next part of the lesson	다음 내용 제시하기
+Teacher move	교사 행동
+# Chalk & Chance Conversation Transcript	# Chalk & Chance 대화 기록
+- Session: `%s`	- 세션: `%s`
+- Exported: %s	- 저장한 때: %s
+- Scenario(s): %s	- 수업: %s
+> Your moves and the students' replies from this session. No telemetry or account data.	> 이번 세션에서 내가 한 행동과 학생 대답이에요. 텔레메트리나 계정 정보는 들어 있지 않아요.
+Nothing recorded yet this session.	이번 세션에는 아직 기록이 없어요.
+## Turn %d	## %d턴
+Teacher	교사
+ move (%s)	 행동 (%s)
+**Coach note:** 	**한 선생님 메모:** 
+**How it went:** %s	**결과:** %s
+That move fit.	맞는 행동이었어요.
+Worth trying a different move here.	여기선 다른 행동을 해 볼 만해요.
+The browser blocked the download.	브라우저가 다운로드를 막았어요.
+Could not create the transcript file.	대화 기록 파일을 만들지 못했어요.
+Voice input is not available in this browser.	이 브라우저에서는 음성 입력을 쓸 수 없어요.
+Voice input is not supported in this browser.	이 브라우저는 음성 입력을 지원하지 않아요.

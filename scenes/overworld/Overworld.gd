@@ -1,4 +1,5 @@
 extends Node2D
+const Content = preload("res://scripts/Content.gd")
 ## Top-down classroom (US-style rows of individual desks; students seated facing the
 ## viewer with a desk in front). Exposes walkability + NPC lookup for the grid-moving
 ## Player. See GAME_CONCEPT.md sections 3.1 and 9.1.
@@ -241,7 +242,7 @@ func _load_scenario(id: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
@@ -967,7 +968,7 @@ func _set_objectives_open(open: bool, toast: bool) -> void:
 
 func _refresh_objective_toggle() -> void:
 	if _objective_toggle != null:
-		_objective_toggle.text = "Objectives %d/%d  [O] %s" % [_last_objectives_met, _objectives.size(), "hide" if _objectives_open else "show"]
+		_objective_toggle.text = "Objectives %d/%d  [O] %s" % [_last_objectives_met, _objectives.size(), tr("hide") if _objectives_open else tr("show")]
 
 func _process(delta: float) -> void:
 	if _player == null:
@@ -1175,7 +1176,7 @@ func _show_ladder_card(ev: Dictionary) -> void:
 	for opt in opts:
 		var tier := int(opt.get("tier", 1))
 		var b := Button.new()
-		b.text = str(opt.get("label", "")).format({"a": str(_npcs[who[0]].get("display_name", "")) if not who.is_empty() else tr("you")})
+		b.text = tr(str(opt.get("label", ""))).format({"a": str(_npcs[who[0]].get("display_name", "")) if not who.is_empty() else tr("you")})
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		for st2 in ["normal", "hover", "pressed", "disabled", "focus"]:
 			var sb: StyleBoxTexture = (UiKit.board_button(st2) if st2 != "focus" else UiKit.button("focus")).duplicate()
@@ -1424,16 +1425,16 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 	for o in _objectives:
 		if not _objective_met(o, attention):
 			missed.append(o)
-	var miss_names: Array = missed.map(func(o): return _objective_short_label(o))
+	var miss_names: Array = missed.map(func(o): return tr(_objective_short_label(o)))
 	var reached := _engaged_count()
 	var back := int(round(_back_secs))
 	var parts := [
 		{"label": "Objectives", "frac": float(stars) / n, "value": "%d/%d" % [stars, _objectives.size()],
-			"cause": "all cleared" if missed.is_empty() else "missed: " + ", ".join(miss_names)},
+			"cause": tr("all cleared") if missed.is_empty() else tr("missed: ") + ", ".join(miss_names)},
 		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
 			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept moving and kept facing them"},
 		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
-			"cause": tr("you heard %d of %d students explain their thinking") % [reached, _npcs.size()]},
+			"cause": tr("you heard {reached} of {total} students explain their thinking").format({"reached": reached, "total": _npcs.size()})},
 	]
 	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
 	var best := _objectives.size() * 80 + 200 + _npcs.size() * 10
@@ -1444,18 +1445,18 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		title += "  ·  replay #%d (they drift faster each time)" % _attempt
 	var next := "Want more? Hear from every student and keep attention over 90%."
 	if not missed.is_empty():
-		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Go again with this one in mind.")) + " " + tr("It goes first on your list next time (+%d XP).") % Tuning.RETRY_XP_BONUS
+		next = tr(str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Go again with this one in mind."))) + " " + tr("It goes first on your list next time (+%d XP).") % Tuning.RETRY_XP_BONUS
 	return {
 		"title": title,
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"])),
 		"parts": parts,
 		"rewards": {"badge": _badge if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear" if bool(reward.get("badge_new", false)) else "Mission badge",
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", 0)), "items": reward.get("items_awarded", {}),
-			"none": ("You already have the %s badge." % _badge.capitalize()) if not reward.is_empty()
-				else ("Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "This mission has no badge.")},
+			"none": (tr("You already have the %s badge.") % tr(_badge.capitalize())) if not reward.is_empty()
+				else (tr("Clear every objective to earn the %s badge.") % tr(_badge.capitalize()) if _badge != "" else "This mission has no badge.")},
 		"moments": _classroom_moments(back),
 		"next": next,
 	}
@@ -1474,15 +1475,15 @@ func _classroom_moments(back: int) -> Array:
 	if moves.is_empty():
 		out.append({"kind": "wrong", "text": "No conferences  ->  you never heard anyone's thinking  ->  get at least one to explain."})
 	if hit >= 0:
-		out.append({"kind": "right", "text": "Move %d  %s  ->  it was what they needed  ->  they got further." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
+		out.append({"kind": "right", "text": "Move %d  %s  ->  it was what they needed  ->  they got further." % [hit + 1, tr(str(moves[hit].get("tag", "")).capitalize())]})
 	if off >= 0:
 		var why := "you didn't give them three seconds first" if not bool(moves[off].get("wait_ok", false)) else "it wasn't what they needed yet"
 		out.append({"kind": "early" if not bool(moves[off].get("wait_ok", false)) else "wrong",
-			"text": "Move %d  %s  ->  didn't land  ->  %s." % [off + 1, str(moves[off].get("tag", "")).capitalize(), why]})
+			"text": "Move %d  %s  ->  didn't land  ->  %s." % [off + 1, tr(str(moves[off].get("tag", "")).capitalize()), tr(why)]})
 	if back >= 10:
 		out.append({"kind": "early", "text": "%ds facing the board  ->  they drifted twice as fast  ->  look back as you write." % back})
 	elif _disruptions > 0:
-		out.append({"kind": "wrong", "text": "%d flare-up%s  ->  someone who'd drifted blew up  ->  get there before the bar goes red." % [_disruptions, "" if _disruptions == 1 else "s"]})
+		out.append({"kind": "wrong", "text": (tr("%d flare-up  ->  someone who'd drifted blew up  ->  get there before the bar goes red.") if _disruptions == 1 else tr("%d flare-ups  ->  someone who'd drifted blew up  ->  get there before the bar goes red.")) % _disruptions})
 	return out
 
 func _reflection_options(attention: float) -> Array:
@@ -1562,7 +1563,7 @@ const OBJ_SKILL := {
 func _objectives_status(attention: float) -> String:
 	if _objectives.is_empty():
 		return ""
-	var lines := ["Objectives  %d/%d" % [_objectives_met_count(attention), _objectives.size()]]
+	var lines := [tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()]]
 	for o in _objectives:
 		var metric := str(o.get("metric", ""))
 		var target := int(o.get("target", 0))
@@ -1584,7 +1585,7 @@ func _objectives_status(attention: float) -> String:
 		var mark := "OK" if ok else "  "
 		# A2: each objective names the teaching skill it practises, then the rule and count.
 		var focus_tag := tr("RETRY FOCUS  ") if bool(o.get("retry", false)) else ""
-		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, str(OBJ_SKILL.get(metric, "Practice")), current, target, str(o.get("label", metric))])
+		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, tr(str(OBJ_SKILL.get(metric, "Practice"))), current, target, tr(str(o.get("label", metric)))])
 	return "\n".join(lines)
 
 func _objectives_met_count(attention: float) -> int:

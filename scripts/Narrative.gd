@@ -1,4 +1,5 @@
 extends RefCounted
+const Content = preload("res://scripts/Content.gd")
 ## Loads data/narrative/chapters.json and resolves speakers to name/colour/portrait.
 
 const PATH := "res://data/narrative/chapters.json"
@@ -6,7 +7,7 @@ static var _data: Dictionary = {}
 
 static func _load() -> Dictionary:
 	if _data.is_empty() and FileAccess.file_exists(PATH):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(PATH))
+		var parsed = Content.localize(PATH, JSON.parse_string(FileAccess.get_file_as_string(PATH)))
 		if typeof(parsed) == TYPE_DICTIONARY:
 			_data = parsed
 	return _data

@@ -1,4 +1,5 @@
 extends Control
+const Content = preload("res://scripts/Content.gd")
 const BrandLogo = preload("res://scripts/BrandLogo.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Mission-select hub. Lists the scenarios from Game.SCENARIOS (reading each JSON for its
@@ -57,7 +58,8 @@ func _build() -> void:
 	var xp_txt := Label.new()
 	xp_txt.text = "%d / %d XP" % [GameState.teacher_xp, GameState.xp_for_level(GameState.teacher_level + 1)]
 	if GameState.upgrade_points > 0:
-		xp_txt.text += "   %d upgrade point%s" % [GameState.upgrade_points, "" if GameState.upgrade_points == 1 else "s"]
+		var pts := tr("%d upgrade point") if GameState.upgrade_points == 1 else tr("%d upgrade points")
+		xp_txt.text += "   " + pts % GameState.upgrade_points
 	xp_txt.position = Vector2(310, 64)
 	xp_txt.add_theme_font_size_override("font_size", UiText.fs(12))
 	xp_txt.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92))
@@ -257,7 +259,7 @@ func _load(id: String) -> Dictionary:
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:
-			var d = JSON.parse_string(f.get_as_text())
+			var d = Content.localize(path, JSON.parse_string(f.get_as_text()))
 			f.close()
 			if typeof(d) == TYPE_DICTIONARY:
 				return d
@@ -373,7 +375,8 @@ func _open_mission_briefing(id: String) -> void:
 
 func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2, size: Vector2, color: Color, fd: int, wrap_chars: int) -> void:
 	var label := Label.new()
-	label.text = "%s\n%s" % [head, _wrap_words(body, wrap_chars)]
+	var wc := wrap_chars
+	label.text = "%s\n%s" % [tr(head), _wrap_words(tr(body), wc)]
 	label.position = pos
 	label.size = size
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -383,6 +386,9 @@ func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2,
 	parent.add_child(label)
 
 func _wrap_words(text: String, max_chars: int) -> String:
+	text = tr(text)   # translate before the line breaks go in, or no key can match
+	if TranslationServer.get_locale().begins_with("ko"):
+		max_chars = maxi(8, max_chars / 2)   # Hangul is about twice as wide as Latin
 	var out: Array = []
 	var line := ""
 	for raw in text.replace("  |  ", " | ").split(" "):
@@ -567,14 +573,14 @@ func _mission_chip_color(earned: bool, locked: bool, is_next: bool) -> Color:
 
 func _mission_meta(cfg: Dictionary) -> String:
 	var mode := str(cfg.get("mode", "overworld"))
-	var format := str(cfg.get("format", "discussion")).replace("_", " ").capitalize()
+	var format := tr(str(cfg.get("format", "discussion")).replace("_", " ").capitalize())
 	var roster: Array = cfg.get("roster", [])
 	var seconds := int(cfg.get("period_seconds", 0))
-	var time_text := "%d:%02d" % [seconds / 60, seconds % 60] if seconds > 0 else "boss"
+	var time_text := "%d:%02d" % [seconds / 60, seconds % 60] if seconds > 0 else tr("boss")
 	var badge := str(cfg.get("badge", ""))
-	var badge_text := "Badge: %s" % _badge_name(badge) if badge != "" else "No badge"
+	var badge_text := tr("Badge: %s") % _badge_name(badge) if badge != "" else tr("No badge")
 	if mode == "gym":
-		format = "Capstone"
+		format = tr("Capstone")
 	return "%s  |  %s  |  %d learners  |  %s" % [format, time_text, roster.size(), badge_text]
 
 func _mission_focus(cfg: Dictionary) -> String:
@@ -701,7 +707,7 @@ func _open_settings() -> void:
 	var notice := Label.new()
 	notice.text = "No voices? Click Voice status."
 	notice.position = Vector2(222, 122)
-	notice.size = Vector2(516, 64)
+	notice.size = Vector2(516, 44)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	notice.add_theme_font_size_override("font_size", UiText.fs(12))
 	notice.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
@@ -715,7 +721,7 @@ func _open_settings() -> void:
 		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
 		{"label": "Classroom look", "key": "korean_classroom", "on": "Korea", "off": "US"},
 	]
-	var y := 188.0
+	var y := 170.0
 	for opt in options:
 		var b := Button.new()
 		b.position = Vector2(222, y)
@@ -735,7 +741,23 @@ func _open_settings() -> void:
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)
-		y += 34.0
+		y += 32.0
+
+	var lang := Button.new()
+	lang.position = Vector2(222, y)
+	lang.size = Vector2(516, 30)
+	lang.add_theme_font_size_override("font_size", UiText.fs(14))
+	lang.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	HubUi.apply_button_style(lang)
+	lang.text = "Language / 언어: %s" % ("한국어" if str(GameState.get_setting("language", "en")) == "ko" else "English")
+	lang.pressed.connect(func():
+		GameState.set_language("en" if str(GameState.get_setting("language", "en")) == "ko" else "ko")
+		for child in get_children():
+			child.queue_free()
+		_build()
+		_open_settings())
+	overlay.add_child(lang)
+	y += 32.0
 
 	var voice := Button.new()
 	voice.position = Vector2(222, y)
@@ -747,7 +769,7 @@ func _open_settings() -> void:
 		notice.text = TTSClient.voice_status_detail()
 	)
 	overlay.add_child(voice)
-	y += 34.0
+	y += 32.0
 
 	var reveal := Button.new()
 	reveal.position = Vector2(222, y)
@@ -820,7 +842,7 @@ func _open_upgrades() -> void:
 		b.size = Vector2(520, 58)
 		b.add_theme_font_size_override("font_size", UiText.fs(13))
 		HubUi.apply_button_style(b, rank < max_rank)
-		b.text = "%s  Rank %d/%d\n%s" % [str(def.get("name", id)), rank, max_rank, str(def.get("desc", ""))]
+		b.text = tr("%s  Rank %d/%d\n%s") % [tr(str(def.get("name", id))), rank, max_rank, tr(str(def.get("desc", "")))]
 		b.disabled = GameState.upgrade_points <= 0 or rank >= max_rank
 		b.pressed.connect(_choose_upgrade.bind(id, overlay))
 		overlay.add_child(b)
@@ -906,10 +928,7 @@ func _open_evidence_journal() -> void:
 
 	var recent := Label.new()
 	var recent_count := GameState.leaderboard_top(30).size()
-	recent.text = "RECENT RUNS: %d saved run%s. Open Board for more." % [
-		recent_count,
-		"" if recent_count == 1 else "s",
-	]
+	recent.text = (tr("RECENT RUNS: %d saved run. Open Board for more.") if recent_count == 1 else tr("RECENT RUNS: %d saved runs. Open Board for more.")) % recent_count
 	recent.position = Vector2(114, 398)
 	recent.size = Vector2(720, 26)
 	recent.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -986,7 +1005,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = "%3d%%  %02d moves  +-%.2f" % [pct, n, unc]
+	stat.text = tr("%3d%%  %02d moves  +-%.2f") % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))
@@ -1559,18 +1578,18 @@ func _toggle_item_equipped(id: String, overlay: Control) -> void:
 
 func _refresh_setting_button(button: Button, opt: Dictionary) -> void:
 	var on := bool(GameState.get_setting(str(opt["key"]), false))
-	button.text = "%s: %s" % [str(opt["label"]), str(opt["on"] if on else opt["off"])]
+	button.text = "%s: %s" % [tr(str(opt["label"])), tr(str(opt["on"] if on else opt["off"]))]
 
 func _refresh_profile_button(button: Button) -> void:
 	var def: Dictionary = GameState.teacher_profile()
-	button.text = "Profile: %s" % str(def.get("short", "Steady"))
+	button.text = "Profile: %s" % tr(str(def.get("short", "Steady")))
 
 func _refresh_reveal_button(button: Button) -> void:
 	var mode := str(GameState.get_setting("text_reveal", "typewriter"))
-	button.text = "Dialogue text: %s" % ("Instant" if mode == "instant" else "Typewriter")
+	button.text = tr("Dialogue text: %s") % tr("Instant" if mode == "instant" else "Typewriter")
 
 func _badge_name(id: String) -> String:
-	return id.capitalize()
+	return tr(id.capitalize())
 
 func _badge_desc(id: String) -> String:
 	match id:
