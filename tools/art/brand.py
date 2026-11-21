@@ -271,5 +271,69 @@ def concepts():
     print('wrote', dst)
 
 
+# ------------------------------------------------------------------- badge set
+EMBLEMS = {
+    # 14x14 chalk emblems on the medal face
+    'routine': ["....######....", "..##......##..", ".#....##....#.", ".#....##....#.", "#.....##.....#", "#.....##.....#",
+                "#.....######.#", "#............#", "#............#", ".#..........#.", ".#..........#.", "..##......##..",
+                "....######....", ".............."],
+    'echo': ["#########.....", "#.......#.....", "#.##.##.#.....", "#.......#.....", "#########.....", "..#..#########",
+             "..#.#.......#.", "...##.##.##.#.", "....#.......#.", "....#########.", ".........#....", "..........#...",
+             "..............", ".............."],
+    'balance': [".......#......", "......###.....", ".......#......", "#############.", "##....#....##.", "##....#....##.",
+                "#.#...#...#.#.", "#.#...#...#.#.", "###...#...###.", "......#.......", "......#.......", "....#####.....",
+                "...#######....", ".............."],
+    'mirror': ["....######....", "..##......#...", ".#........###.", "#..........#..", "#.............", "#.............",
+               ".............#", ".............#", "..#..........#", ".###........#.", "...#......##..", "....######....",
+               "..............", ".............."],
+    'insight': ["....#####.....", "...#.....#....", "..#..###..#...", "..#.#...#.#...", "..#.......#...", "..#.......#...",
+                "...#.....#....", "....#...#.....", "....#####.....", "....#####.....", ".....###......", "#...........#.",
+                ".#.........#..", ".............."],
+}
+RIMS = {'routine': 'teal', 'echo': 'blue', 'balance': 'green', 'mirror': 'purple', 'insight': 'yellow'}
+
+
+def badge(bid):
+    """One medal frame for the whole set: ink outline, a coloured rim, a navy face and a
+    chalk emblem, so the five read as a family and differ by colour and emblem."""
+    m = new(32, 32)
+    disc(m, 16, 16, 14, RIMS[bid], ring='ink')
+    disc(m, 16, 16, 11, 'navy', ring='ink')
+    for x in range(8, 25):                      # rim highlight, top-left
+        for y in range(3, 9):
+            if (x - 16) ** 2 + (y - 16) ** 2 in range(160, 196) and x < 18:
+                put(m, x, y, 'chalk_gy')
+    for j, row in enumerate(EMBLEMS[bid]):
+        for i, c in enumerate(row):
+            if c == '#':
+                put(m, 9 + i, 9 + j, 'chalk')
+    return m
+
+
+def badges():
+    for bid in RIMS:
+        upscale(badge(bid), 2).save(os.path.join(ROOT, 'assets', 'ui', 'badge_%s.png' % bid))
+    sheet = Image.new('RGBA', (5 * 140 + 20, 340), P['wall_mod'])
+    for i, bid in enumerate(RIMS):
+        b = badge(bid)
+        sheet.alpha_composite(upscale(b, 4), (20 + i * 140, 20))
+        dk = Image.new('RGBA', (72, 72), P['ink'])
+        dk.alpha_composite(upscale(b, 2), (4, 4))
+        sheet.alpha_composite(dk, (20 + i * 140, 160))
+        dim = upscale(b, 2)
+        px = dim.load()
+        for y in range(dim.height):
+            for x in range(dim.width):
+                r, g, bb, a = px[x, y]
+                if a:
+                    px[x, y] = (int(r * 0.42), int(g * 0.46), int(bb * 0.55), int(a * 0.45))
+        dk2 = Image.new('RGBA', (72, 72), P['ink'])
+        dk2.alpha_composite(dim, (4, 4))
+        sheet.alpha_composite(dk2, (20 + i * 140, 250))
+    dst = os.path.join(ROOT, 'docs', 'brand', 'badges.png')
+    sheet.convert('RGB').save(dst)
+    print('wrote', dst)
+
+
 if __name__ == '__main__':
-    {'concepts': concepts}[sys.argv[1] if len(sys.argv) > 1 else 'concepts']()
+    {'concepts': concepts, 'badges': badges}[sys.argv[1] if len(sys.argv) > 1 else 'concepts']()
