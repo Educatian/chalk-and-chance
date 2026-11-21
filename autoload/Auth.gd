@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Per-learner identity over the Cloudflare Worker API (cloudflare/worker.js).
 ## Login = class code + name + password (named accounts, like Design Tension Studio).
 ## Holds the JWT; Telemetry/Competency upload under this learner. If api_base is empty
@@ -77,6 +78,8 @@ func beacon(path: String, body: Dictionary, authed := true) -> bool:
 		return false
 	if not authed and not configured():
 		return false
+	if not NetGuard.allowed(api_base):
+		return false   # debug build without --allow-hosted / ?allow_hosted=1
 	if OS.has_feature("web"):
 		var headers_js := "{'Content-Type':'application/json','Authorization':'Bearer '+token}" if authed \
 			else "{'Content-Type':'application/json'}"
@@ -125,6 +128,9 @@ func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:
 	_request(path, HTTPClient.METHOD_POST, body, authed, cb)
 
 func _request(path: String, method: int, body: Dictionary, authed: bool, cb: Callable) -> void:
+	if not NetGuard.allowed(api_base):
+		cb.call(false, null)   # debug build without an explicit opt-in: stay offline
+		return
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.timeout = 15.0

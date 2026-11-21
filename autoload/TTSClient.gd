@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Speaks student lines aloud via the backend /tts endpoint (ElevenLabs per-persona
 ## child-ish voices). Audio is optional: if the backend is down or returns no audio
 ## (204), the game stays silent and never errors. Latest request wins (we cancel an
@@ -76,6 +77,8 @@ func speak(persona_id: String, text: String, emotion: String = "neutral") -> voi
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	if OS.has_feature("web") and _voice_token != "" and voice_gate_unlocked:
 		headers.append("X-Voice-Token: %s" % _voice_token)
+	if not NetGuard.allowed(endpoint):
+		return
 	var err := _http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		push_warning("TTSClient: request error %d (silent)" % err)

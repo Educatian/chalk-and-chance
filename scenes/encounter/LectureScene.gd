@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Lecture (direct-instruction) mode: the rhythm of PRESENT vs CHECK-FOR-UNDERSTANDING.
@@ -813,7 +814,7 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 	}
 	_last_turn_payload = payload
 	var ep := LLMClient.endpoint.replace("/turn", "/lecture_turn")
-	var err := _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		return
