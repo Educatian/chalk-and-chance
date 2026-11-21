@@ -266,8 +266,6 @@ func _label(text: String, pos: Vector2, size: Vector2, fs: int, color: Color) ->
 	return l
 
 func _tex(path: String, fallback: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path)
-	if ResourceLoader.exists(fallback):
-		return load(fallback)
-	return null
+	var Art = load("res://scripts/Art.gd")   # v2 portrait first
+	var t: Texture2D = Art.tex(path)
+	return t if t != null else Art.tex(fallback)

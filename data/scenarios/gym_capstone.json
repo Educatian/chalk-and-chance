@@ -68,7 +68,5 @@
       ]
     }
   },
-  "backdrop": "res://assets/backdrops/gym_capstone.png",
-  "backdrop_thumb": "res://assets/backdrops/gym_capstone_thumb.png",
   "story_hook": "The projector's dead, a chair's on the floor, and four kids need you at once. Pick who goes first."
 }

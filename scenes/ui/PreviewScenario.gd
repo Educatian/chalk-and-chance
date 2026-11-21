@@ -166,8 +166,7 @@ func _refresh() -> void:
 		_play_button.disabled = not errors.is_empty()
 	if _backdrop != null:
 		var sid := str(_scenario.get("id", ""))
-		var v2_img := Art.tex("res://assets/v2/thumbs/%s.png" % sid)
-		_backdrop.texture = v2_img if v2_img != null else Art.tex(Art.scenario_backdrop_path(_scenario, sid, false))
+		_backdrop.texture = Art.tex(Art.scenario_backdrop_path(_scenario, sid, false))
 	if _story != null:
 		_story.text = str(_scenario.get("story_hook", ""))
 

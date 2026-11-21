@@ -72,7 +72,5 @@
     }
   ],
   "badge": "echo",
-  "backdrop": "res://assets/backdrops/discussion_fractions.png",
-  "backdrop_thumb": "res://assets/backdrops/discussion_fractions_thumb.png",
   "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on."
 }

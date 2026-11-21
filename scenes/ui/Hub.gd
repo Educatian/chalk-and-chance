@@ -311,8 +311,7 @@ func _open_mission_briefing(id: String) -> void:
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	var v2_img := Art.tex("res://assets/v2/thumbs/%s.png" % id)   # the mission's own v2 room
-	image.texture = v2_img if v2_img != null else Art.tex(Art.scenario_backdrop_path(cfg, id, false))
+	image.texture = Art.tex(Art.scenario_backdrop_path(cfg, id, false))   # the mission's own room, current look
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.add_child(image)
 
@@ -473,8 +472,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	thumb.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var v2_thumb := Art.tex("res://assets/v2/thumbs/%s.png" % id)
-	thumb.texture = v2_thumb if v2_thumb != null else Art.tex(Art.scenario_backdrop_path(cfg, id, true))
+	thumb.texture = Art.tex(Art.scenario_backdrop_path(cfg, id, true))
 	if locked:
 		thumb.modulate = Color(0.45, 0.48, 0.56)
 	row.add_child(thumb)

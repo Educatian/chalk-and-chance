@@ -7,28 +7,34 @@ extends RefCounted
 ## See ASSET_PROMPTS.md for the expected files and the Pokemon-style art spec.
 
 static func tex(path: String) -> Texture2D:
+	# The palette-matched v2 portrait wins over the pre-overhaul one wherever both exist,
+	# so no screen can show the old painterly face by asking for the old path.
+	if path.contains("/assets/portraits/"):
+		var v2 := path.replace("/assets/portraits/", "/assets/v2/portraits/")
+		if ResourceLoader.exists(v2):
+			path = v2
 	if ResourceLoader.exists(path):
 		var res = load(path)   # Variant; do not use :=
 		if res is Texture2D:
 			return res
 	return null
 
-static func scenario_backdrop_path(cfg: Dictionary, scenario_id: String = "", thumb: bool = false) -> String:
-	var key := "backdrop_thumb" if thumb else "backdrop"
-	var p := str(cfg.get(key, ""))
-	if p != "":
-		return p
-	var id := str(cfg.get("id", scenario_id))
-	if id != "":
-		var candidate := "res://assets/backdrops/%s%s.png" % [id, "_thumb" if thumb else ""]
-		if ResourceLoader.exists(candidate):
-			return candidate
-	var fmt := str(cfg.get("format", "discussion"))
-	match fmt:
-		"lecture": return "res://assets/backdrops/lecture_fractions%s.png" % ("_thumb" if thumb else "")
-		"group_work": return "res://assets/backdrops/group_work_fractions%s.png" % ("_thumb" if thumb else "")
-		"independent": return "res://assets/backdrops/independent_fractions%s.png" % ("_thumb" if thumb else "")
-		_: return "res://assets/backdrops/discussion_fractions%s.png" % ("_thumb" if thumb else "")
+## A mission's picture (hub card, briefing, preview, cinematic, encounter backdrop): the
+## pixel render of its own room, seats and roster from tools/art/thumbs.py, in the current
+## classroom look (<id>_kr.png for the Korean room). Imported lessons use the topic-matched
+## mission in "art_from", else their format's base mission. `thumb` is kept for callers; one 16:9 render serves both sizes.
+const FORMAT_BASE := {"lecture": "lecture_fractions", "group_work": "group_work_fractions",
+	"independent": "independent_fractions", "discussion": "discussion_fractions"}
+
+static func scenario_backdrop_path(cfg: Dictionary, scenario_id: String = "", _thumb: bool = false, folder: String = "thumbs") -> String:
+	var suffix := "_kr" if bool(GameState.get_setting("korean_classroom", false)) else ""
+	var base := str(FORMAT_BASE.get(str(cfg.get("format", "discussion")), "discussion_fractions"))
+	for id in [str(cfg.get("id", scenario_id)), str(cfg.get("art_from", "")), base]:
+		for suf in [suffix, ""]:
+			var p := "res://assets/v2/%s/%s%s.png" % [folder, id, suf]
+			if id != "" and ResourceLoader.exists(p):
+				return p
+	return "res://assets/v2/%s/discussion_fractions.png" % folder
 
 ## Bounding box (region-local) of the non-transparent pixels inside `region` of a texture.
 ## Used to normalize character size by the DRAWN figure, not the cell (figures fill cells

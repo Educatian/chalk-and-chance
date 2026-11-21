@@ -139,8 +139,10 @@ func _scan_required_assets() -> void:
 		"culturally_responsive_intro", "custom_comparing_decimals", "gym_capstone",
 	]
 	for id in scenario_ids:
-		_require("res://assets/backdrops/%s.png" % id)
-		_require("res://assets/backdrops/%s_thumb.png" % id)
+		_require("res://assets/v2/thumbs/%s.png" % id)      # US room
+		_require("res://assets/v2/thumbs/%s_kr.png" % id)   # Korean room
+		_require("res://assets/v2/cinematic/%s.png" % id)
+		_require("res://assets/v2/cinematic/%s_kr.png" % id)
 	for id2 in Items.all_ids():
 		_require(Items.icon_for(str(id2)))
 

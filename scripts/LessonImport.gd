@@ -55,8 +55,7 @@ static func plan_to_scenario(text: String) -> Dictionary:
 		"format": fmt, "mode": "lecture" if fmt == "lecture" else "overworld", "arrangement": arr,
 		"period_seconds": period, "offtask_rise": rise,
 		"roster": ros, "objectives": objs, "badge": badge,
-		"backdrop": "res://assets/backdrops/%s.png" % backdrop,
-		"backdrop_thumb": "res://assets/backdrops/%s_thumb.png" % backdrop,
+		"art_from": backdrop,   # the topic-matched mission whose room picture this lesson uses
 		"story_hook": _story_hook_for(fmt, subject),
 		"_source": "offline_import",
 	}

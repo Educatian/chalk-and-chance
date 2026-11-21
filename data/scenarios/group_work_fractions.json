@@ -77,7 +77,5 @@
     }
   ],
   "badge": "balance",
-  "backdrop": "res://assets/backdrops/group_work_fractions.png",
-  "backdrop_thumb": "res://assets/backdrops/group_work_fractions_thumb.png",
   "story_hook": "Four clusters, a pile of fraction strips, and a lot of noise. Some of it is math. Some of it isn't."
 }

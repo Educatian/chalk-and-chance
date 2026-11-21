@@ -151,7 +151,5 @@
       ]
     }
   },
-  "backdrop": "res://assets/backdrops/science_force_motion.png",
-  "backdrop_thumb": "res://assets/backdrops/science_force_motion_thumb.png",
   "story_hook": "Ramps, carts, and a room full of kids who are sure heavy things go faster. Can their own data change that?"
 }

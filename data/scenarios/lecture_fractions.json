@@ -87,7 +87,5 @@
     }
   ],
   "badge": "routine",
-  "backdrop": "res://assets/backdrops/lecture_fractions.png",
-  "backdrop_thumb": "res://assets/backdrops/lecture_fractions_thumb.png",
   "story_hook": "Short fractions lesson, rows facing front. Easy to talk the whole time and miss who's lost."
 }

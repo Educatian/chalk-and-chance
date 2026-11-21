@@ -76,7 +76,7 @@ static func speaker(who: String, cfg: Dictionary, mood: String = "neutral") -> D
 
 static func _portrait(base: String, mood: String) -> Texture2D:
 	for suffix in [mood, "neutral"]:
-		var p := "res://assets/portraits/%s_%s.png" % [base, suffix]
-		if ResourceLoader.exists(p):
-			return load(p)
+		var t: Texture2D = load("res://scripts/Art.gd").tex("res://assets/portraits/%s_%s.png" % [base, suffix])
+		if t != null:
+			return t
 	return null

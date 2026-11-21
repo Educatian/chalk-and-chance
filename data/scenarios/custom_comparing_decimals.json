@@ -121,7 +121,5 @@
       ]
     }
   },
-  "backdrop": "res://assets/backdrops/custom_comparing_decimals.png",
-  "backdrop_thumb": "res://assets/backdrops/custom_comparing_decimals_thumb.png",
   "story_hook": "Which is bigger, 0.45 or 0.5? Half the room will say 0.45, and they'll say it out loud."
 }

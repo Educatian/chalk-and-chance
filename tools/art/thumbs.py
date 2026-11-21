@@ -1,7 +1,7 @@
 """Mission thumbnails rendered from the v2 room art: each mission's own seat arrangement,
 roster and the modern US room, cropped to 16:9.
 
-    python tools/art/thumbs.py        # writes assets/v2/thumbs/<scenario_id>.png
+    python tools/art/thumbs.py        # writes assets/v2/thumbs/<scenario_id>.png and <id>_kr.png
 
 Seat coordinates mirror scripts/Seating.gd (keep the two in sync).
 """
@@ -17,6 +17,7 @@ from PIL import Image  # noqa: E402
 
 ROOT = B.ROOT
 OUT = os.path.join(ROOT, 'assets', 'v2', 'thumbs')
+CINE = os.path.join(ROOT, 'assets', 'v2', 'cinematic')   # empty rooms for the mission cinematics
 
 
 def seats(arr):
@@ -38,19 +39,24 @@ def seats(arr):
     return [(x, y) for y in (3, 6, 9) for x in (4, 8, 12, 16, 20)]
 
 
-def render(cfg):
+def render(cfg, style='us', people=True):
+    """style 'us' (modern US room) or 'kr' (Korean room: wood-look floor, sliding green
+    board with TV, Korean door and desks); same seats, roster and teacher in both."""
+    kr = style == 'kr'
+    floor = M.floor_kr if kr else M.floor_us
+    board = M.kr_board if kr else M.us_board
     T = 16
     W, H = 24 * T, 14 * T          # one extra tile row above for the front wall face
     img = Image.new('RGBA', (W, H), (0, 0, 0, 255))
     oy = T
     for x in range(1, 23):
         for y in range(1, 12):
-            img.alpha_composite(M.floor_us((x * 7 + y * 3) % 4), (x * T, oy + y * T))
+            img.alpha_composite(floor((x * 7 + y * 3) % 4), (x * T, oy + y * T))
     for x in range(24):
         if 9 <= x <= 14:
-            piece = M.us_board(x - 9)
+            piece = board(x - 9)
         elif x == 1:
-            piece = M.us_door()
+            piece = M.kr_door() if kr else M.us_door()
         elif x in (3, 5, 16, 18):
             piece = M.anchor_chart(x % 5)
         elif x == 20:
@@ -63,16 +69,20 @@ def render(cfg):
         img.alpha_composite(M.cap_base(), (23 * T, oy + y * T))
     for x in range(24):
         img.alpha_composite(M.cap_base(), (x * T, oy + 12 * T))
-    desk = M.desk_modern('us')
+    desk = M.desk_modern(style)
     seat_list = seats(str(cfg.get('arrangement', 'rows')))
     roster = {int(r.get('seat', -1)): str(r.get('id', '')) for r in cfg.get('roster', [])}
     for i, (sx, sy) in enumerate(seat_list):
-        pid = roster.get(i)
+        pid = roster.get(i) if people else None
         px, py = sx * T, oy + sy * T
         if pid and pid in B.STUDENTS:
             stu = B.student_frame(B.STUDENTS[pid], 0)
             img.alpha_composite(stu, (px, py + T - stu.height))
         img.alpha_composite(desk, (px + (T - desk.width) // 2, py + T - desk.height + 1))
+    if not people:
+        # Cinematic backdrop: the empty room before the bell, the whole front wall in view
+        # (the cinematic shows the class as its own portrait strip).
+        return img.crop((0, 0, W, W * 9 // 16)).convert('RGB')
     teacher = B.teacher_frame(B.T_FRONT, 1)
     img.alpha_composite(teacher, (11 * T, oy + 2 * T + T - teacher.height))
     # crop 16:9 around the front wall and the seats
@@ -90,7 +100,11 @@ def main():
         cfg = json.load(open(f, encoding='utf8'))
         sid = os.path.splitext(os.path.basename(f))[0]
         render(cfg).save(os.path.join(OUT, sid + '.png'))
-        n += 1
+        render(cfg, 'kr').save(os.path.join(OUT, sid + '_kr.png'))   # Korean classroom look
+        os.makedirs(CINE, exist_ok=True)
+        render(cfg, 'us', people=False).save(os.path.join(CINE, sid + '.png'))
+        render(cfg, 'kr', people=False).save(os.path.join(CINE, sid + '_kr.png'))
+        n += 2
     print('wrote %d thumbnails to %s' % (n, OUT))
 
 

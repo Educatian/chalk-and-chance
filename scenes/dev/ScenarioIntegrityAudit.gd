@@ -4,7 +4,7 @@ const SCENARIO_DIR := "res://data/scenarios"
 const PERSONA_DIR := "res://data/persona_library"
 const PORTRAIT_DIR := "res://assets/portraits"
 
-const REQUIRED_FIELDS := ["id", "title", "format", "mode", "arrangement", "roster", "objectives", "badge", "backdrop", "backdrop_thumb", "story_hook"]
+const REQUIRED_FIELDS := ["id", "title", "format", "mode", "arrangement", "roster", "objectives", "badge", "story_hook"]
 const FORMATS := ["discussion", "lecture", "group_work", "independent"]
 const MODES := ["overworld", "lecture", "gym"]
 const ARRANGEMENTS := ["ushape", "ushape6", "rows", "rows8", "clusters", "clusters8"]
@@ -83,8 +83,9 @@ func _scan_scenario(path: String, cfg: Dictionary) -> void:
 	if requires != "" and not (requires in BADGES):
 		_issue("%s requires unknown badge: %s" % [id, requires])
 
-	_check_asset(id, "backdrop", str(cfg.get("backdrop", "")))
-	_check_asset(id, "backdrop_thumb", str(cfg.get("backdrop_thumb", "")))
+	# The mission picture is the pixel render of its own room, in both classroom looks.
+	_check_asset(id, "room picture (US)", "res://assets/v2/thumbs/%s.png" % id)
+	_check_asset(id, "room picture (Korean)", "res://assets/v2/thumbs/%s_kr.png" % id)
 	if str(cfg.get("story_hook", "")).strip_edges().length() < 24:
 		_issue("%s story_hook too short for mission briefing" % id)
 

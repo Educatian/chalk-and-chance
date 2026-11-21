@@ -68,11 +68,15 @@ func _build() -> void:
 	add_child(bg)
 
 	_backdrop = TextureRect.new()
-	_backdrop.texture = _trim_border(Art.tex(Art.scenario_backdrop_path(_cfg)))
+	_backdrop.texture = Art.tex(Art.scenario_backdrop_path(_cfg, "", false, "cinematic"))   # empty pixel room, current look
+	_backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	# The room starts under the top letterbox bar and the slow push grows from the top
+	# centre, so the front wall and board stay in view; the floor runs off the bottom.
+	_backdrop.position = Vector2(0, BAR_H)
 	_backdrop.size = _vp
-	_backdrop.pivot_offset = _vp * 0.5
+	_backdrop.pivot_offset = Vector2(_vp.x * 0.5, 0)
 	_backdrop.modulate = Color(1, 1, 1, 0)
 	add_child(_backdrop)
 
@@ -108,7 +112,7 @@ func _build() -> void:
 	add_child(_caption)
 
 	_hint = Label.new()
-	_hint.text = "Click / Space  ▸"
+	_hint.text = "Click / Space  »"
 	_hint.position = Vector2(_vp.x - 190, _vp.y - 22)
 	_hint.size = Vector2(170, 18)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -118,7 +122,7 @@ func _build() -> void:
 	add_child(_hint)
 
 	var skip := Button.new()
-	skip.text = "Skip ▸▸"
+	skip.text = "Skip »"
 	skip.position = Vector2(_vp.x - 104, 14)
 	skip.size = Vector2(88, 28)
 	skip.focus_mode = Control.FOCUS_NONE
@@ -233,7 +237,7 @@ func _run() -> void:
 		var push := create_tween().set_parallel(true)
 		var total := 6.0 + 4.5 * _beats.size()
 		push.tween_property(_backdrop, "scale", Vector2(1.18, 1.18), total).set_trans(Tween.TRANS_SINE)
-		push.tween_property(_backdrop, "position", Vector2(-26, -12), total).set_trans(Tween.TRANS_SINE)
+		push.tween_property(_backdrop, "position:x", -26.0, total).set_trans(Tween.TRANS_SINE)
 	Sfx.play("whoosh", -4.0)
 	await get_tree().create_timer(0.5).timeout
 	if _finished:

@@ -122,7 +122,5 @@
       ]
     }
   },
-  "backdrop": "res://assets/backdrops/reading_main_idea.png",
-  "backdrop_thumb": "res://assets/backdrops/reading_main_idea_thumb.png",
   "story_hook": "A short article about honeybees. Most kids will grab the first detail and call it the main idea."
 }
