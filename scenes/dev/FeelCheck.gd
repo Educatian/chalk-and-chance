@@ -35,6 +35,7 @@ func _ready() -> void:
 	_check_praise_kinds()
 	_check_voiced()
 	_check_retry_focus()
+	_check_ladder()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -74,6 +75,19 @@ func _check_retry_focus() -> void:
 	_ok("other objectives keep their order", str(out[1]["metric"]) == "attention_min" and str(out[2]["metric"]) == "engaged_min")
 	_ok("unknown metric leaves objectives unchanged", Ow.apply_retry_focus(objs, "connect_min") == objs)
 	_ok("source objectives are not mutated", not objs[2].has("retry"))
+
+## B4: every ladder card has a step that works, and the bonus step is the lowest one.
+func _check_ladder() -> void:
+	var Ow = load("res://scenes/overworld/Overworld.gd")
+	_ok("lowest working step skips steps that fail", Ow.lowest_working_tier([{"tier": 1, "works": false}, {"tier": 3, "works": true}, {"tier": 4, "works": true}]) == 3)
+	var ow = Ow.new()
+	for ev in ow.INTERRUPTS:
+		if bool(ev.get("ladder", false)):
+			var tiers := {}
+			for o in ev["options"]:
+				tiers[int(o["tier"])] = true
+			_ok("ladder card '%s' has all four steps and a working one" % str(ev["text"]).left(24), tiers.size() == 4 and Ow.lowest_working_tier(ev["options"]) > 0)
+	ow.free()
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

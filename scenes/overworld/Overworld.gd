@@ -81,20 +81,44 @@ var INTERRUPTS := [
 	},
 	{
 		"text": "A student walks in late, mid-lesson.",
+		"ladder": true,
 		"options": [
-			{"label": "Nonverbal nod to an open seat, keep going", "dcomp": -3.0, "dnoise": 5.0, "ddis": 0,
+			{"label": "Nonverbal nod to an open seat, keep going", "dcomp": -3.0, "dnoise": 5.0, "ddis": 0, "tier": 2, "works": true,
 			 "coach": "Least-intrusive. You kept the lesson's momentum."},
-			{"label": "Stop and question them in front of everyone", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1,
+			{"label": "Walk them to a seat while you keep talking", "dcomp": -4.0, "dnoise": 8.0, "ddis": 0, "tier": 1, "works": false,
+			 "coach": "Walking over pulled you away from the board; a nod from where you stand was enough here."},
+			{"label": "Quiet word: \"Grab a seat, we're on page 4\"", "dcomp": -4.0, "dnoise": 7.0, "ddis": 0, "tier": 3, "works": true,
+			 "coach": "Fine, but a nod would have done it without a word."},
+			{"label": "Stop and question them in front of everyone", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
 			 "coach": "Public call-out cost momentum and rapport. Handle it privately later."},
 		],
 	},
 	{
 		"text": "Two students start a loud side-conversation.",
+		"ladder": true,
 		"options": [
-			{"label": "Move toward them (proximity), keep talking", "dcomp": -2.0, "dnoise": -10.0, "ddis": 0,
+			{"label": "Move toward them (proximity), keep talking", "dcomp": -2.0, "dnoise": -10.0, "ddis": 0, "tier": 1, "works": true,
 			 "coach": "Proximity control. Quietest effective move."},
-			{"label": "Call them out across the room", "dcomp": -9.0, "dnoise": 12.0, "ddis": 1,
+			{"label": "Catch their eye and pause", "dcomp": -3.0, "dnoise": -4.0, "ddis": 0, "tier": 2, "works": true,
+			 "coach": "The look works, but walking over would have cost nothing at all."},
+			{"label": "Say their names quietly, keep teaching", "dcomp": -4.0, "dnoise": 0.0, "ddis": 0, "tier": 3, "works": true,
+			 "coach": "It worked, and it used words where moving closer would have been enough."},
+			{"label": "Call them out across the room", "dcomp": -9.0, "dnoise": 12.0, "ddis": 1, "tier": 4, "works": true,
 			 "coach": "Shouting across the room escalates and pulls everyone off task."},
+		],
+	},
+	{
+		"text": "Two students start arguing over a shared calculator, voices rising.",
+		"ladder": true,
+		"options": [
+			{"label": "Move toward them, keep talking", "dcomp": -5.0, "dnoise": 10.0, "ddis": 1, "tier": 1, "works": false,
+			 "coach": "Proximity alone did not stop an argument already under way; a brief word was the smallest step that works here."},
+			{"label": "Give them a stern look", "dcomp": -5.0, "dnoise": 8.0, "ddis": 1, "tier": 2, "works": false,
+			 "coach": "A look does not settle a dispute over a tool; tell them how to share it, briefly."},
+			{"label": "Brief word: \"One calculator, take turns, Sam first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
+			 "coach": "Right-sized: the smallest step that actually solves this one."},
+			{"label": "Stop the class and lecture both about sharing", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
+			 "coach": "It stopped the argument and the lesson. A brief private word would have done it."},
 		],
 	},
 ]
@@ -143,6 +167,7 @@ var _composure_fill: ColorRect = null
 var _clock_label: Label = null
 var _period_left := PERIOD_SECONDS
 var _next_interrupt := 9.0
+var _interrupt_clock_left := 0.0   # B4: seconds the clock still runs while a card is open
 var _lesson_over := false
 var _overlay: Control = null
 var _pending_card := {}   # results card data, shown after the reflection step
@@ -945,6 +970,13 @@ func _refresh_objective_toggle() -> void:
 func _process(delta: float) -> void:
 	if _player == null:
 		return
+	if input_locked and not _lesson_over and _interrupt_clock_left > 0.0:
+		# B4: the class does not wait while you decide; the clock runs a little.
+		var dt := minf(delta, _interrupt_clock_left)
+		_interrupt_clock_left -= dt
+		_period_left = maxf(0.0, _period_left - dt)
+		if _clock_label != null:
+			_clock_label.text = "%d:%02d" % [int(_period_left) / 60, int(_period_left) % 60]
 	if _lesson_over or input_locked:
 		return
 
@@ -1062,7 +1094,26 @@ func _process(delta: float) -> void:
 func _trigger_interrupt() -> void:
 	Sfx.play("interrupt")
 	var ev: Dictionary = INTERRUPTS[randi() % INTERRUPTS.size()]
-	_show_overlay(str(ev["text"]), ev["options"])
+	_interrupt_clock_left = Tuning.INTERRUPT_CLOCK_SECONDS
+	var opts: Array = ev["options"]
+	if bool(ev.get("ladder", false)):
+		# B4: show the ladder lowest step first, each option labelled with its step.
+		opts = []
+		for o in ev["options"]:
+			var oo: Dictionary = (o as Dictionary).duplicate()
+			oo["_lowest_working"] = lowest_working_tier(ev["options"])
+			oo["display"] = "%d %s:  %s" % [int(o["tier"]), tr(str(Tuning.LADDER_STEPS[int(o["tier"]) - 1])), str(o["label"])]
+			opts.append(oo)
+		opts.sort_custom(func(a, b): return int(a["tier"]) < int(b["tier"]))
+	_show_overlay(str(ev["text"]), opts)
+
+## B4: the lowest ladder step that works for this card (0 if none is marked).
+static func lowest_working_tier(options: Array) -> int:
+	var best := 0
+	for o in options:
+		if bool(o.get("works", false)) and (best == 0 or int(o.get("tier", 9)) < best):
+			best = int(o.get("tier", 9))
+	return best
 
 func _apply_noise(amount: float) -> void:
 	for st in _npcs.keys():
@@ -1070,7 +1121,11 @@ func _apply_noise(amount: float) -> void:
 		info["offtask"] = clampf(info.get("offtask", 0.0) + amount, 0.0, 100.0)
 
 func _resolve_interrupt(opt: Dictionary) -> void:
-	_composure = clampf(_composure + float(opt.get("dcomp", 0.0)), 0.0, GameState.max_composure())
+	_interrupt_clock_left = 0.0
+	var lowest := int(opt.get("_lowest_working", 0))
+	var ladder_bonus := lowest > 0 and int(opt.get("tier", 0)) == lowest
+	var dcomp := float(opt.get("dcomp", 0.0)) + (Tuning.LADDER_BONUS_COMPOSURE if ladder_bonus else 0.0)
+	_composure = clampf(_composure + dcomp, 0.0, GameState.max_composure())
 	_apply_noise(float(opt.get("dnoise", 0.0)))
 	_disruptions += int(opt.get("ddis", 0))
 	if _disrupt_label != null:
@@ -1086,6 +1141,8 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 		"dnoise": float(opt.get("dnoise", 0.0)), "ddis": int(opt.get("ddis", 0)),
 		"composure": _composure, "disruptions": _disruptions,
 		"player_tile": {"x": ptile.x, "y": ptile.y},
+		"tier": int(opt.get("tier", 0)), "lowest_working_tier": lowest, "ladder_bonus": ladder_bonus,
+		"works": bool(opt.get("works", true)),
 	})
 	_close_overlay()
 	_next_interrupt = randf_range(INTERRUPT_MIN, INTERRUPT_MAX)
@@ -1469,7 +1526,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	for i in range(btns.size()):
 		var opt: Dictionary = btns[i]
 		var b := Button.new()
-		b.text = str(opt.get("label", "OK"))
+		b.text = str(opt.get("display", opt.get("label", "OK")))
 		b.position = Vector2(px + 22, by + i * 40.0)
 		b.size = Vector2(pw - 44, 34)
 		b.add_theme_font_size_override("font_size", UiText.fs(14))

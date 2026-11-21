@@ -30,3 +30,11 @@ const GROUP_VOICE_TAGS := ["probe", "redistribute"]
 # --- B8 deliberate practice: the debrief's next target becomes the retry's objective 1 ----
 ## XP for meeting the carried-forward retry focus on the next attempt.
 const RETRY_XP_BONUS := 40
+
+# --- B4 least-intrusive ladder (Simonsen et al., 2008) for behaviour interrupt cards ------
+## Step names, lowest first. Options carry "tier" (1-4) and "works" for that situation.
+const LADDER_STEPS := ["Proximity", "Nonverbal", "Brief word", "Public correction"]
+## Composure bonus for choosing the lowest step that works on that card.
+const LADDER_BONUS_COMPOSURE := 3.0
+## The period clock keeps running this long while an interrupt card is open.
+const INTERRUPT_CLOCK_SECONDS := 2.0
