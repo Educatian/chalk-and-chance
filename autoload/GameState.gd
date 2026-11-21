@@ -131,12 +131,13 @@ func apply_language() -> void:
 		settings["language"] = "ko" if OS.get_locale_language() == "ko" else "en"
 		settings["korean_classroom"] = settings["language"] == "ko" or bool(get_setting("korean_classroom", false))
 	var lang := str(get_setting("language", "en"))
-	TranslationServer.set_locale(lang)
+	# Catalogue first, then the locale: set_locale re-translates every label right away.
 	if lang != "en" and not _catalogues.has(lang):
 		var t = load("res://scripts/PatternTranslation.gd").new()
 		if t.load_catalogue("res://i18n/ui_%s.json" % lang, lang):
 			TranslationServer.add_translation(t)
 			_catalogues[lang] = t
+	TranslationServer.set_locale(lang)
 	var n = load("res://scripts/Narrative.gd")
 	n._data = {}   # story text is cached per language
 

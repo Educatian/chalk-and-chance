@@ -976,7 +976,8 @@ func _on_notice(chip: String) -> void:
 		_release_result()
 	else:
 		Sfx.play("turn_neutral")
-		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
+		# One whole sentence per reading (a label dropped into a sentence reads badly in Korean).
+		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that." % str(Tuning.NOTICE_LABELS[str(truth[0])]).to_lower()))
 		_release_coach()
 	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
 
@@ -1334,7 +1335,7 @@ func _moment_line(m: Dictionary) -> Dictionary:
 	match fit:
 		"advance":
 			kind = "right"
-			why = "it fit where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
+			why = ("it fit where they were (%s)" % str(m["path"]).to_lower()) if str(m.get("path", "")) != "" else "it fit where they were"
 		"early":
 			kind = "early"
 			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "right idea, too early"

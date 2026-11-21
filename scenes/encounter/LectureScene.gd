@@ -1008,9 +1008,9 @@ func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary)
 	_overlay_label(overlay, "LECTURE DEBRIEF", Vector2(48, 94), UiText.S_DISPLAY - 1, Color(0.97, 0.95, 0.86), Vector2(300, 16))
 	var score_lbl := _overlay_label(overlay, "", Vector2(48, 118), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
 	CompletionFx.count_up(score_lbl, "%s   |   Score {score}" % ("CLEARED" if won else "TRY AGAIN"), score)
-	var reward_line := "Comp %d%% | Attention %d%% | Progress %d%%" % [int(comprehension), int(attention), int(progress)]
+	var reward_line := tr("Comp %d%% | Attention %d%% | Progress %d%%") % [int(comprehension), int(attention), int(progress)]
 	if bool(reward.get("level_up", false)):
-		reward_line += " | +upgrade"
+		reward_line += tr(" | +upgrade")
 	_overlay_label(overlay, reward_line, Vector2(48, 140), UiText.S_CAPTION, Color(0.72, 0.82, 0.96), Vector2(300, 28))
 	var trace_line := str(run_record.get("evidence_trace", ""))
 	_overlay_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(48, 172), UiText.S_CAPTION, Color(0.72, 0.78, 0.88), Vector2(300, 16))
