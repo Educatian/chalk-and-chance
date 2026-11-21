@@ -53,10 +53,8 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	disc.size = Vector2(64, 64)
 	disc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	disc.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var f := UiKit.pixel_font()
-	if f != null:
-		disc.add_theme_font_override("font", f)
-	disc.add_theme_font_size_override("font_size", 36)
+	# Smooth face: in the pixel face D reads as 0 at this size.
+	disc.add_theme_font_size_override("font_size", 40)
 	var rc := grade_color(rank)
 	disc.add_theme_color_override("font_color", rc)
 	var ring := StyleBoxFlat.new()

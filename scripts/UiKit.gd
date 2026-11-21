@@ -6,7 +6,7 @@ extends RefCounted
 const BOARD := "res://assets/v2/ui/frame_board.png"
 const PAPER := "res://assets/v2/ui/frame_paper.png"
 const BTN := "res://assets/v2/ui/button_%s.png"
-const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
+const PIXEL_FONT := "res://ui/fonts/Galmuri11-Bold.ttf"
 
 static var _cache := {}
 
@@ -49,10 +49,7 @@ static func pixel_font() -> Font:
 static func style_button(b: Button, font_size: int = 14, pad: int = 6) -> void:
 	for st in ["normal", "hover", "pressed", "disabled", "focus"]:
 		b.add_theme_stylebox_override(st, button(st, pad))
-	var f := pixel_font()
-	if f != null:
-		b.add_theme_font_override("font", f)
-	b.add_theme_font_size_override("font_size", font_size)
+	b.add_theme_font_size_override("font_size", font_size)   # smooth face: option text is running text
 	b.add_theme_color_override("font_color", Color("14131c"))
 	b.add_theme_color_override("font_hover_color", Color("14131c"))
 	b.add_theme_color_override("font_pressed_color", Color("5a3a26"))
@@ -75,9 +72,6 @@ static func style_board_button(b: Button, font_size: int = -1, pad: int = 8) -> 
 	for st in ["normal", "hover", "pressed", "disabled"]:
 		b.add_theme_stylebox_override(st, board_button(st, pad))
 	b.add_theme_stylebox_override("focus", button("focus"))
-	var f := pixel_font()
-	if f != null:
-		b.add_theme_font_override("font", f)
 	if font_size > 0:
 		b.add_theme_font_size_override("font_size", font_size)
 
@@ -92,9 +86,6 @@ static func apply_to_theme() -> void:
 	for st in ["normal", "hover", "pressed", "disabled"]:
 		theme.set_stylebox(StringName(st), &"Button", board_button(st))
 	theme.set_stylebox(&"focus", &"Button", button("focus"))
-	var f := pixel_font()
-	if f != null:
-		theme.set_font(&"font", &"Button", f)
 	theme.set_color(&"font_color", &"Button", Color("f2eedd"))
 	theme.set_color(&"font_hover_color", &"Button", Color("ffffff"))
 	theme.set_color(&"font_pressed_color", &"Button", Color("b9b7a8"))
@@ -105,6 +96,9 @@ static func apply_to_theme() -> void:
 ## Authored in 480x270 space (sizes are scaled x2 by PixelUi.scale_tree afterwards).
 static func style_move_button(b: Button, font_size: int, icon_path: String, hint: String, hint_size: int) -> void:
 	style_button(b, font_size)
+	var f := pixel_font()   # the move's short name is a label, like a title; the hint is smooth
+	if f != null:
+		b.add_theme_font_override("font", f)
 	for st in ["normal", "hover", "pressed", "disabled", "focus"]:
 		var sb: StyleBoxTexture = (button(st) as StyleBoxTexture).duplicate()
 		sb.content_margin_left = 10

@@ -240,6 +240,12 @@ func _audit_overworld_debrief(prefix: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_scan("%s Overworld independent" % prefix, sc)
+	for i in range(sc.INTERRUPTS.size()):   # every interrupt card, ladder cards included
+		sc._trigger_interrupt(i)
+		await get_tree().process_frame
+		_scan("%s Overworld interrupt %d" % [prefix, i], sc._overlay)
+		sc._close_overlay()
+		await get_tree().process_frame
 	_prepare_overworld_clear(sc)
 	sc._end_lesson()
 	await get_tree().process_frame
@@ -305,6 +311,7 @@ func _scan(label: String, root: Node) -> void:
 		if not _inside_scroll(c) and not VIEW.encloses(r):
 			_issues.append("%s clipped: %s %s" % [label, _node_name(c), str(r)])
 		_scan_text_fit(label, c)
+		_scan_pixel_sentence(label, c)
 	var interactives := controls.filter(func(c): return _is_interactive(c) and (not _inside_scroll(c) or _visible_in_scroll(c)))
 	for i in range(interactives.size()):
 		for j in range(i + 1, interactives.size()):
@@ -492,3 +499,21 @@ func _node_name(c: Control) -> String:
 func _notice(enc: Node) -> void:
 	if enc._notice_panel != null and enc._notice_panel.visible:
 		enc._on_notice("confused")
+
+## The pixel face is for titles, names and numbers; a sentence (4+ words with sentence
+## punctuation) in it is an issue.
+func _scan_pixel_sentence(label: String, c: Control) -> void:
+	var t := ""
+	if c is Label:
+		t = (c as Label).text
+	elif c is Button:
+		t = (c as Button).text
+	else:
+		return
+	var tt := t.strip_edges()
+	var sentence := tt.ends_with(".") or tt.ends_with("?") or tt.ends_with("!") or tt.contains(". ")
+	if tt.split(" ", false).size() < 4 or not sentence:   # titles and names may stay pixel
+		return
+	var f := c.get_theme_font("font")
+	if f != null and str(f.resource_path).contains("Galmuri"):
+		_issues.append("%s pixel-face sentence: %s \"%s\"" % [label, _node_name(c), t.left(60)])

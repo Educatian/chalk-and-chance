@@ -31,7 +31,7 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(40, 20)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(24))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
@@ -39,7 +39,7 @@ func _build() -> void:
 	var lv := Label.new()
 	lv.text = "Lv %d" % GameState.teacher_level
 	lv.position = Vector2(42, 62)
-	lv.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	lv.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	lv.add_theme_font_size_override("font_size", UiText.fs(18))
 	lv.add_theme_color_override("font_color", Color("ffd34e"))
 	lv.tooltip_text = "Teacher level. Next +1 upgrade point in %d XP." % GameState.xp_to_next_level()
@@ -338,7 +338,7 @@ func _open_mission_briefing(id: String) -> void:
 	title.position = Vector2(480, 76)
 	title.size = Vector2(344, 48)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -492,7 +492,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.clip_text = true
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	top.add_child(title)
@@ -641,7 +641,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	title.position = Vector2(242, 150)
 	title.size = Vector2(476, 34)
 	title.clip_text = true
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -694,7 +694,7 @@ func _open_settings() -> void:
 	var title := Label.new()
 	title.text = "SETTINGS"
 	title.position = Vector2(222, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -798,7 +798,7 @@ func _open_upgrades() -> void:
 	var title := Label.new()
 	title.text = "LEVEL UP REWARDS"
 	title.position = Vector2(218, 92)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -873,7 +873,7 @@ func _open_evidence_journal() -> void:
 	var title := Label.new()
 	title.text = "EVIDENCE JOURNAL"
 	title.position = Vector2(112, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(16))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1078,7 +1078,7 @@ func _open_leaderboard() -> void:
 	var title := Label.new()
 	title.text = "LEADERBOARD / COACH REPORT"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1221,7 +1221,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	var title := Label.new()
 	title.text = "TRACE DETAIL"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1301,7 +1301,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	var title := Label.new()
 	title.text = title_text
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1354,7 +1354,7 @@ func _open_class_dashboard() -> void:
 	var title := Label.new()
 	title.text = "INSTRUCTOR DASHBOARD"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1469,7 +1469,7 @@ func _open_items() -> void:
 	var title := Label.new()
 	title.text = "ITEM LOADOUT"
 	title.position = Vector2(138, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)

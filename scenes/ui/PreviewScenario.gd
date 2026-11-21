@@ -34,7 +34,7 @@ func _build_shell() -> void:
 	var title := Label.new()
 	title.text = "REVIEW & ADJUST"
 	title.position = Vector2(40, 28)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)

@@ -22,7 +22,7 @@ const BODY_SMALL_ON_BOARD := &"BoardBodyLabel"
 ## Label styles drawn in the pixel display face (titles, HUD labels, numbers, names).
 ## Small running text (HUD labels, names, hints) stays in the smooth face for legibility.
 const PIXEL_STYLES := [&"TitleLabel", &"HeadingLabel", &"HudValueLabel"]
-const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
+const PIXEL_FONT := "res://ui/fonts/Galmuri11-Bold.ttf"
 
 ## Base pixel sizes (960x540 design space) for each variation, before "Large text".
 const BASE_SIZES := {

@@ -8,7 +8,7 @@ const UiText = preload("res://scripts/UiText.gd")
 
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
+const PIXEL_FONT := "res://ui/fonts/Galmuri11-Bold.ttf"
 const VP := Vector2(960, 540)
 
 var _root: Control

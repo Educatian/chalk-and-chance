@@ -8,7 +8,7 @@ const UiText = preload("res://scripts/UiText.gd")
 const Art = preload("res://scripts/Art.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
+const PIXEL_FONT := "res://ui/fonts/Galmuri11-Bold.ttf"
 const BAR_H := 58.0
 const CHARS_PER_SEC := 48.0
 

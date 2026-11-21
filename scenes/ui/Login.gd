@@ -41,7 +41,7 @@ func _ready() -> void:
 	mark_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mark_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mark_text.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	mark_text.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	mark_text.add_theme_font_size_override("font_size", UiText.fs(14))
 	mark_text.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	mark.add_child(mark_text)
@@ -49,7 +49,7 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(logo_x, logo_y + 72)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(30))
 	title.add_theme_color_override("font_color", Color(0.98, 0.92, 0.68))
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.95))
