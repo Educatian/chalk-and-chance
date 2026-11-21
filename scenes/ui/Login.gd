@@ -1,6 +1,7 @@
 extends Control
 const UiText = preload("res://scripts/UiText.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
+const BrandLogo = preload("res://scripts/BrandLogo.gd")
 ## Landing and learner sign-in. The demo path stays one click, while class sign-in remains
 ## available for saved course progress.
 
@@ -11,6 +12,9 @@ var _status: Label
 var _btn: Button
 var _class_box: VBoxContainer
 var _class_label: Label
+var _logo: Control
+var _tagline: Label
+var _menu: VBoxContainer
 
 const COURSE_CODES := {
 	"UA-CAT531-SUMMER26": "CAT531",
@@ -24,73 +28,25 @@ func _ready() -> void:
 	var vp := get_viewport_rect().size
 	_add_landing_background(vp)
 
-	var logo_x := 48.0
-	var logo_y := 44.0
-	if vp.x < 760.0:
-		logo_x = 30.0
-		logo_y = 24.0
+	# Left column over the key art's dark side: logo, tagline, then the menu.
+	var col_x := 48.0 if vp.x >= 760.0 else 24.0
+	var col_w := minf(400.0, vp.x - col_x * 2.0)
+	_logo = BrandLogo.new(3 if vp.x >= 760.0 else 2)
+	_logo.position = Vector2(col_x - 6.0, 34.0)
+	add_child(_logo)
 
-	var mark := Panel.new()
-	mark.position = Vector2(logo_x, logo_y)
-	mark.size = Vector2(74, 58)
-	mark.add_theme_stylebox_override("panel", _panel_style(Color(0.08, 0.18, 0.16, 0.86), Color(0.96, 0.76, 0.36, 0.92), 4))
-	add_child(mark)
+	_tagline = Label.new()
+	_tagline.text = tr("Practice the moments you can't plan.")
+	_tagline.position = Vector2(col_x, 34.0 + 96.0 + 10.0)
+	_tagline.add_theme_font_size_override("font_size", UiText.fs(18))
+	_tagline.add_theme_color_override("font_color", Color("f2eedd"))
+	add_child(_tagline)
 
-	var mark_text := Label.new()
-	mark_text.text = "C&C"
-	mark_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mark_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	mark_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mark_text.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
-	mark_text.add_theme_font_size_override("font_size", UiText.fs(14))
-	mark_text.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
-	mark.add_child(mark_text)
-
-	var title := Label.new()
-	title.text = "CHALK & CHANCE"
-	title.position = Vector2(logo_x, logo_y + 72)
-	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
-	title.add_theme_font_size_override("font_size", UiText.fs(30))
-	title.add_theme_color_override("font_color", Color(0.98, 0.92, 0.68))
-	title.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.95))
-	title.add_theme_constant_override("outline_size", 7)
-	add_child(title)
-
-	var sub := Label.new()
-	sub.text = "Teach. Listen. Adapt."
-	sub.position = Vector2(logo_x + 4, logo_y + 122)
-	sub.add_theme_font_size_override("font_size", UiText.fs(18))
-	sub.add_theme_color_override("font_color", Color(0.85, 0.94, 0.92))
-	sub.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.9))
-	sub.add_theme_constant_override("outline_size", 4)
-	add_child(sub)
-
-	var panel_w := minf(390.0, vp.x - 56.0)
-	var panel_h := minf(510.0, vp.y - 32.0)
-	var panel_x := vp.x - panel_w - 46.0
-	if vp.x < 760.0:
-		panel_x = (vp.x - panel_w) * 0.5
-	var panel_y := maxf(18.0, (vp.y - panel_h) * 0.5)
-
-	_add_landing_characters(vp, panel_x)
-
-	var panel := Panel.new()
-	panel.position = Vector2(panel_x, panel_y)
-	panel.size = Vector2(panel_w, panel_h)
-	panel.add_theme_stylebox_override("panel", _panel_style(Color(0.04, 0.08, 0.11, 0.83), Color(0.96, 0.86, 0.55, 0.34), 3))
-	add_child(panel)
-
-	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(panel_x + 22, panel_y + 20)
-	scroll.size = Vector2(panel_w - 44, panel_h - 40)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.follow_focus = true
-	add_child(scroll)
-
-	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(panel_w - 44, 0)
-	box.add_theme_constant_override("separation", 8)
-	scroll.add_child(box)
+	_menu = VBoxContainer.new()
+	_menu.position = Vector2(col_x, 196.0)
+	_menu.custom_minimum_size = Vector2(col_w, 0)
+	_menu.add_theme_constant_override("separation", 10)
+	add_child(_menu)
 
 	var demo := Button.new()
 	demo.text = "Play demo"
@@ -98,42 +54,35 @@ func _ready() -> void:
 		demo.visible = false
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		demo.text = "Play demo (voice off)"
-	demo.custom_minimum_size = Vector2(0, 42)
+	demo.custom_minimum_size = Vector2(col_w, 44)
 	demo.add_theme_font_size_override("font_size", UiText.fs(18))
 	_apply_button_style(demo, true)
 	demo.pressed.connect(_go_hub)
-	box.add_child(demo)
+	_menu.add_child(demo)
 
-	var demo_hint := Label.new()
-	demo_hint.text = "Pick a mission, teach the class, then see how it went."
-	if is_course:
-		demo_hint.text = "%s: enter your name and the course passcode so your progress saves." % course_label
-	demo_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	demo_hint.add_theme_font_size_override("font_size", UiText.fs(12))
-	demo_hint.add_theme_color_override("font_color", Color(0.76, 0.86, 0.88))
-	box.add_child(demo_hint)
+	var open_form := Button.new()
+	open_form.text = "Sign in with your class"
+	open_form.custom_minimum_size = Vector2(col_w, 38)
+	open_form.visible = not is_course
+	_apply_button_style(open_form, false)
+	_menu.add_child(open_form)
 
-	var divider := Label.new()
-	divider.text = "Class sign in"
-	if is_course:
-		divider.text = "%s sign in" % course_label
-	divider.add_theme_font_size_override("font_size", UiText.fs(16))
-	divider.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
-	box.add_child(divider)
-
-	var signin_hint := Label.new()
-	signin_hint.text = "Sign in with your class so your progress follows you."
-	if is_course:
-		signin_hint.text = "The %s class code is already filled in. Just add your name and the course passcode." % course_label
-	signin_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	signin_hint.add_theme_font_size_override("font_size", UiText.fs(11))
-	signin_hint.add_theme_color_override("font_color", Color(0.70, 0.78, 0.84))
-	box.add_child(signin_hint)
-
+	# The class form folds away until asked for (course links open it straight away).
 	_class_box = VBoxContainer.new()
-	_class_box.add_theme_constant_override("separation", 8)
-	box.add_child(_class_box)
+	_class_box.add_theme_constant_override("separation", 6)
+	_class_box.visible = is_course
+	_menu.add_child(_class_box)
+	open_form.pressed.connect(func():
+		_class_box.visible = not _class_box.visible
+		if _class_box.visible:
+			(_class_in if _class_in.visible else _name_in).grab_focus())
 
+	if is_course:
+		var course_head := Label.new()
+		course_head.text = "%s sign in" % course_label
+		course_head.add_theme_font_size_override("font_size", UiText.fs(18))
+		course_head.add_theme_color_override("font_color", Color("ffd34e"))
+		_class_box.add_child(course_head)
 	_class_in = _field(_class_box, "Class code", "e.g. UA-CAT531-SUMMER26", false)
 	_name_in = _field(_class_box, "Your name", "First Last", false)
 	_pw_in = _field(_class_box, "Course passcode", "enter course passcode", true)
@@ -153,25 +102,12 @@ func _ready() -> void:
 	_btn.pressed.connect(_on_sign_in)
 	_class_box.add_child(_btn)
 
-	var skip := Button.new()
-	skip.text = "Skip sign in"
-	if is_course:
-		skip.visible = false
-	skip.custom_minimum_size = Vector2(0, 34)
-	_apply_button_style(skip, false)
-	skip.pressed.connect(_go_hub)
-	_class_box.add_child(skip)
-
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status.custom_minimum_size = Vector2(col_w, 0)
+	_status.add_theme_font_size_override("font_size", UiText.fs(12))
 	_status.add_theme_color_override("font_color", Color(0.95, 0.6, 0.55))
-	box.add_child(_status)
-
-	# Keyboard/gamepad players start on the main action; course builds start on the name field.
-	if demo.visible:
-		demo.grab_focus.call_deferred()
-	else:
-		_name_in.grab_focus.call_deferred()
+	_menu.add_child(_status)
 
 	Auth.login_ok.connect(_go_hub)
 	Auth.login_failed.connect(func(m): _set_status(m, true); if _btn != null: _btn.disabled = false)
@@ -182,38 +118,38 @@ func _ready() -> void:
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		_set_status("Public demo. Voice is off here to keep costs down.", false)
 
+	# Intro: the ring fills, then the tagline and menu fade in. Any press skips it.
+	_tagline.modulate.a = 0.0
+	_menu.modulate.a = 0.0
+	_logo.animate(func():
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(_tagline, "modulate:a", 1.0, 0.25 if Juice.motion_ok() else 0.0)
+		tw.tween_property(_menu, "modulate:a", 1.0, 0.25 if Juice.motion_ok() else 0.0)
+		# Keyboard/gamepad players start on the main action; course builds start on the name field.
+		if demo.visible:
+			demo.grab_focus()
+		else:
+			_name_in.grab_focus())
+
+func _input(event: InputEvent) -> void:
+	if _logo != null and not _logo.done and (event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventJoypadButton) and event.is_pressed():
+		_logo.skip()
+		get_viewport().set_input_as_handled()
+
 func _add_landing_background(vp: Vector2) -> void:
 	var art := TextureRect.new()
-	art.texture = load("res://ui/art/landing_classroom.png")
-	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	art.texture = load("res://assets/brand/keyart/key_art_960x540.png")
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.size = vp   # the root has no size of its own under the scene stack
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(art)
-
-	var shade := ColorRect.new()
-	shade.color = Color(0.02, 0.04, 0.06, 0.34)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(shade)
-
-	var left_readability := ColorRect.new()
-	left_readability.color = Color(0.01, 0.05, 0.05, 0.36)
-	left_readability.position = Vector2.ZERO
-	left_readability.size = Vector2(vp.x * 0.62, vp.y)
-	add_child(left_readability)
-
-func _add_landing_characters(vp: Vector2, panel_x: float) -> void:
-	if vp.x < 760.0:
-		return
-	var texture: Texture2D = load("res://ui/art/landing_characters.png")
-	if texture == null:
-		return
-	var chars := Sprite2D.new()
-	chars.texture = texture
-	var w := clampf(panel_x - 190.0, 280.0, 330.0)
-	var h := w * float(texture.get_height()) / float(texture.get_width())
-	var s := w / float(texture.get_width())
-	chars.position = Vector2(28.0 + w * 0.5, vp.y - h - 2.0 + h * 0.5)
-	chars.scale = Vector2(s, s)
-	add_child(chars)
+	# Wider-than-16:9 screens: fill the left with the art's own navy so the column stays clean.
+	var bg := ColorRect.new()
+	bg.color = Color("24304f")
+	bg.size = vp
+	add_child(bg)
+	move_child(bg, 0)
 
 func _panel_style(fill: Color, border: Color, border_width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

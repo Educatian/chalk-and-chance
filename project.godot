@@ -7,10 +7,14 @@ config_version=5
 [application]
 
 config/name="Chalk & Chance"
-config/description="A Pokemon-style 2D teacher-simulation game where classroom encounters are read-act-observe dialogues against LLM-driven students. See GAME_CONCEPT.md."
+config/description="A classroom rehearsal game for teachers. Practice the moments you can't plan."
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="res://assets/brand/icon/icon_256.png"
+boot_splash/bg_color=Color(0.141, 0.188, 0.31, 1)
+boot_splash/image="res://assets/brand/splash/splash_960x540.png"
+boot_splash/fullsize=false
+boot_splash/use_filter=false
 
 [autoload]
 
