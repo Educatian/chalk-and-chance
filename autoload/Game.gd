@@ -25,6 +25,10 @@ func start_lesson(scenario_id: String, period_seconds: float) -> void:
 		"offtask": {}, "visited": {}, "voiced": {}, "moves": [],
 	}
 
+## B8: {scenario_id, metric} of the objective the last debrief named as the next target.
+## Session memory only (not saved): it carries into the next attempt of that mission.
+var retry_focus: Dictionary = {}
+
 func clear_lesson() -> void:
 	lesson = {}
 

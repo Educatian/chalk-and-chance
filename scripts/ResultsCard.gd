@@ -135,6 +135,8 @@ static func build(parent: Node, data: Dictionary) -> Control:
 		for id in items.keys():
 			if int(items[id]) > 0 and rx < r.end.x - 120:
 				rx = _icon_chip(root, Items.icon_for(str(id)), "%s x%d" % [Items.short_name_for(str(id)), int(items[id])], Vector2(rx, y))
+	for e in rw.get("extra", []):
+		rx = _icon_chip(root, ICONS["right"], str(e), Vector2(rx, y))
 	if rx == x0 + 156.0:
 		_label(root, str(rw.get("none", "Nothing this time.")), Vector2(rx, y + 6), Vector2(r.end.x - rx - 24, 16), UiText.fs(12), MUTED)
 

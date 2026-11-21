@@ -34,6 +34,7 @@ func _ready() -> void:
 	_check_results_grade()
 	_check_praise_kinds()
 	_check_voiced()
+	_check_retry_focus()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -63,6 +64,16 @@ func _check_voiced() -> void:
 	Game.note_voiced("priya_quiet")
 	_ok("heard students count once each", Game.voiced_count() == 2)
 	Game.lesson = keep
+
+## B8: the carried-forward objective moves to the front, flagged, nothing lost or duplicated.
+func _check_retry_focus() -> void:
+	var Ow = load("res://scenes/overworld/Overworld.gd")
+	var objs := [{"metric": "attention_min"}, {"metric": "engaged_min"}, {"metric": "waittime_min"}]
+	var out: Array = Ow.apply_retry_focus(objs, "waittime_min")
+	_ok("retry focus becomes objective 1", out.size() == 3 and str(out[0]["metric"]) == "waittime_min" and bool(out[0].get("retry", false)))
+	_ok("other objectives keep their order", str(out[1]["metric"]) == "attention_min" and str(out[2]["metric"]) == "engaged_min")
+	_ok("unknown metric leaves objectives unchanged", Ow.apply_retry_focus(objs, "connect_min") == objs)
+	_ok("source objectives are not mutated", not objs[2].has("retry"))
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

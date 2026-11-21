@@ -12,6 +12,7 @@ const UiKit = preload("res://scripts/UiKit.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 const ResultsCard = preload("res://scripts/ResultsCard.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
+const Tuning = preload("res://scripts/Tuning.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
 # Student 1.35 tiles ~= 54px (~10% of screen height); teacher 1.7 tiles ~= 68px. This is
@@ -166,6 +167,8 @@ func _ready() -> void:
 		_composure = GameState.max_composure()
 		GameState.note_attempt(Game.current_scenario_id)
 	_objectives = cfg.get("objectives", [])
+	if str(Game.retry_focus.get("scenario_id", "")) == str(Game.current_scenario_id):
+		_objectives = apply_retry_focus(_objectives, str(Game.retry_focus.get("metric", "")))
 	_badge = str(cfg.get("badge", ""))
 	_seats = Seating.seats_for(str(cfg.get("arrangement", "ushape")))
 	# Deliberate-practice fade: each replay makes the room drift faster.
@@ -1105,6 +1108,7 @@ func _end_lesson() -> void:
 			stars += 1
 		objective_tags.append("%s %s" % ["OK" if ok else "MISS", _objective_short_label(o)])
 	var reward_info := {}
+	var retry_info := _settle_retry_focus(attention)
 	if stars == _objectives.size() and stars > 0 and _badge != "":
 		var reward := GameState.award_badge(_badge)
 		reward_info = reward
@@ -1122,6 +1126,12 @@ func _end_lesson() -> void:
 			"trace_steps": Game.evidence_trace_steps_from_moves(moves),
 		})
 	_pending_card = _card_data(attention, stars, reward_info)
+	if bool(retry_info.get("met", false)):
+		var rw: Dictionary = _pending_card["rewards"]
+		rw["extra"] = [tr("+%d XP retry focus met") % Tuning.RETRY_XP_BONUS]
+		if bool(retry_info.get("level_up", false)):
+			rw["level_up"] = true
+			rw["level_after"] = int(retry_info.get("level_after", GameState.teacher_level))
 	Telemetry.log_event({
 		"event": "classroom_resolve", "scenario_id": str(Game.current_scenario_id),
 		"title": _scenario_title, "attempt": _attempt,
@@ -1160,6 +1170,39 @@ func _on_reflect(opt: Dictionary) -> void:
 
 ## REVIEW: the shared results card (grade, verdict, three parts with causes, rewards,
 ## pivotal moments, one next target) on the same overlay layer as the reflection step.
+## B8: move the objective with `metric` to the front, flagged as the retry focus.
+static func apply_retry_focus(objs: Array, metric: String) -> Array:
+	var out: Array = []
+	var focus := {}
+	for o in objs:
+		if focus.is_empty() and str(o.get("metric", "")) == metric:
+			focus = (o as Dictionary).duplicate()
+			focus["retry"] = true
+		else:
+			out.append(o)
+	if not focus.is_empty():
+		out.push_front(focus)
+	return out
+
+## B8: pay the retry-focus bonus if it was met, then carry the next target forward (the
+## first missed objective, the same one the card names under "Next time").
+func _settle_retry_focus(attention: float) -> Dictionary:
+	var info := {}
+	for o in _objectives:
+		if bool(o.get("retry", false)):
+			var met := _objective_met(o, attention)
+			info = {"met": met, "metric": str(o.get("metric", ""))}
+			if met:
+				info.merge(GameState.add_teacher_xp(Tuning.RETRY_XP_BONUS, "retry_focus:%s" % info["metric"]))
+			Telemetry.log_event({"event": "retry_focus", "scenario_id": str(Game.current_scenario_id),
+				"metric": info["metric"], "met": met, "xp": Tuning.RETRY_XP_BONUS if met else 0})
+	Game.retry_focus = {}
+	for o in _objectives:
+		if not _objective_met(o, attention):
+			Game.retry_focus = {"scenario_id": str(Game.current_scenario_id), "metric": str(o.get("metric", ""))}
+			break
+	return info
+
 func _show_results_card() -> void:
 	input_locked = true
 	# Own canvas layer: the card is taller than the room and must sit over the HUD bands.
@@ -1215,7 +1258,7 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		title += "  ·  replay #%d (the room drifts faster each attempt)" % _attempt
 	var next := "Stretch: reach every student and keep attention above 90%."
 	if not missed.is_empty():
-		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Try again with this objective in mind."))
+		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Try again with this objective in mind.")) + " " + tr("It leads your next try (+%d XP).") % Tuning.RETRY_XP_BONUS
 	return {
 		"title": title,
 		"rank": rank,
@@ -1354,7 +1397,8 @@ func _objectives_status(attention: float) -> String:
 		var ok := _objective_met(o, attention)
 		var mark := "OK" if ok else "  "
 		# A2: each objective names the teaching skill it practises, then the rule and count.
-		lines.append("[%s] %s  %d/%d\n      %s" % [mark, str(OBJ_SKILL.get(metric, "Practice")), current, target, str(o.get("label", metric))])
+		var focus_tag := tr("RETRY FOCUS  ") if bool(o.get("retry", false)) else ""
+		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, str(OBJ_SKILL.get(metric, "Practice")), current, target, str(o.get("label", metric))])
 	return "\n".join(lines)
 
 func _objectives_met_count(attention: float) -> int:

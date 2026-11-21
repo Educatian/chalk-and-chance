@@ -26,3 +26,7 @@ const PRAISE_GENERIC_DELTAS := {"understanding": 0.0, "trust": 0.02, "engagement
 const VOICE_TAGS := ["elicit", "revoice"]
 ## Group check-in: a productive one of these counts every member of that pod as heard.
 const GROUP_VOICE_TAGS := ["probe", "redistribute"]
+
+# --- B8 deliberate practice: the debrief's next target becomes the retry's objective 1 ----
+## XP for meeting the carried-forward retry focus on the next attempt.
+const RETRY_XP_BONUS := 40
