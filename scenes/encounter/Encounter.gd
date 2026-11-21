@@ -100,6 +100,7 @@ var _thinking := false           # WT-I: the student is thinking after a questio
 var _think_resp: Dictionary = {} # their answer, held until the think time is over
 var _think_t0 := 0
 var _long_fired := false         # idle past Tuning.WT_LONG_MS already cost engagement
+var _praise_btn: Button          # B3: its hint says live whether praise would be specific
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -488,6 +489,8 @@ func _build_ui() -> void:
 		InputFeel.add_hotkey_badge(b, i, UiText.S_TINY)
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
+		if tag == "praise":
+			_praise_btn = b
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
 		_layer.add_child(b)
@@ -723,6 +726,10 @@ func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
 	_long_fired = false
+	if _praise_btn != null:
+		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
+		if ph != null:
+			ph.text = tr("names what they just did") if _praise_specific() else tr("generic: nothing to name yet")
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
@@ -878,7 +885,22 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		LLMClient.reply_ready.connect(_on_reply_gate, CONNECT_ONE_SHOT)
 	LLMClient.send_move(payload)
 
+## B3: praise is specific only when there is something nameable: the last move landed, or
+## praise fits the student's path now (a designed "catch them doing it right" moment).
+func _praise_specific() -> bool:
+	if not _move_history.is_empty() and bool(_move_history[-1].get("targets", false)):
+		return true
+	return _pj != null and _pj.fits_now("praise")
+
 func _on_reply(resp: Dictionary) -> void:
+	var ptags: Array = resp.get("judge", {}).get("move_tags", [])
+	if ptags.size() > 0 and str(ptags[0]) == "praise":
+		var pj: Dictionary = resp.get("judge", {})
+		pj["praise_kind"] = "specific" if _praise_specific() else "generic"
+		resp["judge"] = pj
+		if pj["praise_kind"] == "generic":
+			resp["meter_deltas"] = Tuning.PRAISE_GENERIC_DELTAS.duplicate()
+			resp["coach_tip"] = "That was generic praise: there was nothing specific to name yet. Praise right after they show their thinking, and say what they did."
 	var before := _meter_snapshot()
 	_hold_text = true
 	_meter_delay = TURN_CUE_AT
@@ -900,7 +922,10 @@ func _on_reply(resp: Dictionary) -> void:
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
 	# Path judge is authoritative for fit: the same move can be right now and early later.
 	var fit := {}
-	if tag0 != "" and _pj != null:
+	if str(judge.get("praise_kind", "")) == "generic":
+		fit = {"fit": "miss", "credit": 0.0, "path_id": "", "path_label": "", "done": false, "note": "generic praise names nothing they did"}
+		targets = false
+	elif tag0 != "" and _pj != null:
 		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)), bool(resp.get("cut", false)))
 		targets = str(fit["fit"]) == "advance"
 		var credit := float(fit["credit"])
@@ -940,7 +965,8 @@ func _on_reply(resp: Dictionary) -> void:
 		"turn": _turns,
 		"scaffold": {"level": int(_scaffold["level"]), "effective": _support_level(), "stepped_in": _stepped_in,
 			"prob": float(_scaffold.get("prob", 0.5)), "evidence": int(_scaffold.get("evidence", 0))},
-		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text},
+		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text,
+			"praise_kind": str(judge.get("praise_kind", "")), "think_cut": bool(resp.get("cut", false))},
 		"judge": {"tags": tags, "targets": targets, "wait_ok": bool(judge.get("wait_time_ok", false))},
 		"deltas": deltas,
 		"meters": {
@@ -1382,7 +1408,7 @@ func _move_gloss(tag: String) -> String:
 		"extend": return "Okay, and what happens if you push that idea further?"
 		"revoice": return "So what you're saying is..."
 		"tell": return "Here's how it actually works: let me show you."
-		"praise": return "I like how you explained your thinking there."
+		"praise": return "You just walked me through how you got that. That is the thinking I want to see." if _praise_specific() else "Good job!"
 		"redirect": return "Let's bring our focus back to the problem."
 		"wait": return "(waits quietly, giving you time to think)"
 		"connect": return "Tell me about something you're really good at outside class."

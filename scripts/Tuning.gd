@@ -14,3 +14,9 @@ const WT_LONG_ENGAGEMENT := -2.0
 ## Speaking into the think time: the student drops the thought.
 const CUT_DELTAS := {"understanding": 0.0, "trust": -0.03, "engagement": -0.04, "order": 0.0, "composure": 0.0}
 const CUT_LINE := "...oh. Never mind."
+
+# --- B3 feedback kinds (Hattie & Timperley): specific vs generic praise -----------------
+## Praise is specific only when there is something nameable: the last move landed, or
+## praise fits the student's path now. Generic praise: this much trust, no understanding, no path progress, and
+## it is not evidence of behaviour-specific praise.
+const PRAISE_GENERIC_DELTAS := {"understanding": 0.0, "trust": 0.02, "engagement": 0.0, "order": 0.0, "composure": 0.0}

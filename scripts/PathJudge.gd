@@ -99,6 +99,19 @@ func evaluate(tag: String, wait_ok: bool = true, cut: bool = false) -> Dictionar
 				return res
 	return res
 
+## True if `tag` fits a step the student has reached on some path (no state change); the
+## same test evaluate() uses for "advance".
+func fits_now(tag: String) -> bool:
+	var stage := 0
+	for p in paths:
+		stage = maxi(stage, int(progress[str(p["id"])]))
+	for p in paths:
+		var steps: Array = p["steps"]
+		for k in range(mini(stage, steps.size() - 1) + 1):
+			if tag in steps[k]:
+				return true
+	return false
+
 ## Moves that open at least one path (what to do before a "later" move).
 func _openers() -> Array:
 	var out: Array = []

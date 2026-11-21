@@ -32,6 +32,7 @@ func _ready() -> void:
 	await _check_juice()
 	_check_text_scale()
 	_check_results_grade()
+	_check_praise_kinds()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -43,6 +44,12 @@ func _check_results_grade() -> void:
 	_ok("low share with all objectives is still low", ResultsCard.classroom_rank(0.45, 3, 3) == "D")
 	_ok("weakest part is the lowest share", ResultsCard.weakest([{"frac": 0.9}, {"frac": 0.2}, {"frac": 0.5}]) == 1)
 	_ok("C/D grade colour is calm, not alarm red", ResultsCard.grade_color("D").r < 0.85 and ResultsCard.grade_color("D") == ResultsCard.grade_color("C"))
+
+## B3: generic praise is not evidence of behaviour-specific praise; specific praise is.
+func _check_praise_kinds() -> void:
+	_ok("generic praise scores 0 for specific-praise skill", Competency.score_y("praise", {"praise_kind": "generic"}, {"trust": 0.02}) == 0)
+	_ok("specific praise with trust gain scores 1", Competency.score_y("praise", {"praise_kind": "specific"}, {"trust": 0.08}) == 1)
+	_ok("generic praise moves no understanding", float(load("res://scripts/Tuning.gd").PRAISE_GENERIC_DELTAS["understanding"]) == 0.0)
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)
