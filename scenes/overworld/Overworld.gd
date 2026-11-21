@@ -968,7 +968,7 @@ func _set_objectives_open(open: bool, toast: bool) -> void:
 
 func _refresh_objective_toggle() -> void:
 	if _objective_toggle != null:
-		_objective_toggle.text = "Objectives %d/%d  [O] %s" % [_last_objectives_met, _objectives.size(), "hide" if _objectives_open else "show"]
+		_objective_toggle.text = "Objectives %d/%d  [O] %s" % [_last_objectives_met, _objectives.size(), tr("hide") if _objectives_open else tr("show")]
 
 func _process(delta: float) -> void:
 	if _player == null:
@@ -1449,14 +1449,14 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 	return {
 		"title": title,
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"verdict": ResultsCard.verdict(rank, tr(str(parts[weak]["label"])).to_lower()),
 		"parts": parts,
 		"rewards": {"badge": _badge if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear" if bool(reward.get("badge_new", false)) else "Mission badge",
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", 0)), "items": reward.get("items_awarded", {}),
-			"none": ("You already have the %s badge." % _badge.capitalize()) if not reward.is_empty()
-				else ("Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "This mission has no badge.")},
+			"none": (tr("You already have the %s badge.") % tr(_badge.capitalize())) if not reward.is_empty()
+				else (tr("Clear every objective to earn the %s badge.") % tr(_badge.capitalize()) if _badge != "" else "This mission has no badge.")},
 		"moments": _classroom_moments(back),
 		"next": next,
 	}
@@ -1475,11 +1475,11 @@ func _classroom_moments(back: int) -> Array:
 	if moves.is_empty():
 		out.append({"kind": "wrong", "text": "No conferences  ->  you never heard anyone's thinking  ->  get at least one to explain."})
 	if hit >= 0:
-		out.append({"kind": "right", "text": "Move %d  %s  ->  it was what they needed  ->  they got further." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
+		out.append({"kind": "right", "text": "Move %d  %s  ->  it was what they needed  ->  they got further." % [hit + 1, tr(str(moves[hit].get("tag", "")).capitalize())]})
 	if off >= 0:
 		var why := "you didn't give them three seconds first" if not bool(moves[off].get("wait_ok", false)) else "it wasn't what they needed yet"
 		out.append({"kind": "early" if not bool(moves[off].get("wait_ok", false)) else "wrong",
-			"text": "Move %d  %s  ->  didn't land  ->  %s." % [off + 1, str(moves[off].get("tag", "")).capitalize(), why]})
+			"text": "Move %d  %s  ->  didn't land  ->  %s." % [off + 1, tr(str(moves[off].get("tag", "")).capitalize()), tr(why)]})
 	if back >= 10:
 		out.append({"kind": "early", "text": "%ds facing the board  ->  they drifted twice as fast  ->  look back as you write." % back})
 	elif _disruptions > 0:

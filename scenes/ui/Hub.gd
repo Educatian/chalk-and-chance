@@ -374,7 +374,9 @@ func _open_mission_briefing(id: String) -> void:
 
 func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2, size: Vector2, color: Color, fd: int, wrap_chars: int) -> void:
 	var label := Label.new()
-	label.text = "%s\n%s" % [head, _wrap_words(body, wrap_chars)]
+	# Korean glyphs are about twice as wide as Latin ones: wrap at half the count.
+	var wc := wrap_chars / 2 if TranslationServer.get_locale().begins_with("ko") else wrap_chars
+	label.text = "%s\n%s" % [tr(head), _wrap_words(tr(body), wc)]
 	label.position = pos
 	label.size = size
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -568,14 +570,14 @@ func _mission_chip_color(earned: bool, locked: bool, is_next: bool) -> Color:
 
 func _mission_meta(cfg: Dictionary) -> String:
 	var mode := str(cfg.get("mode", "overworld"))
-	var format := str(cfg.get("format", "discussion")).replace("_", " ").capitalize()
+	var format := tr(str(cfg.get("format", "discussion")).replace("_", " ").capitalize())
 	var roster: Array = cfg.get("roster", [])
 	var seconds := int(cfg.get("period_seconds", 0))
-	var time_text := "%d:%02d" % [seconds / 60, seconds % 60] if seconds > 0 else "boss"
+	var time_text := "%d:%02d" % [seconds / 60, seconds % 60] if seconds > 0 else tr("boss")
 	var badge := str(cfg.get("badge", ""))
-	var badge_text := "Badge: %s" % _badge_name(badge) if badge != "" else "No badge"
+	var badge_text := tr("Badge: %s") % _badge_name(badge) if badge != "" else tr("No badge")
 	if mode == "gym":
-		format = "Capstone"
+		format = tr("Capstone")
 	return "%s  |  %s  |  %d learners  |  %s" % [format, time_text, roster.size(), badge_text]
 
 func _mission_focus(cfg: Dictionary) -> String:
@@ -837,7 +839,7 @@ func _open_upgrades() -> void:
 		b.size = Vector2(520, 58)
 		b.add_theme_font_size_override("font_size", UiText.fs(13))
 		HubUi.apply_button_style(b, rank < max_rank)
-		b.text = "%s  Rank %d/%d\n%s" % [str(def.get("name", id)), rank, max_rank, str(def.get("desc", ""))]
+		b.text = tr("%s  Rank %d/%d\n%s") % [tr(str(def.get("name", id))), rank, max_rank, tr(str(def.get("desc", "")))]
 		b.disabled = GameState.upgrade_points <= 0 or rank >= max_rank
 		b.pressed.connect(_choose_upgrade.bind(id, overlay))
 		overlay.add_child(b)
@@ -1576,18 +1578,18 @@ func _toggle_item_equipped(id: String, overlay: Control) -> void:
 
 func _refresh_setting_button(button: Button, opt: Dictionary) -> void:
 	var on := bool(GameState.get_setting(str(opt["key"]), false))
-	button.text = "%s: %s" % [str(opt["label"]), str(opt["on"] if on else opt["off"])]
+	button.text = "%s: %s" % [tr(str(opt["label"])), tr(str(opt["on"] if on else opt["off"]))]
 
 func _refresh_profile_button(button: Button) -> void:
 	var def: Dictionary = GameState.teacher_profile()
-	button.text = "Profile: %s" % str(def.get("short", "Steady"))
+	button.text = "Profile: %s" % tr(str(def.get("short", "Steady")))
 
 func _refresh_reveal_button(button: Button) -> void:
 	var mode := str(GameState.get_setting("text_reveal", "typewriter"))
-	button.text = "Dialogue text: %s" % ("Instant" if mode == "instant" else "Typewriter")
+	button.text = tr("Dialogue text: %s") % tr("Instant" if mode == "instant" else "Typewriter")
 
 func _badge_name(id: String) -> String:
-	return id.capitalize()
+	return tr(id.capitalize())
 
 func _badge_desc(id: String) -> String:
 	match id:

@@ -119,11 +119,17 @@ func get_setting(key: String, fallback = null):
 ## Switch the game language: locale, UI catalogue, and the Korean classroom by default.
 func set_language(lang: String) -> void:
 	settings["language"] = lang
+	settings["language_chosen"] = true
 	settings["korean_classroom"] = lang == "ko"
 	save_game()
 	apply_language()
 
 func apply_language() -> void:
+	# Until the player picks, follow the system/browser language (Korean or English).
+	# Headless runs (the dev suites) stay English so test text is deterministic.
+	if not bool(get_setting("language_chosen", false)) and DisplayServer.get_name() != "headless":
+		settings["language"] = "ko" if OS.get_locale_language() == "ko" else "en"
+		settings["korean_classroom"] = settings["language"] == "ko" or bool(get_setting("korean_classroom", false))
 	var lang := str(get_setting("language", "en"))
 	TranslationServer.set_locale(lang)
 	if lang != "en" and not _catalogues.has(lang):
@@ -135,6 +141,12 @@ func apply_language() -> void:
 	n._data = {}   # story text is cached per language
 
 var _catalogues: Dictionary = {}
+
+func _exit_tree() -> void:
+	# The catalogue is a script-defined Translation: hand it back before its script unloads.
+	for t in _catalogues.values():
+		TranslationServer.remove_translation(t)
+	_catalogues.clear()
 
 func set_setting(key: String, value) -> void:
 	settings[key] = value

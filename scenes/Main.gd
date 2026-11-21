@@ -77,6 +77,9 @@ func _dev_room_hook() -> bool:
 	var room := str(JavaScriptBridge.eval(q + ".get('dev_room') || ''", true)).strip_edges()
 	if str(JavaScriptBridge.eval(q + ".get('dev_korean') || ''", true)) == "1":
 		GameState.settings["korean_classroom"] = true
+	var dev_lang := str(JavaScriptBridge.eval(q + ".get('dev_lang') || ''", true))
+	if dev_lang in ["en", "ko"]:
+		GameState.set_language(dev_lang)
 	var screen := str(JavaScriptBridge.eval(q + ".get('dev_screen') || ''", true)).strip_edges()
 	if screen == "import":
 		SceneRouter.change_scene("res://scenes/ui/ImportLesson.tscn")

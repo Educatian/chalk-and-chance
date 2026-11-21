@@ -27,6 +27,7 @@ func _ready() -> void:
 	var course_label: String = str(COURSE_CODES.get(course_code, ""))
 	var vp := get_viewport_rect().size
 	_add_landing_background(vp)
+	_add_language_switch(vp)
 
 	# Left column over the key art's dark side: logo, tagline, then the menu.
 	var col_x := 48.0 if vp.x >= 760.0 else 24.0
@@ -137,6 +138,20 @@ func _add_voice_off_icon(vp: Vector2) -> void:
 	add_child(ic)
 	ic.size = Vector2(24, 24)
 	ic.position = Vector2(vp.x - 40, 14)
+
+## Language switch on the first screen, named in the language it switches to.
+func _add_language_switch(vp: Vector2) -> void:
+	var b := Button.new()
+	b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	b.text = "English" if str(GameState.get_setting("language", "en")) == "ko" else "한국어"
+	b.add_theme_font_size_override("font_size", UiText.fs(12))
+	UiKit.style_board_button(b, UiText.fs(12))
+	b.pressed.connect(func():
+		GameState.set_language("en" if str(GameState.get_setting("language", "en")) == "ko" else "ko")
+		SceneRouter.change_scene("res://scenes/ui/Login.tscn"))
+	add_child(b)
+	b.size = Vector2(84, 28)
+	b.position = Vector2(vp.x - 136, 12)
 
 func _input(event: InputEvent) -> void:
 	if _logo != null and not _logo.done and (event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventJoypadButton) and event.is_pressed():

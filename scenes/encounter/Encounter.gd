@@ -1259,11 +1259,11 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var card := ResultsCard.build(_layer, {
 		"title": "Done with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"verdict": ResultsCard.verdict(rank, tr(str(parts[weak]["label"])).to_lower()),
 		"parts": parts,
 		"rewards": {"badge": badge_id if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Completion",
-			"none": "You already have the %s badge." % badge_id.capitalize(),
+			"none": tr("You already have the %s badge.") % tr(badge_id.capitalize()),
 			"level_up": bool(reward.get("level_up", false)),
 			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
 		"moments": _pivotal_moments(),
@@ -1341,7 +1341,14 @@ func _moment_line(m: Dictionary) -> Dictionary:
 			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it wasn't what they needed"
 		_:
 			why = "it kept the conversation open"
-	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tag.capitalize(), said, why]}
+	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tr(tag.capitalize()), said, _tr_reason(why)]}
+
+## A reason built from a PathJudge note or path label, translated piece by piece.
+func _tr_reason(why: String) -> String:
+	var cut := why.find(": ")
+	if cut > 0:
+		return tr(why.substr(0, cut + 2)) + tr(why.substr(cut + 2))
+	return tr(why)
 
 func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 	if badge_id == "":

@@ -12,6 +12,17 @@ func _ready() -> void:
 	TTSClient.enabled = false
 	await _run_suite("normal", false)
 	await _run_suite("large text", true)
+	# Korean: the same screens, laid out with Korean text; English left on screen is listed.
+	GameState.set_language("ko")
+	_korean = true
+	await _run_suite("korean", false)
+	_korean = false
+	GameState.set_language("en")
+	var left := _english_left.keys()
+	left.sort()
+	print("KOREAN LEFTOVER %d string(s)" % left.size())
+	for t in left:
+		print("KOREAN LEFTOVER | %s | %s" % [t, _english_left[t]])
 
 	if _issues.is_empty():
 		print("UIAUDIT PASS")
@@ -20,6 +31,26 @@ func _ready() -> void:
 		for i in _issues:
 			print(i)
 	get_tree().quit()
+
+var _korean := false
+var _english_left: Dictionary = {}   # visible English in the Korean pass: text -> where
+const _EN_OK := ["XP", "Lv", "OK", "S", "A", "B", "C", "D", "Chalk & Chance", "CHALK & CHANCE"]
+
+func _note_english(label: String, c: Control) -> void:
+	var t := ""
+	if c is Label:
+		t = (c as Label).text
+	elif c is Button:
+		t = (c as Button).text
+	else:
+		return
+	var shown := c.atr(t) if c.auto_translate_mode != Node.AUTO_TRANSLATE_MODE_DISABLED else t
+	var re := RegEx.new()
+	re.compile("[A-Za-z]{3,}")
+	var m := re.search(shown)
+	if m == null or shown.strip_edges() in _EN_OK:
+		return
+	_english_left[shown.strip_edges().left(90)] = label
 
 func _run_suite(prefix: String, large_text: bool) -> void:
 	GameState.settings["large_text"] = large_text
@@ -318,6 +349,8 @@ func _scan(label: String, root: Node) -> void:
 			_issues.append("%s clipped: %s %s" % [label, _node_name(c), str(r)])
 		_scan_text_fit(label, c)
 		_scan_pixel_sentence(label, c)
+		if _korean:
+			_note_english(label, c)
 	var interactives := controls.filter(func(c): return _is_interactive(c) and (not _inside_scroll(c) or _visible_in_scroll(c)))
 	for i in range(interactives.size()):
 		for j in range(i + 1, interactives.size()):

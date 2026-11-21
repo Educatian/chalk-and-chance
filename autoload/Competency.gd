@@ -129,7 +129,7 @@ func uncertainty(skill: String) -> float:
 func summary() -> Array:
 	var out: Array = []
 	for s in SKILLS:
-		out.append({"skill": s, "label": LABELS.get(s, s), "prob": prob(s),
+		out.append({"skill": s, "label": tr(str(LABELS.get(s, s))), "prob": prob(s),
 			"n": int(n.get(s, 0)), "unc": uncertainty(s)})
 	out.sort_custom(func(a, b): return a["n"] > b["n"])
 	return out
