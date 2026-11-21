@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS := {
 	"text_reveal": "typewriter",
 	"cinematics": true,
 	"music_enabled": true,
+	"korean_classroom": false,   # Classroom look: false = US (default), true = Korean variant
 }
 const DEFAULT_UPGRADES := {
 	"steady_presence": 0,

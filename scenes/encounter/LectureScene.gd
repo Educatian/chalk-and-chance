@@ -1,4 +1,5 @@
 extends Control
+const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Lecture (direct-instruction) mode: the rhythm of PRESENT vs CHECK-FOR-UNDERSTANDING.
 ## Students REACT (portrait affect swap + emote bubble + bob) to your pacing, questions, and
@@ -119,7 +120,7 @@ func setup(data: Dictionary) -> void:
 func _apply_scaffold() -> void:
 	var lvl := int(_scaffold["level"])
 	if _scaffold_badge == null:
-		_scaffold_badge = _label("", Vector2(284, 12), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge = _label("", Vector2(404, 6), UiText.S_MICRO, Color.WHITE)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(lvl, false)
@@ -208,8 +209,12 @@ func _refresh_backdrop() -> void:
 # --- UI ----------------------------------------------------------------------
 
 func _build_ui() -> void:
-	_title = _label("LECTURE: %s" % str(scenario.get("title", "Lesson")), Vector2(10, 6), UiText.S_DISPLAY, Color(0.97, 0.93, 0.85))
-	_title.size = Vector2(460, 14)
+	UiKit.add_scene_frame(_layer, Rect2(4, 2, 472, 17), [Rect2(4, 21, 276, 64), Rect2(6, 166, 468, 48)])
+	_title = _label("LECTURE: %s" % str(scenario.get("title", "Lesson")), Vector2(10, 4), UiText.S_TITLE, Color(0.97, 0.93, 0.85))
+	_title.size = Vector2(388, 12)
+	_title.clip_text = true
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_title.add_theme_font_override("font", UiKit.pixel_font())
 
 	_make_bar("progress", "Lesson Progress", 26, Color(0.30, 0.80, 0.40))
 	_make_bar("comp", "Comprehension", 42, Color(0.35, 0.65, 0.95))
@@ -280,7 +285,7 @@ func _build_ui() -> void:
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position
 	dbg.size = dialogue_box.size
-	dbg.color = Color(0.12, 0.15, 0.26, 0.88)
+	dbg.color = Color(0, 0, 0, 0)   # the chalkboard panel behind provides the box
 	dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(dbg)
 	_dialogue = _label("", dialogue_text.position, 9, Color(0.96, 0.96, 0.92))
@@ -313,6 +318,7 @@ func _build_ui() -> void:
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
+		b.size = Vector2(84, 30)   # re-apply once themed fonts resolve in the tree
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus.call_deferred()
@@ -461,6 +467,7 @@ func _make_bar(key: String, name_txt: String, y: float, c: Color) -> void:
 	_bars[key] = fill
 
 func _tex(path: String) -> Texture2D:
+	path = UiKit.portrait_path(path)
 	if ResourceLoader.exists(path):
 		var r = load(path)
 		if r is Texture2D:
@@ -1074,7 +1081,9 @@ func _bar_deltas(before: Array) -> Array:
 		if d == 0 or fill == null:
 			continue
 		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
-		out.append([_signed(d), Vector2((120.0 + 150.0 + 4.0) * UI_SCALE, fill.position.y - 3.0 * UI_SCALE), col])
+		var maxv := GameState.max_composure() if keys[i] == "composure" else 100.0
+		var frac := clampf(float(now[i]) / maxf(1.0, maxv), 0.0, 1.0)
+		out.append([_signed(d), Vector2(fill.position.x + 150.0 * UI_SCALE * frac + 4.0, fill.position.y - 3.0 * UI_SCALE), col])
 	return out
 
 # --- turn-resolution beat ------------------------------------------------------

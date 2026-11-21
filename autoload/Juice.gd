@@ -11,6 +11,7 @@ var _beats: Array = []   # [{owner: Node, beat: TurnBeat}]
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	preload("res://scripts/UiKit.gd").apply_to_theme()   # v2 frames for every themed Panel/Button
 
 func motion_ok() -> bool:
 	return not bool(GameState.get_setting("reduced_motion", false))
@@ -148,14 +149,18 @@ func make_outcome_chip(parent: Node, pos: Vector2, size: Vector2, font_size: int
 	var l := Label.new()
 	l.name = "OutcomeChip"
 	l.position = pos
-	l.size = size
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_font_size_override("font_size", font_size + GameState.ui_font_delta())
 	l.add_theme_color_override("font_color", Color(0.05, 0.07, 0.12))
+	l.add_theme_constant_override("line_spacing", -2)
+	l.clip_text = true
 	l.visible = false
 	parent.add_child(l)
+	# Size last: a Label clamps its size to its minimum, which depends on the font
+	# override set above (setting it first locked the chip to the default font height).
+	l.size = size
 	return l
 
 ## Show the verdict colour/label on a chip and slide its result line over to make room.
@@ -167,6 +172,7 @@ func show_outcome(chip: Label, kind: String) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = TurnBeat.color(kind)
 	sb.set_corner_radius_all(maxi(2, int(chip.size.y * 0.3)))
+	sb.set_content_margin_all(0)
 	chip.add_theme_stylebox_override("normal", sb)
 	chip.visible = true
 	# Lines that start where the chip sits slide right to make room (result, coach...).

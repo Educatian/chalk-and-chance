@@ -1,4 +1,5 @@
 extends CanvasLayer
+const UiText = preload("res://scripts/UiText.gd")
 ## Coach Vee's between-round coaching screen. Shows one move that worked, one missed
 ## opportunity with the better move + a sentence starter, any repeated anti-pattern,
 ## whether last round's focus was met, and a single focus for an immediate re-rehearsal.
@@ -7,7 +8,7 @@ extends CanvasLayer
 
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PressStart2P-Regular.ttf"
+const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 const VP := Vector2(960, 540)
 
 var _root: Control
@@ -40,7 +41,7 @@ static func show_focus_banner(parent: Node, scenario_id: String) -> void:
 	l.size = Vector2(520, 40)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", 13)
+	l.add_theme_font_size_override("font_size", UiText.fs(13))
 	l.add_theme_color_override("font_color", Color(0.70, 1.0, 0.94))
 	box.add_child(l)
 	var t := layer.create_tween()
@@ -166,7 +167,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	rehearse.text = "Rehearse with this focus"
 	rehearse.position = Vector2(56, 456)
 	rehearse.size = Vector2(420, 40)
-	rehearse.add_theme_font_size_override("font_size", 14)
+	rehearse.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(rehearse, true)
 	var fill := HubUi.button_style(Color(0.13, 0.42, 0.40, 1.0), Color(0.40, 0.98, 0.90))
 	rehearse.add_theme_stylebox_override("normal", fill)
@@ -184,7 +185,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	cont.text = "Continue"
 	cont.position = Vector2(488, 456)
 	cont.size = Vector2(416, 40)
-	cont.add_theme_font_size_override("font_size", 14)
+	cont.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(cont, false)
 	cont.pressed.connect(func():
 		GameState.save_game()
@@ -248,7 +249,7 @@ func _para(text: String, pos: Vector2, width: float, fs: int, color: Color) -> R
 	rt.position = pos
 	rt.size = Vector2(width, 20)
 	rt.custom_minimum_size = Vector2(width, 0)
-	rt.add_theme_font_size_override("normal_font_size", fs + GameState.ui_font_delta())
+	rt.add_theme_font_size_override("normal_font_size", UiText.fs(fs))
 	rt.add_theme_color_override("default_color", color)
 	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rt
@@ -259,7 +260,7 @@ func _label(text: String, pos: Vector2, size: Vector2, fs: int, color: Color) ->
 	l.position = pos
 	l.size = size
 	l.clip_text = true
-	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_font_size_override("font_size", UiText.fs(fs))
 	l.add_theme_color_override("font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l

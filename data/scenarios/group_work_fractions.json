@@ -3,7 +3,7 @@
   "title": "Group Investigation  -  Group Work (clusters)",
   "format": "group_work",
   "mode": "overworld",
-  "arrangement": "clusters",
+  "arrangement": "clusters8",
   "requires": "echo",
   "period_seconds": 120,
   "offtask_rise": 12.0,
@@ -32,22 +32,22 @@
     {
       "id": "deshawn_offtask",
       "name": "Deshawn",
-      "seat": 8
+      "seat": 2
     },
     {
       "id": "marcus_volatile",
       "name": "Marcus",
-      "seat": 9
+      "seat": 3
     },
     {
       "id": "priya_quiet",
       "name": "Priya",
-      "seat": 12
+      "seat": 6
     },
     {
       "id": "sam_withdrawn",
       "name": "Sam",
-      "seat": 13
+      "seat": 7
     }
   ],
   "objectives": [

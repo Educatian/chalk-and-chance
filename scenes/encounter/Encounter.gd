@@ -14,6 +14,12 @@ const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
+const UiKit = preload("res://scripts/UiKit.gd")
+## v2 layout (480x270 authored = 1 unit per texel): portrait panel left, meters and the
+## student's line in chalkboard panels right, verdict + coach line, move buttons below.
+const PORTRAIT_PANEL := Rect2(8, 20, 140, 140)
+const METER_PANEL := Rect2(154, 20, 318, 76)
+const LINE_PANEL := Rect2(154, 100, 318, 60)
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -28,6 +34,12 @@ const MOVES := [
 	["Tell", "tell"], ["Praise", "praise"], ["Connect", "connect"],
 	["Redirect", "redirect"], ["Wait", "wait"],
 ]
+## One-line hints under each move button (interface microcopy, not lesson content).
+const MOVE_HINTS := {
+	"elicit": "ask how they got it", "extend": "push one step further", "revoice": "say it back to them",
+	"tell": "explain it directly", "praise": "name what worked", "connect": "link to their world",
+	"redirect": "bring focus back", "wait": "hold the silence",
+}
 const MOVE_HELP := {
 	"elicit": "Elicit: ask how the student got that answer.",
 	"extend": "Extend: press the idea one step further.",
@@ -278,8 +290,9 @@ func _support_level() -> int:
 func _apply_scaffold() -> void:
 	var lvl := _support_level()
 	if _scaffold_badge == null:
-		_scaffold_badge = _make_label("", Vector2(300, 14), UiText.S_MICRO, Color.WHITE)
-		_scaffold_badge.size = Vector2(90, 10)
+		_scaffold_badge = _make_label("", Vector2(400, 6), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge.clip_text = true
+		_scaffold_badge.size = Vector2(76, 10)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)
@@ -353,30 +366,54 @@ func _build_ui() -> void:
 	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_layer)
 
-	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 6), UiText.S_TITLE, Color(0.95, 0.93, 0.85))
-	_name_label.size = Vector2(340, 14)
-	_need_label = _make_label("Need: surface the student's reasoning", Vector2(10, 104), UiText.S_CAPTION, Color(0.78, 0.88, 0.96))
-	_need_label.size = Vector2(350, 12)
+	var bd_tex := Art.tex("res://assets/v2/ui/encounter_backdrop_modern.png")
+	if bd_tex != null:
+		var bd := TextureRect.new()
+		bd.texture = bd_tex
+		bd.position = Vector2.ZERO
+		bd.size = Vector2(480, 270)
+		bd.stretch_mode = TextureRect.STRETCH_SCALE
+		bd.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bd.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bd.modulate = Color(0.55, 0.57, 0.62)
+		bd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_layer.add_child(bd)
+	var title_frame := UiKit.panel("board")
+	title_frame.position = Vector2(4, 1)
+	title_frame.size = Vector2(392, 17)
+	_layer.add_child(title_frame)
+	for r in [PORTRAIT_PANEL, METER_PANEL, LINE_PANEL]:
+		var pnl := UiKit.panel("board")
+		pnl.position = r.position
+		pnl.size = r.size
+		_layer.add_child(pnl)
+	_name_label = _make_label("ENCOUNTER  -  %s (grade 5 fractions)" % display_name, Vector2(10, 4), UiText.S_TITLE, Color("f2eedd"))
+	_name_label.add_theme_font_override("font", UiKit.pixel_font())
+	_name_label.size = Vector2(380, 12)
+	_name_label.clip_text = true
+	# The most important guidance sits inside the line panel, in the focus colour.
+	_need_label = _make_label("Need: surface the student's reasoning", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
+	_need_label.size = Vector2(298, 12)
 	_need_label.clip_text = true
 
 	# Meters block, top-left.
-	_bars["engagement"] = _make_meter("Engagement", 26, Color(0.30, 0.80, 0.40))
-	_bars["order"] = _make_meter("Order", 44, Color(0.35, 0.65, 0.95))
-	_bars["rapport"] = _make_meter("Rapport", 62, Color(0.95, 0.70, 0.30))
-	_bars["composure"] = _make_meter("Composure", 84, Color(0.90, 0.35, 0.45))
+	_bars["engagement"] = _make_meter("Engagement", 28, Color("5fbf6a"))
+	_bars["order"] = _make_meter("Order", 43, Color("6fa8e8"))
+	_bars["rapport"] = _make_meter("Rapport", 58, Color("e0a93a"))
+	_bars["composure"] = _make_meter("Composure", 73, Color("ec8a6e"))
 
 	# Student sprite, top-right (placeholder; affect portrait swaps in later).
 	_student_rect = ColorRect.new()
-	_student_rect.position = Vector2(372, 22)
-	_student_rect.size = Vector2(84, 84)
+	_student_rect.position = PORTRAIT_PANEL.position + Vector2(6, 6)
+	_student_rect.size = Vector2(128, 128)
 	_student_rect.color = Color(0.80, 0.28, 0.30)
 	_student_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_student_rect)
 
 	# Affect portrait overlay; shown only when an imagegen2 PNG is present.
 	_student_tex = TextureRect.new()
-	_student_tex.position = Vector2(372, 22)
-	_student_tex.size = Vector2(84, 84)
+	_student_tex.position = PORTRAIT_PANEL.position + Vector2(6, 4)
+	_student_tex.size = Vector2(128, 128)
 	_student_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE   # respect the 84x84 box, not the 128px source
 	_student_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_student_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -384,28 +421,31 @@ func _build_ui() -> void:
 	_student_tex.visible = false
 	_layer.add_child(_student_tex)
 
-	_student_name_label = _make_label(display_name, Vector2(372, 108), UiText.S_TITLE, Color.WHITE)
-	_student_name_label.size = Vector2(84, 12)
+	_student_name_label = _make_label(display_name, PORTRAIT_PANEL.position + Vector2(8, 124), UiText.S_TITLE, Color("f2eedd"))
+	_student_name_label.size = Vector2(124, 12)
+	_student_name_label.add_theme_font_override("font", UiKit.pixel_font())
+	_student_name_label.add_theme_color_override("font_outline_color", Color("14131c"))
+	_student_name_label.add_theme_constant_override("outline_size", 2)
 
 	# Persistent relationship (warm demander). Carries across periods, unlike the class meters.
 	# Drawn as ColorRects (like the gym bars) so the height is exactly controlled.
-	_bond_label = _make_label("Bond", Vector2(372, 122), UiText.S_BODY, Color(0.96, 0.76, 0.86))
+	_bond_label = _make_label("Bond", Vector2(392, 76), UiText.S_CAPTION, Color("d46a9a"))
 	var bondbg := ColorRect.new()
-	bondbg.position = Vector2(372, 134)
-	bondbg.size = Vector2(84, 8)
+	bondbg.position = Vector2(392, 86)
+	bondbg.size = Vector2(70, 6)
 	bondbg.color = Color(0, 0, 0, 0.5)
 	bondbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(bondbg)
 	_bond_fill = ColorRect.new()
-	_bond_fill.position = Vector2(372, 134)
-	_bond_fill.size = Vector2(0, 8)
+	_bond_fill.position = Vector2(392, 86)
+	_bond_fill.size = Vector2(0, 6)
 	_bond_fill.color = Color(0.95, 0.55, 0.70)
 	_bond_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_bond_fill)
 
 	# Overhead emote bubble reflecting the student's reaction.
 	_emote = TextureRect.new()
-	_emote.position = Vector2(442, 12)
+	_emote.position = PORTRAIT_PANEL.position + Vector2(114, 4)
 	_emote.size = Vector2(22, 22)
 	_emote.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_emote.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -415,17 +455,17 @@ func _build_ui() -> void:
 	_layer.add_child(_emote)
 
 	# Wait-Time Ring (a bar in M1).
-	_wait_label = _make_label(_wait_label_text(false), Vector2(300, 26), UiText.S_CAPTION, Color(0.8, 0.85, 0.95))
-	_wait_label.size = Vector2(68, 12)
+	_wait_label = _make_label(_wait_label_text(false), Vector2(392, 24), UiText.S_CAPTION, Color("f2eedd"))
+	_wait_label.size = Vector2(76, 12)
 	_wait_bar_bg = ColorRect.new()
-	_wait_bar_bg.position = Vector2(300, 40)
-	_wait_bar_bg.size = Vector2(60, 10)
+	_wait_bar_bg.position = Vector2(392, 37)
+	_wait_bar_bg.size = Vector2(70, 8)
 	_wait_bar_bg.color = Color(0, 0, 0, 0.5)
 	_wait_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_wait_bar_bg)
 	_wait_bar = ColorRect.new()
-	_wait_bar.position = Vector2(300, 40)
-	_wait_bar.size = Vector2(0, 10)
+	_wait_bar.position = Vector2(392, 37)
+	_wait_bar.size = Vector2(0, 8)
 	_wait_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_wait_bar_ready(false)
 	_layer.add_child(_wait_bar)
@@ -434,12 +474,15 @@ func _build_ui() -> void:
 	_build_dialogue_box()
 
 	# Result chip + coach tip box.
-	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(16, 164), Vector2(56, 10), 6)
-	_result = _make_label("", Vector2(16, 164), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
+	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(10, 164), Vector2(56, 10), UiText.S_TINY)
+	_outcome_chip.add_theme_font_override("font", UiKit.pixel_font())
+	_outcome_chip.size = Vector2(56, 10)
+	_result = _make_label("", Vector2(10, 164), UiText.S_CAPTION, Color("ffd34e"))
 	_result.size = Vector2(448, 10)
+	_result.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_result.clip_text = true
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_coach = _make_label("", Vector2(16, 174), UiText.S_CAPTION, Color(0.70, 0.90, 0.75))
+	_coach = _make_label("", Vector2(10, 175), UiText.S_CAPTION, Color("a8d8b0"))
 	_coach.size = Vector2(448, 14)
 	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -448,25 +491,24 @@ func _build_ui() -> void:
 	# Move buttons: two compact rows with a reserved mode column.
 	var n := MOVES.size()
 	var cols := 4
-	var bw := 80.0
-	var row_y := [188.0, 228.0]
-	var short_labels := {
-		"redirect": "Redir.",
-	}
+	var bw := 92.0
+	var row_y := [190.0, 229.0]
+	var short_labels := {}
 	for i in range(n):
 		var b := Button.new()
 		var tag: String = MOVES[i][1]
 		b.text = str(short_labels.get(tag, MOVES[i][0]))
-		b.position = Vector2(8 + (i % cols) * (bw + 4.0), row_y[int(i / cols)])
-		b.size = Vector2(bw, 30)
+		b.position = Vector2(8 + (i % cols) * (bw + 3.0), row_y[int(i / cols)])
+		b.size = Vector2(bw, 35)
 		b.clip_text = true
-		CompactButtonStyle.apply(b, UiText.S_CAPTION)
+		UiKit.style_move_button(b, UiText.S_CAPTION, "res://assets/v2/ui/move_%s.png" % tag, MOVE_HINTS.get(tag, ""), UiText.S_TINY)
 		InputFeel.add_hotkey_badge(b, i, UiText.S_TINY)
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
 		_layer.add_child(b)
+		b.size = Vector2(bw, 35)   # re-apply once themed fonts resolve in the tree
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus()
@@ -504,14 +546,25 @@ func _build_ui() -> void:
 	# Mode toggle uses the reserved right column instead of floating over content.
 	_type_toggle = Button.new()
 	_type_toggle.text = "Type"
-	_type_toggle.position = Vector2(386, 212)
-	_type_toggle.size = Vector2(78, 48)
-	CompactButtonStyle.apply(_type_toggle, UiText.S_BODY, true)
+	_type_toggle.position = Vector2(392, 190)
+	_type_toggle.size = Vector2(80, 35)
+	UiKit.style_move_button(_type_toggle, UiText.S_CAPTION, "res://assets/v2/ui/move_type.png", "say it your way", UiText.S_TINY)
 	_type_toggle.pressed.connect(_toggle_input_mode)
 	_layer.add_child(_type_toggle)
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
+	# Move hints are measured before their font resolves; pin them to their slot.
+	if _type_toggle != null:
+		_type_toggle.size = Vector2(80, 35) * UI_SCALE
+		var th := _type_toggle.get_node_or_null("MoveHint") as Label
+		if th != null:
+			th.size = Vector2(72, 10) * UI_SCALE
+	for b in _buttons:
+		(b as Button).size = Vector2(92, 35) * UI_SCALE   # margins/icon are final-px; pin after scaling
+		var h := (b as Node).get_node_or_null("MoveHint") as Label
+		if h != null:
+			h.size = Vector2(84, 10) * UI_SCALE
 	UiText.keep_centered(_layer)
 
 func _build_item_row() -> void:
@@ -631,49 +684,22 @@ func _set_wait_bar_ready(ready: bool) -> void:
 	_wait_bar.color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
 
 func _build_dialogue_box() -> void:
-	var bub := Art.tex("res://assets/ui/bubble_9slice.png")
-	var text_color := Color(0.96, 0.96, 0.92)
-	var box_rect := Rect2(Vector2(10, 114), Vector2(460, 54))
-	var text_rect := Rect2(Vector2(22, 123), Vector2(436, 34))
-	if bub != null:
-		var np := NinePatchRect.new()
-		np.texture = bub
-		box_rect = Rect2(Vector2(10, 112), Vector2(356, 58))
-		text_rect = Rect2(Vector2(24, 124), Vector2(318, 34))
-		np.position = box_rect.position
-		np.size = box_rect.size
-		np.patch_margin_left = 14
-		np.patch_margin_right = 14
-		np.patch_margin_top = 14
-		np.patch_margin_bottom = 14
-		np.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		np.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		np.name = "DialogueBubble"
-		_layer.add_child(np)
-		var tailtex := Art.tex("res://assets/ui/bubble_tail.png")
-		if tailtex != null:
-			var tail := Sprite2D.new()
-			tail.texture = tailtex
-			tail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			tail.flip_v = true   # point up toward the portrait
-			tail.position = Vector2(346, 118)
-			_layer.add_child(tail)
-		text_color = Color(0.10, 0.12, 0.22)
-	else:
-		var dbox := ColorRect.new()
-		dbox.name = "DialogueBubble"
-		dbox.position = box_rect.position
-		dbox.size = box_rect.size
-		dbox.color = Color(0.12, 0.15, 0.26)
-		dbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_layer.add_child(dbox)
-	_dialogue = _make_label("", text_rect.position, 9, text_color)
+	# The student's line sits in the chalkboard panel (LINE_PANEL), written in chalk.
+	var box_rect := LINE_PANEL
+	var text_rect := Rect2(LINE_PANEL.position + Vector2(10, 17), LINE_PANEL.size - Vector2(20, 23))
+	var holder := Control.new()
+	holder.name = "DialogueBubble"
+	holder.position = box_rect.position
+	holder.size = box_rect.size
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(holder)
+	_dialogue = _make_label("", text_rect.position, UiText.S_TITLE, Color("f2eedd"))
 	_dialogue.name = "DialogueText"
 	_dialogue.size = text_rect.size
 	_dialogue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dialogue.set_meta("qa_container_rect", box_rect)
 	_dialogue.set_meta("qa_text_rect", text_rect)
-	_dialogue.set_meta("qa_min_padding", 8.0)
+	_dialogue.set_meta("qa_min_padding", 6.0)
 
 func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Label:
 	var l := Label.new()
@@ -691,16 +717,16 @@ func _make_label(txt: String, pos: Vector2, font_size: int, color: Color) -> Lab
 ## Drawn as ColorRects (like the gym/lecture bars) so the 12px height is exactly
 ## controlled; ProgressBar inflates to its theme minimum and buried the Need line.
 func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
-	_make_label(name_txt, Vector2(10, y - 2), UiText.S_BODY, Color(0.85, 0.88, 0.95))
+	_make_label(name_txt, Vector2(162, y - 3), UiText.S_CAPTION, Color("f2eedd"))
 	var bg := ColorRect.new()
-	bg.position = Vector2(86, y)
-	bg.size = Vector2(150, 12)
-	bg.color = Color(0, 0, 0, 0.5)
+	bg.position = Vector2(228, y)
+	bg.size = Vector2(150, 10)
+	bg.color = Color("14131c")
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(bg)
 	var fr := ColorRect.new()
-	fr.position = Vector2(86, y)
-	fr.size = Vector2(150, 12)
+	fr.position = Vector2(228, y)
+	fr.size = Vector2(150, 10)
 	fr.color = fill
 	fr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(fr)
@@ -721,7 +747,7 @@ func _process(_delta: float) -> void:
 	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
 	var threshold := float(GameState.wait_threshold_ms())
 	if _wait_bar != null:
-		_wait_bar.size = Vector2(60.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 10.0 * UI_SCALE)
+		_wait_bar.size = Vector2(70.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 8.0 * UI_SCALE)
 	var ready := elapsed >= threshold
 	_set_wait_bar_ready(ready)
 	if _wait_label != null:
@@ -729,7 +755,8 @@ func _process(_delta: float) -> void:
 
 func _wait_label_text(ready: bool) -> String:
 	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
-	return ("Wait %.2fs: READY" if ready else "Wait %.2fs before choosing") % seconds
+	# Short enough for the meter panel; the bar beneath shows the countdown itself.
+	return ("Wait %.1fs: READY" if ready else "Wait %.1fs first") % seconds
 
 func _on_move(tag: String) -> void:
 	if _busy or _resolved:
@@ -1273,7 +1300,7 @@ func _set_meter_fill(key: String, frac: float) -> void:
 	var fill: ColorRect = _bars.get(key, null)
 	if fill == null:
 		return
-	var target := Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
+	var target := Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 10.0 * UI_SCALE)
 	if _meters_live:
 		Juice.bar_to(fill, target, 0.35, _meter_delay)
 	else:
@@ -1282,7 +1309,7 @@ func _set_meter_fill(key: String, frac: float) -> void:
 func _refresh_bond() -> void:
 	var b := GameState.bond(persona_id)
 	if _bond_fill != null:
-		var target := Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
+		var target := Vector2(70.0 * UI_SCALE * clampf(b, 0.0, 1.0), 6.0 * UI_SCALE)
 		if _meters_live:
 			Juice.bar_to(_bond_fill, target, 0.35, _meter_delay)
 		else:
@@ -1366,7 +1393,9 @@ func _update_portrait(emotion: String) -> void:
 	var chain: Array = EMOTION_FALLBACK.get(emotion, [emotion, "neutral", "thinking"])
 	var t: Texture2D = null
 	for affect in chain:
-		t = Art.tex("res://assets/portraits/%s_%s.png" % [persona_id, affect])
+		t = Art.tex("res://assets/v2/portraits/%s_%s.png" % [persona_id, affect])
+		if t == null:
+			t = Art.tex("res://assets/portraits/%s_%s.png" % [persona_id, affect])
 		if t != null:
 			break
 	if t != null:
@@ -1507,7 +1536,24 @@ func _release_result() -> void:
 	var t := _pending_result
 	_pending_result = ""
 	if t != "" and _result != null:
-		_result.text = t
+		_result.text = _display_result(t)
+
+## Display form of the result line (the stored/logged form is unchanged): the verdict
+## phrase first, then only the changes, without the running "Understanding NN%" total.
+func _display_result(t: String) -> String:
+	var parts: Array = Array(t.split("  |  "))
+	if parts.size() > 1 and str(parts[0]).begins_with("Understanding ") and str(parts[0]).ends_with("%"):
+		parts.pop_front()
+	var verdict := ""
+	for i in range(parts.size() - 1, -1, -1):
+		var ptxt := str(parts[i])
+		if not (ptxt.contains("+") or ptxt.contains("-")) or ptxt.begins_with("On a path") or ptxt.begins_with("Not the move") or ptxt.begins_with("Right idea"):
+			verdict = ptxt
+			parts.remove_at(i)
+			break
+	if verdict != "":
+		parts.push_front(verdict)
+	return "  ·  ".join(parts)
 
 func _release_coach() -> void:
 	var t := _pending_coach
@@ -1527,7 +1573,9 @@ func _float_meter_deltas(before: Dictionary) -> void:
 		if d == 0 or fill == null:
 			continue
 		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
-		var pos := Vector2((86.0 + 150.0 + 4.0) * UI_SCALE, fill.position.y - 3.0 * UI_SCALE)
+		var maxv := GameState.max_composure() if key == "composure" else 100.0
+		var frac := clampf(float(now[key]) / maxf(1.0, maxv), 0.0, 1.0)
+		var pos := Vector2(fill.position.x + 150.0 * UI_SCALE * frac + 4.0, fill.position.y - 3.0 * UI_SCALE)
 		Juice.float_text(_layer, _signed(d), pos, col, int(8 * UI_SCALE))
 
 ## Any press (key, click, pad, touch) first finishes a running text reveal, so impatient

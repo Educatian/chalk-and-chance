@@ -6,9 +6,10 @@ extends Node2D
 const Art = preload("res://scripts/Art.gd")
 const STEP_TIME := 0.12
 ## Drawn at the room's texel density (Overworld.PX_PER_TEXEL), not normalised to a height.
-const DEFAULT_PX_PER_TEXEL := 1.25
+const DEFAULT_PX_PER_TEXEL := 2.0
 const WALK_SHEET := "res://assets/sprites/teacher_ow.png"   # static fallback base name
 const WALK_ANIM_SHEET := "res://assets/sprites/teacher_walk.png"
+const V2_WALK_SHEET := "res://assets/v2/sprites/teacher_walk.png"   # 3x4 cells of 16x28 texels
 
 var overworld = null
 var tile := 32                    # synced from overworld.TILE in _ready
@@ -45,8 +46,10 @@ func _ready() -> void:
 	_build_visual()
 
 func _build_visual() -> void:
-	var sheet := Art.tex(WALK_ANIM_SHEET)
-	if sheet != null and sheet.get_width() >= 48 and sheet.get_height() >= 128:
+	var sheet := Art.tex(V2_WALK_SHEET)
+	if sheet == null:
+		sheet = Art.tex(WALK_ANIM_SHEET)
+	if sheet != null and sheet.get_width() >= 48 and sheet.get_height() >= 96:
 		var cw := int(sheet.get_width() / 3.0)
 		var ch := int(sheet.get_height() / 4.0)
 		# Scale by the DRAWN figure (stand frame), not the cell, so every character is the

@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## Import-a-lesson screen. Paste/load a plan, then generate a scenario either OFFLINE
 ## (LessonImport heuristic, no backend) or WITH AI (POST to the FastAPI /lesson_to_scenario
 ## backend for content-specific dialogue; falls back to offline if unreachable). Generation
@@ -32,8 +33,8 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "IMPORT A LESSON PLAN"
 	title.position = Vector2(40, 28)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
 
@@ -42,7 +43,7 @@ func _build() -> void:
 	sub.position = Vector2(42, 66)
 	sub.size = Vector2(vp.x - 84, 44)
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub.add_theme_font_size_override("font_size", 14)
+	sub.add_theme_font_size_override("font_size", UiText.fs(14))
 	sub.add_theme_color_override("font_color", Color(0.7, 0.85, 0.95))
 	add_child(sub)
 
@@ -50,13 +51,13 @@ func _build() -> void:
 	_text.position = Vector2(42, 112)
 	_text.size = Vector2(vp.x - 84, vp.y - 234)
 	_text.placeholder_text = "e.g.\nGrade: 5\nSubject: Comparing Decimals\nDuration: 45 minutes\nFormat: whole-class discussion / number talk\nObjectives: compare decimals by place value..."
-	_text.add_theme_font_size_override("font_size", 15)
+	_text.add_theme_font_size_override("font_size", UiText.fs(15))
 	add_child(_text)
 
 	_status = Label.new()
 	_status.position = Vector2(42, vp.y - 114)
 	_status.size = Vector2(vp.x - 84, 22)
-	_status.add_theme_font_size_override("font_size", 14)
+	_status.add_theme_font_size_override("font_size", UiText.fs(14))
 	_status.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	add_child(_status)
 
@@ -91,7 +92,7 @@ func _make_btn(label: String, x: float, y: float, w: float, cb: Callable) -> But
 	b.text = label
 	b.position = Vector2(x, y)
 	b.size = Vector2(w, 40)
-	b.add_theme_font_size_override("font_size", 13)
+	b.add_theme_font_size_override("font_size", UiText.fs(13))
 	b.pressed.connect(cb)
 	add_child(b)
 	return b

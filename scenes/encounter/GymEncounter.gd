@@ -1,4 +1,5 @@
 extends Control
+const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Gym (boss) encounter: several students at once. Pick a TARGET student, then a move.
 ## Helping one student calms them but the others grow restless (orchestration under load).
@@ -173,8 +174,12 @@ func _refresh_backdrop() -> void:
 # --- UI ----------------------------------------------------------------------
 
 func _build_ui() -> void:
-	_title = _label("GYM: %s" % str(scenario.get("title", "Capstone")), Vector2(10, 6), UiText.S_DISPLAY, Color(0.97, 0.93, 0.85))
-	_title.size = Vector2(460, 14)
+	UiKit.add_scene_frame(_layer, Rect2(4, 2, 472, 17), [Rect2(4, 20, 244, 40), Rect2(6, 158, 468, 46)])
+	_title = _label("GYM: %s" % str(scenario.get("title", "Capstone")), Vector2(10, 4), UiText.S_TITLE, Color(0.97, 0.93, 0.85))
+	_title.size = Vector2(388, 12)
+	_title.clip_text = true
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_title.add_theme_font_override("font", UiKit.pixel_font())
 
 	_label("Composure", Vector2(10, 24), UiText.S_BODY, Color(0.95, 0.8, 0.85))
 	_comp_fill = _bar(Vector2(86, 26), Color(0.90, 0.45, 0.55))
@@ -223,7 +228,7 @@ func _build_ui() -> void:
 	var dialogue_text := Rect2(Vector2(18, 166), Vector2(444, 24))
 	dbg.name = "DialogueBubble"
 	dbg.position = dialogue_box.position; dbg.size = dialogue_box.size
-	dbg.color = Color(0.12, 0.15, 0.26); dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dbg.color = Color(0, 0, 0, 0)   # the chalkboard panel behind provides the box; dbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(dbg)
 	_dialogue = _label("", dialogue_text.position, 9, Color(0.96, 0.96, 0.92))
 	_dialogue.name = "DialogueText"
@@ -256,6 +261,7 @@ func _build_ui() -> void:
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
+		b.size = Vector2(button_widths[i], 30)   # re-apply once themed fonts resolve in the tree
 		_buttons.append(b)
 	if not _buttons.is_empty():
 		_buttons[0].grab_focus.call_deferred()
@@ -425,6 +431,7 @@ func _bar_at(pos: Vector2, w: float, c: Color) -> ColorRect:
 	return fill
 
 func _tex(path: String) -> Texture2D:
+	path = UiKit.portrait_path(path)
 	if ResourceLoader.exists(path):
 		var r = load(path)
 		if r is Texture2D:
@@ -439,7 +446,7 @@ func _support_level() -> int:
 func _apply_scaffold() -> void:
 	var lvl := _support_level()
 	if _scaffold_badge == null:
-		_scaffold_badge = _label("", Vector2(250, 14), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge = _label("", Vector2(404, 6), UiText.S_MICRO, Color.WHITE)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)

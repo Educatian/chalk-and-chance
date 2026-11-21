@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## Chapter intro cinematic played before every mission. Data: data/narrative/chapters.json.
 ## Letterboxed Ken Burns backdrop -> chapter card + "today's class" roster -> dialogue
 ## beats with portraits and typewriter text -> hands off to the mission scene.
@@ -7,7 +8,7 @@ extends Control
 const Art = preload("res://scripts/Art.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PressStart2P-Regular.ttf"
+const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 const BAR_H := 58.0
 const CHARS_PER_SEC := 48.0
 
@@ -97,8 +98,8 @@ func _build() -> void:
 	_caption.scroll_active = false
 	_caption.position = Vector2(120, _vp.y * 0.5 - 30)
 	_caption.size = Vector2(_vp.x - 240, 60)
-	_caption.add_theme_font_size_override("normal_font_size", 17 + GameState.ui_font_delta())
-	_caption.add_theme_font_size_override("italics_font_size", 17 + GameState.ui_font_delta())
+	_caption.add_theme_font_size_override("normal_font_size", UiText.fs(17))
+	_caption.add_theme_font_size_override("italics_font_size", UiText.fs(17))
 	_caption.add_theme_color_override("default_color", Color(0.93, 0.94, 0.90))
 	_caption.add_theme_constant_override("outline_size", 6)
 	_caption.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
@@ -111,7 +112,7 @@ func _build() -> void:
 	_hint.position = Vector2(_vp.x - 190, _vp.y - 22)
 	_hint.size = Vector2(170, 18)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_hint.add_theme_font_size_override("font_size", 10)
+	_hint.add_theme_font_size_override("font_size", UiText.fs(10))
 	_hint.add_theme_color_override("font_color", Color(0.75, 0.78, 0.86, 0.8))
 	_hint.modulate.a = 0.0
 	add_child(_hint)
@@ -121,7 +122,7 @@ func _build() -> void:
 	skip.position = Vector2(_vp.x - 104, 14)
 	skip.size = Vector2(88, 28)
 	skip.focus_mode = Control.FOCUS_NONE
-	skip.add_theme_font_size_override("font_size", 11)
+	skip.add_theme_font_size_override("font_size", UiText.fs(11))
 	HubUi.apply_button_style(skip, false)
 	skip.pressed.connect(_finish)
 	add_child(skip)
@@ -212,8 +213,8 @@ func _build_dialogue_box() -> Control:
 	_text.scroll_active = false
 	_text.position = Vector2(178, 56)
 	_text.size = Vector2(_vp.x - 230, 70)
-	_text.add_theme_font_size_override("normal_font_size", 15 + GameState.ui_font_delta())
-	_text.add_theme_font_size_override("italics_font_size", 15 + GameState.ui_font_delta())
+	_text.add_theme_font_size_override("normal_font_size", UiText.fs(15))
+	_text.add_theme_font_size_override("italics_font_size", UiText.fs(15))
 	_text.add_theme_color_override("default_color", Color(0.94, 0.95, 0.92))
 	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(_text)
@@ -479,7 +480,7 @@ func _label(text: String, pos: Vector2, size: Vector2, fs: int, color: Color) ->
 	l.text = text
 	l.position = pos
 	l.size = size
-	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	l.add_theme_font_size_override("font_size", UiText.fs(fs))
 	l.add_theme_color_override("font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l

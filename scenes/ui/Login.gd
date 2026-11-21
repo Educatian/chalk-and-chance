@@ -1,4 +1,6 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
+const UiKit = preload("res://scripts/UiKit.gd")
 ## Landing and learner sign-in. The demo path stays one click, while class sign-in remains
 ## available for saved course progress.
 
@@ -39,16 +41,16 @@ func _ready() -> void:
 	mark_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mark_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	mark_text.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
-	mark_text.add_theme_font_size_override("font_size", 14)
+	mark_text.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	mark_text.add_theme_font_size_override("font_size", UiText.fs(14))
 	mark_text.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	mark.add_child(mark_text)
 
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(logo_x, logo_y + 72)
-	title.add_theme_font_override("font", load("res://ui/fonts/PressStart2P-Regular.ttf"))
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_size_override("font_size", UiText.fs(30))
 	title.add_theme_color_override("font_color", Color(0.98, 0.92, 0.68))
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.95))
 	title.add_theme_constant_override("outline_size", 7)
@@ -57,7 +59,7 @@ func _ready() -> void:
 	var sub := Label.new()
 	sub.text = "Teach. Listen. Adapt."
 	sub.position = Vector2(logo_x + 4, logo_y + 122)
-	sub.add_theme_font_size_override("font_size", 18)
+	sub.add_theme_font_size_override("font_size", UiText.fs(18))
 	sub.add_theme_color_override("font_color", Color(0.85, 0.94, 0.92))
 	sub.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.06, 0.9))
 	sub.add_theme_constant_override("outline_size", 4)
@@ -97,7 +99,7 @@ func _ready() -> void:
 	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
 		demo.text = "Play demo (voice off)"
 	demo.custom_minimum_size = Vector2(0, 42)
-	demo.add_theme_font_size_override("font_size", 18)
+	demo.add_theme_font_size_override("font_size", UiText.fs(18))
 	_apply_button_style(demo, true)
 	demo.pressed.connect(_go_hub)
 	box.add_child(demo)
@@ -107,7 +109,7 @@ func _ready() -> void:
 	if is_course:
 		demo_hint.text = "%s course access: enter your name and the course passcode to save progress and evidence." % course_label
 	demo_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	demo_hint.add_theme_font_size_override("font_size", 12)
+	demo_hint.add_theme_font_size_override("font_size", UiText.fs(12))
 	demo_hint.add_theme_color_override("font_color", Color(0.76, 0.86, 0.88))
 	box.add_child(demo_hint)
 
@@ -115,7 +117,7 @@ func _ready() -> void:
 	divider.text = "Class sign in"
 	if is_course:
 		divider.text = "%s sign in" % course_label
-	divider.add_theme_font_size_override("font_size", 16)
+	divider.add_theme_font_size_override("font_size", UiText.fs(16))
 	divider.add_theme_color_override("font_color", Color(0.96, 0.86, 0.55))
 	box.add_child(divider)
 
@@ -124,7 +126,7 @@ func _ready() -> void:
 	if is_course:
 		signin_hint.text = "The %s class code is already loaded. Students only need their own name and the course passcode." % course_label
 	signin_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	signin_hint.add_theme_font_size_override("font_size", 11)
+	signin_hint.add_theme_font_size_override("font_size", UiText.fs(11))
 	signin_hint.add_theme_color_override("font_color", Color(0.70, 0.78, 0.84))
 	box.add_child(signin_hint)
 
@@ -236,15 +238,11 @@ func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 func _apply_button_style(btn: Button, primary: bool) -> void:
-	var base := _button_style(Color(0.17, 0.28, 0.24, 0.96) if primary else Color(0.08, 0.15, 0.18, 0.94), Color(0.96, 0.80, 0.38, 0.92) if primary else Color(0.48, 0.68, 0.70, 0.58))
-	var hover := _button_style(Color(0.23, 0.38, 0.31, 0.98) if primary else Color(0.12, 0.22, 0.26, 0.96), Color(1.0, 0.88, 0.50, 1.0) if primary else Color(0.68, 0.86, 0.86, 0.78))
-	var pressed := _button_style(Color(0.10, 0.20, 0.17, 1.0), Color(0.96, 0.70, 0.28, 1.0))
-	btn.add_theme_stylebox_override("normal", base)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_stylebox_override("focus", _button_style(Color(0, 0, 0, 0), Color(1.0, 0.92, 0.55, 1.0)))
-	btn.add_theme_color_override("font_color", Color(0.98, 0.94, 0.76) if primary else Color(0.86, 0.94, 0.95))
-	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	# v2 kit: the primary action is a paper button, the rest chalkboard buttons.
+	if primary:
+		UiKit.style_button(btn, btn.get_theme_font_size("font_size"))
+	else:
+		UiKit.style_board_button(btn)
 
 func _field(parent: Node, label: String, placeholder: String, secret: bool) -> LineEdit:
 	var l := Label.new()

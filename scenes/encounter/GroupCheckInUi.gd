@@ -1,4 +1,5 @@
 extends RefCounted
+const UiText = preload("res://scripts/UiText.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
 
 const Art = preload("res://scripts/Art.gd")
@@ -97,7 +98,7 @@ static func label(parent: Node, txt: String, pos: Vector2, fs: int, col: Color) 
 	var out := Label.new()
 	out.text = txt
 	out.position = pos
-	out.add_theme_font_size_override("font_size", fs)
+	out.add_theme_font_size_override("font_size", UiText.fs(fs))
 	out.add_theme_color_override("font_color", col)
 	parent.add_child(out)
 	return out

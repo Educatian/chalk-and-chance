@@ -3,7 +3,7 @@
   "title": "Practice Set  -  Independent Work (rows)",
   "format": "independent",
   "mode": "overworld",
-  "arrangement": "rows",
+  "arrangement": "rows8",
   "requires": "routine",
   "period_seconds": 120,
   "offtask_rise": 8.0,
@@ -11,42 +11,42 @@
     {
       "id": "riley_avoidant",
       "name": "Riley",
-      "seat": 1
+      "seat": 0
     },
     {
       "id": "marcus_volatile",
       "name": "Marcus",
-      "seat": 3
+      "seat": 1
     },
     {
       "id": "deshawn_offtask",
       "name": "Deshawn",
-      "seat": 5
+      "seat": 2
     },
     {
       "id": "noah_g5_fractions",
       "name": "Noah",
-      "seat": 7
+      "seat": 3
     },
     {
       "id": "meilin_anxious",
       "name": "Mei-Lin",
-      "seat": 8
+      "seat": 4
     },
     {
       "id": "sam_withdrawn",
       "name": "Sam",
-      "seat": 10
+      "seat": 5
     },
     {
       "id": "diego_ell",
       "name": "Diego",
-      "seat": 12
+      "seat": 6
     },
     {
       "id": "priya_quiet",
       "name": "Priya",
-      "seat": 14
+      "seat": 7
     }
   ],
   "objectives": [

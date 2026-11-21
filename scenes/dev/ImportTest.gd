@@ -12,7 +12,7 @@ func _ready() -> void:
 	print("IMPORT id=%s title=%s fmt=%s arr=%s roster=%d period=%d" % [
 		id, str(s["title"]), str(s["format"]), str(s["arrangement"]), (s["roster"] as Array).size(), int(s["period_seconds"])])
 
-	var caps := {"ushape": 9, "rows": 15, "clusters": 16, "pairs": 12}
+	var caps := {"ushape": 9, "ushape6": 6, "rows": 15, "rows8": 8, "clusters": 16, "clusters8": 8, "pairs": 12}
 	var cap: int = caps.get(s["arrangement"], 9)
 	var seats_ok := true
 	for r in s["roster"]:
