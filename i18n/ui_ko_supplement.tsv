@@ -145,20 +145,25 @@ Really good. A little room left in objectives.	아주 좋아요. 목표만 조�
 Really good. A little room left in attention.	아주 좋아요. 집중만 조금 더 붙잡으면 돼요.
 Really good. A little room left in reach.	아주 좋아요. 몇 명만 더 들으면 돼요.
 %3d%%  %02d moves  +-%.2f	%3d%%  %d번  ±%.2f
-Look again. Their face and posture say %s. Answer that.	다시 봐요. 표정이랑 자세를 보면 %s 쪽이에요. 거기에 맞춰 봐요.
+Look again. Their face and posture say %s. Answer that.	다시 봐요. 표정이랑 자세를 보면 %s 쪽이에요. 그걸 골라 봐요.
 you heard {reached} of {total} students explain their thinking	{total}명 중 {reached}명의 생각을 들었어요
 Comp %d%% | Attention %d%% | Progress %d%%	이해 %d%% | 집중 %d%% | 진도 %d%%
 Reached %d/%d | Order %d%% | Composure %d%%	도달 %d/%d | 질서 %d%% | 평정심 %d%%
  | +upgrade	 | 성장 포인트 +1
 TRY AGAIN   |   Score {score}	다시 해 봐요   |   점수 {score}
-Look again. Their face and posture say confused. Answer that.	다시 봐요. 표정이랑 자세를 보면 헷갈려 하는 쪽이에요. 거기에 맞춰 봐요.
-Look again. Their face and posture say gets it. Answer that.	다시 봐요. 표정이랑 자세를 보면 이해한 쪽이에요. 거기에 맞춰 봐요.
-Look again. Their face and posture say withdrawn. Answer that.	다시 봐요. 표정이랑 자세를 보면 움츠러든 쪽이에요. 거기에 맞춰 봐요.
-Look again. Their face and posture say distracted. Answer that.	다시 봐요. 표정이랑 자세를 보면 딴짓하는 쪽이에요. 거기에 맞춰 봐요.
-it fit where they were (%s)	딱 필요한 수였어요(%s)
+Look again. Their face and posture say confused. Answer that.	다시 봐요. 표정이랑 자세를 보면 헷갈려 하는 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say gets it. Answer that.	다시 봐요. 표정이랑 자세를 보면 이해한 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say withdrawn. Answer that.	다시 봐요. 표정이랑 자세를 보면 움츠러든 쪽이에요. 그걸 골라 봐요.
+Look again. Their face and posture say distracted. Answer that.	다시 봐요. 표정이랑 자세를 보면 딴짓하는 쪽이에요. 그걸 골라 봐요.
+it fit where they were (%s)	'%s' 흐름에 딱 맞는 수였어요
 link to their world	아이가 아는 것에 빗대기
 bring focus back	하던 일로 다시 데려오기
 hold the silence	끼어들지 않고 기다리기
 Bond pulled the score down. Start there.	수는 통했어요. 다만 아이와 아직 서먹해서 점수가 낮아요. 거기부터 풀어 봐요.
 Pace pulled the score down. Start there.	수는 통했지만 돌아오느라 오래 걸려서 점수가 낮아요. 거기부터 줄여 봐요.
 Turn your device sideways\n\nChalk & Chance plays in landscape.	기기를 가로로 돌려 주세요\n\nChalk & Chance는 가로 화면에서 해요.
+Leave this lesson?\nThe period ends now and this try won't count.	수업을 여기서 끝낼까요?\n지금 나가면 이번 시도는 기록되지 않아요.
+Coach Vee	한 선생님
+U-shape	ㄷ자 배치
+Rows	줄 배치
+Clusters	모둠 배치

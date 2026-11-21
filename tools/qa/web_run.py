@@ -7,6 +7,11 @@ usage: python -I tools/qa/web_run.py OUTDIR steps.json [WxH] [--expect-blocked]
 env:   CC_URL (page to open, must be local), CC_BOOT (seconds to wait after load)
 steps: ["click",x,y] ["key","Enter"] ["hold","ArrowDown",ms] ["wait",s] ["shot",name]
        ["burst",name,count,interval_ms] ["eval","js"]
+       ["press","Button text"]   press a visible button (debug web builds; English or shown text)
+       ["expect","marker",s]     wait up to s (default 12) until the current scene path or a
+                                 visible text contains marker; otherwise exit 4 and save
+                                 nothing more, so a wrong screen never becomes a "shot"
+       ["expect_not","marker"]   exit 4 if marker is visible now ("a|b" = either marker)
 """
 import json
 import os
@@ -20,9 +25,10 @@ LOCAL = {"127.0.0.1", "localhost", "::1"}
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf8", errors="replace")   # Korean markers in the log
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     expect_blocked = "--expect-blocked" in sys.argv
-    out, steps = args[0], json.load(open(args[1]))
+    out, steps = args[0], json.load(open(args[1], encoding="utf8"))
     w, h = (int(v) for v in (args[2] if len(args) > 2 else "1280x720").split("x"))
     url = os.environ.get("CC_URL", "")
     if urlparse(url).hostname not in LOCAL:
@@ -62,6 +68,30 @@ def main():
                 pg.keyboard.up(st[1])
             elif op == "wait":
                 time.sleep(st[1])
+            elif op == "press":
+                pg.evaluate("t => window.cc_press && window.cc_press(t)", st[1])
+                time.sleep(0.6)
+                if not pg.evaluate("window.__cc_pressed === true"):
+                    log("PRESS FAIL %r: no visible button with that text" % st[1])
+                    b.close()
+                    print("NETWORK blocked=%d hosts=%s" % (len(blocked), sorted({urlparse(u).hostname for _, u in blocked})))
+                    sys.exit(3 if blocked else 4)
+            elif op in ("expect", "expect_not"):
+                state = lambda: pg.evaluate("JSON.stringify(window.__cc_state || {})")
+                # "a|b" passes on either marker
+                has = lambda: (lambda s: any(m in s.get("scene", "") or m in s.get("text", "")
+                                             for m in st[1].split("|")))(json.loads(state()))
+                if op == "expect":
+                    end = time.time() + (st[2] if len(st) > 2 else 12)
+                    while not has() and time.time() < end:
+                        time.sleep(0.4)
+                ok = has() if op == "expect" else not has()
+                if not ok:
+                    log("EXPECT FAIL %s %r" % (op, st[1]))
+                    open("%s/expect_fail.txt" % out, "w", encoding="utf8").write(state())
+                    b.close()
+                    print("NETWORK blocked=%d hosts=%s" % (len(blocked), sorted({urlparse(u).hostname for _, u in blocked})))
+                    sys.exit(3 if blocked else 4)
             elif op == "eval":
                 log("eval: " + str(pg.evaluate(st[1])))
             elif op == "shot":

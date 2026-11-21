@@ -1563,7 +1563,7 @@ const OBJ_SKILL := {
 func _objectives_status(attention: float) -> String:
 	if _objectives.is_empty():
 		return ""
-	var lines := ["Objectives  %d/%d" % [_objectives_met_count(attention), _objectives.size()]]
+	var lines := [tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()]]
 	for o in _objectives:
 		var metric := str(o.get("metric", ""))
 		var target := int(o.get("target", 0))
@@ -1585,7 +1585,7 @@ func _objectives_status(attention: float) -> String:
 		var mark := "OK" if ok else "  "
 		# A2: each objective names the teaching skill it practises, then the rule and count.
 		var focus_tag := tr("RETRY FOCUS  ") if bool(o.get("retry", false)) else ""
-		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, str(OBJ_SKILL.get(metric, "Practice")), current, target, str(o.get("label", metric))])
+		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, tr(str(OBJ_SKILL.get(metric, "Practice"))), current, target, tr(str(o.get("label", metric)))])
 	return "\n".join(lines)
 
 func _objectives_met_count(attention: float) -> int:

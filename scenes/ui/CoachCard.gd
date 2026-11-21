@@ -106,7 +106,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	var title := _label("COACHING", Vector2(230, 50), Vector2(400, 24), 16, Color(0.98, 0.95, 0.86))
 	title.add_theme_font_override("font", load(PIXEL_FONT))
 	_root.add_child(title)
-	_root.add_child(_label("Coach Vee  ·  " + str(fb.get("summary", "no moves recorded")), Vector2(230, 80), Vector2(660, 20), 13, Color(0.62, 0.88, 0.95)))
+	_root.add_child(_label(tr("Coach Vee") + "  ·  " + tr(str(fb.get("summary", "no moves recorded"))), Vector2(230, 80), Vector2(660, 20), 13, Color(0.62, 0.88, 0.95)))
 
 	var y := 108.0
 	if not prev.is_empty():
@@ -157,7 +157,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	focus_box.size = Vector2(848, 40)
 	focus_box.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.10, 0.16, 0.20, 0.95), Color(0.30, 0.92, 0.86, 0.8)))
 	_root.add_child(focus_box)
-	var ftext := "NEXT ROUND FOCUS:  " + (str(focus.get("text", "")) if not focus.is_empty() else "Do what worked again, on purpose.")
+	var ftext := tr("NEXT ROUND FOCUS:  ") + tr(str(focus.get("text", "")) if not focus.is_empty() else "Do what worked again, on purpose.")
 	var fl := _label(ftext, Vector2(70, 414), Vector2(820, 22), 14, Color(0.70, 1.0, 0.94))
 	_root.add_child(fl)
 	_sections.append(focus_box)

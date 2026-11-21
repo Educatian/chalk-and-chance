@@ -1410,7 +1410,8 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 		parts.append("Not the move %s needs yet" % display_name)
 	if _last_input_mode == "free_text":
 		parts.append("read as %s" % tag.capitalize())
-	return "  |  ".join(parts)
+	# Each part is its own catalogue key; the joined line would match none.
+	return "  |  ".join(parts.map(func(p): return tr(str(p))))
 
 func _items_awarded_text(items) -> String:
 	if typeof(items) != TYPE_DICTIONARY:
