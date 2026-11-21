@@ -8,10 +8,18 @@ All runs were offline. Shots came from headless Chromium driving a local debug e
 
 | item | before | after |
 |---|---|---|
-| 1 cinematic | `before/1_cinematic_{en,ko}.png`: painterly wood-and-chalkboard room; "▸▸" drawn as boxes | `after/1_cinematic_{en,ko}.png`: pixel room in the current look (US / Korean), board in view, "»" |
+| 1 cinematic | `before/1_cinematic_{en,ko}.png`: painterly wood-and-chalkboard room; "▸▸" drawn as boxes. `before/1_cinematic_flat_{en,ko}.png`: the first redraw, a flat near-empty room | `after/1_cinematic_{en,ko}.png`: composed front-of-class title frame, title on its own band; `after/1_cinematic_chapter1_beats_{en,ko}.png`: every beat of chapter 1 in game; `cinematic_frames_{us,kr}.png`: all 124 frames |
 | 3 objectives panel | `before/3_objectives_{en,ko}.png`: wrapped lines fall back to the left edge | `after/3_objectives_{en,ko}.png`: two-column rows keep their indent; the plate fits the text |
 | 4 preview units | `before/4_preview_ko.png`: "- 15s / + 15s" | `after/4_preview_ko.png`: "-15초 / +15초"; Korean room picture |
 | 5 instructor panel | `before/5_leaderboard_{en,ko}.png`: "Class" / "반 전체" dashboard button for everyone | `after/5_leaderboard_{en,ko}.png`: no button for a learner or the public demo |
+
+Design pass (follow-up review):
+| screen | before | after |
+|---|---|---|
+| coach card | `before/11_coach_card_*.png`: fixed tall card, mostly empty | `after/11_coach_card_*.png`: sized to content, a good first move when no moves were made |
+| debrief review / results | `before/11_debrief_review_*.png`: fixed slots, empty band | `after/11_debrief_review_*.png`, `after/11_results_sa_*.png`: flows and centres |
+| gym | `before/12_gym_*.png`: empty dialogue panel, "Redir." | `after/12_gym_*.png`: opens on the student's line, "Redirect" |
+| group check-in | `before/12_group_checkin_*.png`: flat dark screen, small faces | `after/12_group_checkin_*.png`: the room behind, the group large at a table |
 
 Item 10 evidence (fixes found in the review pass):
 - `after/10_interrupt_outcome_{en,ko}.png`: the interrupt's coaching line stays up.
