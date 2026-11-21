@@ -8,12 +8,13 @@ const Seating = preload("res://scripts/Seating.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const UiText = preload("res://scripts/UiText.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
+const UiKit = preload("res://scripts/UiKit.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
 # Student 1.35 tiles ~= 54px (~10% of screen height); teacher 1.7 tiles ~= 68px. This is
 # ~2.5x larger relative to before (was 32px tiles in a sparse 30x17 room).
-const TILE := 40
+const TILE := 32   # 16-texel v2 tiles drawn at 2 px per texel
 const COLS := 24
 const ROWS := 13
 const STUDENT_TILES_TALL := 1.35   # fallback placeholder height only
@@ -21,10 +22,17 @@ const STUDENT_TILES_TALL := 1.35   # fallback placeholder height only
 ## authored at 32 texels per tile, so everything is drawn at TILE/32 screen px per texel
 ## (1.25 at TILE 40). Characters are no longer normalised to a "tiles tall" target, which
 ## had put floor, students and teacher at three different densities.
-const PX_PER_TEXEL := TILE / 32.0
-const SEAT_FEET_Y := TILE - 3.0   # seated student's feet: bottom of the seat tile, behind the desk
+const PX_PER_TEXEL := TILE / 16.0
+const V2 := "res://assets/v2/"
+## The room is a stage inside the 960x540 design frame: HUD bands above and below,
+## the front wall (one extra tile tall) above row 0, gutters left and right.
+const DESIGN := Vector2(960, 540)
+const ROOM_ORIGIN := Vector2(96, 78)
+const SEAT_FEET_Y := TILE - 1.0   # seated student's feet: bottom of the seat tile, behind the desk
 const FLOOR_TILE := "res://assets/tiles/floor.png"
 const DESK_TILE := "res://assets/tiles/desk.png"
+const V2_DESK := "res://assets/v2/furniture/student_desk.png"
+const V2_TEACHER_DESK := "res://assets/v2/furniture/teacher_desk.png"
 const SEAT_FEET := 0.60    # student feet position within the seat tile (fraction of TILE)
 const DESK_SCALE := 1.35   # desk width relative to a tile (overhangs a little)
 const DESK_Y := 0.30       # desk top within the tile (fraction of TILE)
@@ -115,6 +123,7 @@ var _disrupt_label: Label = null
 var _equity_label: Label = null
 var _objective_label: Label = null
 var _objective_toggle: Button = null
+var _hud: Node2D = null
 var _objective_plate: Panel = null
 var _objectives_open := false
 var _objective_toast_left := 0.0
@@ -179,7 +188,7 @@ func _ready() -> void:
 	_spawn_player(Vector2i(11, 2))
 	_add_badge_strip()
 	_build_hud()
-	UiText.keep_centered(self, Vector2(COLS * TILE, ROWS * TILE))
+	UiText.keep_centered(self, DESIGN, ROOM_ORIGIN)
 	if (Game.lesson.get("moves", []) as Array).is_empty() and Game.lesson.get("disruptions", 0) == 0:
 		CoachCard.show_focus_banner(self, str(Game.current_scenario_id))
 	Telemetry.log_event({
@@ -221,27 +230,85 @@ func _persona_color(id: String) -> Color:
 # --- world geometry ----------------------------------------------------------
 
 func _build_room() -> void:
-	_add_rect(Vector2(0, 0), Vector2(COLS * TILE, ROWS * TILE), COLOR_BG, -20)
+	_add_rect(Vector2(0, -TILE), Vector2(COLS * TILE, (ROWS + 1) * TILE), COLOR_BG, -20)
+	if Art.tex(V2 + "tiles/floor_0.png") == null:
+		_build_room_legacy()
+		return
+	# Floor: four plank variants, chosen per tile so the grain never visibly repeats.
+	for x in range(1, COLS - 1):
+		for y in range(1, ROWS - 1):
+			_v2_tile(Vector2i(x, y), "tiles/floor_%d.png" % (absi(hash(Vector2i(x, y))) % 4), -19)
+	# Reading rug in front of the board (decor only; walkable).
+	for x in range(9, 15):
+		for y in range(1, 3):
+			var piece := ("t" if y == 1 else "b")
+			if x == 9:
+				piece += "l"
+			elif x == 14:
+				piece += "r"
+			_v2_tile(Vector2i(x, y), "tiles/rug_%s.png" % piece, -18)
+	# Front wall: a 1x2-tile face per column, drawn one tile above the room over row 0.
+	var front := {1: "tiles/front_door.png", 6: "tiles/front_window.png", 17: "tiles/front_window.png",
+		20: "tiles/front_clock.png"}
+	for x in range(COLS):
+		_walls[Vector2i(x, 0)] = true
+		var path: String = front.get(x, "tiles/front_plain.png")
+		if x >= 9 and x <= 14:
+			path = "tiles/board_%d.png" % (x - 9)
+		_v2_sprite(V2 + path, Vector2(x * TILE, -TILE), -10)
+	# Side walls carry built-in shelves; the back wall carries cubbies.
+	for y in range(1, ROWS):
+		for x in [0, COLS - 1]:
+			_walls[Vector2i(x, y)] = true
+			var cap := "tiles/wall_cap.png" if y == ROWS - 1 else "tiles/shelf_%d.png" % (y % 3)
+			_v2_tile(Vector2i(x, y), cap, -10)
+	for x in range(1, COLS - 1):
+		_walls[Vector2i(x, ROWS - 1)] = true
+		_v2_tile(Vector2i(x, ROWS - 1), "tiles/cubby_%d.png" % (x % 3), -10)
+	# Teacher's desk spans two tiles at the front-left.
+	_walls[Vector2i(2, 2)] = true
+	_walls[Vector2i(3, 2)] = true
+	var td := Node2D.new()
+	td.position = Vector2(2 * TILE, 2 * TILE)
+	td.z_index = 1
+	var tdt := Art.tex(V2_TEACHER_DESK)
+	var tds := Sprite2D.new()
+	tds.texture = tdt
+	tds.centered = false
+	tds.scale = Vector2(PX_PER_TEXEL, PX_PER_TEXEL)
+	tds.position = Vector2(round((2 * TILE - tdt.get_width() * PX_PER_TEXEL) / 2.0), round(TILE - 1 - tdt.get_height() * PX_PER_TEXEL))
+	td.add_child(tds)
+	add_child(td)
 
+func _v2_tile(tile: Vector2i, rel: String, z: int) -> void:
+	_v2_sprite(V2 + rel, Vector2(tile.x * TILE, tile.y * TILE), z)
+
+func _v2_sprite(path: String, pos: Vector2, z: int) -> void:
+	var t := Art.tex(path)
+	if t == null:
+		return
+	var s := Sprite2D.new()
+	s.texture = t
+	s.centered = false
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	s.scale = Vector2(PX_PER_TEXEL, PX_PER_TEXEL)
+	s.position = pos
+	s.z_index = z
+	add_child(s)
+
+## Pre-v2 room (32-texel tiles), kept as a fallback if the v2 art is missing.
+func _build_room_legacy() -> void:
 	for x in range(1, COLS - 1):
 		for y in range(1, ROWS - 1):
 			_put_tile(Vector2i(x, y), "res://assets/tiles/floor.png", COLOR_FLOOR, -19, false)
-
 	for x in range(COLS):
 		_add_wall(Vector2i(x, 0))
 		_add_wall(Vector2i(x, ROWS - 1))
 	for y in range(ROWS):
 		_add_wall(Vector2i(0, y))
 		_add_wall(Vector2i(COLS - 1, y))
-
-	# Front wall: chalkboard across the middle, windows either side, door at the corner.
 	for x in range(9, 15):
 		_decor(Vector2i(x, 0), "res://assets/tiles/board.png")
-	_decor(Vector2i(6, 0), "res://assets/tiles/window.png")
-	_decor(Vector2i(17, 0), "res://assets/tiles/window.png")
-	_decor(Vector2i(1, 0), "res://assets/tiles/door.png")
-
-	# Teacher's desk at the front-left.
 	_add_desk(Vector2i(2, 2))
 	_add_desk(Vector2i(3, 2))
 
@@ -265,6 +332,15 @@ func _add_desk(tile: Vector2i) -> void:
 ## The desk cut out of desk.png (floor pixels removed), at the room's texel density, sitting
 ## on the bottom of its tile and centred. Falls back to the full tile if the cut-out fails.
 func _desk_sprite() -> Node2D:
+	var v2 := Art.tex(V2_DESK)
+	if v2 != null:
+		var d := Sprite2D.new()
+		d.texture = v2
+		d.centered = false
+		d.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		d.scale = Vector2(PX_PER_TEXEL, PX_PER_TEXEL)
+		d.position = Vector2(round((TILE - v2.get_width() * PX_PER_TEXEL) / 2.0), round(TILE - v2.get_height() * PX_PER_TEXEL + 2))
+		return d
 	var cut := Art.cutout(DESK_TILE, FLOOR_TILE)
 	var s := Sprite2D.new()
 	s.centered = false
@@ -326,29 +402,24 @@ func _add_rect(pos: Vector2, size: Vector2, color: Color, z: int) -> void:
 ## Shows earned badges as icons in the top-right (GAME_CONCEPT.md gym-badge progression).
 func _add_badge_strip() -> void:
 	var order := ["routine", "echo", "balance", "mirror", "insight"]
-	var x := COLS * TILE - 12
+	var x := DESIGN.x - 36.0
 	for id in order:
 		if not GameState.has_badge(id):
 			continue
 		var t := Art.tex("res://assets/ui/badge_%s.png" % id)
-		x -= 34
-		if t != null:
-			var s := Sprite2D.new()
-			s.texture = t
-			s.centered = true
-			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			s.position = Vector2(x + 14.0, 22.0)
-			var badge_scale := minf(28.0 / float(t.get_width()), 28.0 / float(t.get_height()))
-			s.scale = Vector2(badge_scale, badge_scale)
-			s.z_index = 50
-			add_child(s)
-		else:
-			var dot := ColorRect.new()
-			dot.position = Vector2(x + 1, 9)
-			dot.size = Vector2(26, 26)
-			dot.color = Color(0.95, 0.82, 0.30)
-			dot.z_index = 50
-			add_child(dot)
+		if t == null:
+			continue
+		var r := TextureRect.new()
+		r.texture = t
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		r.position = Vector2(x, 9)
+		r.size = Vector2(28, 28)
+		r.z_index = 60
+		r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hud_node().add_child(r)
+		x -= 30.0
 
 # --- actors ------------------------------------------------------------------
 
@@ -357,7 +428,9 @@ func _add_badge_strip() -> void:
 ## absent, so the caller falls back to the static stand frame. Animation + tempo + start
 ## frame are picked by scenario format and randomized so the class is not in lockstep.
 func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
-	var sheet := Art.tex("res://assets/sprites/%s_idle.png" % persona_id)
+	var sheet := Art.tex(V2 + "sprites/%s_seated.png" % persona_id)
+	if sheet == null:
+		sheet = Art.tex("res://assets/sprites/%s_idle.png" % persona_id)
 	if sheet == null:
 		return null
 	var fw := int(sheet.get_width() / 6.0)
@@ -462,8 +535,9 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 	# can never clip it.
 	var tag := Label.new()
 	tag.text = display_name
-	tag.position = Vector2(-TILE * 0.5, TILE - 1)
-	tag.size = Vector2(TILE * 2.0, 14)
+	tag.position = Vector2(-TILE * 0.75, TILE + 1)
+	tag.size = Vector2(TILE * 2.5, 14)
+	tag.theme_type_variation = UiText.NAME
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.z_index = 8
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -475,14 +549,14 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 
 	# Off-task bar above the head (green = attentive, red = drifting).
 	var barbg := ColorRect.new()
-	barbg.size = Vector2(30, 5)
-	barbg.position = Vector2(1, head_y - 11)
+	barbg.size = Vector2(24, 4)
+	barbg.position = Vector2(4, head_y - 8)
 	barbg.color = Color(0, 0, 0, 0.55)
 	barbg.z_index = 6
 	node.add_child(barbg)
 	var barfill := ColorRect.new()
-	barfill.size = Vector2(0, 5)
-	barfill.position = Vector2(1, head_y - 11)
+	barfill.size = Vector2(0, 4)
+	barfill.position = Vector2(4, head_y - 8)
 	barfill.color = Color(0.3, 0.8, 0.4)
 	barfill.z_index = 7
 	node.add_child(barfill)
@@ -496,15 +570,19 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 
 ## A bobbing "!" bubble just above an NPC's head to invite interaction.
 func _add_talk_emote(node: Node2D, head_y: float) -> void:
-	var t := Art.tex("res://assets/ui/emote_exclaim.png")
+	var t := Art.tex(V2 + "ui/talk_bubble.png")
+	var v2 := t != null
+	if t == null:
+		t = Art.tex("res://assets/ui/emote_exclaim.png")
 	if t == null:
 		return
 	var e := Sprite2D.new()
 	e.texture = t
 	e.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var sc := 20.0 / float(t.get_width())
+	var sc := PX_PER_TEXEL if v2 else 20.0 / float(t.get_width())
 	e.scale = Vector2(sc, sc)
-	e.position = Vector2(TILE / 2.0 - 10.0, head_y - 32.0)
+	# Beside the head (upper right), so it never sits on the row above.
+	e.position = Vector2(TILE / 2.0 + 14.0, head_y + 4.0) if v2 else Vector2(TILE / 2.0 - 10.0, head_y - 32.0)
 	e.z_index = 5
 	node.add_child(e)
 	var y0 := e.position.y
@@ -524,22 +602,24 @@ func _spawn_player(tile: Vector2i) -> void:
 # --- live classroom management (proximity + withitness) ----------------------
 
 ## Translucent rounded plate that groups HUD text so it reads over any floor art.
-func _hud_plate(pos: Vector2, size: Vector2, accent: Color = Color(0.98, 0.82, 0.30, 0.55)) -> Panel:
-	var p := Panel.new()
+func _hud_plate(pos: Vector2, size: Vector2, _accent: Color = Color.WHITE) -> Panel:
+	var p := UiKit.panel("board")
 	p.position = pos
 	p.size = size
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.05, 0.06, 0.12, 0.78)
-	sb.border_color = accent
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.shadow_color = Color(0, 0, 0, 0.35)
-	sb.shadow_size = 4
-	p.add_theme_stylebox_override("panel", sb)
 	p.z_index = 55
-	add_child(p)
+	_hud_node().add_child(p)
 	return p
+
+## HUD lives in 960x540 design coordinates on a node placed at -ROOM_ORIGIN, so it frames
+## the room instead of sitting on it.
+func _hud_node() -> Node2D:
+	if _hud == null:
+		_hud = Node2D.new()
+		_hud.name = "Hud"
+		_hud.position = -ROOM_ORIGIN
+		_hud.z_index = 50
+		add_child(_hud)
+	return _hud
 
 const HUD_ATT_W := 150.0
 const HUD_COMP_W := 120.0
@@ -550,8 +630,47 @@ const OBJ_TOAST_SECONDS := 3.0
 ## Objectives are collapsed to one line (O or click to expand) and pop open briefly
 ## when one is met.
 func _build_hud() -> void:
-	_hud_plate(Vector2(4, 2), Vector2(COLS * TILE - 8, 36))
-	_hud_plate(Vector2(4, ROWS * TILE - 52), Vector2(COLS * TILE - 8, 50))
+	var top := 2.0
+	var bot := DESIGN.y - 44.0
+	_hud_plate(Vector2(4, top), Vector2(DESIGN.x - 8, 42))
+	_hud_plate(Vector2(4, bot), Vector2(DESIGN.x - 8, 42))
+
+	_hud_icon("icon_attention", Vector2(16, top + 13))
+	_hud_text("ATTENTION", Vector2(38, top + 5), UiText.HUD)
+	_hud_bar_bg(Vector2(38, top + 24), Vector2(HUD_ATT_W + 4, 12))
+	_attention_fill = _hud_fill(Vector2(40, top + 26), Vector2(HUD_ATT_W, 8), Color("5fbf6a"))
+
+	_hud_icon("icon_composure", Vector2(212, top + 13))
+	_hud_text("COMPOSURE", Vector2(234, top + 5), UiText.HUD, Color("f2eedd"))
+	_hud_bar_bg(Vector2(234, top + 24), Vector2(HUD_COMP_W + 4, 12))
+	_composure_fill = _hud_fill(Vector2(236, top + 26), Vector2(HUD_COMP_W, 8), Color("ec8a6e"))
+	_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 8)
+
+	_hud_icon("icon_clock", Vector2(380, top + 13))
+	_hud_text("PERIOD", Vector2(402, top + 3), UiText.HUD)
+	_clock_label = _hud_text("2:00", Vector2(402, top + 17), UiText.HUD_VALUE)
+	_hud_text("DISRUPTIONS", Vector2(472, top + 3), UiText.HUD)
+	_disrupt_label = _hud_text("0", Vector2(472, top + 17), UiText.HUD_VALUE, Color("e0a93a"))
+	_hud_text("ENGAGED", Vector2(572, top + 3), UiText.HUD)
+	_equity_label = _hud_text("0/0", Vector2(572, top + 17), UiText.HUD_VALUE, Color("6fa8e8"))
+
+	_objective_toggle = Button.new()
+	_objective_toggle.position = Vector2(648, top + 6)
+	_objective_toggle.size = Vector2(164, 30)
+	_objective_toggle.focus_mode = Control.FOCUS_NONE
+	UiKit.style_button(_objective_toggle, 13 + GameState.ui_font_delta())
+	_objective_toggle.z_index = 60
+	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
+	_hud_node().add_child(_objective_toggle)
+
+	# Expanded objectives: over the left wall columns, clear of every seat.
+	_objective_plate = _hud_plate(Vector2(4, ROOM_ORIGIN.y - 30), Vector2(ROOM_ORIGIN.x + 3 * TILE, 300))
+	_objective_label = _hud_text("", Vector2(18, ROOM_ORIGIN.y - 18), UiText.HUD, Color("f2eedd"))
+	_objective_label.size = Vector2(ROOM_ORIGIN.x + 3 * TILE - 28, 276)
+	_objective_label.clip_text = true
+	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_set_objectives_open(false, false)
+
 	var vee_tex := Art.tex("res://assets/portraits/coach_vee_neutral.png")
 	if vee_tex != null:
 		var vee := TextureRect.new()
@@ -559,57 +678,31 @@ func _build_hud() -> void:
 		vee.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		vee.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		vee.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		vee.position = Vector2(10, ROWS * TILE - 49)
-		vee.size = Vector2(44, 44)
+		vee.position = Vector2(12, bot + 5)
+		vee.size = Vector2(32, 32)
 		vee.z_index = 60
-		add_child(vee)
-
-	_hud_text("ATTENTION", Vector2(12, 3), UiText.HUD)
-	_hud_bar_bg(Vector2(12, 20), Vector2(HUD_ATT_W + 4, 14))
-	_attention_fill = _hud_fill(Vector2(14, 22), Vector2(HUD_ATT_W, 10), Color(0.30, 0.80, 0.40))
-
-	_hud_text("COMPOSURE", Vector2(180, 3), UiText.HUD, Color(0.95, 0.8, 0.85))
-	_hud_bar_bg(Vector2(180, 20), Vector2(HUD_COMP_W + 4, 14))
-	_composure_fill = _hud_fill(Vector2(182, 22), Vector2(HUD_COMP_W, 10), Color(0.90, 0.45, 0.55))
-	_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 10)
-
-	_hud_text("PERIOD", Vector2(322, 3), UiText.HUD)
-	_clock_label = _hud_text("2:00", Vector2(322, 16), UiText.HUD_VALUE)
-	_hud_text("DISRUPTIONS", Vector2(398, 3), UiText.HUD)
-	_disrupt_label = _hud_text("0", Vector2(398, 16), UiText.HUD_VALUE, Color(0.97, 0.85, 0.6))
-	_hud_text("ENGAGED", Vector2(506, 3), UiText.HUD)
-	_equity_label = _hud_text("0/0", Vector2(506, 16), UiText.HUD_VALUE, Color(0.6, 0.9, 0.95))
-
-	_objective_toggle = Button.new()
-	_objective_toggle.flat = true
-	_objective_toggle.position = Vector2(586, 5)
-	_objective_toggle.size = Vector2(176, 30)
-	_objective_toggle.focus_mode = Control.FOCUS_NONE
-	_objective_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_objective_toggle.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
-	_objective_toggle.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
-	_objective_toggle.z_index = 60
-	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
-	add_child(_objective_toggle)
-
-	# Expanded objectives: on the left wall columns (0-3), clear of every seat.
-	_objective_plate = _hud_plate(Vector2(4, 44), Vector2(152, 360), Color(0.30, 0.92, 0.86, 0.5))
-	_objective_label = _hud_text("", Vector2(12, 50), UiText.HUD, Color(0.93, 0.91, 0.78))
-	_objective_label.size = Vector2(138, 348)
-	_objective_label.clip_text = true
-	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_set_objectives_open(false, false)
-
-	var by := ROWS * TILE - 50
-	_interact_label = _hud_text("", Vector2(60, by), UiText.HUD, Color(0.96, 0.86, 0.50))
-	_interact_label.size = Vector2(COLS * TILE - 300, 20)
+		_hud_node().add_child(vee)
+	_interact_label = _hud_text("", Vector2(52, bot + 3), UiText.HUD, Color("ffd34e"))
+	_interact_label.size = Vector2(620, 18)
 	_interact_label.clip_text = true
-	var keys := _hud_text("Arrows walk | Z talk | O goals | Esc leave", Vector2(COLS * TILE - 244, by), UiText.HUD, Color(0.66, 0.72, 0.82))
-	keys.size = Vector2(232, 20)
+	var keys := _hud_text("Arrows walk | Z talk | O goals | Esc leave", Vector2(DESIGN.x - 290, bot + 3), UiText.HUD, Color("b9b7a8"))
+	keys.size = Vector2(276, 18)
 	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_coach_hint = _hud_text("", Vector2(60, by + 22), UiText.HUD, Color(0.72, 0.92, 0.78))
-	_coach_hint.size = Vector2(COLS * TILE - 72, 20)
+	_coach_hint = _hud_text("", Vector2(52, bot + 21), UiText.BODY_SMALL_ON_BOARD, Color("a8d8b0"))
+	_coach_hint.size = Vector2(DESIGN.x - 70, 18)
 	_coach_hint.clip_text = true
+
+func _hud_icon(name: String, pos: Vector2) -> void:
+	var t := Art.tex(V2 + "ui/%s.png" % name)
+	if t == null:
+		return
+	var r := TextureRect.new()
+	r.texture = t
+	r.position = pos
+	r.size = Vector2(16, 16)
+	r.z_index = 60
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_node().add_child(r)
 
 func _hud_text(t: String, pos: Vector2, variation: StringName, color: Variant = null) -> Label:
 	var l := Label.new()
@@ -618,17 +711,17 @@ func _hud_text(t: String, pos: Vector2, variation: StringName, color: Variant = 
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiText.style(l, variation, color)
 	l.z_index = 60
-	add_child(l)
+	_hud_node().add_child(l)
 	return l
 
 func _hud_bar_bg(pos: Vector2, size: Vector2) -> void:
 	var bg := ColorRect.new()
 	bg.position = pos
 	bg.size = size
-	bg.color = Color(0, 0, 0, 0.55)
+	bg.color = Color("14131c")
 	bg.z_index = 60
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	_hud_node().add_child(bg)
 
 func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
 	var f := ColorRect.new()
@@ -637,7 +730,7 @@ func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
 	f.color = color
 	f.z_index = 61
 	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(f)
+	_hud_node().add_child(f)
 	return f
 
 ## Collapsed: one line in the top band. Open: list on the left wall. `toast` = auto-open
@@ -704,7 +797,7 @@ func _process(delta: float) -> void:
 			info["offtask"] = ot
 			var fill: ColorRect = info.get("fill", null)
 			if fill != null:
-				fill.size = Vector2(30.0 * ot / 100.0, 5)
+				fill.size = Vector2(24.0 * ot / 100.0, 4)
 				fill.color = Color(0.3, 0.8, 0.4).lerp(Color(0.9, 0.3, 0.25), ot / 100.0)
 			total += ot
 			if ot > worst:
@@ -713,8 +806,8 @@ func _process(delta: float) -> void:
 
 		if _attention_fill != null:
 			var attention := 100.0 - total / float(_npcs.size())
-			_attention_fill.size = Vector2(HUD_ATT_W * attention / 100.0, 10)
-			_attention_fill.color = Color(0.9, 0.3, 0.25).lerp(Color(0.30, 0.80, 0.40), attention / 100.0)
+			_attention_fill.size = Vector2(HUD_ATT_W * attention / 100.0, 8)
+			_attention_fill.color = Color("ec8a6e").lerp(Color("5fbf6a"), attention / 100.0)
 
 		if _equity_label != null:
 			_equity_label.text = "%d/%d" % [_engaged_count(), _npcs.size()]
@@ -779,7 +872,7 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 	if _disrupt_label != null:
 		_disrupt_label.text = str(_disruptions)
 	if _composure_fill != null:
-		_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 10)
+		_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 8)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
 	var ptile: Vector2i = _player.current_tile() if _player != null else Vector2i.ZERO
@@ -1087,8 +1180,8 @@ func _items_awarded_text(items) -> String:
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true
 	_overlay = Control.new()
-	_overlay.position = Vector2.ZERO
-	_overlay.size = Vector2(COLS * TILE, ROWS * TILE)
+	_overlay.position = -ROOM_ORIGIN
+	_overlay.size = DESIGN
 	_overlay.z_index = 100
 	add_child(_overlay)
 
@@ -1111,7 +1204,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	_overlay.add_child(lbl)
 	var text_h := float(lbl.get_line_count()) * float(lbl.get_line_height()) + 4.0
 	var buttons_h := float(btns.size()) * 40.0
-	var max_h := ROWS * TILE - 40.0
+	var max_h := DESIGN.y - 40.0
 	var ph := clampf(18.0 + text_h + 24.0 + buttons_h + 8.0, 180.0, max_h)
 	var px := (_overlay.size.x - pw) / 2.0
 	var py := (_overlay.size.y - ph) / 2.0

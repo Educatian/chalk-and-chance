@@ -37,7 +37,7 @@ static func add_hotkey_badge(button: Button, i: int, font_size: int, inset: Vect
 	l.position = inset
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.add_theme_font_size_override("font_size", font_size)
-	l.add_theme_color_override("font_color", Color(0.62, 0.70, 0.86, 0.9))
+	l.add_theme_color_override("font_color", Color("8a5a36"))   # wood brown: reads on paper and dark buttons
 	button.add_child(l)
 	return l
 

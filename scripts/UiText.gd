@@ -16,10 +16,16 @@ const BODY := &"BodyLabel"
 const CAPTION := &"CaptionLabel"
 const HUD := &"HudLabel"
 const HUD_VALUE := &"HudValueLabel"
+const NAME := &"NameTagLabel"
+const BODY_SMALL_ON_BOARD := &"BoardBodyLabel"
+
+## Label styles drawn in the pixel display face (titles, HUD labels, numbers, names).
+const PIXEL_STYLES := [&"TitleLabel", &"HeadingLabel", &"HudLabel", &"HudValueLabel", &"NameTagLabel"]
+const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
 
 ## Base pixel sizes (960x540 design space) for each variation, before "Large text".
 const BASE_SIZES := {
-	TITLE: 18, HEADING: 15, BODY: 14, CAPTION: 12, HUD: 12, HUD_VALUE: 15,
+	TITLE: 18, HEADING: 15, BODY: 14, CAPTION: 12, HUD: 12, HUD_VALUE: 15, NAME: 12, BODY_SMALL_ON_BOARD: 13,
 }
 
 ## Tokens for 480x270-authored screens (rendered at x2): 11 -> 22px ... 5 -> 10px.
@@ -40,6 +46,10 @@ static func apply_text_scale() -> void:
 	var delta := GameState.ui_font_delta()
 	for v in BASE_SIZES:
 		theme.set_font_size(&"font_size", v, int(BASE_SIZES[v]) + delta)
+	if ResourceLoader.exists(PIXEL_FONT):
+		var f: Font = load(PIXEL_FONT)
+		for v in PIXEL_STYLES:
+			theme.set_font(&"font", v, f)
 
 static func style(label: Label, variation: StringName, color: Variant = null) -> Label:
 	label.theme_type_variation = variation
@@ -54,10 +64,10 @@ static func center_offset(node: CanvasItem, design: Vector2 = DESIGN) -> Vector2
 	return ((vp - design) * 0.5).max(Vector2.ZERO).floor()
 
 ## Keep `target` centred now and whenever the window is resized.
-static func keep_centered(target: CanvasItem, design: Vector2 = DESIGN) -> void:
+static func keep_centered(target: CanvasItem, design: Vector2 = DESIGN, extra: Vector2 = Vector2.ZERO) -> void:
 	var apply := func():
 		if is_instance_valid(target) and target.is_inside_tree():
-			target.position = center_offset(target, design)
+			target.position = center_offset(target, design) + extra
 	apply.call()
 	if target.is_inside_tree():
 		var vp := target.get_viewport()
