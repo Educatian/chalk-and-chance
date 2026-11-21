@@ -218,6 +218,16 @@ static func verdict(rank: String, weak: String) -> String:
 			return "You got there, with detours. %s is the part to practise." % weak.capitalize()
 	return "%s held the score down. That is the place to start." % weak.capitalize()
 
+## Classroom grade from the share of the best possible period score. Honest caps: a
+## missed objective means no badge, so at most C; under half the objectives met is D.
+static func classroom_rank(frac: float, stars: int, n: int) -> String:
+	var rank := "S" if frac >= 0.9 else ("A" if frac >= 0.8 else ("B" if frac >= 0.65 else ("C" if frac >= 0.5 else "D")))
+	if n > 0 and stars * 2 < n:
+		return "D"
+	if stars < n and rank in ["S", "A", "B"]:
+		return "C"
+	return rank
+
 ## Index of the weakest part (lowest frac); ties go to the first.
 static func weakest(parts: Array) -> int:
 	var wi := 0

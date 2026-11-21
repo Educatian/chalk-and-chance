@@ -1195,7 +1195,8 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 			"cause": "you spoke with %d of %d students" % [reached, _npcs.size()]},
 	]
 	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
-	var rank := GameState._rank_for_score(maxi(0, score))
+	var best := _objectives.size() * 80 + 200 + _npcs.size() * 10
+	var rank := ResultsCard.classroom_rank(float(maxi(0, score)) / maxi(1, best), stars, _objectives.size())
 	var weak := ResultsCard.weakest(parts)
 	var title := "%s  ·  period review" % _scenario_title
 	if _attempt > 1:

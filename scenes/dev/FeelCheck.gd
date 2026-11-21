@@ -35,8 +35,12 @@ func _ready() -> void:
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
-## Results card: weakest part, and C/D never get a celebration colour.
+## Results card: grades stay honest and C/D never get a celebration colour.
 func _check_results_grade() -> void:
+	_ok("all objectives + 95% of best is S", ResultsCard.classroom_rank(0.95, 5, 5) == "S")
+	_ok("a missed objective caps the grade at C", ResultsCard.classroom_rank(0.95, 4, 5) == "C")
+	_ok("under half the objectives is D", ResultsCard.classroom_rank(0.95, 2, 5) == "D")
+	_ok("low share with all objectives is still low", ResultsCard.classroom_rank(0.45, 3, 3) == "D")
 	_ok("weakest part is the lowest share", ResultsCard.weakest([{"frac": 0.9}, {"frac": 0.2}, {"frac": 0.5}]) == 1)
 	_ok("C/D grade colour is calm, not alarm red", ResultsCard.grade_color("D").r < 0.85 and ResultsCard.grade_color("D") == ResultsCard.grade_color("C"))
 
