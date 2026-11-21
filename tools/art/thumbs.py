@@ -17,7 +17,6 @@ from PIL import Image  # noqa: E402
 
 ROOT = B.ROOT
 OUT = os.path.join(ROOT, 'assets', 'v2', 'thumbs')
-CINE = os.path.join(ROOT, 'assets', 'v2', 'cinematic')   # empty rooms for the mission cinematics
 
 
 def seats(arr):
@@ -101,9 +100,6 @@ def main():
         sid = os.path.splitext(os.path.basename(f))[0]
         render(cfg).save(os.path.join(OUT, sid + '.png'))
         render(cfg, 'kr').save(os.path.join(OUT, sid + '_kr.png'))   # Korean classroom look
-        os.makedirs(CINE, exist_ok=True)
-        render(cfg, 'us', people=False).save(os.path.join(CINE, sid + '.png'))
-        render(cfg, 'kr', people=False).save(os.path.join(CINE, sid + '_kr.png'))
         n += 2
     print('wrote %d thumbnails to %s' % (n, OUT))
 
