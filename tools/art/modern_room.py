@@ -427,6 +427,28 @@ def teacher_desk_modern(style):
     return outline(pad(d, 1))
 
 
+def floor_cushion(v):
+    c = new(10, 7)
+    col = ['yellow', 'notyet', 'early', 'ok'][v % 4]
+    rect(c, 1, 0, 8, 7, col)
+    rect(c, 0, 1, 10, 5, col)
+    rect(c, 1, 5, 8, 1, 'tile_ln' if v % 2 else 'wood_dk')
+    put(c, 3, 2, 'chalk'); put(c, 4, 2, 'chalk')
+    return outline(pad(c, 1))
+
+
+def floor_plant():
+    p = new(12, 16)
+    rect(p, 3, 10, 6, 6, 'chalk')
+    rect(p, 3, 10, 6, 1, 'tile')
+    for (x, y) in [(5, 1), (6, 1), (4, 2), (7, 2), (3, 3), (6, 3), (8, 3), (4, 4), (5, 4), (7, 4), (2, 5), (5, 5),
+                   (6, 5), (9, 5), (3, 6), (4, 6), (7, 6), (8, 6), (5, 7), (6, 7), (4, 8), (7, 8), (5, 9), (6, 9)]:
+        put(p, x, y, 'green')
+    for (x, y) in [(5, 2), (6, 4), (4, 5), (8, 5), (6, 6)]:
+        put(p, x, y, 'ok')
+    return outline(pad(p, 1))
+
+
 def build_modern():
     for style, floor_fn in (('us', floor_us), ('kr', floor_kr)):
         for v in range(4):
@@ -466,6 +488,9 @@ def build_modern():
     save(plant_modern(), 'room_common/plant.png')
     save(purifier(), 'room_common/purifier.png')
     save(cap_base(), 'room_common/wall_cap.png')
+    for v in range(4):
+        save(floor_cushion(v), 'room_common/cushion_%d.png' % v)
+    save(floor_plant(), 'room_common/floor_plant.png')
     modern_backdrop()
 
 

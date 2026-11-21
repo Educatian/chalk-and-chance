@@ -76,3 +76,15 @@ static func keep_centered(target: CanvasItem, design: Vector2 = DESIGN, extra: V
 		target.tree_exiting.connect(func():
 			if vp.size_changed.is_connected(apply):
 				vp.size_changed.disconnect(apply), CONNECT_ONE_SHOT)
+
+## The 960-space type scale (plan 3.4) for code that sets sizes directly: snaps any
+## requested size to 24 / 18 / 14 / 12 and adds the Large text delta.
+static func fs(n: int) -> int:
+	var snapped := 12
+	if n >= 22:
+		snapped = 24
+	elif n >= 17:
+		snapped = 18
+	elif n >= 13:
+		snapped = 14
+	return snapped + GameState.ui_font_delta()

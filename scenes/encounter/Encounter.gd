@@ -19,7 +19,7 @@ const UiKit = preload("res://scripts/UiKit.gd")
 ## student's line in chalkboard panels right, verdict + coach line, move buttons below.
 const PORTRAIT_PANEL := Rect2(8, 20, 140, 140)
 const METER_PANEL := Rect2(154, 20, 318, 76)
-const LINE_PANEL := Rect2(154, 110, 318, 50)
+const LINE_PANEL := Rect2(154, 100, 318, 60)
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -391,8 +391,9 @@ func _build_ui() -> void:
 	_name_label.add_theme_font_override("font", UiKit.pixel_font())
 	_name_label.size = Vector2(380, 12)
 	_name_label.clip_text = true
-	_need_label = _make_label("Need: surface the student's reasoning", Vector2(156, 98), UiText.S_CAPTION, Color("6fa8e8"))
-	_need_label.size = Vector2(314, 12)
+	# The most important guidance sits inside the line panel, in the focus colour.
+	_need_label = _make_label("Need: surface the student's reasoning", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
+	_need_label.size = Vector2(298, 12)
 	_need_label.clip_text = true
 
 	# Meters block, top-left.
@@ -685,7 +686,7 @@ func _set_wait_bar_ready(ready: bool) -> void:
 func _build_dialogue_box() -> void:
 	# The student's line sits in the chalkboard panel (LINE_PANEL), written in chalk.
 	var box_rect := LINE_PANEL
-	var text_rect := Rect2(LINE_PANEL.position + Vector2(10, 7), LINE_PANEL.size - Vector2(20, 14))
+	var text_rect := Rect2(LINE_PANEL.position + Vector2(10, 17), LINE_PANEL.size - Vector2(20, 23))
 	var holder := Control.new()
 	holder.name = "DialogueBubble"
 	holder.position = box_rect.position

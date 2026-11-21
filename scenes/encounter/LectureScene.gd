@@ -120,7 +120,7 @@ func setup(data: Dictionary) -> void:
 func _apply_scaffold() -> void:
 	var lvl := int(_scaffold["level"])
 	if _scaffold_badge == null:
-		_scaffold_badge = _label("", Vector2(284, 12), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge = _label("", Vector2(404, 6), UiText.S_MICRO, Color.WHITE)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(lvl, false)
@@ -210,8 +210,11 @@ func _refresh_backdrop() -> void:
 
 func _build_ui() -> void:
 	UiKit.add_scene_frame(_layer, Rect2(4, 2, 472, 17), [Rect2(4, 21, 276, 64), Rect2(6, 166, 468, 48)])
-	_title = _label("LECTURE: %s" % str(scenario.get("title", "Lesson")), Vector2(10, 6), UiText.S_DISPLAY, Color(0.97, 0.93, 0.85))
-	_title.size = Vector2(460, 14)
+	_title = _label("LECTURE: %s" % str(scenario.get("title", "Lesson")), Vector2(10, 4), UiText.S_TITLE, Color(0.97, 0.93, 0.85))
+	_title.size = Vector2(388, 12)
+	_title.clip_text = true
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_title.add_theme_font_override("font", UiKit.pixel_font())
 
 	_make_bar("progress", "Lesson Progress", 26, Color(0.30, 0.80, 0.40))
 	_make_bar("comp", "Comprehension", 42, Color(0.35, 0.65, 0.95))

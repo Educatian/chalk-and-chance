@@ -1,4 +1,5 @@
 extends RefCounted
+const UiText = preload("res://scripts/UiText.gd")
 
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 
@@ -28,7 +29,7 @@ static func show(parent: Node, run_record: Dictionary, reward: Dictionary, conte
 	cont.text = "Return to room"
 	cont.position = Vector2(720, 448)
 	cont.size = Vector2(184, 64)
-	cont.add_theme_font_size_override("font_size", 16)
+	cont.add_theme_font_size_override("font_size", UiText.fs(16))
 	cont.pressed.connect(on_continue)
 	overlay.add_child(cont)
 	cont.grab_focus()
@@ -65,7 +66,7 @@ static func _label(parent: Node, text: String, pos: Vector2, fs: int, color: Col
 	label.size = size
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.clip_text = true
-	label.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
+	label.add_theme_font_size_override("font_size", UiText.fs(fs))
 	label.add_theme_color_override("font_color", color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(label)

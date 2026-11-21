@@ -400,6 +400,30 @@ func _dress_room(occupied: Dictionary) -> void:
 			_decor_sprite("room_%s/chair.png" % _room_style(), Vector2(s.x * TILE + 4, s.y * TILE - 2), Vector2i(s.x, s.y))
 		elif i % 2 == 0:
 			_decor_sprite("furniture/backpack_%d.png" % (i % 6), Vector2(s.x * TILE + TILE - 2, s.y * TILE + 14), Vector2i(s.x, s.y))
+	# Margin zones (review note): a reading corner at the back right and floor plants in
+	# the front corners. Walkable, and skipped wherever a layout puts a seat nearby.
+	var corner := Rect2i(18, 9, 4, 2)
+	var corner_free := true
+	for s2 in _seats:
+		if Rect2i(corner.position - Vector2i.ONE, corner.size + Vector2i(2, 2)).has_point(s2):
+			corner_free = false
+	if corner_free:
+		var room := "room_%s/" % _room_style()
+		for x in range(corner.position.x, corner.end.x):
+			for y in range(corner.position.y, corner.end.y):
+				var piece := ("t" if y == corner.position.y else "b")
+				if x == corner.position.x:
+					piece += "l"
+				elif x == corner.end.x - 1:
+					piece += "r"
+				_v2_tile(Vector2i(x, y), room + "rug_%s.png" % piece, -18)
+		var ci := 0
+		for t in [Vector2(18.3, 9.4), Vector2(19.6, 10.2), Vector2(20.9, 9.5)]:
+			_decor_sprite("room_common/cushion_%d.png" % ci, Vector2(t.x * TILE, t.y * TILE), Vector2i(int(t.x), int(t.y)))
+			ci += 1
+	for t in [Vector2i(1, 1), Vector2i(COLS - 2, 1)]:
+		if not _seats.has(t) and not _walls.has(t):
+			_decor_sprite("room_common/floor_plant.png", Vector2(t.x * TILE + 4, t.y * TILE - 6), t)
 	for k in range(4):
 		var h := absi(hash(Vector2i(k * 7 + 3, k * 5 + 1)))
 		var t := Vector2i(2 + h % (COLS - 4), 3 + (h / 7) % (ROWS - 5))
@@ -668,7 +692,7 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.z_index = 8
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tag.add_theme_font_size_override("font_size", 12)
+	tag.add_theme_font_size_override("font_size", UiText.fs(12))
 	tag.add_theme_color_override("font_color", Color.WHITE)
 	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	tag.add_theme_constant_override("outline_size", 5)
@@ -1356,7 +1380,7 @@ func _show_overlay(text: String, options: Array) -> void:
 		b.text = str(opt.get("label", "OK"))
 		b.position = Vector2(px + 22, by + i * 40.0)
 		b.size = Vector2(pw - 44, 34)
-		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+		b.add_theme_font_size_override("font_size", UiText.fs(14))
 		if opt.has("_reflect"):
 			b.pressed.connect(_on_reflect.bind(opt))
 		elif opt.has("_action"):

@@ -71,6 +71,25 @@ func _dev_room_hook() -> bool:
 	var room := str(JavaScriptBridge.eval(q + ".get('dev_room') || ''", true)).strip_edges()
 	if str(JavaScriptBridge.eval(q + ".get('dev_korean') || ''", true)) == "1":
 		GameState.settings["korean_classroom"] = true
+	var screen := str(JavaScriptBridge.eval(q + ".get('dev_screen') || ''", true)).strip_edges()
+	if screen == "import":
+		SceneRouter.change_scene("res://scenes/ui/ImportLesson.tscn")
+		return true
+	if screen == "preview":
+		var pcfg = JSON.parse_string(FileAccess.get_file_as_string("res://data/scenarios/custom_comparing_decimals.json"))
+		SceneRouter.change_scene("res://scenes/ui/PreviewScenario.tscn", {"scenario": pcfg})
+		return true
+	var win := str(JavaScriptBridge.eval(q + ".get('dev_win') || ''", true)).strip_edges()
+	var end_lesson := str(JavaScriptBridge.eval(q + ".get('dev_end') || ''", true)) == "1"
+	if win != "":
+		Game.current_scenario_id = room if room != "" else "discussion_fractions"
+		Game.start_lesson(Game.current_scenario_id, 120.0)
+		SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {"persona_id": win, "display_name": win.split("_")[0].capitalize()})
+		get_tree().create_timer(2.0).timeout.connect(func():
+			var enc = SceneRouter._current
+			if enc != null and enc.has_method("_win"):
+				enc._win("reasoning"))
+		return true
 	if room == "" or not FileAccess.file_exists("res://data/scenarios/%s.json" % room):
 		return false
 	Game.current_scenario_id = room
@@ -82,4 +101,9 @@ func _dev_room_hook() -> bool:
 		SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": cfg})
 	else:
 		SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
+		if end_lesson:
+			get_tree().create_timer(2.5).timeout.connect(func():
+				var ow = SceneRouter._current
+				if ow != null and ow.has_method("_end_lesson"):
+					ow._end_lesson())
 	return true

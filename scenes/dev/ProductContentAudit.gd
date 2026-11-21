@@ -21,8 +21,8 @@ func _ready() -> void:
 		"CHALK & CHANCE",
 		"Adaptive coach:",
 		"Evidence",
-		"Teacher Level",
-		"Badges:",
+		"Lv ",          # v2 hub: compact level chip (was "Teacher Level ...")
+		"Badges",       # v2 hub: caption before the badge icons (legend moved into tooltips)
 	])
 
 	hub._open_evidence_journal()

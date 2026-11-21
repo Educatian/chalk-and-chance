@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## Review & adjust a generated scenario before playing (lesson-plan import preview).
 ## Receives {"scenario": <dict>} via setup(); lets the teacher tweak period / drop a student,
 ## then saves to user://scenarios and plays.
@@ -34,7 +35,7 @@ func _build_shell() -> void:
 	title.text = "REVIEW & ADJUST"
 	title.position = Vector2(40, 28)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 18 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
 
@@ -55,7 +56,7 @@ func _build_shell() -> void:
 	_summary.position = Vector2.ZERO
 	_summary.custom_minimum_size = Vector2(vp.x - 442, 0)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_summary.add_theme_font_size_override("font_size", 16 + GameState.ui_font_delta())
+	_summary.add_theme_font_size_override("font_size", UiText.fs(16))
 	_summary.add_theme_color_override("font_color", Color(0.95, 0.96, 0.9))
 	_summary_scroll.add_child(_summary)
 
@@ -72,7 +73,7 @@ func _build_shell() -> void:
 	_story.position = Vector2(vp.x - 342, 266)
 	_story.size = Vector2(282, 112)
 	_story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_story.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	_story.add_theme_font_size_override("font_size", UiText.fs(13))
 	_story.add_theme_color_override("font_color", Color(0.82, 0.86, 0.78))
 	add_child(_story)
 
@@ -80,7 +81,7 @@ func _build_shell() -> void:
 	_validation.position = Vector2(62, vp.y - 126)
 	_validation.size = Vector2(vp.x - 124, 34)
 	_validation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_validation.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	_validation.add_theme_font_size_override("font_size", UiText.fs(13))
 	add_child(_validation)
 
 	var by := vp.y - 70
@@ -101,7 +102,7 @@ func _make_btn(label: String, x: float, y: float, w: float, cb: Callable) -> But
 	b.text = label
 	b.position = Vector2(x, y)
 	b.size = Vector2(w, 40)
-	b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	b.add_theme_font_size_override("font_size", UiText.fs(14))
 	b.pressed.connect(cb)
 	add_child(b)
 	return b
@@ -111,7 +112,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 	label.text = "Loadout"
 	label.position = pos
 	label.size = Vector2(86, 20)
-	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	label.add_theme_font_size_override("font_size", UiText.fs(12))
 	label.add_theme_color_override("font_color", Color(0.78, 0.86, 0.96))
 	add_child(label)
 	var x := pos.x + 82.0
@@ -157,7 +158,9 @@ func _refresh() -> void:
 	if _play_button != null:
 		_play_button.disabled = not errors.is_empty()
 	if _backdrop != null:
-		_backdrop.texture = Art.tex(Art.scenario_backdrop_path(_scenario, str(_scenario.get("id", "")), false))
+		var sid := str(_scenario.get("id", ""))
+		var v2_img := Art.tex("res://assets/v2/thumbs/%s.png" % sid)
+		_backdrop.texture = v2_img if v2_img != null else Art.tex(Art.scenario_backdrop_path(_scenario, sid, false))
 	if _story != null:
 		_story.text = str(_scenario.get("story_hook", ""))
 

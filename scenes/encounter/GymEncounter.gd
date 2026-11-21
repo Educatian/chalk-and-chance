@@ -175,8 +175,11 @@ func _refresh_backdrop() -> void:
 
 func _build_ui() -> void:
 	UiKit.add_scene_frame(_layer, Rect2(4, 2, 472, 17), [Rect2(4, 20, 244, 40), Rect2(6, 158, 468, 46)])
-	_title = _label("GYM: %s" % str(scenario.get("title", "Capstone")), Vector2(10, 6), UiText.S_DISPLAY, Color(0.97, 0.93, 0.85))
-	_title.size = Vector2(460, 14)
+	_title = _label("GYM: %s" % str(scenario.get("title", "Capstone")), Vector2(10, 4), UiText.S_TITLE, Color(0.97, 0.93, 0.85))
+	_title.size = Vector2(388, 12)
+	_title.clip_text = true
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_title.add_theme_font_override("font", UiKit.pixel_font())
 
 	_label("Composure", Vector2(10, 24), UiText.S_BODY, Color(0.95, 0.8, 0.85))
 	_comp_fill = _bar(Vector2(86, 26), Color(0.90, 0.45, 0.55))
@@ -443,7 +446,7 @@ func _support_level() -> int:
 func _apply_scaffold() -> void:
 	var lvl := _support_level()
 	if _scaffold_badge == null:
-		_scaffold_badge = _label("", Vector2(250, 14), UiText.S_MICRO, Color.WHITE)
+		_scaffold_badge = _label("", Vector2(404, 6), UiText.S_MICRO, Color.WHITE)
 		_scaffold_badge.mouse_filter = Control.MOUSE_FILTER_PASS
 		PixelUi.scale_tree(_scaffold_badge, UI_SCALE)
 	_scaffold_badge.text = Scaffold.badge_text(int(_scaffold["level"]), _stepped_in)

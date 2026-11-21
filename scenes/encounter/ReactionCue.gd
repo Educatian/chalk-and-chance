@@ -1,4 +1,5 @@
 extends RefCounted
+const UiText = preload("res://scripts/UiText.gd")
 
 const WIDTH := 392.0
 const HEIGHT := 34.0
@@ -18,7 +19,7 @@ static func show_group_cue(parent: Node, previous: Control, pos: Vector2, unders
 	if label != null:
 		changed = changed or label.text != cue_text
 		label.text = cue_text
-		label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+		label.add_theme_font_size_override("font_size", UiText.fs(12))
 
 	if changed and not bool(GameState.get_setting("reduced_motion")):
 		cue.modulate.a = 0.0

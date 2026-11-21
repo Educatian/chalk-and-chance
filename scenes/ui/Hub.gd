@@ -26,139 +26,122 @@ func _build() -> void:
 	add_child(bg)
 	HubUi.add_hub_backdrop(self, vp)
 
+	# Header (plan 4.6): title, a compact level chip with an XP meter, badges as icons,
+	# one row of commands. The badge legend and status sentence moved into tooltips.
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
-	title.position = Vector2(40, 26)
+	title.position = Vector2(40, 20)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 26 + fd)
+	title.add_theme_font_size_override("font_size", UiText.fs(24))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
-	title.add_theme_color_override("font_outline_color", Color(0.05, 0.07, 0.14))
-	title.add_theme_constant_override("outline_size", 6)
 	add_child(title)
 
-	var sub := Label.new()
-	sub.text = "Start with demo lessons. Unlock harder classrooms."
-	sub.position = Vector2(42, 74)
-	sub.size = Vector2(420, 42)
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub.clip_text = false
-	sub.add_theme_font_size_override("font_size", 15 + fd)
-	sub.add_theme_color_override("font_color", Color(0.7, 0.85, 0.95))
-	add_child(sub)
-
-	var level := Label.new()
-	if fd > 0:
-		level.text = "Level %d   XP %d/%d   Next +1 in %d   Points %d" % [
-			GameState.teacher_level,
-			GameState.teacher_xp,
-			GameState.xp_for_level(GameState.teacher_level + 1),
-			GameState.xp_to_next_level(),
-			GameState.upgrade_points,
-		]
-	else:
-		level.text = "Teacher Level %d   XP %d/%d   Next +1 upgrade in %d XP   Points %d" % [
-			GameState.teacher_level,
-			GameState.teacher_xp,
-			GameState.xp_for_level(GameState.teacher_level + 1),
-			GameState.xp_to_next_level(),
-			GameState.upgrade_points,
-		]
-	level.position = Vector2(42, 122)
-	level.size = Vector2(420, 20)
-	level.clip_text = true
-	level.add_theme_font_size_override("font_size", 13 + fd)
-	level.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
-	add_child(level)
-
+	var lv := Label.new()
+	lv.text = "Lv %d" % GameState.teacher_level
+	lv.position = Vector2(42, 62)
+	lv.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	lv.add_theme_font_size_override("font_size", UiText.fs(18))
+	lv.add_theme_color_override("font_color", Color("ffd34e"))
+	lv.tooltip_text = "Teacher level. Next +1 upgrade point in %d XP." % GameState.xp_to_next_level()
+	lv.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(lv)
 	var xp_bg := ColorRect.new()
-	xp_bg.position = Vector2(42, 146)
-	xp_bg.size = Vector2(240, 9)
-	xp_bg.color = Color(0, 0, 0, 0.52)
+	xp_bg.position = Vector2(100, 70)
+	xp_bg.size = Vector2(200, 10)
+	xp_bg.color = Color("14131c")
 	add_child(xp_bg)
 	var xp_fill := ColorRect.new()
 	xp_fill.position = xp_bg.position
-	xp_fill.size = Vector2(240.0 * GameState.level_progress(), 9)
-	xp_fill.color = Color(0.35, 0.78, 0.42)
+	xp_fill.size = Vector2(200.0 * GameState.level_progress(), 10)
+	xp_fill.color = Color("5fbf6a")
 	add_child(xp_fill)
+	var xp_txt := Label.new()
+	xp_txt.text = "%d / %d XP" % [GameState.teacher_xp, GameState.xp_for_level(GameState.teacher_level + 1)]
+	if GameState.upgrade_points > 0:
+		xp_txt.text += "   %d upgrade point%s" % [GameState.upgrade_points, "" if GameState.upgrade_points == 1 else "s"]
+	xp_txt.position = Vector2(310, 64)
+	xp_txt.add_theme_font_size_override("font_size", UiText.fs(12))
+	xp_txt.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92))
+	add_child(xp_txt)
 
-	var command_plate := Panel.new()
-	command_plate.position = Vector2(vp.x - 502, 66)
-	command_plate.size = Vector2(488, 104)
-	command_plate.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.075, 0.09, 0.16, 0.82), Color(0.20, 0.30, 0.46, 0.70)))
-	add_child(command_plate)
+	var bcap := Label.new()
+	bcap.text = "Badges"
+	bcap.position = Vector2(42, 98)
+	bcap.add_theme_font_size_override("font_size", UiText.fs(12))
+	bcap.add_theme_color_override("font_color", Color(0.70, 0.78, 0.88))
+	add_child(bcap)
+	var bx := 100.0
+	for bid in ["routine", "echo", "balance", "mirror", "insight"]:
+		var icon := TextureRect.new()
+		icon.texture = Art.tex("res://assets/ui/badge_%s.png" % bid)
+		icon.position = Vector2(bx, 94)
+		icon.size = Vector2(28, 28)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var got := GameState.has_badge(bid)
+		icon.modulate = Color.WHITE if got else Color(1, 1, 1, 0.28)
+		icon.tooltip_text = "%s badge: %s%s" % [_badge_name(bid), _badge_desc(bid), "" if got else "  (not earned yet)"]
+		icon.mouse_filter = Control.MOUSE_FILTER_PASS
+		add_child(icon)
+		bx += 34.0
 
-	var evidence := Button.new()
-	evidence.text = "Evidence"
-	evidence.position = Vector2(vp.x - 488, 74)
-	evidence.size = Vector2(100, 34)
-	evidence.add_theme_font_size_override("font_size", 12 + fd)
-	HubUi.apply_button_style(evidence)
-	evidence.pressed.connect(_open_evidence_journal)
-	add_child(evidence)
+	var commands := [
+		["Evidence", _open_evidence_journal, "Your evidence journal: skill estimates from the moves you used."],
+		["Upgrade", _open_upgrades_or_explain, "Spend upgrade points earned from level-ups."],
+		["Profile", null, ""],
+		["Items", _open_items, "Equip classroom items."],
+		["Board", _open_leaderboard, "Run history and reports."],
+		["Settings", _open_settings, "Audio, text size, motion, classroom look."],
+	]
+	var cx := vp.x - 42.0 - 6 * 96.0
+	for c in commands:
+		var b := Button.new()
+		b.position = Vector2(cx, 22)
+		b.size = Vector2(90, 32)
+		b.add_theme_font_size_override("font_size", UiText.fs(12))
+		HubUi.apply_button_style(b)
+		if str(c[0]) == "Profile":
+			_refresh_profile_button(b)
+			b.tooltip_text = "%s\n%s" % [GameState.teacher_profile_label(), GameState.teacher_profile_mechanic_text()]
+			b.pressed.connect(func():
+				GameState.cycle_teacher_profile()
+				for child in get_children():
+					child.queue_free()
+				_build()
+			)
+		else:
+			b.text = str(c[0])
+			b.tooltip_text = str(c[2])
+			b.pressed.connect(c[1])
+		add_child(b)
+		cx += 96.0
 
-	var upgrades := Button.new()
-	upgrades.text = "Upgrade"
-	upgrades.position = Vector2(vp.x - 378, 74)
-	upgrades.size = Vector2(94, 34)
-	upgrades.add_theme_font_size_override("font_size", 12 + fd)
-	HubUi.apply_button_style(upgrades)
-	upgrades.tooltip_text = "Spend upgrade points earned from level-ups."
-	upgrades.pressed.connect(_open_upgrades_or_explain)
-	add_child(upgrades)
+	_draw_equipped_items(Vector2(vp.x - 330.0, 62))
 
-	var profile := Button.new()
-	profile.position = Vector2(vp.x - 274, 74)
-	profile.size = Vector2(96, 34)
-	profile.add_theme_font_size_override("font_size", 10 + fd)
-	HubUi.apply_button_style(profile, true)
-	_refresh_profile_button(profile)
-	profile.tooltip_text = "%s\n%s" % [GameState.teacher_profile_label(), GameState.teacher_profile_mechanic_text()]
-	profile.pressed.connect(func():
-		GameState.cycle_teacher_profile()
-		for child in get_children():
-			child.queue_free()
-		_build()
-	)
-	add_child(profile)
-
-	var items := Button.new()
-	items.text = "Items"
-	items.position = Vector2(vp.x - 168, 74)
-	items.size = Vector2(74, 34)
-	items.add_theme_font_size_override("font_size", 12 + fd)
-	HubUi.apply_button_style(items)
-	items.pressed.connect(_open_items)
-	add_child(items)
-
-	var board := Button.new()
-	board.text = "Board"
-	board.position = Vector2(vp.x - 84, 74)
-	board.size = Vector2(70, 34)
-	board.add_theme_font_size_override("font_size", 12 + fd)
-	HubUi.apply_button_style(board)
-	board.pressed.connect(_open_leaderboard)
-	add_child(board)
-
-	var legend := Label.new()
-	legend.text = "Badges: Routine=pacing | Echo=reasoning\nBalance=airtime | Mirror=feedback | Insight=capstone"
-	legend.position = Vector2(42, 168)   # below the gold header rule at y=160
-	legend.size = Vector2(maxf(300.0, vp.x - 560.0), 40)
-	legend.clip_text = true
-	legend.add_theme_constant_override("line_spacing", -3)
-	legend.add_theme_font_size_override("font_size", 10 + fd)
-	legend.add_theme_color_override("font_color", Color(0.68, 0.76, 0.86))
-	add_child(legend)
-
-	var settings := Button.new()
-	settings.text = "Settings"
-	settings.position = Vector2(vp.x - 172, 28)
-	settings.size = Vector2(130, 36)
-	settings.add_theme_font_size_override("font_size", 12 + fd)
-	HubUi.apply_button_style(settings)
-	settings.pressed.connect(_open_settings)
-	add_child(settings)
-
-	_draw_equipped_items(Vector2(vp.x - 488, 120))
+	# The coach recommendation as one highlighted callout.
+	var callout := Panel.new()
+	callout.position = Vector2(42, 134)
+	callout.size = Vector2(vp.x - 84, 44)
+	add_child(callout)
+	var accent := ColorRect.new()
+	accent.position = Vector2(48, 140)
+	accent.size = Vector2(4, 32)
+	accent.color = Color("ffd34e")
+	add_child(accent)
+	var coach := Label.new()
+	coach.text = "Coach Vee:  " + Game.practice_recommendation()
+	coach.position = Vector2(62, 140)
+	coach.size = Vector2(vp.x - 116, 32)
+	coach.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	coach.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	coach.clip_text = true
+	coach.add_theme_font_size_override("font_size", UiText.fs(14))
+	coach.add_theme_color_override("font_color", Color(0.80, 0.95, 0.84))
+	coach.tooltip_text = Game.practice_recommendation()
+	coach.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(coach)
+	coach.size = Vector2(vp.x - 116, 32)   # after the font resolves, or the label clamps wider
 
 	var open_ids: Array = []
 	var locked_ids: Array = []
@@ -171,7 +154,7 @@ func _build() -> void:
 			open_ids.append(sid)
 	var ordered_ids := open_ids + locked_ids
 
-	var list_top := 212.0
+	var list_top := 188.0
 	var scroll := ScrollContainer.new()
 	scroll.follow_focus = true
 	scroll.position = Vector2(42, list_top)
@@ -184,13 +167,6 @@ func _build() -> void:
 	list.add_theme_constant_override("separation", 8)
 	scroll.add_child(list)
 
-	var coach := Label.new()
-	coach.text = Game.practice_recommendation()
-	coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	coach.custom_minimum_size = Vector2(0, 46)
-	coach.add_theme_font_size_override("font_size", 13 + fd)
-	coach.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
-	list.add_child(coach)
 
 	var first: Button = null
 	var start_marked := false
@@ -211,7 +187,7 @@ func _build() -> void:
 	imp.text = "+  Import a lesson plan..."
 	imp.custom_minimum_size = Vector2(0, 42)
 	imp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	imp.add_theme_font_size_override("font_size", 14 + fd)
+	imp.add_theme_font_size_override("font_size", UiText.fs(14))
 	imp.add_theme_color_override("font_color", Color(0.6, 0.9, 0.7))
 	imp.pressed.connect(_go_import)
 	list.add_child(imp)
@@ -220,7 +196,7 @@ func _build() -> void:
 	hint.text = "Move: arrows or WASD. Select/talk: Z, Enter, or Space."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(0, 38)
-	hint.add_theme_font_size_override("font_size", 14 + fd)
+	hint.add_theme_font_size_override("font_size", UiText.fs(14))
 	hint.add_theme_color_override("font_color", Color(0.7, 0.8, 0.7))
 	list.add_child(hint)
 
@@ -317,7 +293,8 @@ func _open_mission_briefing(id: String) -> void:
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	image.texture = Art.tex(Art.scenario_backdrop_path(cfg, id, false))
+	var v2_img := Art.tex("res://assets/v2/thumbs/%s.png" % id)   # the mission's own v2 room
+	image.texture = v2_img if v2_img != null else Art.tex(Art.scenario_backdrop_path(cfg, id, false))
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.add_child(image)
 
@@ -326,7 +303,7 @@ func _open_mission_briefing(id: String) -> void:
 	badge.position = Vector2(96, 304)
 	badge.size = Vector2(356, 24)
 	badge.clip_text = true
-	badge.add_theme_font_size_override("font_size", 12 + fd)
+	badge.add_theme_font_size_override("font_size", UiText.fs(12))
 	badge.add_theme_color_override("font_color", Color(0.70, 0.82, 0.94))
 	overlay.add_child(badge)
 
@@ -335,7 +312,7 @@ func _open_mission_briefing(id: String) -> void:
 	reward.position = Vector2(96, 330)
 	reward.size = Vector2(356, 24)
 	reward.clip_text = true
-	reward.add_theme_font_size_override("font_size", 12 + fd)
+	reward.add_theme_font_size_override("font_size", UiText.fs(12))
 	reward.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	overlay.add_child(reward)
 
@@ -345,7 +322,7 @@ func _open_mission_briefing(id: String) -> void:
 	title.size = Vector2(344, 48)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 14 + fd)
+	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -359,7 +336,7 @@ func _open_mission_briefing(id: String) -> void:
 	back.text = "Back"
 	back.position = Vector2(96, 462)
 	back.size = Vector2(160, 26)
-	back.add_theme_font_size_override("font_size", 13 + fd)
+	back.add_theme_font_size_override("font_size", UiText.fs(13))
 	HubUi.apply_button_style(back)
 	back.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(back)
@@ -368,7 +345,7 @@ func _open_mission_briefing(id: String) -> void:
 	start.text = "Start rehearsal"
 	start.position = Vector2(584, 462)
 	start.size = Vector2(236, 26)
-	start.add_theme_font_size_override("font_size", 13 + fd)
+	start.add_theme_font_size_override("font_size", UiText.fs(13))
 	HubUi.apply_button_style(start, true)
 	start.add_theme_color_override("font_color", Color(0.2, 0.95, 0.4))
 	start.pressed.connect(func():
@@ -385,7 +362,7 @@ func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2,
 	label.size = size
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.clip_text = true
-	label.add_theme_font_size_override("font_size", 12 + fd)
+	label.add_theme_font_size_override("font_size", UiText.fs(12))
 	label.add_theme_color_override("font_color", color)
 	parent.add_child(label)
 
@@ -451,117 +428,109 @@ func _scenario_adaptive_text(cfg: Dictionary) -> String:
 	]
 
 func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earned: bool, locked: bool, is_next: bool) -> Button:
-	var fd := GameState.ui_font_delta()
+	# Card (plan 4.6): thumbnail of the mission's own room, status + title, a chips line,
+	# one line of premise, the focus goal. Everything else lives in the briefing.
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 152)
+	card.custom_minimum_size = Vector2(0, 112)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.modulate = Color(0.72, 0.76, 0.86) if locked else Color.WHITE
 	card.add_theme_stylebox_override("panel", HubUi.card_style(is_next, locked, earned))
 	parent.add_child(card)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 10)
 	card.add_child(margin)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 14)
 	margin.add_child(row)
 
-	var thumb_tex := Art.tex(Art.scenario_backdrop_path(cfg, id, true))
 	var thumb := TextureRect.new()
-	thumb.custom_minimum_size = Vector2(156, 88)
+	thumb.custom_minimum_size = Vector2(160, 90)
 	thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	thumb.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	thumb.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var v2_thumb := Art.tex("res://assets/v2/thumbs/%s.png" % id)
+	thumb.texture = v2_thumb if v2_thumb != null else Art.tex(Art.scenario_backdrop_path(cfg, id, true))
+	if locked:
+		thumb.modulate = Color(0.45, 0.48, 0.56)
 	row.add_child(thumb)
-	if thumb_tex != null:
-		thumb.texture = thumb_tex
-	else:
-		thumb.modulate = Color(0.35, 0.40, 0.52)
 
 	var info := VBoxContainer.new()
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_theme_constant_override("separation", 4)
+	info.add_theme_constant_override("separation", 3)
 	row.add_child(info)
 
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 8)
+	top.add_theme_constant_override("separation", 10)
 	info.add_child(top)
-
 	var chip := Label.new()
 	chip.text = _mission_chip(earned, locked, is_next)
-	chip.custom_minimum_size = Vector2(76, 22)
-	chip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	chip.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	chip.add_theme_font_size_override("font_size", 11 + fd)
+	chip.add_theme_font_size_override("font_size", UiText.fs(12))
 	chip.add_theme_color_override("font_color", _mission_chip_color(earned, locked, is_next))
 	top.add_child(chip)
-
 	var title := Label.new()
 	title.text = str(cfg.get("title", id))
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.clip_text = true
-	title.add_theme_font_size_override("font_size", 14 + fd)
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	top.add_child(title)
 
 	var meta := Label.new()
 	meta.text = _mission_meta(cfg)
-	meta.add_theme_font_size_override("font_size", 11 + fd)
-	meta.add_theme_color_override("font_color", Color(0.70, 0.82, 0.94))
 	meta.clip_text = true
+	meta.add_theme_font_size_override("font_size", UiText.fs(12))
+	meta.add_theme_color_override("font_color", Color(0.70, 0.82, 0.94))
 	info.add_child(meta)
 
 	var story := Label.new()
 	story.text = str(cfg.get("story_hook", ""))
-	story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	story.custom_minimum_size = Vector2(0, 30)
-	story.add_theme_font_size_override("font_size", 10 + fd)
-	story.add_theme_color_override("font_color", Color(0.84, 0.82, 0.74))
+	story.clip_text = true
+	story.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	story.add_theme_font_size_override("font_size", UiText.fs(14))
+	story.add_theme_color_override("font_color", Color(0.88, 0.88, 0.84))
+	story.tooltip_text = story.text
+	story.mouse_filter = Control.MOUSE_FILTER_PASS
 	info.add_child(story)
 
 	var focus := Label.new()
 	focus.text = _mission_focus(cfg)
-	focus.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	focus.custom_minimum_size = Vector2(0, 26)
-	focus.add_theme_font_size_override("font_size", 11 + fd)
-	focus.add_theme_color_override("font_color", Color(0.86, 0.90, 0.96))
+	focus.clip_text = true
+	focus.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	focus.add_theme_font_size_override("font_size", UiText.fs(12))
+	focus.add_theme_color_override("font_color", Color(0.66, 0.90, 0.78))
 	info.add_child(focus)
 
-	var signature := Label.new()
-	signature.text = Game.scenario_signature(cfg)
-	signature.clip_text = true
-	signature.add_theme_font_size_override("font_size", 10 + fd)
-	signature.add_theme_color_override("font_color", Color(0.66, 0.90, 0.78))
-	info.add_child(signature)
-
-	var reward := Label.new()
-	reward.text = _mission_reward_text(str(cfg.get("badge", "")), earned)
-	reward.clip_text = true
-	reward.add_theme_font_size_override("font_size", 10 + fd)
-	reward.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
-	info.add_child(reward)
-
+	var side := VBoxContainer.new()
+	side.alignment = BoxContainer.ALIGNMENT_CENTER
+	side.custom_minimum_size = Vector2(124, 0)
+	side.add_theme_constant_override("separation", 4)
+	row.add_child(side)
 	var action := Button.new()
-	action.custom_minimum_size = Vector2(116, 0)
-	action.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	action.add_theme_font_size_override("font_size", 12 + fd)
+	action.custom_minimum_size = Vector2(124, 36)
+	action.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(action, is_next and not locked)
 	if locked:
-		action.text = "Locked\n%s" % _badge_name(str(cfg.get("requires", "")))
+		action.text = "Locked"
 		action.tooltip_text = "Click to see how to unlock this mission."
 		action.pressed.connect(_open_locked_mission_notice.bind(id, cfg))
-	elif earned:
-		action.text = "Replay"
-		action.pressed.connect(_open_mission_briefing.bind(id))
+		var why := Label.new()
+		why.text = "Earn the %s badge" % _badge_name(str(cfg.get("requires", "")))
+		why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		why.custom_minimum_size = Vector2(124, 0)
+		why.add_theme_font_size_override("font_size", UiText.fs(12))
+		why.add_theme_color_override("font_color", Color(0.80, 0.84, 0.92))
+		side.add_child(action)
+		side.add_child(why)
 	else:
-		action.text = "Start"
+		action.text = "Replay" if earned else "Start"
 		action.pressed.connect(_open_mission_briefing.bind(id))
-	row.add_child(action)
+		side.add_child(action)
 	return null if locked else action
 
 func _mission_chip(earned: bool, locked: bool, is_next: bool) -> String:
@@ -658,7 +627,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	title.size = Vector2(476, 34)
 	title.clip_text = true
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 14 + fd)
+	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -667,7 +636,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	body.position = Vector2(242, 202)
 	body.size = Vector2(476, 78)
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_font_size_override("font_size", 13 + fd)
+	body.add_theme_font_size_override("font_size", UiText.fs(13))
 	body.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
 	overlay.add_child(body)
 
@@ -676,7 +645,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	next.position = Vector2(242, 292)
 	next.size = Vector2(476, 44)
 	next.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	next.add_theme_font_size_override("font_size", 12 + fd)
+	next.add_theme_font_size_override("font_size", UiText.fs(12))
 	next.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	overlay.add_child(next)
 
@@ -684,7 +653,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	close.text = "Got it"
 	close.position = Vector2(242, 348)
 	close.size = Vector2(476, 34)
-	close.add_theme_font_size_override("font_size", 13 + fd)
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	HubUi.apply_button_style(close, true)
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
@@ -711,7 +680,7 @@ func _open_settings() -> void:
 	title.text = "SETTINGS"
 	title.position = Vector2(222, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 18 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -720,7 +689,7 @@ func _open_settings() -> void:
 	notice.position = Vector2(222, 122)
 	notice.size = Vector2(516, 64)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	notice.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	notice.add_theme_font_size_override("font_size", UiText.fs(12))
 	notice.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
 	overlay.add_child(notice)
 
@@ -737,7 +706,7 @@ func _open_settings() -> void:
 		var b := Button.new()
 		b.position = Vector2(222, y)
 		b.size = Vector2(516, 30)
-		b.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+		b.add_theme_font_size_override("font_size", UiText.fs(14))
 		HubUi.apply_button_style(b)
 		overlay.add_child(b)
 		_refresh_setting_button(b, opt)
@@ -757,7 +726,7 @@ func _open_settings() -> void:
 	var voice := Button.new()
 	voice.position = Vector2(222, y)
 	voice.size = Vector2(516, 30)
-	voice.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	voice.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(voice)
 	voice.text = TTSClient.voice_status_label()
 	voice.pressed.connect(func():
@@ -769,7 +738,7 @@ func _open_settings() -> void:
 	var reveal := Button.new()
 	reveal.position = Vector2(222, y)
 	reveal.size = Vector2(516, 30)
-	reveal.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	reveal.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(reveal)
 	overlay.add_child(reveal)
 	_refresh_reveal_button(reveal)
@@ -783,7 +752,7 @@ func _open_settings() -> void:
 	close.text = "Close"
 	close.position = Vector2(222, 478)
 	close.size = Vector2(516, 38)
-	close.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(close, true)
 	close.pressed.connect(func():
 		overlay.queue_free()
@@ -815,7 +784,7 @@ func _open_upgrades() -> void:
 	title.text = "LEVEL UP REWARDS"
 	title.position = Vector2(218, 92)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -823,7 +792,7 @@ func _open_upgrades() -> void:
 	points.text = "Upgrade Points: %d" % GameState.upgrade_points
 	points.position = Vector2(220, 126)
 	points.size = Vector2(520, 20)
-	points.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	points.add_theme_font_size_override("font_size", UiText.fs(14))
 	points.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	overlay.add_child(points)
 
@@ -835,7 +804,7 @@ func _open_upgrades() -> void:
 		var b := Button.new()
 		b.position = Vector2(220, y)
 		b.size = Vector2(520, 58)
-		b.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+		b.add_theme_font_size_override("font_size", UiText.fs(13))
 		HubUi.apply_button_style(b, rank < max_rank)
 		b.text = "%s  Rank %d/%d\n%s" % [str(def.get("name", id)), rank, max_rank, str(def.get("desc", ""))]
 		b.disabled = GameState.upgrade_points <= 0 or rank >= max_rank
@@ -847,7 +816,7 @@ func _open_upgrades() -> void:
 	close.text = "Close"
 	close.position = Vector2(220, 390)
 	close.size = Vector2(520, 42)
-	close.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(close, true)
 	close.pressed.connect(func():
 		overlay.queue_free()
@@ -890,7 +859,7 @@ func _open_evidence_journal() -> void:
 	title.text = "EVIDENCE JOURNAL"
 	title.position = Vector2(112, 74)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 16 + fd)
+	title.add_theme_font_size_override("font_size", UiText.fs(16))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -899,7 +868,7 @@ func _open_evidence_journal() -> void:
 	summary.position = Vector2(114, 106)
 	summary.size = Vector2(720, 34)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	summary.add_theme_font_size_override("font_size", 12 + fd)
+	summary.add_theme_font_size_override("font_size", UiText.fs(12))
 	summary.add_theme_color_override("font_color", Color(0.72, 0.88, 0.96))
 	overlay.add_child(summary)
 
@@ -911,7 +880,7 @@ func _open_evidence_journal() -> void:
 	target.size = Vector2(720, 34)
 	target.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	target.clip_text = true
-	target.add_theme_font_size_override("font_size", 11 + fd)
+	target.add_theme_font_size_override("font_size", UiText.fs(11))
 	target.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	overlay.add_child(target)
 
@@ -930,7 +899,7 @@ func _open_evidence_journal() -> void:
 	recent.position = Vector2(114, 398)
 	recent.size = Vector2(720, 26)
 	recent.autowrap_mode = TextServer.AUTOWRAP_OFF
-	recent.add_theme_font_size_override("font_size", 11 + fd)
+	recent.add_theme_font_size_override("font_size", UiText.fs(11))
 	recent.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	overlay.add_child(recent)
 
@@ -938,7 +907,7 @@ func _open_evidence_journal() -> void:
 	download.text = "Download transcript"
 	download.position = Vector2(492, 430)
 	download.size = Vector2(200, 34)
-	download.add_theme_font_size_override("font_size", 12 + fd)
+	download.add_theme_font_size_override("font_size", UiText.fs(12))
 	download.disabled = Telemetry.conversation_count() <= 0
 	download.tooltip_text = (
 		"Save this session's teacher moves and simulated learner responses as Markdown."
@@ -961,7 +930,7 @@ func _open_evidence_journal() -> void:
 	close.text = "Close"
 	close.position = Vector2(704, 430)
 	close.size = Vector2(140, 34)
-	close.add_theme_font_size_override("font_size", 13 + fd)
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
 	close.grab_focus()
@@ -980,7 +949,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	label.position = Vector2(116, y)
 	label.size = Vector2(166, 24)
 	label.clip_text = true
-	label.add_theme_font_size_override("font_size", 11 + fd)
+	label.add_theme_font_size_override("font_size", UiText.fs(11))
 	label.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90))
 	overlay.add_child(label)
 
@@ -1004,7 +973,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	stat.text = "%3d%%  ev %02d  unc %.2f" % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
-	stat.add_theme_font_size_override("font_size", 10 + fd)
+	stat.add_theme_font_size_override("font_size", UiText.fs(10))
 	stat.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	overlay.add_child(stat)
 
@@ -1013,7 +982,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	cite.position = Vector2(588, y)
 	cite.size = Vector2(250, 22)
 	cite.clip_text = true
-	cite.add_theme_font_size_override("font_size", 10 + fd)
+	cite.add_theme_font_size_override("font_size", UiText.fs(10))
 	cite.add_theme_color_override("font_color", Color(0.68, 0.88, 0.96))
 	overlay.add_child(cite)
 
@@ -1095,7 +1064,7 @@ func _open_leaderboard() -> void:
 	title.text = "LEADERBOARD / COACH REPORT"
 	title.position = Vector2(138, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -1107,7 +1076,7 @@ func _open_leaderboard() -> void:
 	]
 	summary.position = Vector2(140, 112)
 	summary.size = Vector2(680, 26)
-	summary.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	summary.add_theme_font_size_override("font_size", UiText.fs(13))
 	summary.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
 	overlay.add_child(summary)
 
@@ -1115,7 +1084,7 @@ func _open_leaderboard() -> void:
 	header.text = "Rank   Score   Mission                         Coach Report"
 	header.position = Vector2(140, 148)
 	header.size = Vector2(680, 24)
-	header.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	header.add_theme_font_size_override("font_size", UiText.fs(12))
 	header.add_theme_color_override("font_color", Color(0.62, 0.88, 0.95))
 	overlay.add_child(header)
 
@@ -1126,7 +1095,7 @@ func _open_leaderboard() -> void:
 		empty.text = "Clear a lesson or encounter to post your first run."
 		empty.position = Vector2(140, y)
 		empty.size = Vector2(680, 34)
-		empty.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
+		empty.add_theme_font_size_override("font_size", UiText.fs(14))
 		empty.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
 		overlay.add_child(empty)
 	else:
@@ -1153,7 +1122,7 @@ func _footer_button(text: String, pos: Vector2, callback: Callable) -> Button:
 	b.text = text
 	b.position = pos
 	b.size = Vector2(128, 34)
-	b.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	b.add_theme_font_size_override("font_size", UiText.fs(11))
 	HubUi.apply_button_style(b, text != "Close")
 	b.pressed.connect(callback)
 	return b
@@ -1176,7 +1145,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 	label.position = Vector2(140, y)
 	label.size = Vector2(408, 24)
 	label.clip_text = true
-	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	label.add_theme_font_size_override("font_size", UiText.fs(12))
 	label.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90))
 	overlay.add_child(label)
 
@@ -1200,7 +1169,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 	detail.position = Vector2(548, y)
 	detail.size = Vector2(214, 24)
 	detail.clip_text = true
-	detail.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	detail.add_theme_font_size_override("font_size", UiText.fs(11))
 	detail.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
 	overlay.add_child(detail)
 	var trace_steps = rec.get("evidence_trace_steps", [])
@@ -1209,7 +1178,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 		trace_btn.text = "Trace"
 		trace_btn.position = Vector2(772, y - 2)
 		trace_btn.size = Vector2(48, 24)
-		trace_btn.add_theme_font_size_override("font_size", 10 + GameState.ui_font_delta())
+		trace_btn.add_theme_font_size_override("font_size", UiText.fs(10))
 		trace_btn.pressed.connect(_open_trace_detail.bind(rec))
 		overlay.add_child(trace_btn)
 
@@ -1238,7 +1207,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	title.text = "TRACE DETAIL"
 	title.position = Vector2(138, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -1254,7 +1223,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	body.fit_content = true
 	body.scroll_active = false
 	body.custom_minimum_size = Vector2(650, 520)
-	body.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	body.add_theme_font_size_override("font_size", UiText.fs(11))
 	body.add_theme_color_override("font_color", Color(0.82, 0.90, 0.96))
 	scroll.add_child(body)
 
@@ -1262,7 +1231,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	close.text = "Close"
 	close.position = Vector2(140, 432)
 	close.size = Vector2(680, 34)
-	close.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
 	close.grab_focus()
@@ -1318,7 +1287,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	title.text = title_text
 	title.position = Vector2(138, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -1334,7 +1303,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	body.fit_content = true
 	body.scroll_active = false
 	body.custom_minimum_size = Vector2(650, 620)
-	body.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	body.add_theme_font_size_override("font_size", UiText.fs(11))
 	body.add_theme_color_override("font_color", Color(0.82, 0.90, 0.96))
 	scroll.add_child(body)
 
@@ -1342,7 +1311,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	close.text = "Close"
 	close.position = Vector2(140, 432)
 	close.size = Vector2(680, 34)
-	close.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	HubUi.apply_button_style(close, true)
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
@@ -1371,7 +1340,7 @@ func _open_class_dashboard() -> void:
 	title.text = "INSTRUCTOR DASHBOARD"
 	title.position = Vector2(138, 82)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -1386,7 +1355,7 @@ func _open_class_dashboard() -> void:
 	body.fit_content = true
 	body.scroll_active = false
 	body.custom_minimum_size = Vector2(650, 460)
-	body.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	body.add_theme_font_size_override("font_size", UiText.fs(12))
 	body.add_theme_color_override("font_color", Color(0.82, 0.90, 0.96))
 	scroll.add_child(body)
 	_populate_class_dashboard(body, {})
@@ -1404,7 +1373,7 @@ func _open_class_dashboard() -> void:
 	close.text = "Close"
 	close.position = Vector2(140, 432)
 	close.size = Vector2(680, 34)
-	close.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	close.pressed.connect(func(): overlay.queue_free())
 	overlay.add_child(close)
 	close.grab_focus()
@@ -1432,7 +1401,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 	label.text = "Equipped"
 	label.position = pos
 	label.size = Vector2(90, 18)
-	label.add_theme_font_size_override("font_size", 11 + fd)
+	label.add_theme_font_size_override("font_size", UiText.fs(11))
 	label.add_theme_color_override("font_color", Color(0.78, 0.86, 0.96))
 	add_child(label)
 	var x := pos.x + 92.0
@@ -1442,7 +1411,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		empty.text = "None"
 		empty.position = Vector2(x, pos.y)
 		empty.size = Vector2(160, 18)
-		empty.add_theme_font_size_override("font_size", 11 + fd)
+		empty.add_theme_font_size_override("font_size", UiText.fs(11))
 		empty.add_theme_color_override("font_color", Color(0.55, 0.62, 0.72))
 		add_child(empty)
 		return
@@ -1486,7 +1455,7 @@ func _open_items() -> void:
 	title.text = "ITEM LOADOUT"
 	title.position = Vector2(138, 74)
 	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
-	title.add_theme_font_size_override("font_size", 17 + GameState.ui_font_delta())
+	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
@@ -1496,7 +1465,7 @@ func _open_items() -> void:
 	help.size = Vector2(680, 24)
 	help.autowrap_mode = TextServer.AUTOWRAP_OFF
 	help.clip_text = true
-	help.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	help.add_theme_font_size_override("font_size", UiText.fs(13))
 	help.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
 	overlay.add_child(help)
 
@@ -1511,7 +1480,7 @@ func _open_items() -> void:
 	close.text = "Close"
 	close.position = Vector2(140, 450)
 	close.size = Vector2(680, 34)
-	close.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	close.add_theme_font_size_override("font_size", UiText.fs(13))
 	HubUi.apply_button_style(close, true)
 	close.pressed.connect(func():
 		overlay.queue_free()
@@ -1537,20 +1506,20 @@ func _add_item_row(overlay: Control, id: String, x: float, y: float) -> void:
 	label.text = "%s  x%d" % [Items.name_for(id), count]
 	label.position = Vector2(x + 48, y + 3)
 	label.size = Vector2(196, 24)
-	label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
+	label.add_theme_font_size_override("font_size", UiText.fs(12))
 	label.add_theme_color_override("font_color", Color(0.95, 0.96, 0.90) if count > 0 else Color(0.55, 0.60, 0.66))
 	overlay.add_child(label)
 	var desc := Label.new()
 	desc.text = _truncate(Items.desc_for(id), 44)
 	desc.position = Vector2(x + 250, y + 3)
 	desc.size = Vector2(302, 24)
-	desc.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	desc.add_theme_font_size_override("font_size", UiText.fs(11))
 	desc.add_theme_color_override("font_color", Color(0.72, 0.82, 0.93))
 	overlay.add_child(desc)
 	var b := Button.new()
 	b.position = Vector2(x + 566, y - 2)
 	b.size = Vector2(114, 28)
-	b.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
+	b.add_theme_font_size_override("font_size", UiText.fs(11))
 	HubUi.apply_button_style(b, equipped)
 	b.text = "Unequip" if equipped else "Equip"
 	b.disabled = count <= 0 or (not equipped and GameState.equipped_item_ids().size() >= Items.MAX_EQUIPPED)
@@ -1572,7 +1541,7 @@ func _refresh_setting_button(button: Button, opt: Dictionary) -> void:
 
 func _refresh_profile_button(button: Button) -> void:
 	var def: Dictionary = GameState.teacher_profile()
-	button.text = "Profile\n%s" % str(def.get("short", "Steady"))
+	button.text = "Profile: %s" % str(def.get("short", "Steady"))
 
 func _refresh_reveal_button(button: Button) -> void:
 	var mode := str(GameState.get_setting("text_reveal", "typewriter"))
