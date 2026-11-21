@@ -157,7 +157,8 @@ var _hud: Node2D = null
 var _objective_plate: Panel = null
 var _objectives_open := false
 var _objective_toast_left := 0.0
-var _objective_quiet_left := 0.0   # after the player toggles the panel, no auto-open toasts
+var _objective_quiet_left := 0.0
+var _coach_hold_left := 0.0       # an interrupt's coaching line stays up this long before room hints resume   # after the player toggles the panel, no auto-open toasts
 var _last_objectives_met := -1
 var _room_cue := ""
 var _interact_label: Label = null
@@ -847,6 +848,7 @@ func _hud_node() -> Node2D:
 const HUD_ATT_W := 150.0
 const HUD_COMP_W := 120.0
 const OBJ_TOAST_SECONDS := 3.0
+const COACH_HOLD_SECONDS := 6.0
 ## The player's own O press / tap wins: objective-change toasts stay quiet this long after
 ## it, so the panel never reopens right after they closed it (attention hovering at an
 ## objective's bar flips the met count every few seconds).
@@ -1113,7 +1115,8 @@ func _process(delta: float) -> void:
 				if _objective_toast_left <= 0.0:
 					_set_objectives_open(false, false)
 
-		if _coach_hint != null:
+		_coach_hold_left = maxf(0.0, _coach_hold_left - delta)
+		if _coach_hint != null and _coach_hold_left <= 0.0:
 			if facing_up and worst > 30.0:
 				_coach_hint.text = "Coach Vee: turn around. They drift when your back is to them."
 			elif worst >= 60.0 and not _room_names_shown():
@@ -1145,6 +1148,7 @@ const LADDER_CHIP_COLOR := Color("4a5a72")
 ## step, so the vocabulary is taught without the order giving the answer away.
 func _show_ladder_card(ev: Dictionary) -> void:
 	input_locked = true
+	_set_objectives_open(false, false)
 	_overlay = Control.new()
 	_overlay.position = -ROOM_ORIGIN
 	_overlay.size = DESIGN
@@ -1296,6 +1300,7 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 		_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 8)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
+		_coach_hold_left = COACH_HOLD_SECONDS   # the per-frame room hint used to overwrite it at once
 	var ptile: Vector2i = _player.current_tile() if _player != null else Vector2i.ZERO
 	Telemetry.log_event({
 		"event": "interrupt_resolved", "scenario_id": str(Game.current_scenario_id),
@@ -1652,6 +1657,7 @@ func _objective_short_label(o: Dictionary) -> String:
 
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true
+	_set_objectives_open(false, false)   # a modal never sits under the open objectives panel
 	_overlay = Control.new()
 	_overlay.position = -ROOM_ORIGIN
 	_overlay.size = DESIGN

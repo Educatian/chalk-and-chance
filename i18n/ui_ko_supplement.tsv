@@ -94,7 +94,7 @@ disruptions	소란
 asset connect	삶의 지식 잇기
 %d upgrade point	성장 포인트 %d개
 %d upgrade points	성장 포인트 %d개
-%3d%%  %02d moves  +-%.2f	%3d%%  %02d번  ±%.2f
+%d%%  ·  %d moves  ·  ±%.2f	%d%%  ·  %d번  ·  ±%.2f
 CLEARED   |   Score {score}	통과   |   점수 {score}
 Understanding %d%% | Participation %d%% | Revealed	이해도 %d%% | 참여 %d%% | 드러남
  | Badge %s	 | 배지 %s
@@ -144,7 +144,6 @@ Really good. A little room left in pace.	아주 좋아요. 조금만 더 빨리 
 Really good. A little room left in objectives.	아주 좋아요. 목표만 조금 더 챙기면 돼요.
 Really good. A little room left in attention.	아주 좋아요. 집중만 조금 더 붙잡으면 돼요.
 Really good. A little room left in reach.	아주 좋아요. 몇 명만 더 들으면 돼요.
-%3d%%  %02d moves  +-%.2f	%3d%%  %d번  ±%.2f
 Look again. Their face and posture say %s. Answer that.	다시 봐요. 표정이랑 자세를 보면 %s 쪽이에요. 그걸 골라 봐요.
 you heard {reached} of {total} students explain their thinking	{total}명 중 {reached}명의 생각을 들었어요
 Comp %d%% | Attention %d%% | Progress %d%%	이해 %d%% | 집중 %d%% | 진도 %d%%
@@ -173,3 +172,6 @@ Clusters	모둠 배치
 #%d  %s   %03d   %s	%d위  %s   %d점   %s
 - 15s	-15초
 + 15s	+15초
+rows	줄 배치
+clusters	모둠 배치
+pairs	짝 배치

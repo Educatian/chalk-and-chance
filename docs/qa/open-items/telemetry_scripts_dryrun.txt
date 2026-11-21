@@ -1,0 +1,24 @@
+$ find_test_telemetry.py --sqlite <tmp>/fixture.db --out <tmp>/test_rows.json
+test-traffic rows: 7 in 4 browser ids (table telemetry_anon_events)
+anon_id                       rows  first (UTC)          last (UTC)           sessions
+ci_anon_251321                   2  2026-11-21 06:24:01  2026-11-21 06:24:02  1
+unknown                          2  2026-11-21 13:20:00  2026-11-21 13:20:05  1
+a_1763730000_1                   2  2026-11-21 14:01:00  2026-11-21 14:01:20  1
+a_1763740000_2                   1  2026-11-21 15:10:00  2026-11-21 15:10:00  1
+wrote <tmp>/test_rows.json (7 rows). Review it before running the delete script.
+(exit 0)
+$ delete_test_telemetry.py --list <tmp>/test_rows.json --sqlite <tmp>/fixture.db
+plan: delete 7 rows from telemetry_anon_events in 1 statement(s), 4 browser ids
+  DELETE FROM telemetry_anon_events WHERE id IN (1,2,8,9,3,4,5) AND anon_id IN ('ci_anon_251321','unknown','a_1763730000_1','a_1763740000_2')
+dry run: nothing deleted. Add --confirm to delete.
+(exit 2)
+$ delete_test_telemetry.py --list <tmp>/test_rows.json --sqlite <tmp>/fixture.db --confirm
+plan: delete 7 rows from telemetry_anon_events in 1 statement(s), 4 browser ids
+  DELETE FROM telemetry_anon_events WHERE id IN (1,2,8,9,3,4,5) AND anon_id IN ('ci_anon_251321','unknown','a_1763730000_1','a_1763740000_2')
+deleted 7 rows
+(exit 0)
+$ find_test_telemetry.py --sqlite <tmp>/fixture.db
+test-traffic rows: 0 in 0 browser ids (table telemetry_anon_events)
+anon_id                       rows  first (UTC)          last (UTC)           sessions
+(exit 0)
+TELEMETRY SCRIPTS PASS (fixture only; hosted store untouched)

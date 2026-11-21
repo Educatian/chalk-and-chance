@@ -12,18 +12,23 @@ const NAMES := {
 	"riley_avoidant": "Riley", "marcus_volatile": "Marcus",
 }
 
+## Seating ids as the built-in mission titles name them ("Group Discussion (U-shape)").
+const SEATING_NAMES := {"ushape": "U-shape", "ushape6": "U-shape", "rows": "rows", "rows8": "rows",
+	"clusters": "clusters", "clusters8": "clusters", "pairs": "pairs"}
+
 static func plan_to_scenario(text: String) -> Dictionary:
 	var low := text.to_lower()
 	var fmt := "discussion"
 	var arr := "ushape"
 	var badge := "echo"
-	if _has(low, ["group", "collaborat", "station", "team", "jigsaw"]):
+	# English and Korean plan words (the Korean import screen invites a Korean plan).
+	if _has(low, ["group", "collaborat", "station", "team", "jigsaw", "모둠", "협동", "협력", "직소"]):
 		fmt = "group_work"; arr = "clusters"; badge = "balance"
-	elif _has(low, ["independent", "seatwork", "worksheet", "practice set", "individual work"]):
+	elif _has(low, ["independent", "seatwork", "worksheet", "practice set", "individual work", "개별", "학습지", "혼자 푸"]):
 		fmt = "independent"; arr = "rows"; badge = "routine"
-	elif _has(low, ["lecture", "direct instruction", "mini-lesson", "presentation"]):
+	elif _has(low, ["lecture", "direct instruction", "mini-lesson", "presentation", "강의", "설명식", "직접 교수"]):
 		fmt = "lecture"; arr = "rows"; badge = "routine"
-	elif _has(low, ["discussion", "number talk", "socratic", "seminar", "debate"]):
+	elif _has(low, ["discussion", "number talk", "socratic", "seminar", "debate", "토의", "토론", "수 이야기", "하브루타"]):
 		fmt = "discussion"; arr = "ushape"; badge = "echo"
 
 	var minutes := _find_minutes(low)
@@ -51,7 +56,7 @@ static func plan_to_scenario(text: String) -> Dictionary:
 
 	return {
 		"id": "custom_" + _slug(subject),
-		"title": "%s  -  %s (%s)" % [subject, _fmt_name(fmt), arr],
+		"title": "%s  -  %s (%s)" % [subject, _fmt_name(fmt), SEATING_NAMES.get(arr, arr)],
 		"format": fmt, "mode": "lecture" if fmt == "lecture" else "overworld", "arrangement": arr,
 		"period_seconds": period, "offtask_rise": rise,
 		"roster": ros, "objectives": objs, "badge": badge,
@@ -79,7 +84,7 @@ static func _has(low: String, keys: Array) -> bool:
 
 static func _find_minutes(low: String) -> int:
 	var re := RegEx.new()
-	re.compile("(\\d{1,3})\\s*(?:min|minute)")
+	re.compile("(\\d{1,3})\\s*(?:min|minute|분)")
 	var m := re.search(low)
 	if m != null:
 		return int(m.get_string(1))
@@ -89,7 +94,8 @@ static func _find_subject(text: String) -> String:
 	for raw in text.split("\n"):
 		var line := raw.strip_edges().lstrip("*# ").strip_edges()   # ignore markdown bold/heading marks
 		var l := line.to_lower()
-		if l.begins_with("subject") or l.begins_with("topic") or l.begins_with("title"):
+		if l.begins_with("subject") or l.begins_with("topic") or l.begins_with("title") \
+				or l.begins_with("과목") or l.begins_with("주제") or l.begins_with("단원") or l.begins_with("제목"):
 			var idx := line.find(":")
 			if idx != -1:
 				var val := line.substr(idx + 1).strip_edges().lstrip("*").strip_edges()
@@ -99,7 +105,7 @@ static func _find_subject(text: String) -> String:
 	for raw2 in text.split("\n"):
 		if raw2.strip_edges().begins_with("#"):
 			var h := raw2.strip_edges().lstrip("# ").strip_edges()
-			if h != "" and h.to_lower() != "lesson plan":
+			if h != "" and h.to_lower() != "lesson plan" and h != "수업 계획":
 				return _clean_subject(h)
 	return "Imported Lesson"
 
@@ -130,11 +136,11 @@ static func _fmt_name(fmt: String) -> String:
 		_: return "Discussion"
 
 static func _backdrop_for(fmt: String, low: String) -> String:
-	if _has(low, ["decimal", "place value", "hundredth", "tenth", "money"]):
+	if _has(low, ["decimal", "place value", "hundredth", "tenth", "money", "소수", "자릿값"]):
 		return "custom_comparing_decimals"
-	if _has(low, ["force", "motion", "ramp", "cart", "push", "pull"]):
+	if _has(low, ["force", "motion", "ramp", "cart", "push", "pull", "힘과 운동", "빗면", "수레"]):
 		return "science_force_motion"
-	if _has(low, ["main idea", "reading", "passage", "summary", "literacy"]):
+	if _has(low, ["main idea", "reading", "passage", "summary", "literacy", "중심 생각", "읽기", "요약"]):
 		return "reading_main_idea"
 	match fmt:
 		"lecture": return "lecture_fractions"
@@ -185,7 +191,8 @@ static func _slug(s: String) -> String:
 		out = out.replace("__", "_")
 	out = out.strip_edges().lstrip("_").rstrip("_")
 	if out == "":
-		out = "lesson"
+		# A Korean (non-Latin) title: a stable short hash, so two imports never share an id.
+		out = "lesson_%05d" % (absi(s.hash()) % 100000)
 	if out.length() > 28:
 		out = out.substr(0, 28)
 	return out

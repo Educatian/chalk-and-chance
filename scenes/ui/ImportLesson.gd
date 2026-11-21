@@ -99,7 +99,7 @@ func _make_btn(label: String, x: float, y: float, w: float, cb: Callable) -> But
 	return b
 
 func _on_sample() -> void:
-	var path := "res://tools/sample_lesson_plan.md"
+	var path := "res://tools/sample_lesson_plan_ko.md" if str(GameState.get_setting("language", "en")) == "ko" else "res://tools/sample_lesson_plan.md"
 	if FileAccess.file_exists(path):
 		var f := FileAccess.open(path, FileAccess.READ)
 		if f != null:

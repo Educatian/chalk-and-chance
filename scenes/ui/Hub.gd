@@ -1003,7 +1003,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = tr("%3d%%  %02d moves  +-%.2f") % [pct, n, unc]
+	stat.text = tr("%d%%  ·  %d moves  ·  ±%.2f") % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))

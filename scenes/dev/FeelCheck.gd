@@ -333,6 +333,14 @@ func _check_objectives_toggle() -> void:
 	ow._unhandled_key_input(_key(KEY_O))
 	await get_tree().process_frame
 	_ok("O still opens the panel", ow._objectives_open)
+	ow._unhandled_key_input(_key(KEY_ESCAPE))   # leave prompt over an open panel
+	await get_tree().process_frame
+	_ok("Esc leave prompt closes the objectives panel instead of sitting under it", not ow._objectives_open and ow._overlay != null)
+	ow._close_overlay()
+	ow._resolve_interrupt({"dcomp": -2.0, "dnoise": 0.0, "ddis": 0, "coach": "COACH-OUTCOME-LINE"})
+	for i in 5:
+		await get_tree().process_frame
+	_ok("an interrupt's coaching line stays on screen (not overwritten by the room hint)", str(ow._coach_hint.text).contains("COACH-OUTCOME-LINE"))
 	ow.queue_free()
 	await get_tree().process_frame
 
