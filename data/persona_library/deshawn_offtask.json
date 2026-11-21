@@ -12,7 +12,7 @@
     "connect"
   ],
   "opening_line": "(turned around, talking to a friend instead of starting the task)",
-  "win_line": "Alright, alright, I'm on it. Sorry.",
+  "win_line": "Alright, alright, I'm on it. My bad.",
   "traits": {
     "confidence": 0.6,
     "talkativeness": 0.7,
@@ -47,8 +47,8 @@
     "captains his rec basketball team",
     "the kid everyone follows at recess"
   ],
-  "asset_hint": "Deshawn is off-task AND the natural leader the others follow. Build the relationship and channel that leadership - warm demander, not just redirect.",
-  "connect_line": "Aight, aight. You actually get me. ...Fine, I'll lead by getting MY work done first.",
+  "asset_hint": "Deshawn's off task, and he's also the kid the others follow. Build the relationship and put that pull to work. Warm, and still hold the line.",
+  "connect_line": "Aight, aight. You get me. ...Fine. I'll do MY work first, then they'll do theirs.",
   "connect_resolves": false,
   "paths": [
     {
@@ -77,7 +77,7 @@
           "elicit"
         ]
       ],
-      "why": "Behavior-specific praise first builds the credit that makes the redirect work."
+      "why": "Catch him doing it right first. That credit is what makes the redirect land."
     },
     {
       "id": "relevance_hook",
@@ -91,7 +91,7 @@
           "praise"
         ]
       ],
-      "why": "Give him a reason to be in the task, then hold the line calmly."
+      "why": "Give him a reason to care about the task. Then hold the line, calmly."
     }
   ]
 }

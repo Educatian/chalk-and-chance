@@ -18,7 +18,7 @@
     0.62
   ],
   "opening_line": "(looking down at the desk, not raising a hand)",
-  "win_line": "...okay. I think... maybe it's the one with the smaller bottom number?",
+  "win_line": "...okay. Um. Maybe it's the one with the smaller bottom number?",
   "hidden_need": "fears being wrong in public; needs a warm, low-pressure invitation and wait time",
   "knowledge_state": {
     "target_concept": "participating when it feels safe",
@@ -27,10 +27,10 @@
   "answer_flip_policy": "Do not suddenly participate from a cold call; you only open up after a warm, advance-notice invitation and real wait time.",
   "assets": [
     "sketches characters in the margins",
-    "knows every fact about deep-sea creatures"
+    "knows everything about deep-sea creatures"
   ],
-  "asset_hint": "Sam has gone quiet, but the margins are full of drawings. There's a door in there - an interest you can open before you ask for thinking.",
-  "connect_line": "...you saw my drawings? I could draw the problem instead of writing it... yeah. Okay. I can try that.",
+  "asset_hint": "Sam's gone quiet, but his margins are full of drawings. Start there before you ask for his thinking.",
+  "connect_line": "...you saw my drawings? Could I draw it instead of writing it? ...Okay. I can try.",
   "connect_resolves": true,
   "paths": [
     {
@@ -45,7 +45,7 @@
           "revoice"
         ]
       ],
-      "why": "Low pressure plus time makes it safe for him to be wrong in public (Fredricks et al., 2004)."
+      "why": "Low pressure and some time make it safe for him to be wrong out loud (Fredricks et al., 2004)."
     },
     {
       "id": "connect_first",
@@ -59,7 +59,7 @@
           "elicit"
         ]
       ],
-      "why": "Start from something he already knows so entering the conversation costs less."
+      "why": "Start from something he already knows, so speaking up costs him less."
     },
     {
       "id": "low_stakes_credit",
@@ -73,7 +73,7 @@
           "wait"
         ]
       ],
-      "why": "Specific credit for effort signals he belongs in the discussion."
+      "why": "Specific credit for his effort tells him he belongs in the talk."
     }
   ]
 }
