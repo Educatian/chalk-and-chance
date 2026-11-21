@@ -107,6 +107,10 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	# Open on the selected student's own words, not an empty dialogue panel.
+	var s0: Dictionary = students[sel]
+	if _dialogue != null and _dialogue.text == "" and str(s0.get("opening_line", "")) != "":
+		_dialogue.text = "%s: \"%s\"" % [s0["name"], tr(str(s0["opening_line"]))]
 	_bars_live = true
 	var all_moves: Array = []
 	for st in students:
