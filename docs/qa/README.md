@@ -4,7 +4,7 @@ One contact sheet per language per size: `en_1280x720.jpg`, `ko_1280x720.jpg`, a
 
 ## How the shots were taken
 
-- **Off-screen and offline.** The shots come from headless Chromium running a local debug web export through `tools/qa/web_run.py`. Every non-local request is aborted. Every run in these sheets logged `NETWORK blocked=0` (0 of 144 runs, including failed attempts).
+- **Off-screen and offline.** The shots come from headless Chromium running a local debug web export through `tools/qa/web_run.py`. Every non-local request is aborted. Every run in these sheets logged `NETWORK blocked=0` (144 of 144 final runs; every run, including failed attempts and re-runs, reported 0 blocked requests).
 - **Each shot proves its screen.** A shot is saved only after an `expect` step finds that screen's marker: the scene path or a visible text, read from `window.__cc_state` (debug web builds only).
   - Navigation uses `press` with the button's English text, which also matches the shown Korean.
   - A wrong screen fails the run (exit 4) instead of producing a tile.
