@@ -68,6 +68,11 @@ func _dev_room_hook() -> bool:
 	if not (OS.has_feature("web") and OS.is_debug_build() and ClassDB.class_exists("JavaScriptBridge")):
 		return false
 	var q := "new URLSearchParams(window.location.search)"
+	# Any dev_* run is a test: offline students, no voice, nothing sent to the hosted API.
+	if str(JavaScriptBridge.eval("window.location.search", true)).contains("dev_"):
+		LLMClient.use_stub = true
+		TTSClient.enabled = false
+		Telemetry._net = false
 	var room := str(JavaScriptBridge.eval(q + ".get('dev_room') || ''", true)).strip_edges()
 	if str(JavaScriptBridge.eval(q + ".get('dev_korean') || ''", true)) == "1":
 		GameState.settings["korean_classroom"] = true
