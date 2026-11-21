@@ -16,7 +16,15 @@ const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 const TILE := 40
 const COLS := 24
 const ROWS := 13
-const STUDENT_TILES_TALL := 1.35
+const STUDENT_TILES_TALL := 1.35   # fallback placeholder height only
+## One texel density for the whole room. Tiles, furniture and character sheets are all
+## authored at 32 texels per tile, so everything is drawn at TILE/32 screen px per texel
+## (1.25 at TILE 40). Characters are no longer normalised to a "tiles tall" target, which
+## had put floor, students and teacher at three different densities.
+const PX_PER_TEXEL := TILE / 32.0
+const SEAT_FEET_Y := TILE - 3.0   # seated student's feet: bottom of the seat tile, behind the desk
+const FLOOR_TILE := "res://assets/tiles/floor.png"
+const DESK_TILE := "res://assets/tiles/desk.png"
 const SEAT_FEET := 0.60    # student feet position within the seat tile (fraction of TILE)
 const DESK_SCALE := 1.35   # desk width relative to a tile (overhangs a little)
 const DESK_Y := 0.30       # desk top within the tile (fraction of TILE)
@@ -150,6 +158,9 @@ func _ready() -> void:
 	_attempt = GameState.attempt_count(Game.current_scenario_id)
 	_offtask_rise *= 1.0 + 0.12 * float(min(_attempt - 1, 4))
 
+	# Characters and furniture share one draw layer and are ordered by row (y-sort), so a
+	# student behind a desk, the desk, and the teacher walking past overlap correctly.
+	y_sort_enabled = true
 	_build_room()
 	var occupied: Dictionary = {}
 	for entry in cfg.get("roster", []):
@@ -231,8 +242,8 @@ func _build_room() -> void:
 	_decor(Vector2i(1, 0), "res://assets/tiles/door.png")
 
 	# Teacher's desk at the front-left.
-	_put_tile(Vector2i(2, 2), "res://assets/tiles/desk.png", COLOR_DESK, -8, true)
-	_put_tile(Vector2i(3, 2), "res://assets/tiles/desk.png", COLOR_DESK, -8, true)
+	_add_desk(Vector2i(2, 2))
+	_add_desk(Vector2i(3, 2))
 
 ## Seats holding a student get their desk drawn over the student in _spawn_npc; the
 ## remaining seats show a standalone (empty) desk here.
@@ -241,10 +252,34 @@ func _build_seating(occupied: Dictionary) -> void:
 		if not occupied.has(s):
 			_add_desk(s)
 
-## Standalone (empty) desk filling a seat tile; blocks the tile. Same full-tile look as the
-## desks drawn under seated students, so the grid is consistent.
+## Standalone (empty) desk on a seat tile; blocks the tile. Same cut-out desk, at the same
+## texel density and placement, as the desks in front of seated students.
 func _add_desk(tile: Vector2i) -> void:
-	_put_tile(tile, "res://assets/tiles/desk.png", COLOR_DESK, 0, true)
+	_walls[tile] = true
+	var holder := Node2D.new()
+	holder.position = Vector2(tile.x * TILE, tile.y * TILE)
+	holder.z_index = 1
+	holder.add_child(_desk_sprite())
+	add_child(holder)
+
+## The desk cut out of desk.png (floor pixels removed), at the room's texel density, sitting
+## on the bottom of its tile and centred. Falls back to the full tile if the cut-out fails.
+func _desk_sprite() -> Node2D:
+	var cut := Art.cutout(DESK_TILE, FLOOR_TILE)
+	var s := Sprite2D.new()
+	s.centered = false
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if cut != null:
+		s.texture = cut
+		s.scale = Vector2(PX_PER_TEXEL, PX_PER_TEXEL)
+		var sz := Vector2(cut.get_width(), cut.get_height()) * PX_PER_TEXEL
+		s.position = Vector2(round((TILE - sz.x) / 2.0), round(TILE - 1.0 - sz.y))
+	else:
+		var full := Art.tex(DESK_TILE)
+		if full != null:
+			s.texture = full
+			s.scale = Vector2(TILE / float(full.get_width()), TILE / float(full.get_height()))
+	return s
 
 func _add_wall(tile: Vector2i, color: Color = COLOR_WALL) -> void:
 	_put_tile(tile, "res://assets/tiles/wall.png", color, -10, true)
@@ -332,7 +367,7 @@ func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
 	var b0 := Art.opaque_bounds(sheet, Rect2i(0, 0, fw, fh))
 	if b0.size.y <= 0:
 		return null
-	var sc := (STUDENT_TILES_TALL * TILE) / float(b0.size.y)
+	var sc := PX_PER_TEXEL
 	var frames := SpriteFrames.new()
 	var sets := {
 		"idle": [0, 1, 0, 2, 0, 3],
@@ -350,6 +385,7 @@ func _build_idle_anim(persona_id: String, feety: float) -> AnimatedSprite2D:
 			frames.add_frame(anim_name, at)
 	frames.remove_animation("default")
 	var asp := AnimatedSprite2D.new()
+	asp.set_meta("figure_h", b0.size.y)
 	asp.sprite_frames = frames
 	asp.centered = false
 	asp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -372,29 +408,20 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 	var char_spr: Node2D = null    # the character body, animated with an idle/gesture loop
 	var sheet := Art.tex("res://assets/sprites/%s_walk.png" % persona_id)
 	var t := Art.tex("res://assets/sprites/%s_ow.png" % persona_id)
-	# Desk at the seat tile, drawn FIRST so the student stands fully visible behind/above it
-	# (no part of the character is hidden or clipped by the desk).
-	var deskt := Art.tex("res://assets/tiles/desk.png")
-	if deskt != null:
-		var dk := Sprite2D.new()
-		dk.texture = deskt
-		dk.centered = false
-		dk.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		dk.scale = Vector2(TILE / float(deskt.get_width()), TILE / float(deskt.get_height()))
-		node.add_child(dk)
-	# Feet rest just inside the top of the desk tile; the whole figure shows above it.
-	var feety := TILE * 0.28
+	# The student sits BEHIND their desk: feet at the bottom of the seat tile, then the desk
+	# is drawn after (in front), covering the legs. Same texel density as the room.
+	var feety := SEAT_FEET_Y
 	var idle_anim := _build_idle_anim(persona_id, feety)
 	if idle_anim != null:
 		node.add_child(idle_anim)
 		char_spr = idle_anim
-		head_y = feety - STUDENT_TILES_TALL * TILE
+		head_y = feety - float(idle_anim.get_meta("figure_h")) * PX_PER_TEXEL
 	elif sheet != null and sheet.get_width() >= 48 and sheet.get_height() >= 128:
 		# Normalize by the DRAWN figure (stand frame), not the cell, so all students match.
 		var cw := int(sheet.get_width() / 3.0)
 		var ch := int(sheet.get_height() / 4.0)
 		var b := Art.opaque_bounds(sheet, Rect2i(cw, 0, cw, ch))
-		var sc := (STUDENT_TILES_TALL * TILE) / float(b.size.y)
+		var sc := PX_PER_TEXEL
 		var at := AtlasTexture.new()
 		at.atlas = sheet
 		at.region = Rect2(cw, 0, cw, ch)
@@ -406,10 +433,11 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 		s.position = Vector2(TILE / 2.0 - (float(b.position.x) + float(b.size.x) / 2.0) * sc, feety - float(b.position.y + b.size.y) * sc)
 		node.add_child(s)
 		char_spr = s
-		head_y = feety - STUDENT_TILES_TALL * TILE
+		head_y = feety - b.size.y * sc
 	elif t != null:
 		var tb := Art.opaque_bounds(t, Rect2i(0, 0, t.get_width(), t.get_height()))
-		var sc2 := (STUDENT_TILES_TALL * TILE) / float(tb.size.y)
+		# Legacy half-resolution (16x32) sheet: drawn at 2x texels to match 32x64 sheets.
+		var sc2 := PX_PER_TEXEL * (64.0 / float(maxi(1, t.get_height())))
 		var s2 := Sprite2D.new()
 		s2.texture = t
 		s2.centered = false
@@ -417,7 +445,7 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 		s2.scale = Vector2(sc2, sc2)
 		s2.position = Vector2(TILE / 2.0 - (float(tb.position.x) + float(tb.size.x) / 2.0) * sc2, feety - float(tb.position.y + tb.size.y) * sc2)
 		node.add_child(s2)
-		head_y = feety - STUDENT_TILES_TALL * TILE
+		head_y = feety - tb.size.y * sc2
 	else:
 		var body := ColorRect.new()
 		body.size = Vector2(TILE * 0.7, TILE * STUDENT_TILES_TALL)
@@ -427,11 +455,18 @@ func _spawn_npc(tile: Vector2i, persona_id: String, display_name: String) -> voi
 		node.add_child(body)
 		head_y = feety - STUDENT_TILES_TALL * TILE
 
+	node.add_child(_desk_sprite())   # in front of the seated student
 	_add_talk_emote(node, head_y)
 
+	# Name under the desk, centred, drawn above every body so a student in the next row
+	# can never clip it.
 	var tag := Label.new()
 	tag.text = display_name
-	tag.position = Vector2(-6, TILE + 2)
+	tag.position = Vector2(-TILE * 0.5, TILE - 1)
+	tag.size = Vector2(TILE * 2.0, 14)
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tag.z_index = 8
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tag.add_theme_font_size_override("font_size", 12)
 	tag.add_theme_color_override("font_color", Color.WHITE)
 	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0))
@@ -481,7 +516,7 @@ func _spawn_player(tile: Vector2i) -> void:
 	var p := Node2D.new()
 	p.set_script(load("res://scenes/overworld/Player.gd"))
 	p.position = Vector2(tile.x * TILE, tile.y * TILE)
-	p.z_index = 2
+	p.z_index = 1   # same layer as students and desks; y-sort decides overlap
 	p.overworld = self          # set before add_child so _ready() can read TILE
 	add_child(p)
 	_player = p

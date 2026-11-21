@@ -55,3 +55,39 @@ static func opaque_bounds(t: Texture2D, region: Rect2i) -> Rect2i:
 	if maxx < 0:
 		return Rect2i(0, 0, region.size.x, region.size.y)
 	return Rect2i(minx, miny, maxx - minx + 1, maxy - miny + 1)
+
+## The furniture tiles (e.g. desk.png) are painted onto a copy of the floor tile. This
+## removes every pixel that matches the floor so the object can sit in front of or behind
+## characters, then crops to what is left. Cached per pair; null if either is missing.
+static var _cutouts := {}
+
+static func cutout(fg_path: String, floor_path: String) -> Texture2D:
+	var key := fg_path + "|" + floor_path
+	if _cutouts.has(key):
+		return _cutouts[key]
+	var fg := tex(fg_path)
+	var bg := tex(floor_path)
+	if fg == null or bg == null:
+		return null
+	var a := fg.get_image()
+	var b := bg.get_image()
+	if a == null or b == null or a.get_size() != b.get_size():
+		return null
+	if a.is_compressed():
+		a.decompress()
+	if b.is_compressed():
+		b.decompress()
+	a.convert(Image.FORMAT_RGBA8)
+	b.convert(Image.FORMAT_RGBA8)
+	for y in range(a.get_height()):
+		for x in range(a.get_width()):
+			var p := a.get_pixel(x, y)
+			var q := b.get_pixel(x, y)
+			if absf(p.r - q.r) + absf(p.g - q.g) + absf(p.b - q.b) < 0.02:
+				a.set_pixel(x, y, Color(0, 0, 0, 0))
+	var used := a.get_used_rect()
+	if used.size.x <= 0 or used.size.y <= 0:
+		return null
+	var out := ImageTexture.create_from_image(a.get_region(used))
+	_cutouts[key] = out
+	return out

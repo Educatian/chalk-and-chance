@@ -5,7 +5,8 @@ extends Node2D
 
 const Art = preload("res://scripts/Art.gd")
 const STEP_TIME := 0.12
-const TEACHER_TILES_TALL := 1.7   # adult: taller than the ~1.35-tall students
+## Drawn at the room's texel density (Overworld.PX_PER_TEXEL), not normalised to a height.
+const DEFAULT_PX_PER_TEXEL := 1.25
 const WALK_SHEET := "res://assets/sprites/teacher_ow.png"   # static fallback base name
 const WALK_ANIM_SHEET := "res://assets/sprites/teacher_walk.png"
 
@@ -51,7 +52,7 @@ func _build_visual() -> void:
 		# Scale by the DRAWN figure (stand frame), not the cell, so every character is the
 		# same on-screen height regardless of how much of the cell the art fills.
 		var b := Art.opaque_bounds(sheet, Rect2i(cw, 0, cw, ch))
-		var sc := (TEACHER_TILES_TALL * tile) / float(b.size.y)
+		var sc := _px_per_texel()
 		_anim = AnimatedSprite2D.new()
 		_anim.sprite_frames = _make_frames(sheet)
 		_anim.centered = false
@@ -66,7 +67,7 @@ func _build_visual() -> void:
 	var t := Art.tex(WALK_SHEET)
 	if t != null:
 		var tb := Art.opaque_bounds(t, Rect2i(0, 0, t.get_width(), t.get_height()))
-		var sc2 := (TEACHER_TILES_TALL * tile) / float(tb.size.y)
+		var sc2 := _px_per_texel() * (64.0 / float(maxi(1, t.get_height())))
 		var s := Sprite2D.new()
 		s.texture = t
 		s.centered = false
@@ -80,6 +81,9 @@ func _build_visual() -> void:
 	spr.color = Color(0.25, 0.55, 0.95)
 	spr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(spr)
+
+func _px_per_texel() -> float:
+	return float(overworld.PX_PER_TEXEL) if overworld != null else DEFAULT_PX_PER_TEXEL
 
 ## Slice a 3-col x 4-row sheet into walk_down/left/right/up animations.
 func _make_frames(sheet: Texture2D) -> SpriteFrames:

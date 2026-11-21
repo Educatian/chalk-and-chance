@@ -9,6 +9,8 @@ All screenshots come from web exports viewed in headless Chromium (SwiftShader, 
 | 01 | Title (Enter now starts the demo) | [before](before/01_title.jpg) | [after](after/01_title.jpg) |
 | 02 | Hub after pressing Down (list follows focus) | [before](before/02_hub_focus_after_down_arrow.jpg) | [after](after/02_hub_focus_after_down_arrow.jpg) |
 | 03 | Classroom HUD (bands clear of students) | [before](before/03_classroom_hud.jpg) | [after](after/03_classroom_hud.jpg) |
+| 03b | Classroom at one texel density (students seated behind cut-out desks, y-sorted, names never clipped) | [before](after/03_classroom_hud.jpg) | [after](after/03b_classroom_one_texel_density.jpg) |
+| 03c | Teacher walking up behind a student (y-sort overlap) | — | [after](after/03c_classroom_teacher_by_student.jpg) |
 | 04 | Objectives opened with O | — | [after](after/04_classroom_objectives_open.jpg) |
 | 05 | Esc in the classroom (before: straight to hub) | [before](before/05_esc_in_classroom.jpg) | [after](after/05_esc_in_classroom.jpg) |
 | 06 | Click on a student: walked up, facing them | — | [after](after/06_tap_to_walk_next_to_student.jpg) |
