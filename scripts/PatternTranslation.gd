@@ -36,7 +36,7 @@ func load_catalogue(path: String, loc: String) -> bool:
 			if ph_s == "%%":
 				rx += "%"
 			elif ph_s.ends_with("d"):
-				rx += "(-?[0-9]+)"          # %d only ever holds a whole number
+				rx += "( *-?[0-9]+)"        # %d only ever holds a whole number (maybe space-padded)
 			elif ph_s.ends_with("f"):
 				rx += "(-?[0-9.]+)"
 			else:
@@ -111,6 +111,8 @@ func _fill(tmpl: String, m: RegExMatch) -> Array:
 					v = v.substr(0, v.length() - core.length()) + tv
 				elif _has_letters(core):
 					pen += 1
+			if p.get_string() == "%d" and v.strip_edges().is_valid_int():
+				v = str(int(v.strip_edges()))   # the target template decides padding ("%02d" -> "%d")
 			out += v
 			i += 1
 		last = p.get_end()

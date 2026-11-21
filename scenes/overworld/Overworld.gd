@@ -1434,7 +1434,7 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
 			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept moving and kept facing them"},
 		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
-			"cause": tr("you heard %d of %d students explain their thinking") % [reached, _npcs.size()]},
+			"cause": tr("you heard {reached} of {total} students explain their thinking").format({"reached": reached, "total": _npcs.size()})},
 	]
 	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
 	var best := _objectives.size() * 80 + 200 + _npcs.size() * 10

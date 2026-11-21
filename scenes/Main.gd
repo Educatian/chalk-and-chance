@@ -116,7 +116,7 @@ func _dev_room_hook() -> bool:
 	if room == "" or not FileAccess.file_exists("res://data/scenarios/%s.json" % room):
 		return false
 	Game.current_scenario_id = room
-	var cfg = JSON.parse_string(FileAccess.get_file_as_string("res://data/scenarios/%s.json" % room))
+	var cfg = load("res://scripts/Content.gd").json("res://data/scenarios/%s.json" % room)   # as the hub would pass it
 	var mode := str(cfg.get("mode", "")) if typeof(cfg) == TYPE_DICTIONARY else ""
 	if mode == "gym":
 		SceneRouter.change_scene("res://scenes/encounter/GymEncounter.tscn", {"scenario": cfg})
