@@ -5,6 +5,7 @@ extends Node
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
+const UiText = preload("res://scripts/UiText.gd")
 var fails := 0
 
 func _ok(label: String, cond: bool) -> void:
@@ -27,6 +28,7 @@ func _ready() -> void:
 	_check_outcomes()
 	_check_beat_order()
 	await _check_juice()
+	_check_text_scale()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -144,3 +146,17 @@ func _check_juice() -> void:
 	_ok("with motion: bars ease (not instant)", bar.size != Vector2(20, 4))
 	GameState.settings["reduced_motion"] = was
 	bar.queue_free()
+
+func _check_text_scale() -> void:
+	var theme := ThemeDB.get_project_theme()
+	var was: bool = bool(GameState.get_setting("large_text", false))
+	GameState.settings["large_text"] = false
+	UiText.apply_text_scale()
+	var normal := theme.get_font_size(&"font_size", UiText.HUD)
+	GameState.settings["large_text"] = true
+	UiText.apply_text_scale()
+	var large := theme.get_font_size(&"font_size", UiText.HUD)
+	_ok("HUD text style exists in the theme", normal == int(UiText.BASE_SIZES[UiText.HUD]))
+	_ok("Large text grows every themed label", large > normal)
+	GameState.settings["large_text"] = was
+	UiText.apply_text_scale()

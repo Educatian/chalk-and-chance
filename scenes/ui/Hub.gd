@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 ## Mission-select hub. Lists the scenarios from Game.SCENARIOS (reading each JSON for its
 ## title/badge), shows which badges are earned, and routes to the chosen scenario.
 
@@ -745,6 +746,8 @@ func _open_settings() -> void:
 			_refresh_setting_button(b, opt)
 			if key == "music_enabled":
 				Music.apply_settings()
+			if key == "large_text":
+				UiText.apply_text_scale()
 			if key == "audio_enabled":
 				notice.text = TTSClient.voice_status_detail()
 		)

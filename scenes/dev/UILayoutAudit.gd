@@ -6,6 +6,8 @@ const INTERACTIVE := ["Button", "LineEdit", "TextEdit", "ScrollContainer"]
 var _issues: Array = []
 
 func _ready() -> void:
+	# Audit the 960x540 design space regardless of the host window shape (stretch aspect is "expand").
+	get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	LLMClient.use_stub = true
 	TTSClient.enabled = false
 	await _run_suite("normal", false)

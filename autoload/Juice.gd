@@ -169,8 +169,11 @@ func show_outcome(chip: Label, kind: String) -> void:
 	sb.set_corner_radius_all(maxi(2, int(chip.size.y * 0.3)))
 	chip.add_theme_stylebox_override("normal", sb)
 	chip.visible = true
-	var line: Control = chip.get_meta("shift_label") if chip.has_meta("shift_label") else null
-	if line != null and is_instance_valid(line):
+	# Lines that start where the chip sits slide right to make room (result, coach...).
+	var lines: Array = chip.get_meta("shift_labels") if chip.has_meta("shift_labels") else []
+	for line in lines:
+		if line == null or not is_instance_valid(line):
+			continue
 		if not line.has_meta("orig_right"):
 			line.set_meta("orig_right", line.position.x + line.size.x)
 		line.position.x = chip.position.x + chip.size.x + chip.size.y * 0.6

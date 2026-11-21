@@ -1,4 +1,5 @@
 extends Control
+const UiText = preload("res://scripts/UiText.gd")
 const GroupDebriefPanel = preload("res://scenes/encounter/GroupDebriefPanel.gd")
 const GroupCheckInUi = preload("res://scenes/encounter/GroupCheckInUi.gd")
 const ReactionCue = preload("res://scenes/encounter/ReactionCue.gd")
@@ -83,6 +84,7 @@ func _build_ui() -> void:
 	_dialogue = refs["dialogue"]
 	_coach = refs["coach"]
 	_buttons = refs["buttons"]
+	UiText.keep_centered(_layer)
 	if not _buttons.is_empty():
 		(_buttons[0] as Button).grab_focus.call_deferred()
 

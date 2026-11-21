@@ -6,6 +6,7 @@ extends Node2D
 const Art = preload("res://scripts/Art.gd")
 const Seating = preload("res://scripts/Seating.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
+const UiText = preload("res://scripts/UiText.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
@@ -103,8 +104,13 @@ var _player: Node2D = null
 var _attention_fill: ColorRect = null
 var _disrupt_label: Label = null
 var _equity_label: Label = null
-var _risk_label: Label = null
 var _objective_label: Label = null
+var _objective_toggle: Button = null
+var _objective_plate: Panel = null
+var _objectives_open := false
+var _objective_toast_left := 0.0
+var _last_objectives_met := -1
+var _room_cue := ""
 var _interact_label: Label = null
 var _coach_hint: Label = null
 var _disruptions := 0
@@ -159,9 +165,9 @@ func _ready() -> void:
 		_npcs[st]["offtask"] = float(ot_saved.get(_npcs[st]["persona_id"], 0.0))
 	_build_seating(occupied)
 	_spawn_player(Vector2i(11, 2))
-	_add_banner()
 	_add_badge_strip()
 	_build_hud()
+	UiText.keep_centered(self, Vector2(COLS * TILE, ROWS * TILE))
 	if (Game.lesson.get("moves", []) as Array).is_empty() and Game.lesson.get("disruptions", 0) == 0:
 		CoachCard.show_focus_banner(self, str(Game.current_scenario_id))
 	Telemetry.log_event({
@@ -280,17 +286,6 @@ func _add_rect(pos: Vector2, size: Vector2, color: Color, z: int) -> void:
 	r.z_index = z
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(r)
-
-func _add_banner() -> void:
-	var label := Label.new()
-	label.text = "%s\nWalk the room; Z = talk.  Esc = mission hub." % _scenario_title
-	label.position = Vector2(TILE + 4, 4)
-	label.add_theme_font_size_override("font_size", 15)
-	label.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	label.add_theme_constant_override("outline_size", 2)
-	label.z_index = 60
-	add_child(label)
 
 ## Shows earned badges as icons in the top-right (GAME_CONCEPT.md gym-badge progression).
 func _add_badge_strip() -> void:
@@ -510,10 +505,17 @@ func _hud_plate(pos: Vector2, size: Vector2, accent: Color = Color(0.98, 0.82, 0
 	add_child(p)
 	return p
 
+const HUD_ATT_W := 150.0
+const HUD_COMP_W := 120.0
+const OBJ_TOAST_SECONDS := 3.0
+
+## Classroom HUD lives in two bands that never cover a student: the front wall row
+## (top, y 0-40) and the back wall row + empty aisle (bottom). Seats are rows 3-10.
+## Objectives are collapsed to one line (O or click to expand) and pop open briefly
+## when one is met.
 func _build_hud() -> void:
-	_hud_plate(Vector2(8, 4), Vector2(456, 156))
-	_hud_plate(Vector2(COLS * TILE - 310, 52), Vector2(302, 104), Color(0.30, 0.92, 0.86, 0.5))
-	_hud_plate(Vector2(8, ROWS * TILE - 60), Vector2(COLS * TILE - 16, 56))
+	_hud_plate(Vector2(4, 2), Vector2(COLS * TILE - 8, 36))
+	_hud_plate(Vector2(4, ROWS * TILE - 52), Vector2(COLS * TILE - 8, 50))
 	var vee_tex := Art.tex("res://assets/portraits/coach_vee_neutral.png")
 	if vee_tex != null:
 		var vee := TextureRect.new()
@@ -521,132 +523,101 @@ func _build_hud() -> void:
 		vee.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		vee.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		vee.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		vee.position = Vector2(14, ROWS * TILE - 56)
-		vee.size = Vector2(48, 48)
+		vee.position = Vector2(10, ROWS * TILE - 49)
+		vee.size = Vector2(44, 44)
 		vee.z_index = 60
 		add_child(vee)
-	var lbl := Label.new()
-	lbl.text = "CLASS ATTENTION"
-	lbl.position = Vector2(TILE + 4, 58)
-	lbl.add_theme_font_size_override("font_size", 13)
-	lbl.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	lbl.add_theme_constant_override("outline_size", 2)
-	lbl.z_index = 60
-	add_child(lbl)
 
+	_hud_text("ATTENTION", Vector2(12, 3), UiText.HUD)
+	_hud_bar_bg(Vector2(12, 20), Vector2(HUD_ATT_W + 4, 14))
+	_attention_fill = _hud_fill(Vector2(14, 22), Vector2(HUD_ATT_W, 10), Color(0.30, 0.80, 0.40))
+
+	_hud_text("COMPOSURE", Vector2(180, 3), UiText.HUD, Color(0.95, 0.8, 0.85))
+	_hud_bar_bg(Vector2(180, 20), Vector2(HUD_COMP_W + 4, 14))
+	_composure_fill = _hud_fill(Vector2(182, 22), Vector2(HUD_COMP_W, 10), Color(0.90, 0.45, 0.55))
+	_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 10)
+
+	_hud_text("PERIOD", Vector2(322, 3), UiText.HUD)
+	_clock_label = _hud_text("2:00", Vector2(322, 16), UiText.HUD_VALUE)
+	_hud_text("DISRUPTIONS", Vector2(398, 3), UiText.HUD)
+	_disrupt_label = _hud_text("0", Vector2(398, 16), UiText.HUD_VALUE, Color(0.97, 0.85, 0.6))
+	_hud_text("ENGAGED", Vector2(506, 3), UiText.HUD)
+	_equity_label = _hud_text("0/0", Vector2(506, 16), UiText.HUD_VALUE, Color(0.6, 0.9, 0.95))
+
+	_objective_toggle = Button.new()
+	_objective_toggle.flat = true
+	_objective_toggle.position = Vector2(586, 5)
+	_objective_toggle.size = Vector2(176, 30)
+	_objective_toggle.focus_mode = Control.FOCUS_NONE
+	_objective_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_objective_toggle.add_theme_font_size_override("font_size", 13 + GameState.ui_font_delta())
+	_objective_toggle.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
+	_objective_toggle.z_index = 60
+	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
+	add_child(_objective_toggle)
+
+	# Expanded objectives: on the left wall columns (0-3), clear of every seat.
+	_objective_plate = _hud_plate(Vector2(4, 44), Vector2(152, 360), Color(0.30, 0.92, 0.86, 0.5))
+	_objective_label = _hud_text("", Vector2(12, 50), UiText.HUD, Color(0.93, 0.91, 0.78))
+	_objective_label.size = Vector2(138, 348)
+	_objective_label.clip_text = true
+	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_set_objectives_open(false, false)
+
+	var by := ROWS * TILE - 50
+	_interact_label = _hud_text("", Vector2(60, by), UiText.HUD, Color(0.96, 0.86, 0.50))
+	_interact_label.size = Vector2(COLS * TILE - 300, 20)
+	_interact_label.clip_text = true
+	var keys := _hud_text("Arrows walk | Z talk | O goals | Esc leave", Vector2(COLS * TILE - 244, by), UiText.HUD, Color(0.66, 0.72, 0.82))
+	keys.size = Vector2(232, 20)
+	keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_coach_hint = _hud_text("", Vector2(60, by + 22), UiText.HUD, Color(0.72, 0.92, 0.78))
+	_coach_hint.size = Vector2(COLS * TILE - 72, 20)
+	_coach_hint.clip_text = true
+
+func _hud_text(t: String, pos: Vector2, variation: StringName, color: Variant = null) -> Label:
+	var l := Label.new()
+	l.text = t
+	l.position = pos
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiText.style(l, variation, color)
+	l.z_index = 60
+	add_child(l)
+	return l
+
+func _hud_bar_bg(pos: Vector2, size: Vector2) -> void:
 	var bg := ColorRect.new()
-	bg.position = Vector2(TILE + 4, 78)
-	bg.size = Vector2(220, 16)
+	bg.position = pos
+	bg.size = size
 	bg.color = Color(0, 0, 0, 0.55)
 	bg.z_index = 60
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
-	_attention_fill = ColorRect.new()
-	_attention_fill.position = Vector2(TILE + 6, 80)
-	_attention_fill.size = Vector2(216, 12)
-	_attention_fill.color = Color(0.30, 0.80, 0.40)
-	_attention_fill.z_index = 61
-	add_child(_attention_fill)
 
-	_disrupt_label = Label.new()
-	_disrupt_label.text = "Disruptions: 0"
-	_disrupt_label.position = Vector2(TILE + 4, 98)
-	_disrupt_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
-	_disrupt_label.add_theme_color_override("font_color", Color(0.97, 0.85, 0.6))
-	_disrupt_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_disrupt_label.add_theme_constant_override("outline_size", 2)
-	_disrupt_label.z_index = 60
-	add_child(_disrupt_label)
+func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
+	var f := ColorRect.new()
+	f.position = pos
+	f.size = size
+	f.color = color
+	f.z_index = 61
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(f)
+	return f
 
-	_equity_label = Label.new()
-	_equity_label.text = "Engaged: 0/0"
-	_equity_label.position = Vector2(TILE + 4, 138)
-	_equity_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
-	_equity_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.95))
-	_equity_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_equity_label.add_theme_constant_override("outline_size", 2)
-	_equity_label.z_index = 60
-	add_child(_equity_label)
+## Collapsed: one line in the top band. Open: list on the left wall. `toast` = auto-open
+## for a few seconds (an objective changed), then close again unless the player opened it.
+func _set_objectives_open(open: bool, toast: bool) -> void:
+	_objectives_open = open
+	_objective_toast_left = OBJ_TOAST_SECONDS if (open and toast) else 0.0
+	if _objective_plate != null:
+		_objective_plate.visible = open
+	if _objective_label != null:
+		_objective_label.visible = open
+	_refresh_objective_toggle()
 
-	_risk_label = Label.new()
-	_risk_label.text = "Room cue: settled"
-	_risk_label.position = Vector2(TILE + 4, 118)
-	_risk_label.size = Vector2(430, 20)
-	_risk_label.clip_text = true
-	_risk_label.add_theme_font_size_override("font_size", 12 + GameState.ui_font_delta())
-	_risk_label.add_theme_color_override("font_color", Color(0.86, 0.90, 0.96))
-	_risk_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_risk_label.add_theme_constant_override("outline_size", 2)
-	_risk_label.z_index = 60
-	add_child(_risk_label)
-
-	_objective_label = Label.new()
-	_objective_label.text = ""
-	_objective_label.position = Vector2(COLS * TILE - 300, 58)
-	_objective_label.size = Vector2(284, 92)
-	_objective_label.add_theme_font_size_override("font_size", 11 + GameState.ui_font_delta())
-	_objective_label.add_theme_color_override("font_color", Color(0.93, 0.91, 0.78))
-	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_objective_label.add_theme_constant_override("outline_size", 2)
-	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_objective_label.z_index = 60
-	add_child(_objective_label)
-
-	_interact_label = Label.new()
-	_interact_label.text = ""
-	_interact_label.position = Vector2(70, ROWS * TILE - 56)
-	_interact_label.size = Vector2(COLS * TILE - 90, 20)
-	_interact_label.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
-	_interact_label.add_theme_color_override("font_color", Color(0.96, 0.86, 0.50))
-	_interact_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_interact_label.add_theme_constant_override("outline_size", 2)
-	_interact_label.z_index = 60
-	add_child(_interact_label)
-
-	_coach_hint = Label.new()
-	_coach_hint.position = Vector2(70, ROWS * TILE - 32)
-	_coach_hint.size = Vector2(COLS * TILE - 90, 22)
-	_coach_hint.add_theme_font_size_override("font_size", 14)
-	_coach_hint.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
-	_coach_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_coach_hint.add_theme_constant_override("outline_size", 2)
-	_coach_hint.z_index = 60
-	add_child(_coach_hint)
-
-	# Period clock (top-right) and Composure bar (under attention).
-	_clock_label = Label.new()
-	_clock_label.text = "Period: 2:30"
-	_clock_label.position = Vector2(TILE + 250, 56)
-	_clock_label.add_theme_font_size_override("font_size", 13)
-	_clock_label.add_theme_color_override("font_color", Color(0.97, 0.95, 0.88))
-	_clock_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	_clock_label.add_theme_constant_override("outline_size", 2)
-	_clock_label.z_index = 60
-	add_child(_clock_label)
-
-	var clbl := Label.new()
-	clbl.text = "COMPOSURE"
-	clbl.position = Vector2(TILE + 250, 76)
-	clbl.add_theme_font_size_override("font_size", 11)
-	clbl.add_theme_color_override("font_color", Color(0.95, 0.8, 0.85))
-	clbl.add_theme_color_override("font_outline_color", Color(0, 0, 0))
-	clbl.add_theme_constant_override("outline_size", 2)
-	clbl.z_index = 60
-	add_child(clbl)
-	var cbg := ColorRect.new()
-	cbg.position = Vector2(TILE + 250, 94)
-	cbg.size = Vector2(160, 14)
-	cbg.color = Color(0, 0, 0, 0.55)
-	cbg.z_index = 60
-	add_child(cbg)
-	_composure_fill = ColorRect.new()
-	_composure_fill.position = Vector2(TILE + 252, 96)
-	_composure_fill.size = Vector2(156, 10)
-	_composure_fill.color = Color(0.90, 0.45, 0.55)
-	_composure_fill.z_index = 61
-	add_child(_composure_fill)
-	# Reflect current (possibly resumed/reduced) composure instead of always showing full.
-	_composure_fill.size = Vector2(156.0 * _composure / GameState.max_composure(), 10)
+func _refresh_objective_toggle() -> void:
+	if _objective_toggle != null:
+		_objective_toggle.text = "Objectives %d/%d  [O] %s" % [_last_objectives_met, _objectives.size(), "hide" if _objectives_open else "show"]
 
 func _process(delta: float) -> void:
 	if _player == null:
@@ -657,7 +628,7 @@ func _process(delta: float) -> void:
 	# Period clock.
 	_period_left -= delta
 	if _clock_label != null:
-		_clock_label.text = "Period: %d:%02d" % [int(_period_left) / 60, int(_period_left) % 60]
+		_clock_label.text = "%d:%02d" % [int(_period_left) / 60, int(_period_left) % 60]
 	if _period_left <= 0.0:
 		_end_lesson()
 		return
@@ -692,7 +663,7 @@ func _process(delta: float) -> void:
 			if ot >= 100.0:
 				_disruptions += 1
 				if _disrupt_label != null:
-					_disrupt_label.text = "Disruptions: %d" % _disruptions
+					_disrupt_label.text = str(_disruptions)
 				ot = 65.0                                # brief cooldown after a flare-up
 			info["offtask"] = ot
 			var fill: ColorRect = info.get("fill", null)
@@ -706,22 +677,19 @@ func _process(delta: float) -> void:
 
 		if _attention_fill != null:
 			var attention := 100.0 - total / float(_npcs.size())
-			_attention_fill.size = Vector2(216.0 * attention / 100.0, 12)
+			_attention_fill.size = Vector2(HUD_ATT_W * attention / 100.0, 10)
 			_attention_fill.color = Color(0.9, 0.3, 0.25).lerp(Color(0.30, 0.80, 0.40), attention / 100.0)
 
 		if _equity_label != null:
-			_equity_label.text = "Engaged: %d/%d" % [_engaged_count(), _npcs.size()]
+			_equity_label.text = "%d/%d" % [_engaged_count(), _npcs.size()]
 
-		if _risk_label != null:
-			if worst >= 70.0:
-				_risk_label.text = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
-				_risk_label.add_theme_color_override("font_color", Color(0.98, 0.58, 0.46))
-			elif worst >= 45.0:
-				_risk_label.text = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
-				_risk_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.42))
-			else:
-				_risk_label.text = "Room cue: settled. Keep scanning and circulate."
-				_risk_label.add_theme_color_override("font_color", Color(0.72, 0.92, 0.78))
+		# Room cue shares the bottom line with the talk prompt (talk prompt wins when facing a student).
+		if worst >= 70.0:
+			_room_cue = "Hot spot: %s is at %d%% drift. Move close now." % [worst_name, int(worst)]
+		elif worst >= 45.0:
+			_room_cue = "Room cue: %s is starting to drift (%d%%)." % [worst_name, int(worst)]
+		else:
+			_room_cue = "Room cue: settled. Green bars = focused; red = drifting."
 
 		var faced: Vector2i = ptile + _player.facing
 		if _interact_label != null:
@@ -729,11 +697,22 @@ func _process(delta: float) -> void:
 			if not npc.is_empty():
 				_interact_label.text = "Press Z to talk to %s" % npc.get("display_name", "student")
 			else:
-				_interact_label.text = "Green bars = focused; red bars = drifting. Move closer to lower them."
+				_interact_label.text = _room_cue
 
 		if _objective_label != null:
 			var attention_now := 100.0 - total / float(_npcs.size())
 			_objective_label.text = _objectives_status(attention_now)
+			var met := _objectives_met_count(attention_now)
+			if met != _last_objectives_met:
+				var first := _last_objectives_met < 0
+				_last_objectives_met = met
+				if not first and not _objectives_open:
+					_set_objectives_open(true, true)
+				_refresh_objective_toggle()
+			if _objective_toast_left > 0.0:
+				_objective_toast_left -= delta
+				if _objective_toast_left <= 0.0:
+					_set_objectives_open(false, false)
 
 		if _coach_hint != null:
 			if facing_up and worst > 30.0:
@@ -762,9 +741,9 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 	_apply_noise(float(opt.get("dnoise", 0.0)))
 	_disruptions += int(opt.get("ddis", 0))
 	if _disrupt_label != null:
-		_disrupt_label.text = "Disruptions: %d" % _disruptions
+		_disrupt_label.text = str(_disruptions)
 	if _composure_fill != null:
-		_composure_fill.size = Vector2(156.0 * _composure / GameState.max_composure(), 10)
+		_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 10)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
 	var ptile: Vector2i = _player.current_tile() if _player != null else Vector2i.ZERO
@@ -1102,8 +1081,7 @@ func _show_overlay(text: String, options: Array) -> void:
 	lbl.position = Vector2(px + 22, py + 18)
 	lbl.size = Vector2(pw - 44, by - py - 48)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 14 + GameState.ui_font_delta())
-	lbl.add_theme_color_override("font_color", Color(0.97, 0.96, 0.9))
+	UiText.style(lbl, UiText.BODY, Color(0.97, 0.96, 0.9))
 	_overlay.add_child(lbl)
 
 	for i in range(btns.size()):
@@ -1156,6 +1134,10 @@ func _go_hub() -> void:
 ## While the leave prompt is open, Esc again means "stay".
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.keycode == KEY_O and not input_locked and not _lesson_over:
+		_set_objectives_open(not _objectives_open, false)
+		get_viewport().set_input_as_handled()
 		return
 	if event.keycode != KEY_ESCAPE and event.keycode != KEY_BACKSPACE:
 		return
