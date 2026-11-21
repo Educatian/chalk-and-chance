@@ -7,7 +7,6 @@ const UiText = preload("res://scripts/UiText.gd")
 
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
-const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 const PathJudge = preload("res://scripts/PathJudge.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
@@ -15,6 +14,7 @@ const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
+const ResultsCard = preload("res://scripts/ResultsCard.gd")
 ## v2 layout (480x270 authored = 1 unit per texel): portrait panel left, meters and the
 ## student's line in chalkboard panels right, verdict + coach line, move buttons below.
 const PORTRAIT_PANEL := Rect2(8, 20, 140, 140)
@@ -93,6 +93,9 @@ var _port_tween: Tween = null    # portrait bounce on emotion change
 var _last_wait_ms: int = 0       # wait time of the move in flight (for telemetry)
 var _last_input_mode := "menu"
 var _last_free_text := ""
+var _think: Panel                # A1: think-time bubble on the portrait
+var _think_dots: Array = []
+var _think_ready := false
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -454,6 +457,37 @@ func _build_ui() -> void:
 	_emote.visible = false
 	_layer.add_child(_emote)
 
+	# A1: think-time bubble. Three dots fill over the wait threshold, then "now".
+	_think = Panel.new()
+	_think.name = "ThinkBubble"
+	_think.position = PORTRAIT_PANEL.position + Vector2(6, 6)
+	_think.size = Vector2(46, 14)
+	_think.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tsb := StyleBoxFlat.new()
+	tsb.bg_color = Color("f2eedd")
+	tsb.border_color = Color("14131c")
+	tsb.set_border_width_all(2)
+	tsb.set_corner_radius_all(6)
+	_think.add_theme_stylebox_override("panel", tsb)
+	_layer.add_child(_think)
+	for i in range(3):
+		var d := ColorRect.new()
+		d.position = Vector2(5 + i * 7, 5)
+		d.size = Vector2(4, 4)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_think.add_child(d)
+		_think_dots.append(d)
+	var now := Label.new()
+	now.name = "Now"
+	now.text = "now"
+	now.position = Vector2(25, 1)
+	now.size = Vector2(20, 10)
+	now.add_theme_font_size_override("font_size", UiText.S_TINY + GameState.ui_font_delta())
+	now.add_theme_color_override("font_color", Color("2f7d3a"))
+	now.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_think.add_child(now)
+	_set_think(0.0)
+
 	# Wait-Time Ring (a bar in M1).
 	_wait_label = _make_label(_wait_label_text(false), Vector2(392, 24), UiText.S_CAPTION, Color("f2eedd"))
 	_wait_label.size = Vector2(76, 12)
@@ -737,21 +771,39 @@ func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
 func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
+	_set_think(0.0)
 	if _wait_label != null:
 		_wait_label.text = _wait_label_text(false)
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
 	if _busy or _resolved:
+		if _think != null:
+			_think.visible = false
 		return
 	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
 	var threshold := float(GameState.wait_threshold_ms())
+	_set_think(elapsed / maxf(1.0, threshold))
 	if _wait_bar != null:
 		_wait_bar.size = Vector2(70.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 8.0 * UI_SCALE)
 	var ready := elapsed >= threshold
 	_set_wait_bar_ready(ready)
 	if _wait_label != null:
 		_wait_label.text = _wait_label_text(ready)
+
+## A1: fill the think bubble (0..1 of the wait threshold); a pulse when it reaches "now".
+func _set_think(frac: float) -> void:
+	if _think == null:
+		return
+	_think.visible = true
+	var ready := frac >= 1.0
+	var lit := int(clampf(frac, 0.0, 1.0) * 3.0)
+	for i in range(_think_dots.size()):
+		(_think_dots[i] as ColorRect).color = Color("2f7d3a") if ready else (Color("14131c") if i < lit else Color("c9c4b0"))
+	(_think.get_node("Now") as Label).visible = ready
+	if ready and not _think_ready:
+		Juice.punch(_think, 0.15)
+	_think_ready = ready
 
 func _wait_label_text(ready: bool) -> String:
 	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
@@ -791,6 +843,10 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		wait_ms = max(wait_ms, GameState.wait_threshold_ms())
 		_wait_item_ready = false
 	_last_wait_ms = wait_ms
+	if wait_ms < GameState.wait_threshold_ms() and _think != null:
+		# A1: pressing before the bubble fills cuts the student's thinking off.
+		Juice.flash(_think, Color(1.0, 0.45, 0.4))
+		Juice.float_text(_layer, "cut off", _think.position + Vector2(0, _think.size.y), Color("ec8a6e"), UiText.fs(14))
 	var is_free := free_text != ""
 	_last_input_mode = "free_text" if is_free else "menu"
 	_last_free_text = free_text
@@ -1066,135 +1122,92 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	if _coach != null:
 		_coach.visible = false
 
-	var overlay := Control.new()
-	overlay.name = "SessionComplete"
-	_layer.add_child(overlay)
+	var parts := _result_parts()
+	var weak := ResultsCard.weakest(parts)
+	var rank := str(run_record.get("rank", "-"))
+	var card := ResultsCard.build(_layer, {
+		"title": "Session complete with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
+		"rank": rank,
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"parts": parts,
+		"rewards": {"badge": badge_id, "level_up": bool(reward.get("level_up", false)),
+			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
+		"moments": _pivotal_moments(),
+		"next": str(NEXT_TARGET[weak]),
+		"buttons": [{"label": "Return to room", "primary": true,
+			"cb": func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")}],
+	})
+	card.name = "SessionComplete"
+	for b in card.find_children("*", "Button", true, false):
+		_continue_btn = b
 
-	var panel := Panel.new()
-	panel.position = Vector2(34, 74)
-	panel.size = Vector2(436, 190)
-	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true, str(run_record.get("rank", "-")))
+## Teaching-language next target for the weakest part (understanding, pace, bond).
+const NEXT_TARGET := [
+	"Ask for their thinking first (Elicit), then build on what they said (Extend) before you explain anything.",
+	"Read the Need line and choose the move it points to: fewer detours, fewer turns.",
+	"Connect to something from their world, and keep the bar high with warmth.",
+]
 
-	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 88), UiText.S_DISPLAY - 1, Color(0.97, 0.95, 0.86), Vector2(300, 16))
-	var score_lbl := _overlay_label(overlay, "", Vector2(48, 108), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
-	CompletionFx.count_up(score_lbl, "Score {score}   |   Level %d" % GameState.teacher_level, int(run_record.get("score", 0)))
-
-	var reward_line := "Badge %s" % badge_id.to_upper()
-	if bool(reward.get("level_up", false)):
-		reward_line += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
-	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
-	if item_text != "":
-		reward_line += " | +items"
-	_overlay_label(overlay, reward_line, Vector2(48, 122), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
-	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 136), UiText.S_CAPTION, Color(0.72, 0.82, 0.96), Vector2(300, 12))
-
-	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
-	rows = rows.slice(0, 3)
-	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 152), UiText.S_CAPTION, Color(0.72, 0.78, 0.88), Vector2(404, 12))
-	var y := 168
-	for r in rows:
-		_overlay_label(overlay, str(r["label"]), Vector2(50, y), UiText.S_CAPTION, Color(0.86, 0.90, 0.96), Vector2(132, 11))
-		var bg := ColorRect.new()
-		bg.position = Vector2(188, y + 2)
-		bg.size = Vector2(170, 8)
-		bg.color = Color(0, 0, 0, 0.5)
-		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		overlay.add_child(bg)
-		var fill := ColorRect.new()
-		fill.position = bg.position
-		var p: float = r["prob"]
-		fill.size = Vector2(maxf(2.0, 170.0 * p), 8)
-		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
-		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		overlay.add_child(fill)
-		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(364, y), UiText.S_CAPTION, Color(0.70, 0.76, 0.84), Vector2(40, 11))
-		y += 15
-	if rows.is_empty():
-		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 168), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(390, 22))
-	else:
-		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 214), UiText.S_CAPTION, Color(0.66, 0.90, 0.78), Vector2(260, 12))
-		_overlay_label(overlay, _short_practice_target(), Vector2(48, 228), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(260, 28))
-
-	_continue_btn = Button.new()
-	_continue_btn.text = "Return to room"
-	_continue_btn.position = Vector2(320, 224)
-	_continue_btn.size = Vector2(126, 30)
-	_continue_btn.add_theme_font_size_override("font_size", 7)
-	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
-	overlay.add_child(_continue_btn)
-	PixelUi.scale_tree(overlay, UI_SCALE)
-	_continue_btn.grab_focus()
-
-func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.position = pos
-	l.size = size
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.clip_text = true
-	l.horizontal_alignment = align
-	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
-	l.add_theme_color_override("font_color", color)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(l)
-	return l
-
-func _score_driver_text(run_record: Dictionary) -> String:
+## The three score parts the run score is made of, each with the decision behind it.
+func _result_parts() -> Array:
+	var landed := 0
+	for m in _move_history:
+		if bool(m.get("targets", false)):
+			landed += 1
 	var u := int(round(understanding * 100.0))
 	var pace := maxi(0, 42 - _turns * 4)
 	var bond_pts := int(round(GameState.bond(persona_id) * 30.0))
-	return "Score: understand %d + pace %d + bond %d = %03d" % [
-		u,
-		pace,
-		bond_pts,
-		int(run_record.get("score", 0)),
+	return [
+		{"label": "Understanding", "frac": u / 100.0, "value": "%d" % u,
+			"cause": "%d of %d moves landed on their path" % [landed, _move_history.size()]},
+		{"label": "Pace", "frac": pace / 42.0, "value": "%d" % pace,
+			"cause": "reached it in %d turn%s" % [_turns, "" if _turns == 1 else "s"]},
+		{"label": "Bond", "frac": bond_pts / 30.0, "value": "%d" % bond_pts,
+			"cause": "trust grew from connecting and warm pressing" if bond_pts >= 10 else "little warmth or connection yet"},
 	]
 
-func _move_fingerprint_text() -> String:
-	if _move_history.is_empty():
-		return "Move fingerprint: no scored moves yet"
-	var counts := {}
-	for m in _move_history:
-		var tag := str(m.get("tag", ""))
-		if tag == "":
-			continue
-		counts[tag] = int(counts.get(tag, 0)) + 1
-	var parts: Array = []
-	var short := {
-		"elicit": "E",
-		"extend": "X",
-		"revoice": "R",
-		"wait": "W",
-		"redirect": "D",
-		"praise": "P",
-		"tell": "T",
-		"connect": "C",
-	}
-	for tag in ["elicit", "extend", "revoice", "wait", "redirect", "praise", "tell", "connect"]:
-		if int(counts.get(tag, 0)) > 0:
-			parts.append("%s%d" % [str(short.get(tag, tag.substr(0, 1).to_upper())), int(counts[tag])])
-	if parts.is_empty():
-		return "Moves: no scored moves yet"
-	return "Moves: " + " ".join(parts)
+## A4: up to three turning points from this encounter: the first move that landed, the
+## first early/missed move, and the deciding move. Each reads: move -> reaction -> why.
+func _pivotal_moments() -> Array:
+	var picks: Array = []
+	var first_hit := -1
+	var first_off := -1
+	for i in range(_move_history.size()):
+		var fit := str(_move_history[i].get("fit", ""))
+		if first_hit < 0 and fit == "advance":
+			first_hit = i
+		if first_off < 0 and fit in ["early", "miss"]:
+			first_off = i
+	for i in [first_hit, first_off, _move_history.size() - 1]:
+		if i >= 0 and not i in picks:
+			picks.append(i)
+	picks.sort()
+	var out: Array = []
+	for i in picks:
+		out.append(_moment_line(_move_history[i]))
+	return out
 
-func _short_practice_target() -> String:
-	var target := Game.evidence_practice_target(false)
-	if target.begins_with("Practice: "):
-		target = target.substr(10)
-	var re := RegEx.new()
-	re.compile(" \\d+% -> ")
-	return "Practice: " + re.sub(target, " -> ")
-
-func _show_continue_button() -> void:
-	_continue_btn = Button.new()
-	_continue_btn.text = "Return to room"
-	_continue_btn.position = Vector2(326, 176)
-	_continue_btn.size = Vector2(126, 24)
-	_continue_btn.add_theme_font_size_override("font_size", 7)
-	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
-	_layer.add_child(_continue_btn)
-	_continue_btn.grab_focus()
+func _moment_line(m: Dictionary) -> Dictionary:
+	var fit := str(m.get("fit", ""))
+	var tag := str(m.get("tag", ""))
+	var said := str(m.get("reaction", ""))
+	if said.length() > 56:
+		said = said.substr(0, 54).strip_edges() + "…"
+	var why := ""
+	var kind := "neutral"
+	match fit:
+		"advance":
+			kind = "right"
+			why = "it met them where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
+		"early":
+			kind = "early"
+			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "right idea, too early"
+		"miss":
+			kind = "wrong"
+			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it did not answer what they needed"
+		_:
+			why = "it kept the conversation open"
+	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tag.capitalize(), said, why]}
 
 func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 	if badge_id == "":

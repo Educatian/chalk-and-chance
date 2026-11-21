@@ -84,7 +84,7 @@ static func run(host: Node) -> Array:
 	if over._overlay == null:
 		issues.append("Overworld debrief did not open")
 	else:
-		issues.append_array(ProductAuditSupport.assert_text_issues("Overworld debrief", over._overlay, ["DEBRIEF", "Practice:", "Research edge:", "Evidence:"]))
+		issues.append_array(ProductAuditSupport.assert_text_issues("Overworld debrief", over._overlay, ["period review", "Objectives", "Attention", "Reach", "Moments that decided it", "Next time", "Talk it through"]))
 	var trace_issue := ProductAuditSupport.overworld_trace_issue()
 	if trace_issue != "":
 		issues.append(trace_issue)

@@ -6,6 +6,7 @@ const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 const UiText = preload("res://scripts/UiText.gd")
+const ResultsCard = preload("res://scripts/ResultsCard.gd")
 var fails := 0
 
 func _ok(label: String, cond: bool) -> void:
@@ -30,8 +31,14 @@ func _ready() -> void:
 	_check_beat_order()
 	await _check_juice()
 	_check_text_scale()
+	_check_results_grade()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
+
+## Results card: weakest part, and C/D never get a celebration colour.
+func _check_results_grade() -> void:
+	_ok("weakest part is the lowest share", ResultsCard.weakest([{"frac": 0.9}, {"frac": 0.2}, {"frac": 0.5}]) == 1)
+	_ok("C/D grade colour is calm, not alarm red", ResultsCard.grade_color("D").r < 0.85 and ResultsCard.grade_color("D") == ResultsCard.grade_color("C"))
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

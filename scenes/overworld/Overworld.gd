@@ -10,6 +10,7 @@ const UiText = preload("res://scripts/UiText.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
+const ResultsCard = preload("res://scripts/ResultsCard.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
 # Student 1.35 tiles ~= 54px (~10% of screen height); teacher 1.7 tiles ~= 68px. This is
@@ -142,7 +143,8 @@ var _period_left := PERIOD_SECONDS
 var _next_interrupt := 9.0
 var _lesson_over := false
 var _overlay: Control = null
-var _pending_debrief := ""   # scored summary, shown after the reflection step
+var _pending_card := {}   # results card data, shown after the reflection step
+var _back_secs := 0.0      # time spent facing the board (A5: the cause behind attention)
 
 func _ready() -> void:
 	var cfg := _load_scenario(Game.current_scenario_id)
@@ -432,6 +434,35 @@ func _dress_room(occupied: Dictionary) -> void:
 
 ## Pick the idle loop from the student's drift (presentation only; drift itself is
 ## computed above and is unchanged). A faced student raises a hand: "you can talk to me".
+## A3: proximity and withitness made visible. A small green "calm" when standing near a
+## student drops them a drift band (never while they are already settled, so parking
+## beside one student earns nothing), and a "?" over students behind you while you face
+## the board.
+func _room_feedback(info: Dictionary, ot: float, near: bool, unseen: bool) -> void:
+	var band := 0 if ot < 35.0 else (1 if ot < 65.0 else 2)
+	var node: Node2D = info.get("node", null)
+	var fill: ColorRect = info.get("fill", null)
+	if node == null or fill == null:
+		return
+	if near and band < int(info.get("band", band)):
+		Juice.float_text(node, "calm", fill.position + Vector2(-2, -16), Color("7fe08a"), UiText.fs(12))
+	info["band"] = band
+	var q: Label = info.get("q", null)
+	if q == null and unseen:
+		q = Label.new()
+		q.text = "?"
+		q.position = fill.position + Vector2(8, -22)
+		q.z_index = 9
+		q.add_theme_font_size_override("font_size", UiText.fs(14))
+		q.add_theme_color_override("font_color", Color("ffd34e"))
+		q.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		q.add_theme_constant_override("outline_size", 4)
+		q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		node.add_child(q)
+		info["q"] = q
+	if q != null:
+		q.visible = unseen
+
 func _set_student_state(info: Dictionary, faced: bool) -> void:
 	var a = info.get("anim", null)
 	if not (a is AnimatedSprite2D) or not a.sprite_frames.has_animation("focused"):
@@ -924,6 +955,8 @@ func _process(delta: float) -> void:
 	if not _npcs.is_empty():
 		var ptile: Vector2i = _player.current_tile()
 		var facing_up: bool = _player.facing == Vector2i(0, -1)   # writing at the board, back to class
+		if facing_up:
+			_back_secs += delta
 
 		var total := 0.0
 		var worst := 0.0
@@ -948,6 +981,7 @@ func _process(delta: float) -> void:
 					_disrupt_label.text = str(_disruptions)
 				ot = 65.0                                # brief cooldown after a flare-up
 			info["offtask"] = ot
+			_room_feedback(info, ot, dist <= PROX_TILES, facing_up and st.y > ptile.y and dist > PROX_TILES)
 			var fill: ColorRect = info.get("fill", null)
 			if fill != null:
 				fill.size = Vector2(24.0 * ot / 100.0, 4)
@@ -1051,26 +1085,18 @@ func _end_lesson() -> void:
 	for st in _npcs.keys():
 		total += _npcs[st].get("offtask", 0.0)
 	var attention := 100.0 - total / float(max(1, _npcs.size()))
-	var reward_lines := ""
 	var objective_tags: Array = []
-	var miss_tips: Array = []
 	var stars := 0
 	for o in _objectives:
 		var ok := _objective_met(o, attention)
 		if ok:
 			stars += 1
 		objective_tags.append("%s %s" % ["OK" if ok else "MISS", _objective_short_label(o)])
-		if not ok:
-			miss_tips.append(_objective_tip(o, attention))
+	var reward_info := {}
 	if stars == _objectives.size() and stars > 0 and _badge != "":
 		var reward := GameState.award_badge(_badge)
+		reward_info = reward
 		Sfx.play("badge")
-		reward_lines += "Reward: Badge %s" % _badge.to_upper()
-		if bool(reward.get("level_up", false)):
-			reward_lines += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
-		if _items_awarded_text(reward.get("items_awarded", {})) != "":
-			reward_lines += " | +items"
-		reward_lines += "\n"
 		var moves: Array = Game.lesson.get("moves", [])
 		GameState.record_leaderboard({
 			"scenario_id": str(Game.current_scenario_id),
@@ -1083,17 +1109,7 @@ func _end_lesson() -> void:
 			"trace": Game.evidence_trace_from_moves(moves),
 			"trace_steps": Game.evidence_trace_steps_from_moves(moves),
 		})
-	var next_line := _debrief_note(attention)
-	if not miss_tips.is_empty():
-		next_line = "Next: %s." % str(miss_tips[0]).capitalize()
-	var summary := "%s\nDEBRIEF   Attention %d%%   Composure %d%%   Disruptions %d\nEngaged %d/%d   Objectives %d/%d\n%sObjectives: %s\nPractice: %s\n%s\n%s" % [
-		_scenario_title, int(attention), int(_composure), _disruptions,
-		_engaged_count(), _npcs.size(), stars, _objectives.size(),
-		reward_lines, " | ".join(objective_tags), Game.evidence_practice_target(false).trim_prefix("Practice: "),
-		Game.scenario_edge_label(_scenario_cfg), _compact_evidence_fingerprint(attention)]
-	if _attempt > 1:
-		summary += "\nReplay #%d: the room drifts faster each attempt." % _attempt
-	_pending_debrief = summary
+	_pending_card = _card_data(attention, stars, reward_info)
 	Telemetry.log_event({
 		"event": "classroom_resolve", "scenario_id": str(Game.current_scenario_id),
 		"title": _scenario_title, "attempt": _attempt,
@@ -1128,11 +1144,101 @@ func _on_reflect(opt: Dictionary) -> void:
 		"prompt": "what_stays_with_you", "choice": str(opt.get("_reflect", "")),
 	})
 	_close_overlay()
-	_show_overlay("REVIEW 2/2\n\n" + _pending_debrief, [
-		{"label": "Talk it through with Coach Vee", "_action": "coach"},
-		{"label": "Replay this lesson", "_action": "replay"},
-		{"label": "Choose another mission", "_action": "hub"},
-	])
+	_show_results_card()
+
+## REVIEW: the shared results card (grade, verdict, three parts with causes, rewards,
+## pivotal moments, one next target) on the same overlay layer as the reflection step.
+func _show_results_card() -> void:
+	input_locked = true
+	# Own canvas layer: the card is taller than the room and must sit over the HUD bands.
+	var cl := CanvasLayer.new()
+	cl.layer = 20
+	add_child(cl)
+	_overlay = Control.new()
+	_overlay.size = DESIGN
+	cl.add_child(_overlay)
+	_overlay.tree_exited.connect(cl.queue_free)
+	UiText.keep_centered(_overlay)
+	var data := _pending_card.duplicate()
+	data["buttons"] = [
+		{"label": "Choose another mission", "cb": _go_hub},
+		{"label": "Replay this lesson", "cb": _restart_lesson},
+		{"label": "Talk it through", "cb": _open_coach, "primary": true},
+	]
+	ResultsCard.build(_overlay, data)
+
+## Teaching-language next step for each objective metric.
+const NEXT_FOR := {
+	"attention_min": "Circulate: stand near drifting students and face the room while you talk.",
+	"disruptions_max": "Handle interruptions with the smallest move that works (a look, moving closer) before stopping the class.",
+	"composure_min": "Keep corrections small and private; public escalations cost you composure.",
+	"engaged_min": "Hold a short conference with every student, not only the ones who call out.",
+	"waittime_min": "After you ask, wait three seconds before your next move.",
+	"connect_min": "Notice a student's interest first, then bridge it to the lesson (Connect twice).",
+}
+
+func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
+	var n := maxi(1, _objectives.size())
+	var missed: Array = []
+	for o in _objectives:
+		if not _objective_met(o, attention):
+			missed.append(o)
+	var miss_names: Array = missed.map(func(o): return _objective_short_label(o))
+	var reached := _engaged_count()
+	var back := int(round(_back_secs))
+	var parts := [
+		{"label": "Objectives", "frac": float(stars) / n, "value": "%d/%d" % [stars, _objectives.size()],
+			"cause": "all cleared" if missed.is_empty() else "missed: " + ", ".join(miss_names)},
+		{"label": "Attention", "frac": attention / 100.0, "value": "%d%%" % int(attention),
+			"cause": ("%ds with your back to the room" % back) if back >= 10 else "you kept facing and circulating the room"},
+		{"label": "Reach", "frac": float(reached) / maxi(1, _npcs.size()), "value": "%d/%d" % [reached, _npcs.size()],
+			"cause": "you spoke with %d of %d students" % [reached, _npcs.size()]},
+	]
+	var score := stars * 80 + int(round(attention)) + int(round(_composure)) + reached * 10 - _disruptions * 12
+	var rank := GameState._rank_for_score(maxi(0, score))
+	var weak := ResultsCard.weakest(parts)
+	var title := "%s  ·  period review" % _scenario_title
+	if _attempt > 1:
+		title += "  ·  replay #%d (the room drifts faster each attempt)" % _attempt
+	var next := "Stretch: reach every student and keep attention above 90%."
+	if not missed.is_empty():
+		next = str(NEXT_FOR.get(str(missed[0].get("metric", "")), "Try again with this objective in mind."))
+	return {
+		"title": title,
+		"rank": rank,
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"parts": parts,
+		"rewards": {"badge": _badge if not reward.is_empty() else "", "level_up": bool(reward.get("level_up", false)),
+			"level_after": int(reward.get("level_after", 0)), "items": reward.get("items_awarded", {}),
+			"none": "Clear every objective to earn the %s badge." % _badge.capitalize() if _badge != "" else "No badge in this mission."},
+		"moments": _classroom_moments(back),
+		"next": next,
+	}
+
+## A4 for the classroom: first move that landed, first that missed, and the room itself.
+func _classroom_moments(back: int) -> Array:
+	var out: Array = []
+	var moves: Array = Game.lesson.get("moves", [])
+	var hit := -1
+	var off := -1
+	for i in range(moves.size()):
+		if hit < 0 and bool(moves[i].get("targets", false)):
+			hit = i
+		if off < 0 and not bool(moves[i].get("targets", false)):
+			off = i
+	if moves.is_empty():
+		out.append({"kind": "wrong", "text": "No conferences  ->  no student's thinking was heard  ->  talk to at least one student."})
+	if hit >= 0:
+		out.append({"kind": "right", "text": "Move %d  %s  ->  it landed on what the student needed  ->  their understanding moved." % [hit + 1, str(moves[hit].get("tag", "")).capitalize()]})
+	if off >= 0:
+		var why := "it came before three seconds of think time" if not bool(moves[off].get("wait_ok", false)) else "it did not answer what they needed yet"
+		out.append({"kind": "early" if not bool(moves[off].get("wait_ok", false)) else "wrong",
+			"text": "Move %d  %s  ->  it did not land  ->  %s." % [off + 1, str(moves[off].get("tag", "")).capitalize(), why]})
+	if back >= 10:
+		out.append({"kind": "early", "text": "%ds facing the board  ->  drift rose about twice as fast  ->  scan the room as you write." % back})
+	elif _disruptions > 0:
+		out.append({"kind": "wrong", "text": "%d flare-up%s  ->  a drifting student boiled over  ->  get there before the bar turns red." % [_disruptions, "" if _disruptions == 1 else "s"]})
+	return out
 
 func _reflection_options(attention: float) -> Array:
 	var opts: Array = []
@@ -1202,6 +1308,16 @@ func _objective_met(o: Dictionary, attention: float) -> bool:
 			return _connect_count() >= int(target)
 	return false
 
+## A2: the teaching skill behind each objective metric.
+const OBJ_SKILL := {
+	"attention_min": "Withitness",
+	"disruptions_max": "Least-intrusive management",
+	"composure_min": "Composure",
+	"engaged_min": "Equity of voice",
+	"waittime_min": "Wait time",
+	"connect_min": "Funds of knowledge",
+}
+
 func _objectives_status(attention: float) -> String:
 	if _objectives.is_empty():
 		return ""
@@ -1225,10 +1341,8 @@ func _objectives_status(attention: float) -> String:
 				current = _connect_count()
 		var ok := _objective_met(o, attention)
 		var mark := "OK" if ok else "  "
-		var desc := str(o.get("label", metric))
-		if desc.length() > 32:
-			desc = desc.substr(0, 29) + "..."
-		lines.append("[%s] %s (%d/%d)" % [mark, desc, current, target])
+		# A2: each objective names the teaching skill it practises, then the rule and count.
+		lines.append("[%s] %s  %d/%d\n      %s" % [mark, str(OBJ_SKILL.get(metric, "Practice")), current, target, str(o.get("label", metric))])
 	return "\n".join(lines)
 
 func _objectives_met_count(attention: float) -> int:
@@ -1237,31 +1351,6 @@ func _objectives_met_count(attention: float) -> int:
 		if _objective_met(o, attention):
 			n += 1
 	return n
-
-func _debrief_note(attention: float) -> String:
-	if _composure <= 0.0:
-		return "You ran out of composure. Triage interruptions with the least-intrusive option and keep circulating."
-	if attention >= 75.0 and _disruptions <= 1:
-		return "Strong withitness and proximity. The room stayed with you."
-	if attention >= 55.0:
-		return "Decent control. Circulate more and turn your back to the class less."
-	return "The room drifted. Move among the desks and scan often; handle interruptions briefly."
-
-func _objective_tip(o: Dictionary, attention: float) -> String:
-	match str(o.get("metric", "")):
-		"attention_min":
-			return "circulate and face the room more"
-		"disruptions_max":
-			return "choose least-intrusive interruption responses"
-		"composure_min":
-			return "avoid dead time and public escalations"
-		"engaged_min":
-			return "talk to every student: %d/%d reached" % [_engaged_count(), int(o.get("target", 0))]
-		"waittime_min":
-			return "use Wait after asking: %d/%d" % [_waittime_count(), int(o.get("target", 0))]
-		"connect_min":
-			return "use Connect twice: notice, then bridge"
-	return "try again with this goal in mind"
 
 func _objective_short_label(o: Dictionary) -> String:
 	match str(o.get("metric", "")):
@@ -1278,59 +1367,6 @@ func _objective_short_label(o: Dictionary) -> String:
 		"connect_min":
 			return "asset connect"
 	return str(o.get("id", "objective"))
-
-func _evidence_fingerprint(attention: float) -> String:
-	var moves: Array = Game.lesson.get("moves", [])
-	var targeted := 0
-	var waits := 0
-	var connects := 0
-	var tells := 0
-	var redirects := 0
-	for m in moves:
-		if bool(m.get("targets", false)):
-			targeted += 1
-		if bool(m.get("wait_ok", false)):
-			waits += 1
-		match str(m.get("tag", "")):
-			"connect":
-				connects += 1
-			"tell":
-				tells += 1
-			"redirect":
-				redirects += 1
-	var equity := "%d/%d learners reached" % [_engaged_count(), _npcs.size()]
-	var trace := "Evidence fingerprint: attention %d%%, %s, target-fit moves %d/%d, wait-time evidence %d" % [
-		int(attention), equity, targeted, moves.size(), waits]
-	if connects > 0:
-		trace += ", asset connects %d" % connects
-	if redirects > 0:
-		trace += ", least-intrusive redirects %d" % redirects
-	if tells > 0:
-		trace += ", tell/takeover attempts %d" % tells
-	trace += "."
-	return trace
-
-func _compact_evidence_fingerprint(attention: float) -> String:
-	var moves: Array = Game.lesson.get("moves", [])
-	var targeted := 0
-	var waits := 0
-	for m in moves:
-		if m.get("targets", false):
-			targeted += 1
-		if m.get("wait_ok", false):
-			waits += 1
-	return "Evidence: attention %d%%, reached %d/%d, target-fit %d/%d, wait-time %d." % [
-		int(attention), _engaged_count(), _npcs.size(), targeted, moves.size(), waits]
-
-func _items_awarded_text(items) -> String:
-	if typeof(items) != TYPE_DICTIONARY:
-		return ""
-	var parts: Array = []
-	for id in items.keys():
-		var amt := int(items[id])
-		if amt > 0:
-			parts.append("%s x%d" % [Items.short_name_for(str(id)), amt])
-	return ", ".join(parts)
 
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true

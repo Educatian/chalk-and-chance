@@ -64,14 +64,32 @@ func _build() -> void:
 	xp_txt.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92))
 	add_child(xp_txt)
 
+	var earned_n := 0
+	for b0 in ["routine", "echo", "balance", "mirror", "insight"]:
+		if GameState.has_badge(b0):
+			earned_n += 1
 	var bcap := Label.new()
-	bcap.text = "Badges"
+	bcap.text = "Badges %d/5" % earned_n
 	bcap.position = Vector2(42, 98)
 	bcap.add_theme_font_size_override("font_size", UiText.fs(12))
 	bcap.add_theme_color_override("font_color", Color(0.70, 0.78, 0.88))
 	add_child(bcap)
-	var bx := 100.0
+	var bx := 128.0
 	for bid in ["routine", "echo", "balance", "mirror", "insight"]:
+		# One slot per badge, spaced apart: earned = full colour in a gold ring,
+		# not yet = an empty slate slot holding a faint grey silhouette.
+		var got := GameState.has_badge(bid)
+		var slot := Panel.new()
+		slot.position = Vector2(bx - 3, 91)
+		slot.size = Vector2(34, 34)
+		var ssb := StyleBoxFlat.new()
+		ssb.bg_color = Color(0.10, 0.12, 0.20) if got else Color(0.07, 0.08, 0.13)
+		ssb.border_color = Color("ffd34e") if got else Color(0.25, 0.30, 0.40)
+		ssb.set_border_width_all(2)
+		ssb.set_corner_radius_all(17)
+		slot.add_theme_stylebox_override("panel", ssb)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(slot)
 		var icon := TextureRect.new()
 		icon.texture = Art.tex("res://assets/ui/badge_%s.png" % bid)
 		icon.position = Vector2(bx, 94)
@@ -79,12 +97,12 @@ func _build() -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var got := GameState.has_badge(bid)
-		icon.modulate = Color.WHITE if got else Color(1, 1, 1, 0.28)
+		icon.modulate = Color.WHITE if got else Color(0.42, 0.46, 0.55, 0.45)
 		icon.tooltip_text = "%s badge: %s%s" % [_badge_name(bid), _badge_desc(bid), "" if got else "  (not earned yet)"]
 		icon.mouse_filter = Control.MOUSE_FILTER_PASS
 		add_child(icon)
-		bx += 34.0
+		icon.size = Vector2(28, 28)
+		bx += 46.0
 
 	var commands := [
 		["Evidence", _open_evidence_journal, "Your evidence journal: skill estimates from the moves you used."],
@@ -122,26 +140,25 @@ func _build() -> void:
 	# The coach recommendation as one highlighted callout.
 	var callout := Panel.new()
 	callout.position = Vector2(42, 134)
-	callout.size = Vector2(vp.x - 84, 44)
+	callout.size = Vector2(vp.x - 84, 54)
 	add_child(callout)
 	var accent := ColorRect.new()
 	accent.position = Vector2(48, 140)
-	accent.size = Vector2(4, 32)
+	accent.size = Vector2(4, 42)
 	accent.color = Color("ffd34e")
 	add_child(accent)
 	var coach := Label.new()
 	coach.text = "Coach Vee:  " + Game.practice_recommendation()
 	coach.position = Vector2(62, 140)
-	coach.size = Vector2(vp.x - 116, 32)
+	coach.size = Vector2(vp.x - 116, 42)
 	coach.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	coach.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	coach.clip_text = true
+	coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	coach.add_theme_font_size_override("font_size", UiText.fs(14))
 	coach.add_theme_color_override("font_color", Color(0.80, 0.95, 0.84))
 	coach.tooltip_text = Game.practice_recommendation()
 	coach.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(coach)
-	coach.size = Vector2(vp.x - 116, 32)   # after the font resolves, or the label clamps wider
+	coach.size = Vector2(vp.x - 116, 42)   # after the font resolves, or the label clamps wider
 
 	var open_ids: Array = []
 	var locked_ids: Array = []
@@ -154,7 +171,7 @@ func _build() -> void:
 			open_ids.append(sid)
 	var ordered_ids := open_ids + locked_ids
 
-	var list_top := 188.0
+	var list_top := 198.0
 	var scroll := ScrollContainer.new()
 	scroll.follow_focus = true
 	scroll.position = Vector2(42, list_top)
@@ -489,8 +506,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 
 	var story := Label.new()
 	story.text = str(cfg.get("story_hook", ""))
-	story.clip_text = true
-	story.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	story.add_theme_font_size_override("font_size", UiText.fs(14))
 	story.add_theme_color_override("font_color", Color(0.88, 0.88, 0.84))
 	story.tooltip_text = story.text
@@ -499,8 +515,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 
 	var focus := Label.new()
 	focus.text = _mission_focus(cfg)
-	focus.clip_text = true
-	focus.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	focus.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	focus.add_theme_font_size_override("font_size", UiText.fs(12))
 	focus.add_theme_color_override("font_color", Color(0.66, 0.90, 0.78))
 	info.add_child(focus)
