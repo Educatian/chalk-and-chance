@@ -86,8 +86,8 @@
     },
     "diego_ell": {
       "target_label": "Wait and revoice tenths versus hundredths",
-      "opening_line": "I think 0.45, because forty-five. But tenths and hundredths... they are different, no?",
-      "win_line": "So 0.5 is five tenths. Same like fifty hundredths. And fifty is more than forty-five!",
+      "opening_line": "Forty-five is more than five, so 0.45? But the places are not the same. Tenths, hundredths... wait.",
+      "win_line": "0.5 is five tenths. That is fifty hundredths. Fifty is more than forty-five, so 0.5 is bigger.",
       "win_moves": [
         "wait",
         "revoice"

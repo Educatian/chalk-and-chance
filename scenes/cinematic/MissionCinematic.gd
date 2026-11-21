@@ -291,7 +291,7 @@ func _next_beat() -> void:
 		return
 	var beat: Dictionary = _beats[_beat]
 	var who := str(beat.get("speaker", "narrator"))
-	var line := str(beat.get("text", ""))
+	var line := Narrative.line_text(beat, _cfg)
 	if who == "narrator":
 		_show_caption(line)
 		return

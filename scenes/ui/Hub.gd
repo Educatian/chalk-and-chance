@@ -961,6 +961,8 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 
 	var label := Label.new()
 	label.text = str(row.get("label", row.get("skill", "")))
+	label.tooltip_text = str(SKILL_GLOSS.get(str(row.get("skill", "")), ""))
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
 	label.position = Vector2(116, y)
 	label.size = Vector2(166, 24)
 	label.clip_text = true
@@ -1001,6 +1003,12 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	cite.add_theme_color_override("font_color", Color(0.68, 0.88, 0.96))
 	overlay.add_child(cite)
 
+## Plain-words gloss for the teaching terms behind the friendlier skill names.
+const SKILL_GLOSS := {
+	"behavior_mgmt": "Least-intrusive management: use the smallest move that stops it (a look, moving closer) before a word, and a word before calling it out.",
+	"funds_of_knowledge": "Funds of knowledge: what a student already knows from home, family and their own interests, used as a way into the lesson.",
+}
+
 func _evidence_color(pct: int, n: int) -> Color:
 	if n <= 0:
 		return Color(0.50, 0.56, 0.66)
@@ -1031,9 +1039,9 @@ func _short_anchor(anchor: String) -> String:
 	if a.find("Rowe") != -1:
 		return "Rowe 1986"
 	if a.find("Simonsen") != -1:
-		return "Simonsen et al. 2008"
+		return "least-intrusive, Simonsen 2008"   # the term stays where players meet it
 	if a.find("Moll") != -1:
-		return "Moll & Gonzalez; HLP 12"
+		return "funds of knowledge, Moll"
 	if a.find("Chapin") != -1 or a.find("O'Connor") != -1:
 		return "Chapin/O'Connor moves"
 	if a.find("Hattie") != -1:

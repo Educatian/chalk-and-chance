@@ -37,6 +37,7 @@ func _ready() -> void:
 	_check_retry_focus()
 	_check_ladder()
 	_check_encounter_grades()
+	_check_roster_safe_lines()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -116,6 +117,19 @@ func _check_encounter_grades() -> void:
 	_ok("saved encounter rank is raised from its score", recs[0]["rank"] == "S")
 	_ok("saved encounter rank is never lowered", recs[1]["rank"] == "B")
 	_ok("other modes are left as stored", recs[2]["rank"] == "C")
+
+## Story lines name students only if they are in this lesson's roster.
+func _check_roster_safe_lines() -> void:
+	var N = load("res://scripts/Narrative.gd")
+	var beat := {"text": "{talia_dominator} steered it.", "fallback": "One loud voice steered it."}
+	_ok("roster name is filled in", N.line_text(beat, {"roster": [{"id": "talia_dominator", "name": "Talia"}]}) == "Talia steered it.")
+	_ok("missing student falls back to the no-name line", N.line_text(beat, {"roster": [{"id": "sam_withdrawn", "name": "Sam"}]}) == "One loud voice steered it.")
+	var bad := 0
+	for c in (N._load().get("chapters", {}) as Dictionary).values():
+		for b in c.get("intro", []) + [c.get("outro_win", {}), c.get("outro_retry", {})]:
+			if str(b.get("text", "")).contains("{") and str(b.get("fallback", "")) == "":
+				bad += 1
+	_ok("every chapter line that names a student has a fallback", bad == 0)
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

@@ -11,7 +11,7 @@ Branch `Educatian/copy-pass`, from `2f97352`. This pass changes wording only. Me
 5. The lint is `_banned_copy_issues()` in `scenes/dev/ProductContentAudit.gd`. It fails with file and line on any of these: "Great job", "Let's dive", "dive in", "It's important to", "Remember,", "evidence-rich", "competency estimate", an em dash, "Not only", "In conclusion", "unlock your".
    - It scans `data/**/*.json`, skipping `_doc` lines and `judge_rubric.json`.
    - It scans string literals in `scenes/`, `scripts/` and `autoload/`, skipping `scenes/dev`, comments, `print`/`push_*` lines, `_classify_stub_text`, and a literal that is only a dash (the parser separator in `LessonImport`).
-   - It reports zero hits on the final text. A planted "Great job — dive in!" was caught three times.
+   - It reports zero hits on the final text. A planted "Great job â€” dive in!" was caught three times.
 
 **Counts:** 1,830 strings scanned and 544 rewritten. The other 1,286 were kept. Many of those are node names, move-button names, ids or numbers that the scanner can't tell from copy.
 
@@ -101,7 +101,7 @@ Branch `Educatian/copy-pass`, from `2f97352`. This pass changes wording only. Me
 | `scenes/encounter/Encounter.gd:1224` | Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s. | Coach Vee: you got to %s through something they already know. You never had to tell them. Badge: %s. |
 | `scenes/encounter/Encounter.gd:1229` | Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s. | Coach Vee: you were kind and you didn't lower the bar. They trusted you to hold it. Badge: %s. |
 | `scenes/encounter/Encounter.gd:1231` | Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s. | Coach Vee: they got there on their own. Solid. Get to know them a bit next time, it makes tomorrow easier. Badge: %s. |
-| `scenes/encounter/Encounter.gd:1259` | Session complete with %s  �  score %d | Done with %s  �  score %d |
+| `scenes/encounter/Encounter.gd:1259` | Session complete with %s  ·  score %d | Done with %s  ·  score %d |
 | `scenes/encounter/Encounter.gd:1265` | %s badge already earned on an earlier clear. | You already have the %s badge. |
 | `scenes/encounter/Encounter.gd:1280` | Read the Need line and choose the move it points to: fewer detours, fewer turns. | Read the Need line and pick the move it points to. You'll get there in fewer turns. |
 | `scenes/encounter/Encounter.gd:1281` | Connect to something from their world, and keep the bar high with warmth. | Hook it to something they care about. Stay warm and keep the bar high. |
@@ -250,7 +250,7 @@ Branch `Educatian/copy-pass`, from `2f97352`. This pass changes wording only. Me
 | `scenes/overworld/Overworld.gd:1418` | Notice a student's interest first, then bridge it to the lesson (Connect twice). | Find something a student cares about and tie it to the lesson. Use Connect twice. |
 | `scenes/overworld/Overworld.gd:1434` | you kept facing and circulating the room | you kept moving and kept facing them |
 | `scenes/overworld/Overworld.gd:1436` | you heard the thinking of %d of %d students | you heard %d of %d students explain their thinking |
-| `scenes/overworld/Overworld.gd:1444` |   �  replay #%d (the room drifts faster each attempt) |   �  replay #%d (they drift faster each time) |
+| `scenes/overworld/Overworld.gd:1444` |   ·  replay #%d (the room drifts faster each attempt) |   ·  replay #%d (they drift faster each time) |
 | `scenes/overworld/Overworld.gd:1445` | Stretch: reach every student and keep attention above 90%. | Want more? Hear from every student and keep attention over 90%. |
 | `scenes/overworld/Overworld.gd:1447` | Try again with this objective in mind. | Go again with this one in mind. |
 | `scenes/overworld/Overworld.gd:1447` | It leads your next try (+%d XP). | It goes first on your list next time (+%d XP). |
@@ -300,7 +300,7 @@ Branch `Educatian/copy-pass`, from `2f97352`. This pass changes wording only. Me
 | `scenes/ui/Hub.gd:874` | EVIDENCE JOURNAL | SKILL NOTEBOOK |
 | `scenes/ui/Hub.gd:882` | Live ECD model: each turn updates a competency estimate, evidence count, and uncertainty. | Every move you make nudges these bars. More moves, steadier numbers. |
 | `scenes/ui/Hub.gd:905` | session evidence model | from your play |
-| `scenes/ui/Hub.gd:910` | RECENT RUN EVIDENCE � %d saved run%s; open Board for details. | RECENT RUNS: %d saved run%s. Open Board for more. |
+| `scenes/ui/Hub.gd:910` | RECENT RUN EVIDENCE — %d saved run%s; open Board for details. | RECENT RUNS: %d saved run%s. Open Board for more. |
 | `scenes/ui/Hub.gd:928` | Save this session's teacher moves and simulated learner responses as Markdown. | Save what you said and what the students said back, as Markdown. |
 | `scenes/ui/Hub.gd:930` | Complete at least one dialogue turn first. | Talk to a student first. Nothing to save yet. |
 | `scenes/ui/Hub.gd:988` | %3d%%  ev %02d  unc %.2f | %3d%%  %02d moves  +-%.2f |
@@ -603,3 +603,20 @@ Branch `Educatian/copy-pass`, from `2f97352`. This pass changes wording only. Me
 | `data/narrative/chapters.json#chapters.science_force_motion.outro_win.text` | The results changed their minds, not you. Hollis asked to borrow your ramps. | Their own results changed their minds. Hollis asked to borrow your ramps. |
 | `data/narrative/chapters.json#chapters.gym_capstone.intro[4].text` | You've been rehearsing it all year. Order, care, reasoning. One student at a time. | You've been rehearsing this all year. One student at a time. |
 | `data/narrative/chapters.json#chapters.gym_capstone.intro[5].text` | Breathe. Choose. Go. | Breathe. Then pick one. |
+
+
+## Follow-up, decided by default (owner to confirm)
+
+- **Teaching terms kept where players meet them.** In the skill notebook, the Low-key redirects row cites "least-intrusive, Simonsen 2008" and the Asset connect row cites "funds of knowledge, Moll". Hovering either name gives a one-sentence plain gloss.
+- **Story lines are roster-safe.** Chapter lines that name a student now say `{persona_id}`, filled from the lesson's roster. If that student isn't in the roster, the line's no-name `fallback` is used. This covers chapter 3's retry line plus seven other lines. FeelCheck covers it.
+- **Diego rewritten as a capable student still acquiring English:** short accurate sentences, the odd Spanish-influenced structure, and maths as sharp as anyone's. No broken-English comedy. *Owner to read these:*
+
+| where | before | after |
+|---|---|---|
+| diego_ell opening | I... I know it, but I not sure how to say it in English. | I know the answer. I need a second to say it in English. |
+| diego_ell win | Oh! I show it with the picture first, then I say it. One fourth is bigger. | Let me draw it. See? Cut in four, the pieces are bigger than cut in eight. So one fourth is bigger. |
+| diego_ell connect | Ah, 'lo explico en espanol primero'... yes. I say it my way first, then I can tell you in English. Okay. That works. | In Spanish first? Okay. Un cuarto es más grande... One fourth is bigger. And I can tell you why. |
+| comparing decimals, Diego opening | I think 0.45, because forty-five. But tenths and hundredths... they are different, no? | Forty-five is more than five, so 0.45? But the places are not the same. Tenths, hundredths... wait. |
+| comparing decimals, Diego win | So 0.5 is five tenths. Same like fifty hundredths. And fifty is more than forty-five! | 0.5 is five tenths. That is fifty hundredths. Fifty is more than forty-five, so 0.5 is bigger. |
+
+- **Question for the owner, left as is:** should the instructor and report panels (Quality Report, TeacherSim Delta) be hidden from learner accounts?
