@@ -7,6 +7,7 @@ const Art = preload("res://scripts/Art.gd")
 const Seating = preload("res://scripts/Seating.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const UiText = preload("res://scripts/UiText.gd")
+const InputFeel = preload("res://scripts/InputFeel.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 # Character-to-environment ratio: TILE 40 with a 24x13 room fills the 960x540 viewport
 # while keeping the whole class visible (needed for the management/withitness layer).
@@ -1061,28 +1062,34 @@ func _show_overlay(text: String, options: Array) -> void:
 	dim.color = Color(0, 0, 0, 0.6)
 	_overlay.add_child(dim)
 
+	var btns: Array = options
+	if btns.is_empty():
+		btns = [{"label": "Continue", "_action": "hub"}]
+	# Size the panel to its text: a one-line interrupt gets a compact card, a long
+	# debrief gets the full height. Buttons stay bottom-anchored below the text.
 	var pw := 660.0
-	var ph := 360.0 + maxf(0.0, float(options.size() - 2)) * 40.0
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiText.style(lbl, UiText.BODY, Color(0.97, 0.96, 0.9))
+	lbl.size = Vector2(pw - 44, 10)
+	_overlay.add_child(lbl)
+	var text_h := float(lbl.get_line_count()) * float(lbl.get_line_height()) + 4.0
+	var buttons_h := float(btns.size()) * 40.0
+	var max_h := ROWS * TILE - 40.0
+	var ph := clampf(18.0 + text_h + 24.0 + buttons_h + 8.0, 180.0, max_h)
 	var px := (_overlay.size.x - pw) / 2.0
 	var py := (_overlay.size.y - ph) / 2.0
 	var panel := Panel.new()   # themed: rounded, bordered, drop shadow
 	panel.position = Vector2(px, py)
 	panel.size = Vector2(pw, ph)
 	_overlay.add_child(panel)
-
-	var btns: Array = options
-	if btns.is_empty():
-		btns = [{"label": "Continue", "_action": "hub"}]
-	# Buttons are bottom-anchored; the text fills the space above them (no overlap).
-	var by := py + ph - float(btns.size()) * 40.0 - 8.0
-
-	var lbl := Label.new()
-	lbl.text = text
+	_overlay.move_child(lbl, -1)
+	var by := py + ph - buttons_h - 8.0
 	lbl.position = Vector2(px + 22, py + 18)
-	lbl.size = Vector2(pw - 44, by - py - 48)
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UiText.style(lbl, UiText.BODY, Color(0.97, 0.96, 0.9))
-	_overlay.add_child(lbl)
+	lbl.size = Vector2(pw - 44, by - py - 30)
+	lbl.clip_text = true
+	Juice.pop_in(panel)
 
 	for i in range(btns.size()):
 		var opt: Dictionary = btns[i]
@@ -1129,6 +1136,39 @@ func _go_hub() -> void:
 		Narrative.go_hub_with_outro(_scenario_cfg, _lesson_won)
 	else:
 		SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
+
+## Tap or click a floor tile to walk there; tap a student to walk up and talk to them.
+## Uses the room's own transform, so it stays correct when the room is centred.
+func _unhandled_input(event: InputEvent) -> void:
+	if input_locked or _lesson_over or _player == null:
+		return
+	var pressed: bool = (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) \
+		or (event is InputEventScreenTouch and event.pressed)
+	if not pressed:
+		return
+	var local: Vector2 = get_global_transform_with_canvas().affine_inverse() * (event as InputEventFromWindow).position
+	var tile := Vector2i(floori(local.x / TILE), floori(local.y / TILE))
+	if tile.x < 0 or tile.y < 0 or tile.x >= COLS or tile.y >= ROWS:
+		return
+	var from: Vector2i = _player.current_tile()
+	if not npc_at(tile).is_empty():
+		# Walk to the nearest free side of the student, then face them and talk.
+		var best: Array = []
+		var face := Vector2i.ZERO
+		for d in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
+			var stand: Vector2i = tile + d
+			var p := InputFeel.grid_path(from, stand, is_walkable)
+			if not p.is_empty() and (best.is_empty() or p.size() < best.size()):
+				best = p
+				face = -d
+		if not best.is_empty():
+			_player.walk_path(best, face, true)
+			get_viewport().set_input_as_handled()
+		return
+	var path := InputFeel.grid_path(from, tile, is_walkable)
+	if not path.is_empty():
+		_player.walk_path(path)
+		get_viewport().set_input_as_handled()
 
 ## Esc / Backspace asks before leaving: one stray key press should not end a lesson.
 ## While the leave prompt is open, Esc again means "stay".

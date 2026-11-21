@@ -82,3 +82,30 @@ class MoveBuffer:
 	func clear() -> void:
 		_dir = Vector2i.ZERO
 		_at_ms = -100000
+
+
+## Shortest 4-way grid path from `start` to `goal` (both included), or [] if unreachable.
+## `walkable` is called with a Vector2i and must return bool; `goal` itself is checked too.
+## Used for tap/click-to-walk in the classroom. Bounded so a bad tap cannot stall a frame.
+static func grid_path(start: Vector2i, goal: Vector2i, walkable: Callable, max_nodes: int = 2000) -> Array:
+	if start == goal:
+		return [start]
+	if not walkable.call(goal):
+		return []
+	var prev := {start: start}
+	var queue: Array = [start]
+	var dirs := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	while not queue.is_empty() and prev.size() < max_nodes:
+		var cur: Vector2i = queue.pop_front()
+		for d in dirs:
+			var nxt: Vector2i = cur + d
+			if prev.has(nxt) or not walkable.call(nxt):
+				continue
+			prev[nxt] = cur
+			if nxt == goal:
+				var path: Array = [goal]
+				while path[0] != start:
+					path.push_front(prev[path[0]])
+				return path
+			queue.append(nxt)
+	return []

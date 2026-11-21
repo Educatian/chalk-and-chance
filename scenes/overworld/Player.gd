@@ -22,6 +22,21 @@ var _walking := false             # true while a held/buffered walk is in progre
 var _turn_hold := 0.0
 var _last_bump_ms := -10000
 var _bump_tween: Tween = null
+var _path: Array = []             # tap/click-to-walk: remaining tiles to step through
+var _path_face := Vector2i.ZERO   # after the path, face this way (toward a tapped student)
+var _path_talk := false           # ...and talk to them
+
+## Walk along a tile path (from InputFeel.grid_path); optionally face and talk at the end.
+func walk_path(path: Array, face: Vector2i = Vector2i.ZERO, talk: bool = false) -> void:
+	_path = path.duplicate()
+	if not _path.is_empty() and _path[0] == current_tile():
+		_path.pop_front()
+	_path_face = face
+	_path_talk = talk
+
+func cancel_path() -> void:
+	_path.clear()
+	_path_talk = false
 
 func _ready() -> void:
 	if overworld != null:
@@ -124,6 +139,27 @@ func _process(delta: float) -> void:
 		_go_idle()
 		return
 	var dir := _held_dir()
+	if dir != Vector2i.ZERO:
+		cancel_path()   # keys always win over a tap path
+	elif not _path.is_empty():
+		var nxt: Vector2i = _path.pop_front()
+		var step := nxt - current_tile()
+		if absi(step.x) + absi(step.y) == 1 and overworld != null and overworld.is_walkable(nxt):
+			facing = step
+			_walking = true
+			_start_walk()
+			_try_move(step)
+		else:
+			cancel_path()   # the room changed under the path; stop cleanly
+		return
+	elif _path_face != Vector2i.ZERO:
+		facing = _path_face
+		_path_face = Vector2i.ZERO
+		_go_idle()
+		if _path_talk:
+			_path_talk = false
+			_try_interact()
+		return
 	var buffered := _buffer.take(Time.get_ticks_msec())
 	if dir == Vector2i.ZERO and buffered != Vector2i.ZERO:
 		dir = buffered

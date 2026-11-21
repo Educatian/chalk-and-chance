@@ -24,6 +24,7 @@ func _ready() -> void:
 	_check_hotkeys()
 	_check_skip()
 	_check_move_buffer()
+	_check_grid_path()
 	await _check_hotkey_press()
 	_check_outcomes()
 	_check_beat_order()
@@ -160,3 +161,20 @@ func _check_text_scale() -> void:
 	_ok("Large text grows every themed label", large > normal)
 	GameState.settings["large_text"] = was
 	UiText.apply_text_scale()
+
+func _check_grid_path() -> void:
+	# 5x3 room with a wall at (2,0) and (2,1): the path must go around through row 2.
+	var walls := {Vector2i(2, 0): true, Vector2i(2, 1): true}
+	var walkable := func(t: Vector2i) -> bool:
+		return t.x >= 0 and t.y >= 0 and t.x < 5 and t.y < 3 and not walls.has(t)
+	var p := InputFeel.grid_path(Vector2i(0, 0), Vector2i(4, 0), walkable)
+	_ok("path goes around the wall", p.size() == 9 and not p.has(Vector2i(2, 0)) and p[0] == Vector2i(0, 0) and p[-1] == Vector2i(4, 0))
+	var steps_ok := true
+	for i in range(1, p.size()):
+		var d: Vector2i = p[i] - p[i - 1]
+		steps_ok = steps_ok and (absi(d.x) + absi(d.y) == 1)
+	_ok("path moves one tile at a time", steps_ok)
+	_ok("blocked goal gives no path", InputFeel.grid_path(Vector2i(0, 0), Vector2i(2, 0), walkable).is_empty())
+	walls[Vector2i(2, 2)] = true
+	_ok("walled-off goal gives no path", InputFeel.grid_path(Vector2i(0, 0), Vector2i(4, 0), walkable).is_empty())
+	_ok("start == goal is a zero-step path", InputFeel.grid_path(Vector2i(1, 1), Vector2i(1, 1), walkable) == [Vector2i(1, 1)])
