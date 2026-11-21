@@ -42,13 +42,13 @@
   "objectives": [
     {
       "id": "attn",
-      "label": "Keep class attention >= 65%",
+      "label": "Keep attention at 65%+",
       "metric": "attention_min",
       "target": 65
     },
     {
       "id": "comp",
-      "label": "Finish with composure >= 50%",
+      "label": "Finish with composure at 50%+",
       "metric": "composure_min",
       "target": 50
     },
@@ -74,5 +74,5 @@
   "badge": "echo",
   "backdrop": "res://assets/backdrops/discussion_fractions.png",
   "backdrop_thumb": "res://assets/backdrops/discussion_fractions_thumb.png",
-  "story_hook": "A U-shaped fraction talk invites public reasoning, but wait-time and equitable airtime determine whose ideas become visible."
+  "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on."
 }

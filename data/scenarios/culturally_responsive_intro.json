@@ -42,7 +42,7 @@
   "objectives": [
     {
       "id": "attn",
-      "label": "Keep class attention >= 60%",
+      "label": "Keep attention at 60%+",
       "metric": "attention_min",
       "target": 60
     },
@@ -54,20 +54,20 @@
     },
     {
       "id": "connect",
-      "label": "Connect to >= 3 students' funds of knowledge",
+      "label": "Tie the lesson to 3+ students' own lives",
       "metric": "connect_min",
       "target": 3
     },
     {
       "id": "comp",
-      "label": "Finish with composure >= 50%",
+      "label": "Finish with composure at 50%+",
       "metric": "composure_min",
       "target": 50
     }
   ],
   "badge": "bridge",
-  "note": "Weinstein, Tomlinson-Clarke & Curran (2004): management is cultural. Use Connect to notice each student's assets (funds of knowledge) and check your assumption before you correct.",
+  "note": "Weinstein, Tomlinson-Clarke & Curran (2004) argue management is cultural. Use Connect to find what each student brings, and check your assumption before you correct.",
   "backdrop": "res://assets/backdrops/culturally_responsive_intro.png",
   "backdrop_thumb": "res://assets/backdrops/culturally_responsive_intro_thumb.png",
-  "story_hook": "Before correcting behavior, the teacher has to notice student assets and connect the lesson to lived knowledge."
+  "story_hook": "You know these kids better since conferences. Find what each one already knows before you correct anything."
 }

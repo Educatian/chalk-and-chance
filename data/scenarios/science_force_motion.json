@@ -53,7 +53,7 @@
   "objectives": [
     {
       "id": "attn",
-      "label": "Keep attention >= 60% (groups drift faster)",
+      "label": "Keep attention at 60%+ (groups drift fast)",
       "metric": "attention_min",
       "target": 60
     },
@@ -65,7 +65,7 @@
     },
     {
       "id": "comp",
-      "label": "Composure >= 50%",
+      "label": "Keep composure at 50%+",
       "metric": "composure_min",
       "target": 50
     },
@@ -79,7 +79,7 @@
   "badge": "balance",
   "persona_overrides": {
     "noah_g5_fractions": {
-      "target_label": "Elicit and extend Noah's prediction",
+      "target_label": "Ask about Noah's prediction, then push",
       "opening_line": "The heavier ball will hit the ground first, because it's heavier.",
       "win_line": "Oh... when we dropped them they landed together. So weight isn't what makes it fall faster.",
       "win_moves": [
@@ -88,36 +88,36 @@
       ]
     },
     "marcus_volatile": {
-      "target_label": "Affect-first, then re-engage",
+      "target_label": "Calm him first, then back to the ramp",
       "opening_line": "(shoves the materials) Our cart won't roll right, this is dumb!",
-      "win_line": "...fine. Maybe the ramp is too flat. Let me try raising it a little.",
+      "win_line": "...fine. Maybe the ramp's too flat. I'll put it up a little.",
       "win_moves": [
         "revoice",
         "wait"
       ]
     },
     "deshawn_offtask": {
-      "target_label": "Least-intrusive redirect to the task",
+      "target_label": "Quietest redirect that works",
       "opening_line": "(spinning the wheel, off task) Watch how fast I can make it go!",
-      "win_line": "Alright, I'll record how far it rolls each push. On it.",
+      "win_line": "Aight, aight. I'll write down how far it goes each push.",
       "win_moves": [
         "redirect",
         "praise"
       ]
     },
     "diego_ell": {
-      "target_label": "Wait and revoice the force idea",
+      "target_label": "Wait, then revoice his force idea",
       "opening_line": "I push... it moves. But 'force', I am not sure the word.",
-      "win_line": "So a push or a pull is a force, and a bigger push makes it go farther.",
+      "win_line": "So a push or a pull, that's a force. Bigger push, it goes farther.",
       "win_moves": [
         "wait",
         "revoice"
       ]
     },
     "meilin_anxious": {
-      "target_label": "Process feedback, not person-praise",
+      "target_label": "Praise her method, not how smart she is",
       "opening_line": "Our group's measurement is probably wrong. I'm bad at science.",
-      "win_line": "Okay, measuring the distance three times and averaging is a good method. I can do that.",
+      "win_line": "Okay... so measuring three times and taking the average is a good way. I can do that.",
       "win_moves": [
         "praise",
         "extend"
@@ -126,16 +126,16 @@
     "talia_dominator": {
       "target_label": "Revoice, then share the turn",
       "opening_line": "I'll do all the pushing AND the recording AND the talking!",
-      "win_line": "Okay, I'll push and let Sam record so everyone has a job.",
+      "win_line": "Fine, I'll push. Sam can write it down. Everybody gets a job.",
       "win_moves": [
         "revoice",
         "redirect"
       ]
     },
     "priya_quiet": {
-      "target_label": "Deliberately invite Priya's data",
+      "target_label": "Ask Priya for her data",
       "opening_line": "(quietly has the cleanest data table, rarely asked)",
-      "win_line": "Our cart went farther each time we pushed harder, here are the numbers.",
+      "win_line": "Um, ours went farther every time we pushed harder. I wrote the numbers down.",
       "win_moves": [
         "elicit",
         "wait"
@@ -153,5 +153,5 @@
   },
   "backdrop": "res://assets/backdrops/science_force_motion.png",
   "backdrop_thumb": "res://assets/backdrops/science_force_motion_thumb.png",
-  "story_hook": "Ramps, carts, and confident misconceptions make this a live test of whether group data can change student thinking."
+  "story_hook": "Ramps, carts, and a room full of kids who are sure heavy things go faster. Can their own data change that?"
 }
