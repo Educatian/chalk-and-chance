@@ -9,6 +9,8 @@ static func seats_for(arrangement: String) -> Array:
 	match arrangement:
 		"ushape":
 			return _ushape()
+		"ushape6":
+			return _ushape6()
 		"rows":
 			return _rows()
 		"clusters":
@@ -25,6 +27,15 @@ static func _ushape() -> Array:
 		Vector2i(4, 3), Vector2i(4, 5), Vector2i(4, 7),         # left arm
 		Vector2i(8, 9), Vector2i(11, 9), Vector2i(14, 9),       # back row
 		Vector2i(18, 3), Vector2i(18, 5), Vector2i(18, 7),      # right arm
+	]
+
+## Tight 6-seat U for 6-learner discussions (owner-approved 2026-11-21): every desk is
+## occupied and the U fills the room's middle while keeping aisles to walk.
+static func _ushape6() -> Array:
+	return [
+		Vector2i(7, 4), Vector2i(7, 6),      # left arm
+		Vector2i(10, 8), Vector2i(13, 8),    # back row
+		Vector2i(16, 4), Vector2i(16, 6),    # right arm
 	]
 
 static func _rows() -> Array:

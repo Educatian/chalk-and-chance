@@ -3,7 +3,7 @@
   "title": "Comparing Decimals  -  Discussion (U-shape)",
   "format": "discussion",
   "mode": "overworld",
-  "arrangement": "ushape",
+  "arrangement": "ushape6",
   "period_seconds": 120,
   "offtask_rise": 8.0,
   "roster": [
@@ -25,17 +25,17 @@
     {
       "id": "jordan_skeptic",
       "name": "Jordan",
-      "seat": 4
+      "seat": 3
     },
     {
       "id": "priya_quiet",
       "name": "Priya",
-      "seat": 6
+      "seat": 4
     },
     {
       "id": "noah_g5_fractions",
       "name": "Noah",
-      "seat": 8
+      "seat": 5
     }
   ],
   "objectives": [
