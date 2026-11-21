@@ -45,8 +45,14 @@ func _read_api_base() -> String:
 	f.close()
 	return str(cfg.get("api_base", "")).strip_edges() if typeof(cfg) == TYPE_DICTIONARY else ""
 
+## The player's language ("ko" or "en"). The Worker answers in Korean for "ko" and in
+## English otherwise (cloudflare/locale.js); every LLM request carries it.
+static func locale() -> String:
+	return "ko" if str(GameState.get_setting("language", "en")) == "ko" else "en"
+
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:
+	payload["locale"] = locale()
 	_last_payload = payload
 	if use_stub or not NetGuard.allowed(endpoint):
 		call_deferred("_emit_stub", payload)

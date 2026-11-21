@@ -11,6 +11,12 @@ personas = {}
 for p in sorted((ROOT / "data" / "persona_library").glob("*.json")):
     d = json.loads(p.read_text(encoding="utf-8"))
     personas[d["persona_id"]] = d
+# Korean overlays (the same files the game merges over the English data) and Korean rules.
+personas_ko = {}
+for p in sorted((ROOT / "data" / "i18n" / "ko" / "persona_library").glob("*.json")):
+    personas_ko[p.stem] = json.loads(p.read_text(encoding="utf-8"))
+student_ko_rules = (ROOT / "tools" / "student_prompt_ko.txt").read_text(encoding="utf-8")
+coach_ko_rules = (ROOT / "tools" / "coach_prompt_ko.txt").read_text(encoding="utf-8")
 student_prompt = (ROOT / "tools" / "student_prompt.txt").read_text(encoding="utf-8")
 coach_prompt = (ROOT / "tools" / "coach_prompt.txt").read_text(encoding="utf-8")
 group_prompt = (ROOT / "tools" / "group_prompt.txt").read_text(encoding="utf-8")
@@ -29,5 +35,8 @@ out += "export const STUDENT_PROMPT = " + tmpl(student_prompt) + ";\n"
 out += "export const COACH_PROMPT = " + tmpl(coach_prompt) + ";\n"
 out += "export const VOICE_PROFILES = " + json.dumps(voice_profiles) + ";\n"
 out += "export const GROUP_PROMPT = " + tmpl(group_prompt) + ";\n"
+out += "export const PERSONAS_KO = " + json.dumps(personas_ko, ensure_ascii=False) + ";\n"
+out += "export const STUDENT_KO_RULES = " + tmpl(student_ko_rules) + ";\n"
+out += "export const COACH_KO_RULES = " + tmpl(coach_ko_rules) + ";\n"
 (ROOT / "cloudflare" / "gamedata.js").write_text(out, encoding="utf-8")
 print("wrote cloudflare/gamedata.js (%d personas, %d bytes)" % (len(personas), len(out)))

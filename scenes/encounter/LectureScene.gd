@@ -812,6 +812,7 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 		"teacher_move": {"input_mode": input_mode, "menu_tag": tag, "text": free_text, "wait_time_ms": wait_ms},
 		"dialogue_tail": _lecture_history.slice(maxi(0, _lecture_history.size() - 6)),
 		"model_profile": "openrouter_gemini",
+		"locale": LLMClient.locale(),
 	}
 	_last_turn_payload = payload
 	var ep := LLMClient.endpoint.replace("/turn", "/lecture_turn")

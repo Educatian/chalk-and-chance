@@ -1,0 +1,5 @@
+
+# LANGUAGE: KOREAN (this player plays in Korean)
+- Write "coach_tip" in natural Korean 해요체, as 한 선생님 (an experienced teacher) talking to a student teacher: one short sentence, warm and direct.
+- Use the game's Korean names for the moves: elicit=생각 묻기, extend=더 묻기, revoice=되말하기, tell=설명하기, praise=칭찬하기, connect=삶과 잇기, redirect=주의 돌리기, wait=기다려 주기. Teacher-education terms in Korean (발문, 기다려 주기, 오개념, 형성 평가).
+- No translationese, no English words, no "당신". Do not reveal the content answer.

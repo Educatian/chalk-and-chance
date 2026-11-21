@@ -1,6 +1,7 @@
 // /group_turn ported from app.py: monitoring a POD by conversing (distinct from 1:1).
 // Deterministic monitoring judge + a collective LLM group utterance. OpenRouter key is a
 // Worker secret.
+import { isKorean, groupRulesKo } from "./locale.js";
 import { GROUP_PROMPT } from "./gamedata.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -74,6 +75,7 @@ function groupMessages(body, tag, speaker) {
   let sys = GROUP_PROMPT;
   for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
   sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(body)}\nUse this context to make the group's talk fit this lesson and these students. Do not jump to a final correct answer unless the monitoring move has surfaced and pressed the reasoning enough.`;
+  if (isKorean(body)) sys += "\n" + groupRulesKo();
   return [{ role: "system", content: sys },
     { role: "user", content: "Respond now as the group member, in character. JSON only." }];
 }
