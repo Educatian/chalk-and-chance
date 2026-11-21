@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const Tuning = preload("res://scripts/Tuning.gd")
 const UiText = preload("res://scripts/UiText.gd")
 const GroupDebriefPanel = preload("res://scenes/encounter/GroupDebriefPanel.gd")
@@ -119,7 +120,7 @@ func _on_move(tag: String) -> void:
 		"model_profile": "openrouter_gemini",
 	}
 	var ep := LLMClient.endpoint.replace("/turn", "/group_turn")
-	var err := _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		_busy = false

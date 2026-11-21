@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Wraps the Godot <-> LLM /turn contract (GAME_CONCEPT.md section 7.6).
 ## In M1 it runs a local STUB whose judge deltas follow the literature-tagged
 ## rubric of section 7.4. Set use_stub=false (and run tools/llm_backend) for the
@@ -47,7 +48,7 @@ func _read_api_base() -> String:
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:
 	_last_payload = payload
-	if use_stub:
+	if use_stub or not NetGuard.allowed(endpoint):
 		call_deferred("_emit_stub", payload)
 		return
 	var headers := PackedStringArray(["Content-Type: application/json"])

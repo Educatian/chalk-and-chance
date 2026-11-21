@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Gym (boss) encounter: several students at once. Pick a TARGET student, then a move.
@@ -665,7 +666,7 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 	_last_targets = targets
 	_last_wait_ok = wait_ok
 	_last_student = student
-	var err := _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(LLMClient.endpoint) else _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		return

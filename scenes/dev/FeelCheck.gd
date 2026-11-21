@@ -38,6 +38,7 @@ func _ready() -> void:
 	_check_ladder()
 	_check_encounter_grades()
 	_check_roster_safe_lines()
+	_check_net_guard()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -130,6 +131,16 @@ func _check_roster_safe_lines() -> void:
 			if str(b.get("text", "")).contains("{") and str(b.get("fallback", "")) == "":
 				bad += 1
 	_ok("every chapter line that names a student has a fallback", bad == 0)
+
+## Debug builds refuse the hosted API unless opted in; release builds are unchanged.
+func _check_net_guard() -> void:
+	var G = load("res://scripts/NetGuard.gd")
+	var api := "https://chalk-and-chance-api.jewoong-moon.workers.dev/turn"
+	_ok("debug build refuses the hosted API by default", not G.decide(api, true, false))
+	_ok("debug build allows it with the explicit opt-in", G.decide(api, true, true))
+	_ok("release build is unchanged (hosted API allowed)", G.decide(api, false, false))
+	_ok("local backend stays allowed in debug", G.decide("http://127.0.0.1:8008/turn", true, false) and G.decide("http://localhost:8008/turn", true, false))
+	_ok("this headless debug run is not opted in", not G.allowed(api))
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Import-a-lesson screen. Paste/load a plan, then generate a scenario either OFFLINE
 ## (LessonImport heuristic, no backend) or WITH AI (POST to the FastAPI /lesson_to_scenario
@@ -136,7 +137,7 @@ func _on_generate_ai() -> void:
 	_gen_btn.disabled = true
 	_genai_btn.disabled = true
 	var headers := PackedStringArray(["Content-Type: application/json"])
-	var err := _http.request(ENDPOINT, headers, HTTPClient.METHOD_POST, JSON.stringify({"plan_text": txt}))
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ENDPOINT) else _http.request(ENDPOINT, headers, HTTPClient.METHOD_POST, JSON.stringify({"plan_text": txt}))
 	if err != OK:
 		_status.text = "Couldn't reach the AI. Building it offline."
 		_go_preview(LessonImport.plan_to_scenario(txt))
