@@ -32,16 +32,16 @@
   "objectives": [],
   "persona_overrides": {
     "noah_g5_fractions": {
-      "target_label": "Elicit + extend (surface the reasoning)",
-      "opening_line": "I think I messed up the example. I used the bigger number because it looked bigger, but now everyone is staring at me.",
-      "win_line": "Oh, I see it now, I had the idea backwards!",
+      "target_label": "Elicit, then extend his thinking",
+      "opening_line": "I think I messed it up. I picked the bigger number 'cause it looked bigger. Why is everyone looking at me?",
+      "win_line": "Ohhh. Wait. I had it backwards!",
       "win_moves": [
         "elicit",
         "extend"
       ]
     },
     "deshawn_offtask": {
-      "target_label": "Least-intrusive redirect + BSP",
+      "target_label": "Quiet redirect, then specific praise",
       "opening_line": "(leans back and starts joking with the side table) This is taking forever.",
       "win_line": "Alright, I'm back on it.",
       "win_moves": [
@@ -50,7 +50,7 @@
       ]
     },
     "marcus_volatile": {
-      "target_label": "Affect-first: revoice + wait",
+      "target_label": "Calm him first: revoice, then wait",
       "opening_line": "(pushes the paper away) I already said I don't get it. I'm done.",
       "win_line": "...okay. I'll try the first step.",
       "win_moves": [
@@ -59,9 +59,9 @@
       ]
     },
     "priya_quiet": {
-      "target_label": "Deliberately invite + wait",
-      "opening_line": "(quietly has a useful idea written down, but keeps her hand low while louder students talk)",
-      "win_line": "Yes! I had that, thanks for asking me.",
+      "target_label": "Invite her by name, then wait",
+      "opening_line": "(has a good idea written down, but keeps her hand low while the loud kids talk)",
+      "win_line": "I had that one. ...Thanks for asking me.",
       "win_moves": [
         "elicit",
         "wait"
@@ -70,5 +70,5 @@
   },
   "backdrop": "res://assets/backdrops/gym_capstone.png",
   "backdrop_thumb": "res://assets/backdrops/gym_capstone_thumb.png",
-  "story_hook": "The lesson has gone sideways; the teacher must recover order, care, and reasoning across several students at once."
+  "story_hook": "The projector's dead, a chair's on the floor, and four kids need you at once. Pick who goes first."
 }

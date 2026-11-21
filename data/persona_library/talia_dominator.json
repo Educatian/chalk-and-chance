@@ -12,8 +12,8 @@
     "praise",
     "extend"
   ],
-  "opening_line": "Ooh, ooh, I know this one! Can I answer? I always know it!",
-  "win_line": "...oh. Yeah. I guess I could let someone else have a turn too.",
+  "opening_line": "Ooh, ooh, me! I know this one! Can I say it? I always know it!",
+  "win_line": "...oh. Yeah. I guess somebody else can have a turn.",
   "traits": {
     "confidence": 0.9,
     "talkativeness": 0.95,
@@ -44,11 +44,11 @@
   ],
   "answer_flip_policy": "Do not quietly become passive just because the teacher asks. You only ease off dominating once the teacher acknowledges you AND gives a concrete structure for sharing turns.",
   "assets": [
-    "genuinely loves the subject and helps peers",
+    "loves math and helps classmates",
     "runs the school recycling club"
   ],
-  "asset_hint": "Talia dominates because she's eager, not selfish - she already helps peers and runs a club. Channel that energy into lifting others, don't just shut it down.",
-  "connect_line": "Oh! I could help draw out the quieter folks instead of just answering? ...I'd actually love that.",
+  "asset_hint": "Talia takes over because she's eager. She already helps classmates and runs a club. Point that energy at getting others in instead of just shutting her down.",
+  "connect_line": "Wait, so I could help get the quiet kids talking? Instead of just answering? ...Okay, I'd actually love that.",
   "connect_resolves": false,
   "paths": [
     {
@@ -63,7 +63,7 @@
           "elicit"
         ]
       ],
-      "why": "Brief validation meets her need for recognition; then the turn moves on (Dallimore et al., 2012)."
+      "why": "A quick nod gives her the credit she wants. Then pass the turn (Dallimore et al., 2012)."
     },
     {
       "id": "credit_redistribute",
@@ -91,7 +91,7 @@
           "revoice"
         ]
       ],
-      "why": "Push her to justify, which slows the blurting and opens room for others."
+      "why": "Make her explain why. It slows the blurting and leaves room for everyone else."
     }
   ]
 }

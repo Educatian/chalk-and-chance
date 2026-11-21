@@ -16,7 +16,7 @@
     0.3
   ],
   "opening_line": "(slams the pencil down) This is stupid, I can't do it!",
-  "win_line": "...fine. Okay. Maybe just the first step. Don't make a big thing of it.",
+  "win_line": "...fine. Just the first step. Don't make it a whole thing.",
   "hidden_need": "frustration spikes fast; needs calm, private, affect-first response, not a public power struggle",
   "knowledge_state": {
     "target_concept": "regulate affect before cognition; de-escalate privately",
@@ -27,8 +27,8 @@
     "makes beats on his phone",
     "calms himself with a rhythm or a walk"
   ],
-  "asset_hint": "Marcus is escalating. He grounds himself through music and rhythm. Connect to that to bring the temperature down before any academic demand.",
-  "connect_line": "...yeah. Music helps me chill. ...Okay. I'm good now. We can do the work.",
+  "asset_hint": "Marcus is heating up. Music and rhythm are how he calms down. Start there, and cool things off before you ask for any math.",
+  "connect_line": "...yeah. Beats help me chill. ...Okay. I'm good. Whatever, we can do it.",
   "connect_resolves": false,
   "paths": [
     {
@@ -57,7 +57,7 @@
           "elicit"
         ]
       ],
-      "why": "A calm pause lowers the heat; then you reconnect."
+      "why": "A calm pause cools him down. Then you reconnect."
     }
   ]
 }

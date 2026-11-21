@@ -22,7 +22,7 @@ static func show(parent: Node, run_record: Dictionary, reward: Dictionary, conte
 	_label(overlay, _reward_line(reward, context), Vector2(96, 288), 13, Color(0.72, 0.82, 0.96), Vector2(760, 22))
 	var trace_line := str(run_record.get("evidence_trace", ""))
 	_label(overlay, "Trace: " + (trace_line if trace_line != "" else "no scored moves yet"), Vector2(96, 326), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
-	_label(overlay, "Focus: sample reasoning, press the shared error, rebalance airtime.", Vector2(96, 360), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
+	_label(overlay, "Focus: listen first. Press on the shared mistake. Get the quiet kids talking.", Vector2(96, 360), 13, Color(0.72, 0.78, 0.88), Vector2(760, 24))
 	_label(overlay, "Next: " + Game.evidence_practice_target(false), Vector2(96, 390), 13, Color(0.72, 0.92, 0.78), Vector2(600, 22))
 
 	var cont := Button.new()

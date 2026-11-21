@@ -8,7 +8,7 @@ extends RefCounted
 ## Per-tag coaching content. "better" names the alternative move tag for a miss.
 const MOVES := {
 	# 1:1 encounter / gym
-	"elicit": {"label": "Elicit", "glow": "You asked for their reasoning instead of supplying it. Now their thinking is visible, and you can teach to it.",
+	"elicit": {"label": "Elicit", "glow": "You asked instead of telling. Now you can see their thinking and teach to it.",
 		"miss": "The question came before they were ready, so it didn't open anything up.", "better": "wait",
 		"starter": "\"Walk me through how you got that.\""},
 	"extend": {"label": "Extend", "glow": "You pushed on an idea that was already out there. That's how a partial answer turns into an argument.",
@@ -21,12 +21,12 @@ const MOVES := {
 		"miss": "You gave the answer, and their reasoning never came out. Now you don't know what they understand.", "better": "elicit",
 		"starter": "\"Before I show you, what's your hunch, and why?\""},
 	"praise": {"label": "Praise", "glow": "You named exactly what they did, so they know what to do again.",
-		"miss": "The praise was about the person, not about what they did, so it doesn't tell them anything.", "better": "praise",
-		"starter": "\"You checked your answer against the picture. That's what careful mathematicians do.\""},
-	"connect": {"label": "Connect", "glow": "You tied the lesson to something they already know from their own life. That's a strength to build on.",
+		"miss": "That praise was about them, not what they did. It doesn't tell them anything.", "better": "praise",
+		"starter": "\"You checked your answer against the picture. That's exactly what I want to see.\""},
+	"connect": {"label": "Connect", "glow": "You tied the lesson to something from their own life. Now you have something to build on.",
 		"miss": "The connection felt forced because you didn't know enough about them yet.", "better": "elicit",
 		"starter": "\"Where have you seen something split into equal parts before?\""},
-	"redirect": {"label": "Redirect", "glow": "You redirected the behavior quietly and in proportion, and the lesson kept going.",
+	"redirect": {"label": "Redirect", "glow": "Quiet redirect, right size. The lesson kept going.",
 		"miss": "The redirect was stronger than the moment called for. Try a quieter step first.", "better": "redirect",
 		"starter": "(Move closer, make eye contact, then a quiet: \"Pencil on problem two, please.\")"},
 	"wait": {"label": "Wait", "glow": "You held the silence. That time is where their thinking happened.",
@@ -37,19 +37,19 @@ const MOVES := {
 		"miss": "Too many Presents in a row. You were talking into confusion you couldn't see.", "better": "poll",
 		"starter": "(One idea, under a minute. Then stop and check.)"},
 	"ask": {"label": "Question", "glow": "You asked at the right moment, so their answer showed you what they understood.",
-		"miss": "The question came while the room was still confused, so it only exposed that confusion without fixing it.", "better": "reexplain",
+		"miss": "You asked while they were still confused. It showed the confusion but didn't fix it.", "better": "reexplain",
 		"starter": "\"Who can explain why the denominator names the parts?\""},
 	"reexplain": {"label": "Repair", "glow": "You noticed confusion and fixed it before moving on.",
 		"miss": "You re-explained when there wasn't much confusion to fix.", "better": "ask",
 		"starter": "\"Let me show it a different way, with the fraction strips.\""},
-	"poll": {"label": "Check", "glow": "You checked the whole room, and now you have evidence instead of a guess.",
+	"poll": {"label": "Check", "glow": "You checked the whole room. Now you know instead of guessing.",
 		"miss": "The check didn't lead to anything. Use what it shows you.", "better": "reexplain",
 		"starter": "\"Thumbs up, sideways, or down: which fraction is bigger, 1/3 or 1/4?\""},
 	# group check-in
 	"observe": {"label": "Observe", "glow": "You watched before stepping in, so your next move fit the group.",
 		"miss": "You watched for too long. The mistake was already out there.", "better": "press",
 		"starter": "(Stand back, listen for 20 seconds, then step in.)"},
-	"probe": {"label": "Probe", "glow": "Your probe brought the group's hidden misconception out into the open.",
+	"probe": {"label": "Probe", "glow": "Your question got the group's mistake out where you could see it.",
 		"miss": "You probed a group that had already shown its thinking.", "better": "press",
 		"starter": "\"How did you all decide that?\""},
 	"press": {"label": "Press", "glow": "You pressed on the shared mistake once everyone could see it.",
@@ -95,7 +95,7 @@ static func analyze(moves: Array) -> Dictionary:
 	if worst_n >= 3:
 		var alt := str(MOVES.get(worst_tag, {}).get("better", ""))
 		if alt == worst_tag:
-			pattern = "You used %s %d times and it didn't land. It's not the move, it's how you're using it. See the example below." % [_label(worst_tag), worst_n]
+			pattern = "You used %s %d times and it didn't land. The move's fine. It's how you're using it. Look at the example below." % [_label(worst_tag), worst_n]
 		else:
 			pattern = "You fell back on %s %d times and it didn't land. Next time, try %s instead." % [
 				_label(worst_tag), worst_n, _label(alt)]

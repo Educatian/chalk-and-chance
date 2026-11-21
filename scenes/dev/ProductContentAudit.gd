@@ -19,8 +19,8 @@ func _ready() -> void:
 	await _frames(1)
 	_assert_text("Hub base", hub, [
 		"CHALK & CHANCE",
-		"Adaptive coach:",
-		"Evidence",
+		"Coach Vee:",
+		"Skills",
 		"Lv ",          # v2 hub: compact level chip (was "Teacher Level ...")
 		"Badges",       # v2 hub: caption before the badge icons (legend moved into tooltips)
 	])
@@ -32,11 +32,11 @@ func _ready() -> void:
 		_issue("Evidence Journal overlay did not open")
 	else:
 		_assert_text("Evidence Journal", evidence, [
-			"EVIDENCE JOURNAL",
+			"SKILL NOTEBOOK",
 			"Practice target:",
-			"growth edge",
+			"weakest spot",
 			"Try:",
-			"RECENT RUN EVIDENCE",
+			"RECENT RUNS",
 			"Rowe 1986",
 		])
 		evidence.queue_free()
@@ -51,14 +51,14 @@ func _ready() -> void:
 		_assert_text("Mission briefing", briefing, [
 			"CASE",
 			"SUCCESS",
-			"EVIDENCE",
-			"ADAPTIVE START",
-			"Research edge:",
+			"SCORED ON",
+			"DIFFICULTY",
+			"Scored:",
 			"FIRST MOVE",
 			"Start rehearsal",
 		])
-		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["EVIDENCE", "Research edge:"], ["ADAPTIVE START", "Adaptive:"])
-		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["Reward:"], ["ADAPTIVE START", "Adaptive:"])
+		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["SCORED ON", "Scored:"], ["DIFFICULTY", "Starting"])
+		_assert_label_groups_do_not_overlap("Mission briefing", briefing, ["Reward:"], ["DIFFICULTY", "Starting"])
 		briefing.queue_free()
 	await _frames(1)
 
@@ -124,8 +124,8 @@ func _ready() -> void:
 		_assert_text("Trace Detail", trace_detail, [
 			"TRACE DETAIL",
 			"Turn 1",
-			"Evidence",
-			"Signal:",
+			"Skill",
+			"Why:",
 			"Reaction:",
 			"Meter:",
 			"Next:",
@@ -185,6 +185,9 @@ func _ready() -> void:
 	for issue in await ProductDebriefAudit.run(self):
 		_issue(issue)
 
+	for issue in _banned_copy_issues():
+		_issue(issue)
+
 	if _issues.is_empty():
 		print("PRODUCTCONTENT PASS")
 	else:
@@ -192,6 +195,73 @@ func _ready() -> void:
 		for issue in _issues:
 			print(issue)
 	get_tree().quit()
+
+## Copy lint: stock AI-sounding phrases must not come back into player text.
+## Scans data/**/*.json (minus _doc lines and the judge rubric, which parses teacher input)
+## and string literals in scenes/ scripts/ autoload/ (minus scenes/dev, comments, dev logs,
+## and LLMClient._classify_stub_text, whose keywords drive scoring). See docs/copy-pass.md.
+const BANNED_COPY := ["Great job", "Let's dive", "dive in", "It's important to", "Remember,",
+	"evidence-rich", "competency estimate", "—", "Not only", "In conclusion", "unlock your"]
+
+func _banned_copy_issues() -> Array:
+	var issues: Array = []
+	for path in _files_under("res://data", ".json"):
+		if path.ends_with("judge_rubric.json"):
+			continue
+		var n := 0
+		for line in FileAccess.get_file_as_string(path).split("\n"):
+			n += 1
+			if line.find("\"_doc\"") == -1:
+				_banned_in(line, "%s:%d" % [path, n], issues)
+	for root in ["res://scenes", "res://scripts", "res://autoload"]:
+		for path in _files_under(root, ".gd"):
+			if path.begins_with("res://scenes/dev/"):
+				continue
+			var n := 0
+			var skip_fn := false
+			for line in FileAccess.get_file_as_string(path).split("\n"):
+				n += 1
+				var s := line.strip_edges()
+				if s.begins_with("func ") or s.begins_with("static func "):
+					skip_fn = s.find("_classify_stub_text") != -1
+				if skip_fn or s.begins_with("#") or s.begins_with("print") or s.begins_with("push_"):
+					continue
+				for lit in _string_literals(line):
+					if lit.replace("—", "").strip_edges() == "":
+						continue   # a bare dash literal is a parser separator, not copy
+					_banned_in(lit, "%s:%d" % [path, n], issues)
+	return issues
+
+func _banned_in(text: String, where: String, issues: Array) -> void:
+	for phrase in BANNED_COPY:
+		if text.findn(phrase) != -1:
+			issues.append("Banned copy %s at %s" % [phrase, where])
+
+## Double-quoted literals on one line, stopping at a # comment outside quotes.
+func _string_literals(line: String) -> Array:
+	var out: Array = []
+	var i := 0
+	while i < line.length():
+		var c := line[i]
+		if c == "#":
+			break
+		if c == "\"":
+			var j := i + 1
+			while j < line.length() and line[j] != "\"":
+				j += 2 if line[j] == "\\" else 1
+			out.append(line.substr(i + 1, j - i - 1))
+			i = j
+		i += 1
+	return out
+
+func _files_under(dir: String, ext: String) -> Array:
+	var out: Array = []
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(ext):
+			out.append(dir.path_join(f))
+	for d in DirAccess.get_directories_at(dir):
+		out.append_array(_files_under(dir.path_join(d), ext))
+	return out
 
 func _assert_text(label: String, root: Node, needles: Array) -> void:
 	for issue in ProductAuditSupport.assert_text_issues(label, root, needles):

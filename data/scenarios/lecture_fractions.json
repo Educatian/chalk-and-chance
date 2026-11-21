@@ -57,7 +57,7 @@
   "objectives": [
     {
       "id": "attn",
-      "label": "Hold attention >= 70% (rows favor on-task)",
+      "label": "Keep attention at 70%+ (rows help)",
       "metric": "attention_min",
       "target": 70
     },
@@ -69,7 +69,7 @@
     },
     {
       "id": "comp",
-      "label": "Composure >= 60%",
+      "label": "Keep composure at 60%+",
       "metric": "composure_min",
       "target": 60
     },
@@ -89,5 +89,5 @@
   "badge": "routine",
   "backdrop": "res://assets/backdrops/lecture_fractions.png",
   "backdrop_thumb": "res://assets/backdrops/lecture_fractions_thumb.png",
-  "story_hook": "A calm fraction mini-lesson can become a monologue unless the teacher checks understanding before confusion spreads."
+  "story_hook": "Short fractions lesson, rows facing front. Easy to talk the whole time and miss who's lost."
 }

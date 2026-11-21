@@ -18,7 +18,7 @@
     0.8
   ],
   "opening_line": "(pushes the worksheet away) I'm not doing this.",
-  "win_line": "...it's not that I won't. I didn't get the first part and I felt dumb.",
+  "win_line": "...it's not that I won't. I didn't get the first part. And I felt dumb.",
   "hidden_need": "avoidance reads as defiance; the real issue is an unmet skill gap and fear of looking incapable",
   "knowledge_state": {
     "target_concept": "behavior has a function; this refusal is escape from a too-hard task",
@@ -29,8 +29,8 @@
     "builds elaborate redstone machines in Minecraft",
     "keeps a notebook of game strategies"
   ],
-  "asset_hint": "Riley shrugs at the worksheet, but builds intricate redstone logic at home. So this is avoidance / fear of being wrong, NOT a thinking gap. Read the FUNCTION before you respond.",
-  "connect_line": "I mean... I do way harder logic in Minecraft. I guess I just didn't want to mess this up in front of everyone.",
+  "asset_hint": "Riley shrugs at the worksheet but builds complicated redstone circuits at home. This is fear of being wrong, not a thinking gap. Figure out what the refusal is for before you respond.",
+  "connect_line": "I mean... I build way harder stuff in Minecraft. I just didn't wanna mess up in front of everybody.",
   "connect_resolves": true,
   "paths": [
     {
@@ -45,7 +45,7 @@
           "revoice"
         ]
       ],
-      "why": "Find out what the avoidance is protecting before responding (Jacobs et al., 2010)."
+      "why": "Find out what the refusal is protecting before you respond (Jacobs et al., 2010)."
     },
     {
       "id": "lower_stakes",

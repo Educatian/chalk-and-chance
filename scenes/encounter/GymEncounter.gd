@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Gym (boss) encounter: several students at once. Pick a TARGET student, then a move.
@@ -131,7 +132,7 @@ func _load_students() -> void:
 			"name": str(entry.get("name", base.get("display_name", "Student"))),
 			"u": 0.15, "resolved": false, "restless": 0.0,
 			"win_moves": pj.all_moves() if base.has("paths") else legacy_wm,
-			"win_line": str(ov.get("win_line", base.get("win_line", "Oh, I get it now!"))),
+			"win_line": str(ov.get("win_line", base.get("win_line", "Oh! Okay, I get it."))),
 			"target_label": str(ov.get("target_label", base.get("target_label", ""))),
 			"opening_line": str(ov.get("opening_line", base.get("opening_line", ""))),
 		})
@@ -238,10 +239,10 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
 	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(16, 204), Vector2(52, 9), 5)
-	_result = _label("Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck.", Vector2(16, 204), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
+	_result = _label("Pick the student who needs you most, then use the move on their Need line. Tell only if stuck.", Vector2(16, 204), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 9)
 	_result.clip_text = true
-	_coach = _label("Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.", Vector2(16, 213), UiText.S_CAPTION, Color(0.72, 0.92, 0.78))
+	_coach = _label("Coach Vee: the Need line tells you which button. Not sure? Use a Profile or Noticing item.", Vector2(16, 213), UiText.S_CAPTION, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(448, 13)
 	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -269,7 +270,7 @@ func _build_ui() -> void:
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(10, 230)
 	_text_input.size = Vector2(286, 30)
-	_text_input.placeholder_text = "Type what you would say to the selected student."
+	_text_input.placeholder_text = "Type what you'd say to this student."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
 	_text_input.text_submitted.connect(func(_t): _on_type_submit())
@@ -345,35 +346,35 @@ func _use_item(id: String) -> void:
 		"item_id": id, "scope": "gym", "selected": sel, "turn": _turns,
 		"remaining": int(result.get("remaining", GameState.item_count(id)))})
 	if not bool(result.get("ok", false)):
-		_result.text = "Item unavailable."
+		_result.text = "You can't use that right now."
 		return
 	match id:
 		"breathing_reset":
 			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			composure = clampf(composure + gain, 0.0, GameState.max_composure())
 			_result.text = "Breathing Reset  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""]
-			_coach.text = "Coach Vee: you regulated while managing the room. Now pick the highest-need student."
+			_coach.text = "Coach Vee: good, you breathed. Now, who needs you most?"
 		"quiet_signal":
 			var signal_gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			order = clampf(order + signal_gain, 0.0, 100.0)
 			for s in students:
 				s["restless"] = maxf(0.0, float(s.get("restless", 0.0)) - 0.12)
 			_result.text = "Quiet Signal  |  Order +%d%s" % [int(signal_gain), " profile bonus" if signal_gain > 18.0 else ""]
-			_coach.text = "Coach Vee: a known signal lowered noise without shaming any student."
+			_coach.text = "Coach Vee: they know that signal. Quieter, and nobody got called out."
 		"student_profile_card":
 			var s0: Dictionary = students[sel] if sel >= 0 and sel < students.size() else {}
 			var listener_gain := 0.04 if GameState.teacher_profile_id == "listener" else 0.0
 			if listener_gain > 0.0 and sel >= 0 and sel < students.size():
 				students[sel]["u"] = clampf(float(students[sel].get("u", 0.0)) + listener_gain, 0.0, 1.0)
-			_result.text = "Student Profile Card  |  %s need revealed%s" % [str(s0.get("name", "Student")), "  |  Understanding +4" if listener_gain > 0.0 else ""]
+			_result.text = "Student Profile Card  |  you know what %s needs%s" % [str(s0.get("name", "Student")), "  |  Understanding +4" if listener_gain > 0.0 else ""]
 			var ways: Array = []
 			for p in s0["pj"].paths:
 				ways.append(str(p.get("label", "")))
-			_coach.text = "Coach Vee: %s's need is %s. Ways in: %s." % [str(s0.get("name", "Student")), str(s0.get("target_label", "")), " / ".join(ways)]
+			_coach.text = "Coach Vee: %s needs %s. Ways in: %s." % [str(s0.get("name", "Student")), str(s0.get("target_label", "")), " / ".join(ways)]
 		"noticing_lens":
 			var s1: Dictionary = students[sel] if sel >= 0 and sel < students.size() else {}
-			_result.text = "Noticing Lens  |  inspect target cue"
-			_coach.text = "Coach Vee: %s is at %d%% understanding and %d%% restless. Choose a move that fits that state." % [str(s1.get("name", "Student")), int(float(s1.get("u", 0.0)) * 100.0), int(float(s1.get("restless", 0.0)) * 100.0)]
+			_result.text = "Noticing Lens  |  look closer at them"
+			_coach.text = "Coach Vee: %s is about %d%% there and %d%% restless. Pick a move for that." % [str(s1.get("name", "Student")), int(float(s1.get("u", 0.0)) * 100.0), int(float(s1.get("restless", 0.0)) * 100.0)]
 		"equity_snapshot":
 			var best := sel
 			var best_score := -1.0
@@ -387,22 +388,22 @@ func _use_item(id: String) -> void:
 			_select(best)
 			var equity_gain := 5.0 if GameState.teacher_profile_id == "equity" else 0.0
 			order = clampf(order + equity_gain, 0.0, 100.0)
-			_result.text = "Equity Snapshot  |  highlighted the most at-risk unresolved student%s" % ("  |  Order +5" if equity_gain > 0.0 else "")
-			_coach.text = "Coach Vee: this is participation monitoring. Use it before the room drifts."
+			_result.text = "Equity Snapshot  |  marked who you haven't reached%s" % ("  |  Order +5" if equity_gain > 0.0 else "")
+			_coach.text = "Coach Vee: check who you've missed before the room drifts."
 		"wait_meter_pin":
 			_wait_item_ready = true
-			_result.text = "Wait Meter Pin  |  next move gets full wait-time credit"
-			_coach.text = "Coach Vee: use the guaranteed pause before pressing a learner under load."
+			_result.text = "Wait Meter Pin  |  next move counts as a full pause"
+			_coach.text = "Coach Vee: use that pause before you push someone who's struggling."
 		"lesson_map":
 			for s2 in students:
 				s2["restless"] = maxf(0.0, float(s2.get("restless", 0.0)) - 0.08)
 			composure = clampf(composure + 3.0, 0.0, GameState.max_composure())
-			_result.text = "Lesson Map  |  room drift reduced"
-			_coach.text = "Coach Vee: you re-centered the task structure. Now target one learner deliberately."
+			_result.text = "Lesson Map  |  the room settles a bit"
+			_coach.text = "Coach Vee: the task's clear again. Now pick one student and go to them."
 		"practice_goal_card":
 			_practice_goal_active = true
-			_result.text = "Practice Goal set  |  clear the capstone for bonus XP"
-			_coach.text = "Coach Vee: goal focus: reach every student without overusing Tell."
+			_result.text = "Practice Goal set  |  finish the capstone for bonus XP"
+			_coach.text = "Coach Vee: goal. Reach everyone, and go easy on Tell."
 	_refresh()
 	_refresh_item_buttons()
 
@@ -455,9 +456,9 @@ func _apply_scaffold() -> void:
 	if _stepped_in:
 		return
 	if _result != null:
-		_result.text = ["", "", "Select a student, then choose a move.", "Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck."][lvl]
+		_result.text = ["", "", "Pick a student, then a move.", "Pick the student who needs you most, then use the move on their Need line. Tell only if stuck."][lvl]
 	if _coach != null:
-		_coach.text = "Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear." if lvl == Scaffold.FULL else ""
+		_coach.text = "Coach Vee: the Need line tells you which button. Not sure? Use a Profile or Noticing item." if lvl == Scaffold.FULL else ""
 	_refresh()
 
 func _update_contingency(targets: bool, s: Dictionary) -> void:
@@ -486,7 +487,7 @@ func _select(i: int) -> void:
 	_refresh()
 	if _result != null and sel >= 0 and sel < students.size():
 		var s: Dictionary = students[sel]
-		_result.text = ("Current target: %s. Need: %s." % [s["name"], s.get("target_label", "")]) if _support_level() >= Scaffold.PARTIAL else "Current target: %s. Read the cues." % s["name"]
+		_result.text = ("With %s. Need: %s." % [s["name"], s.get("target_label", "")]) if _support_level() >= Scaffold.PARTIAL else "With %s. Watch them first." % s["name"]
 
 func _toggle_input_mode() -> void:
 	_type_mode = not _type_mode
@@ -501,7 +502,7 @@ func _toggle_input_mode() -> void:
 	if _mic_btn != null:
 		_mic_btn.visible = _type_mode
 	if _type_mode:
-		_result.text = "Type mode: write teacher talk to the selected student."
+		_result.text = "Type what you'd say to this student."
 		_text_input.grab_focus()
 	elif not _buttons.is_empty():
 		_buttons[0].grab_focus()
@@ -510,9 +511,9 @@ func _start_voice_input() -> void:
 	if _text_input == null:
 		return
 	if VoiceInput.start_for_line_edit(_text_input):
-		_result.text = "Listening... speak your teacher talk."
+		_result.text = "Listening... go ahead."
 	else:
-		_result.text = "Voice input is not available in this browser."
+		_result.text = "This browser can't use the mic."
 
 func _on_type_submit() -> void:
 	if _over or _text_input == null:
@@ -554,8 +555,8 @@ func _on_move(tag: String) -> void:
 	_turns += 1
 	var s: Dictionary = students[sel]
 	if s.get("resolved", false):
-		_result.text = "%s is already resolved. Pick another student." % s["name"]
-		_coach.text = "Coach Vee: %s is already with you. Turn to someone who needs you." % s["name"]
+		_result.text = "%s is already with you. Pick someone else." % s["name"]
+		_coach.text = "Coach Vee: %s is fine. Who else needs you?" % s["name"]
 		return
 	var raw_wait_ms := Time.get_ticks_msec() - _ready_ms
 	var wait_ms := GameState.effective_wait_ms(raw_wait_ms)
@@ -582,23 +583,23 @@ func _on_move(tag: String) -> void:
 		_result.text = "%s +%d understanding  |  %s" % [s["name"], int(round((float(s["u"]) - old_u) * 100.0)), str(fit["path_label"])]
 		if str(fit["note"]) != "":
 			_result.text += "  |  " + str(fit["note"])
-		_coach.text = "Coach Vee: that fits %s. Keep following it through." % s["name"]
+		_coach.text = "Coach Vee: that works for %s. Stay with it." % s["name"]
 	elif str(fit["fit"]) == "early":
 		s["u"] = clampf(float(s["u"]) + 0.04, 0.0, 1.0)
-		_dialogue.text = "%s: \"Hm... I'm not there yet.\"" % s["name"]
+		_dialogue.text = "%s: \"Hm... wait, I don't get it yet.\"" % s["name"]
 		_result.text = "%s  |  right idea, too early" % s["name"]
 		_coach.text = "Coach Vee: %s is right for %s, but %s." % [tag.capitalize(), s["name"], str(fit["note"]).trim_prefix("right idea, too early: ")]
 	elif tag == "tell":
 		s["restless"] = minf(1.0, float(s["restless"]) + 0.1)
 		composure = clampf(composure - 4.0, 0.0, GameState.max_composure())
 		_dialogue.text = "%s: \"Oh... okay, I guess.\"" % s["name"]
-		_result.text = "Composure -4  |  telling did not build %s's reasoning" % s["name"]
-		_coach.text = "Coach Vee: telling took over %s's thinking." % s["name"]
+		_result.text = "Composure -4  |  you told %s instead of asking" % s["name"]
+		_coach.text = "Coach Vee: you did the thinking for %s." % s["name"]
 	else:
 		composure = clampf(composure - 2.0, 0.0, GameState.max_composure())
 		_dialogue.text = "%s: \"...\"" % s["name"]
 		_result.text = "Composure -2  |  not the move %s needs yet" % s["name"]
-		_coach.text = "Coach Vee: that is not the move %s needs (try: %s)." % [s["name"], s.get("target_label", "")]
+		_coach.text = "Coach Vee: not what %s needs. Try %s." % [s["name"], s.get("target_label", "")]
 
 	_update_contingency(targets, s)
 	# Resolve?
@@ -665,7 +666,7 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 	_last_targets = targets
 	_last_wait_ok = wait_ok
 	_last_student = student
-	var err := _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(LLMClient.endpoint) else _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		return
@@ -769,15 +770,15 @@ func _move_gloss(tag: String, input_mode: String = "menu", free_text: String = "
 		"elicit":
 			return "Can you walk me through how you are thinking?"
 		"extend":
-			return "What happens if you push that idea one step further?"
+			return "What if you take that one step further?"
 		"revoice":
 			return "So what I hear you saying is..."
 		"tell":
-			return "Let me show you the answer directly."
+			return "Here, let me just show you."
 		"praise":
-			return "I name what you did well."
+			return "I like how you explained that step."
 		"redirect":
-			return "Let's bring our focus back to the task."
+			return "Okay, eyes back on the task."
 		"wait":
 			return "(waits quietly)"
 	return "I address the student."
@@ -840,10 +841,10 @@ func _finish(won: bool) -> void:
 			"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 		})
 		Sfx.play("win")
-		_coach.text = "Coach Vee: you held the whole room and reached every student. Capstone cleared!"
+		_coach.text = "Coach Vee: you kept the whole room and got to every kid. That's the capstone."
 		_show_complete_panel(true, resolved, reward, run_record)
 	else:
-		_coach.text = "Coach Vee: the room got away from you (%d/%d reached). Circulate faster next time." % [resolved, students.size()]
+		_coach.text = "Coach Vee: the room got away from you. %d of %d reached. Move around faster." % [resolved, students.size()]
 		_show_complete_panel(false, resolved, {}, {})
 
 func _show_complete_panel(won: bool, resolved: int, reward: Dictionary, run_record: Dictionary) -> void:

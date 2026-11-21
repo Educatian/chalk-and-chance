@@ -8,7 +8,8 @@ var _done := false
 var _stage := "boot"
 
 func _ready() -> void:
-	get_tree().create_timer(25.0).timeout.connect(func():
+	# 90 s: B1 think time makes encounters longer in real time.
+	get_tree().create_timer(90.0).timeout.connect(func():
 		if not _done:
 			_check("playtest watchdog reached %s" % _stage, false)
 			_finish()
@@ -53,13 +54,22 @@ func _skip_cinematic(label: String) -> void:
 			skip.pressed.emit()
 		await _wait(0.8)
 
+## Like a player: let the student finish thinking (B1 WT-I), then let the answer land (WT-II).
+func _await_turn(enc: Node) -> void:
+	var t := 0
+	while is_instance_valid(enc) and (enc._busy or enc._thinking) and not enc._resolved and t < 80:
+		await _wait(0.1)
+		t += 1
+	if is_instance_valid(enc) and enc.has_method("_on_notice"):
+		_notice(enc)
+	await _wait(1.6)
+
 func _press_move(enc: Node, tag: String) -> void:
-	# Press a teaching-move button like a user; honor wait-time for the Wait move.
+	# Press a teaching-move button like a user, after the think time and answer have landed.
+	await _await_turn(enc)
 	if enc._busy or enc._resolved:
 		await _frames(2)
 		return
-	if tag == "wait":
-		await _wait(3.2)   # hold the wait-time ring as a real player must
 	var b := _find_button(enc, tag.capitalize())
 	if b != null:
 		b.pressed.emit()
@@ -131,7 +141,7 @@ func _run() -> void:
 			coach_btn.pressed.emit()
 			await _frames(3)
 			var card := c.get_node_or_null("CoachCard")
-			_check("coaching card names a next-round focus", card != null and _find_button(card, "Rehearse") != null)
+			_check("coaching card names a next-round focus", card != null and _find_button(card, "Try again") != null)
 			if card != null:
 				card.queue_free()
 				await _frames(2)
@@ -208,8 +218,12 @@ func _run() -> void:
 			for move in ["elicit", "extend", "elicit", "extend", "elicit", "extend", "elicit"]:
 				if c._resolved:
 					break
+				await _await_turn(c)
+				if c._resolved:
+					break
 				c._on_move(move)
 				await _frames(3)
+			await _await_turn(c)   # the last question's think time
 			_check("student encounter resolves from teacher moves", c._resolved)
 			var room := _find_button(c, "Return to room")
 			_check("student completion exposes return button", room != null and not room.disabled)
@@ -232,3 +246,8 @@ func _finish() -> void:
 	print("PLAYTEST | RESULT: %d / %d checks passed" % [passed, results.size()])
 	print("PLAYTEST | %s" % ("ALL PASS" if passed == results.size() else "SOME FAILED"))
 	get_tree().quit()
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")

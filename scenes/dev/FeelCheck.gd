@@ -6,6 +6,7 @@ const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 const UiText = preload("res://scripts/UiText.gd")
+const ResultsCard = preload("res://scripts/ResultsCard.gd")
 var fails := 0
 
 func _ok(label: String, cond: bool) -> void:
@@ -30,8 +31,116 @@ func _ready() -> void:
 	_check_beat_order()
 	await _check_juice()
 	_check_text_scale()
+	_check_results_grade()
+	_check_praise_kinds()
+	_check_voiced()
+	_check_retry_focus()
+	_check_ladder()
+	_check_encounter_grades()
+	_check_roster_safe_lines()
+	_check_net_guard()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
+
+## Results card: grades stay honest and C/D never get a celebration colour.
+func _check_results_grade() -> void:
+	_ok("all objectives + 95% of best is S", ResultsCard.classroom_rank(0.95, 5, 5) == "S")
+	_ok("a missed objective caps the grade at C", ResultsCard.classroom_rank(0.95, 4, 5) == "C")
+	_ok("under half the objectives is D", ResultsCard.classroom_rank(0.95, 2, 5) == "D")
+	_ok("low share with all objectives is still low", ResultsCard.classroom_rank(0.45, 3, 3) == "D")
+	_ok("weakest part is the lowest share", ResultsCard.weakest([{"frac": 0.9}, {"frac": 0.2}, {"frac": 0.5}]) == 1)
+	_ok("C/D grade colour is calm, not alarm red", ResultsCard.grade_color("D").r < 0.85 and ResultsCard.grade_color("D") == ResultsCard.grade_color("C"))
+
+## B3: generic praise is not evidence of behaviour-specific praise; specific praise is.
+func _check_praise_kinds() -> void:
+	_ok("generic praise scores 0 for specific-praise skill", Competency.score_y("praise", {"praise_kind": "generic"}, {"trust": 0.02}) == 0)
+	_ok("specific praise with trust gain scores 1", Competency.score_y("praise", {"praise_kind": "specific"}, {"trust": 0.08}) == 1)
+	_ok("generic praise moves no understanding", float(load("res://scripts/Tuning.gd").PRAISE_GENERIC_DELTAS["understanding"]) == 0.0)
+
+## B6: a visit alone is not a heard voice; each student counts once however often heard.
+func _check_voiced() -> void:
+	var keep := Game.lesson
+	Game.start_lesson("discussion_fractions", 60.0)
+	Game.note_visit("noah_g5_fractions")
+	_ok("a visit alone does not count as heard", Game.voiced_count() == 0)
+	Game.note_voiced("noah_g5_fractions")
+	Game.note_voiced("noah_g5_fractions")
+	Game.note_voiced("priya_quiet")
+	_ok("heard students count once each", Game.voiced_count() == 2)
+	Game.lesson = keep
+
+## B8: the carried-forward objective moves to the front, flagged, nothing lost or duplicated.
+func _check_retry_focus() -> void:
+	var Ow = load("res://scenes/overworld/Overworld.gd")
+	var objs := [{"metric": "attention_min"}, {"metric": "engaged_min"}, {"metric": "waittime_min"}]
+	var out: Array = Ow.apply_retry_focus(objs, "waittime_min")
+	_ok("retry focus becomes objective 1", out.size() == 3 and str(out[0]["metric"]) == "waittime_min" and bool(out[0].get("retry", false)))
+	_ok("other objectives keep their order", str(out[1]["metric"]) == "attention_min" and str(out[2]["metric"]) == "engaged_min")
+	_ok("unknown metric leaves objectives unchanged", Ow.apply_retry_focus(objs, "connect_min") == objs)
+	_ok("source objectives are not mutated", not objs[2].has("retry"))
+
+## B4: every ladder card has a step that works, and the bonus step is the lowest one.
+func _check_ladder() -> void:
+	var Ow = load("res://scenes/overworld/Overworld.gd")
+	_ok("lowest working step skips steps that fail", Ow.lowest_working_tier([{"tier": 1, "works": false}, {"tier": 3, "works": true}, {"tier": 4, "works": true}]) == 3)
+	var ow = Ow.new()
+	for ev in ow.INTERRUPTS:
+		if bool(ev.get("ladder", false)):
+			var tiers := {}
+			for o in ev["options"]:
+				tiers[int(o["tier"])] = true
+			_ok("ladder card '%s' has all four steps and a working one" % str(ev["text"]).left(24), tiers.size() == 4 and Ow.lowest_working_tier(ev["options"]) > 0)
+	# No card text may name a roster student: the card fills names in from the students shown.
+	var names: Array = []
+	for f in DirAccess.get_files_at("res://data/persona_library"):
+		if f.ends_with(".json"):
+			names.append(str(JSON.parse_string(FileAccess.get_file_as_string("res://data/persona_library/" + f)).get("display_name", "")))
+	var named := []
+	for ev in ow.INTERRUPTS:
+		for o in ev["options"]:
+			for n in names:
+				if n != "" and (str(o["label"]).contains(n) or str(o.get("coach", "")).contains(n)):
+					named.append("%s in '%s'" % [n, str(o["label"])])
+	_ok("no interrupt option names a fixed student (%s)" % ", ".join(named), named.is_empty())
+	ow.free()
+
+## Encounter grades use their own scale; saved ranks are only ever raised.
+func _check_encounter_grades() -> void:
+	var m := "1:1 Encounter"
+	_ok("flawless encounter (120) is S", GameState._rank_for_score(120, m) == "S")
+	_ok("solid win (113) is A", GameState._rank_for_score(113, m) == "A")
+	_ok("one-detour floor (107) is B", GameState._rank_for_score(107, m) == "B")
+	_ok("scraped win (97) is C", GameState._rank_for_score(97, m) == "C")
+	_ok("weak score (60) is D", GameState._rank_for_score(60, m) == "D")
+	_ok("classroom keeps the general scale", GameState._rank_for_score(120, "Classroom") == "C")
+	var recs := [{"mode": m, "score": 121, "rank": "D"}, {"mode": m, "score": 40, "rank": "B"}, {"mode": "Lecture", "score": 121, "rank": "C"}]
+	GameState.upgrade_saved_ranks(recs)
+	_ok("saved encounter rank is raised from its score", recs[0]["rank"] == "S")
+	_ok("saved encounter rank is never lowered", recs[1]["rank"] == "B")
+	_ok("other modes are left as stored", recs[2]["rank"] == "C")
+
+## Story lines name students only if they are in this lesson's roster.
+func _check_roster_safe_lines() -> void:
+	var N = load("res://scripts/Narrative.gd")
+	var beat := {"text": "{talia_dominator} steered it.", "fallback": "One loud voice steered it."}
+	_ok("roster name is filled in", N.line_text(beat, {"roster": [{"id": "talia_dominator", "name": "Talia"}]}) == "Talia steered it.")
+	_ok("missing student falls back to the no-name line", N.line_text(beat, {"roster": [{"id": "sam_withdrawn", "name": "Sam"}]}) == "One loud voice steered it.")
+	var bad := 0
+	for c in (N._load().get("chapters", {}) as Dictionary).values():
+		for b in c.get("intro", []) + [c.get("outro_win", {}), c.get("outro_retry", {})]:
+			if str(b.get("text", "")).contains("{") and str(b.get("fallback", "")) == "":
+				bad += 1
+	_ok("every chapter line that names a student has a fallback", bad == 0)
+
+## Debug builds refuse the hosted API unless opted in; release builds are unchanged.
+func _check_net_guard() -> void:
+	var G = load("res://scripts/NetGuard.gd")
+	var api := "https://chalk-and-chance-api.jewoong-moon.workers.dev/turn"
+	_ok("debug build refuses the hosted API by default", not G.decide(api, true, false))
+	_ok("debug build allows it with the explicit opt-in", G.decide(api, true, true))
+	_ok("release build is unchanged (hosted API allowed)", G.decide(api, false, false))
+	_ok("local backend stays allowed in debug", G.decide("http://127.0.0.1:8008/turn", true, false) and G.decide("http://localhost:8008/turn", true, false))
+	_ok("this headless debug run is not opted in", not G.allowed(api))
 
 func _check_hotkeys() -> void:
 	_ok("1 maps to move 0", InputFeel.hotkey_index(_key(KEY_1)) == 0)

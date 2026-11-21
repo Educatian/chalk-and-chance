@@ -8,7 +8,7 @@ const UiText = preload("res://scripts/UiText.gd")
 const Art = preload("res://scripts/Art.gd")
 const Narrative = preload("res://scripts/Narrative.gd")
 const HubUi = preload("res://scenes/ui/HubUi.gd")
-const PIXEL_FONT := "res://ui/fonts/PixelifySans.ttf"
+const PIXEL_FONT := "res://ui/fonts/Galmuri11-Bold.ttf"
 const BAR_H := 58.0
 const CHARS_PER_SEC := 48.0
 
@@ -291,7 +291,7 @@ func _next_beat() -> void:
 		return
 	var beat: Dictionary = _beats[_beat]
 	var who := str(beat.get("speaker", "narrator"))
-	var line := str(beat.get("text", ""))
+	var line := Narrative.line_text(beat, _cfg)
 	if who == "narrator":
 		_show_caption(line)
 		return
@@ -418,7 +418,7 @@ func _show_end_card() -> void:
 	var sub := _label(str(_chapter.get("title", "")), Vector2(0, 222), Vector2(_vp.x, 20), 14, Color(0.92, 0.93, 0.90))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(sub)
-	var teaser_text := "Replay the chapter when you're ready. Coach Vee will be there."
+	var teaser_text := "Run it again when you're ready. Vee will be there."
 	if _won:
 		var nxt := Narrative.next_chapter(n)
 		teaser_text = "The school year goes on." if nxt.is_empty() else "NEXT  ·  CHAPTER %d  ·  %s  ·  %s" % [int(nxt.get("chapter", 0)), str(nxt.get("month", "")), str(nxt.get("title", ""))]

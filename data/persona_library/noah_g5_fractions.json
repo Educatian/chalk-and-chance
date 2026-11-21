@@ -11,8 +11,8 @@
     "revoice",
     "wait"
   ],
-  "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth, because 8 is more than 4.",
-  "win_line": "Oh! More pieces means each piece is smaller. One fourth IS bigger. I get it now!",
+  "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth. 'Cause eight's more than four.",
+  "win_line": "Ohh. More pieces means each piece is smaller. So one fourth IS bigger. Okay. I get it.",
   "traits": {
     "confidence": 0.3,
     "talkativeness": 0.4,
@@ -57,8 +57,8 @@
     "divides snacks fairly so his little sister never complains",
     "draws comic panels in equal-sized boxes"
   ],
-  "asset_hint": "Noah is the one who splits the last brownie so his sister can't argue. He already reasons about equal shares - that's fractions in his own world.",
-  "connect_line": "Oh - like splitting the brownie! More people means smaller pieces. So 1/8 is the smaller share. I actually get it now.",
+  "asset_hint": "Noah's the one who splits the last brownie so his sister can't argue. He already thinks in equal shares. That's fractions, in his world.",
+  "connect_line": "Wait, like the brownie. More people, smaller pieces. So 1/8 is the smaller share. ...Huh. Okay.",
   "connect_resolves": true,
   "paths": [
     {
@@ -73,7 +73,7 @@
           "revoice"
         ]
       ],
-      "why": "Surface his 4 > 3 theory first, then press on the crack in it (Jacobs et al., 2010)."
+      "why": "Get his 8 > 4 rule out in the open, then press on the crack in it (Jacobs et al., 2010)."
     },
     {
       "id": "think_time",
@@ -101,7 +101,7 @@
           "elicit"
         ]
       ],
-      "why": "Restating his claim makes it an idea to test, not a mistake to hide."
+      "why": "Say his claim back. Now it's an idea to test instead of a mistake to hide."
     }
   ]
 }

@@ -1,4 +1,5 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
 const UiText = preload("res://scripts/UiText.gd")
 ## Lecture (direct-instruction) mode: the rhythm of PRESENT vs CHECK-FOR-UNDERSTANDING.
@@ -127,7 +128,7 @@ func _apply_scaffold() -> void:
 	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
 	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(lvl, false))
 	if _result != null:
-		_result.text = "Guide: Present -> Wait -> Question/Check. Repair when comprehension lags." if lvl == Scaffold.FULL else ""
+		_result.text = "Present, wait, then Question or Check. Repair if they fall behind." if lvl == Scaffold.FULL else ""
 	if _wait_label != null:
 		_wait_label.visible = lvl >= Scaffold.PARTIAL
 	if _wait_fill != null:
@@ -296,11 +297,11 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
 	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(12, 216), Vector2(52, 9), 5)
-	_result = _label("Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.", Vector2(12, 216), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
+	_result = _label("Present, wait, then Question or Check. Repair if they fall behind.", Vector2(12, 216), UiText.S_CAPTION, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 9)
 	_outcome_chip.set_meta("shift_labels", [_result])
 	_result.clip_text = true
-	_coach = _label("Coach Vee: Repair when progress outruns comprehension; otherwise Check.", Vector2(12, 224), UiText.S_MICRO, Color(0.72, 0.92, 0.78))
+	_coach = _label("Coach Vee: if you're ahead of them, Repair. If not, Check.", Vector2(12, 224), UiText.S_MICRO, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(456, 8)
 	_coach.clip_text = true
 	_coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -326,7 +327,7 @@ func _build_ui() -> void:
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(10, 230)
 	_text_input.size = Vector2(286, 30)
-	_text_input.placeholder_text = "Type what you would say to the class."
+	_text_input.placeholder_text = "Type what you'd say to the class."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
 	_text_input.text_submitted.connect(func(_t): _on_type_submit())
@@ -401,24 +402,24 @@ func _use_item(id: String) -> void:
 	Telemetry.log_event({"event": "item_used" if bool(result.get("ok", false)) else "item_blocked",
 		"item_id": id, "scope": "lecture", "selected": sel, "remaining": int(result.get("remaining", GameState.item_count(id)))})
 	if not bool(result.get("ok", false)):
-		_result.text = "Item unavailable."
+		_result.text = "You can't use that right now."
 		return
 	match id:
 		"breathing_reset":
 			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			composure = clampf(composure + gain, 0.0, GameState.max_composure())
 			_result.text = "Breathing Reset  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""]
-			_coach.text = "Coach Vee: you reset before continuing. Now choose a smaller, more diagnostic next move."
+			_coach.text = "Coach Vee: good reset. Next, something small that shows you what they know."
 		"quiet_signal":
 			var signal_gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			attention = clampf(attention + signal_gain, 0.0, 100.0)
 			_result.text = "Quiet Signal  |  Attention +%d%s" % [int(signal_gain), " profile bonus" if signal_gain > 18.0 else ""]
-			_coach.text = "Coach Vee: a practiced attention signal restores the room without escalating."
+			_coach.text = "Coach Vee: they know that signal. Room's back, and nobody had to get loud."
 			_react_many("thinking", "dots", students.size())
 		"noticing_lens":
 			var s: Dictionary = students[sel] if sel >= 0 and sel < students.size() else {}
-			_result.text = "Noticing Lens  |  check the highlighted learner"
-			_coach.text = "Coach Vee: look at %s. If progress is ahead of comprehension, repair before asking harder questions." % str(s.get("name", "the highlighted student"))
+			_result.text = "Noticing Lens  |  check the highlighted student"
+			_coach.text = "Coach Vee: look at %s. If you've gotten ahead of them, re-explain before you ask anything harder." % str(s.get("name", "the highlighted student"))
 		"equity_snapshot":
 			for i in range(students.size()):
 				if not bool(students[i].get("called", false)):
@@ -426,21 +427,21 @@ func _use_item(id: String) -> void:
 					break
 			var equity_gain := 6.0 if GameState.teacher_profile_id == "equity" else 0.0
 			attention = clampf(attention + equity_gain, 0.0, 100.0)
-			_result.text = "Equity Snapshot  |  highlighted a student who has not spoken%s" % ("  |  Attention +6" if equity_gain > 0.0 else "")
-			_coach.text = "Coach Vee: equitable participation is a design move, not just a fairness slogan. Ask the highlighted student next."
+			_result.text = "Equity Snapshot  |  marked someone who hasn't talked yet%s" % ("  |  Attention +6" if equity_gain > 0.0 else "")
+			_coach.text = "Coach Vee: they haven't said a word yet. Ask them next."
 		"wait_meter_pin":
 			_wait_item_ready = true
-			_result.text = "Wait Meter Pin  |  next move gets full wait-time credit"
-			_coach.text = "Coach Vee: use this pause before asking so more students can enter the question."
+			_result.text = "Wait Meter Pin  |  next move counts as a full pause"
+			_coach.text = "Coach Vee: pause before you ask. More of them get a chance to think."
 		"lesson_map":
 			comprehension = clampf(comprehension + 5.0, 0.0, 100.0)
 			composure = clampf(composure + 3.0, 0.0, GameState.max_composure())
 			_result.text = "Lesson Map  |  Comprehension +5  |  Composure +3"
-			_coach.text = "Coach Vee: you realigned the chunk with the objective. Now check before advancing."
+			_coach.text = "Coach Vee: back on the goal. Check before you go on."
 		"practice_goal_card":
 			_practice_goal_active = true
-			_result.text = "Practice Goal set  |  clear this lecture for bonus XP"
-			_coach.text = "Coach Vee: goal focus: check understanding before presenting two more chunks."
+			_result.text = "Practice Goal set  |  finish this lecture for bonus XP"
+			_coach.text = "Coach Vee: goal. Check in before you present two more chunks."
 	_refresh()
 	_refresh_item_buttons()
 
@@ -544,7 +545,7 @@ func _toggle_input_mode() -> void:
 	if _mic_btn != null:
 		_mic_btn.visible = _type_mode
 	if _type_mode:
-		_result.text = "Type mode: write your teacher talk; the game maps it to a lecture move."
+		_result.text = "Type what you'd say. The game picks the closest lecture move."
 		_text_input.grab_focus()
 	elif not _buttons.is_empty():
 		_buttons[0].grab_focus()
@@ -553,9 +554,9 @@ func _start_voice_input() -> void:
 	if _text_input == null:
 		return
 	if VoiceInput.start_for_line_edit(_text_input):
-		_result.text = "Listening... speak your teacher talk."
+		_result.text = "Listening... go ahead."
 	else:
-		_result.text = "Voice input is not available in this browser."
+		_result.text = "This browser can't use the mic."
 
 func _on_type_submit() -> void:
 	if _over or _text_input == null:
@@ -614,16 +615,16 @@ func _on_move(tag: String) -> void:
 				_coach.text = "Coach Vee: you're getting ahead of them. Stop and check."
 				_react_many("confused", "question", 3)
 			elif consec_present >= 3:
-				_coach.text = "Coach Vee: that's a lot of talking. They're tuning out, ask a question."
+				_coach.text = "Coach Vee: that's a lot of talking. They're drifting. Ask something."
 				_react_many("withdrawn", "dots", 3)
 			else:
-				_coach.text = "Coach Vee: good chunk. Check in before moving on."
+				_coach.text = "Coach Vee: good chunk. Now check in."
 				_react_many("neutral", "dots", 2)
 		"ask":
 			if sel < 0 or sel >= students.size():
 				consec_present = 0
-				_result.text = "No student selected to call on."
-				_coach.text = "Coach Vee: there's no one highlighted, run a whole-class Check instead."
+				_result.text = "Nobody's highlighted to call on."
+				_coach.text = "Coach Vee: nobody's highlighted. Do a whole-class Check."
 				_refresh()
 				_arm_turn()
 				return
@@ -648,14 +649,14 @@ func _on_move(tag: String) -> void:
 					_coach.text = "Coach Vee: %s is behind. Re-explain before pressing on." % s["name"]
 					_react(sel, "confused", "question")
 				else:
-					_dialogue.text = "%s answers, and it shows they're with you." % s["name"]
-					_coach.text = "Coach Vee: nice check%s." % (" (good wait time)" if wait_ok else "")
+					_dialogue.text = "%s answers. They're with you." % s["name"]
+					_coach.text = "Coach Vee: nice check%s." % (" (and you waited)" if wait_ok else "")
 					_react(sel, "excited", "exclaim")
 		"wait":
 			attention = clampf(attention + 3.0, 0.0, 100.0)
 			_dialogue.text = "You pause and give them a few seconds."
-			_result.text = "Wait-Time ready: ask a question after the pause."
-			_coach.text = "Coach Vee: wait time lets more of them think. Now pose a question."
+			_result.text = "Pause done. Ask your question."
+			_coach.text = "Coach Vee: more of them are thinking now. Ask."
 		"reexplain":
 			var old_comp2 := comprehension
 			consec_present = 0
@@ -663,8 +664,8 @@ func _on_move(tag: String) -> void:
 			attention = clampf(attention + 6.0, 0.0, 100.0)
 			composure = clampf(composure + 2.0, 0.0, GameState.max_composure())
 			_dialogue.text = "You re-explain the tricky step a different way."
-			_result.text = "Comprehension %s  |  responsive repair" % _signed(int(round(comprehension - old_comp2)))
-			_coach.text = "Coach Vee: closing the gap. That's responsive teaching."
+			_result.text = "Comprehension %s  |  you caught it" % _signed(int(round(comprehension - old_comp2)))
+			_coach.text = "Coach Vee: you saw they were lost and fixed it."
 			_react_many("excited", "exclaim", 3)
 		"poll":
 			var old_comp3 := comprehension
@@ -672,8 +673,8 @@ func _on_move(tag: String) -> void:
 			comprehension = clampf(comprehension + 16.0, 0.0, 100.0)
 			attention = clampf(attention + 20.0, 0.0, 100.0)
 			_dialogue.text = "Whole-class check: everyone shows their answer."
-			_result.text = "Whole-class check  |  Comprehension %s  |  everyone accountable" % _signed(int(round(comprehension - old_comp3)))
-			_coach.text = "Coach Vee: a whole-class check holds everyone accountable at once."
+			_result.text = "Whole-class check  |  Comprehension %s  |  everyone answers" % _signed(int(round(comprehension - old_comp3)))
+			_coach.text = "Coach Vee: everybody answered. Now you know where the room is."
 			_react_many("thinking", "exclaim", students.size())
 	_observe_lecture_competency(tag, wait_ok, gap)
 	var productive := _lecture_move_productive(tag, wait_ok, gap)
@@ -813,7 +814,7 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 	}
 	_last_turn_payload = payload
 	var ep := LLMClient.endpoint.replace("/turn", "/lecture_turn")
-	var err := _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		return
@@ -962,7 +963,7 @@ func _finish(won: bool) -> void:
 			"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 		})
 		Sfx.play("win")
-		_coach.text = "Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!" % int(comprehension)
+		_coach.text = "Coach Vee: you got through it and kept them with you. Comprehension %d%%. Good pacing." % int(comprehension)
 		for i in range(students.size()):
 			_react(i, "excited", "exclaim")
 		_show_complete_panel(true, reward, run_record)
@@ -971,7 +972,7 @@ func _finish(won: bool) -> void:
 		if attention <= 0.0:
 			_coach.text = "Coach Vee: you lost the room. Present in smaller chunks and check more often."
 		else:
-			_coach.text = "Coach Vee: the lesson ended but comprehension was low (%d%%). Check understanding as you go." % int(comprehension)
+			_coach.text = "Coach Vee: you finished, but comprehension was only %d%%. Check in as you go." % int(comprehension)
 		_show_complete_panel(false, {}, {})
 
 func _show_complete_panel(won: bool, reward: Dictionary, run_record: Dictionary) -> void:

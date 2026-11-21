@@ -1,0 +1,1831 @@
+kind	location	text
+gd	scenes/Main.gd:68	JavaScriptBridge
+gd	scenes/Main.gd:70	new URLSearchParams(window.location.search)
+gd	scenes/Main.gd:71	.get('dev_room') || ''
+gd	scenes/Main.gd:72	.get('dev_korean') || ''
+gd	scenes/Main.gd:74	.get('dev_screen') || ''
+gd	scenes/Main.gd:82	.get('dev_win') || ''
+gd	scenes/Main.gd:83	.get('dev_end') || ''
+gd	scenes/Main.gd:89	.get('dev_moves') || ''
+gd	scenes/Main.gd:90	.get('dev_gap') || '1.6'
+gd	scenes/Main.gd:116	.get('dev_interrupt') || '-1'
+gd	scenes/cinematic/MissionCinematic.gd:111	Click / Space  ▸
+gd	scenes/cinematic/MissionCinematic.gd:121	Skip ▸▸
+gd	scenes/cinematic/MissionCinematic.gd:135	CHAPTER %d  ·  %s
+gd	scenes/cinematic/MissionCinematic.gd:137	Kicker
+gd	scenes/cinematic/MissionCinematic.gd:141	Title
+gd	scenes/cinematic/MissionCinematic.gd:160	Roster
+gd	scenes/cinematic/MissionCinematic.gd:328	[center][i]%s[/i][/center]
+gd	scenes/cinematic/MissionCinematic.gd:411	CHAPTER %d COMPLETE
+gd	scenes/cinematic/MissionCinematic.gd:411	CHAPTER %d  ·  NOT YET
+gd	scenes/cinematic/MissionCinematic.gd:421	Replay the chapter when you're ready. Coach Vee will be there.
+gd	scenes/cinematic/MissionCinematic.gd:424	The school year goes on.
+gd	scenes/cinematic/MissionCinematic.gd:424	NEXT  ·  CHAPTER %d  ·  %s  ·  %s
+gd	scenes/encounter/CompletionFx.gd:12	CompletionBurst
+gd	scenes/encounter/CompletionFx.gd:18	TopBar
+gd	scenes/encounter/CompletionFx.gd:26	RankStamp
+gd	scenes/encounter/CompletionFx.gd:54	{score}
+gd	scenes/encounter/CompletionFx.gd:56	{score}
+gd	scenes/encounter/CompletionFx.gd:62	{score}
+gd	scenes/encounter/CompletionFx.gd:75	DebriefDim
+gd	scenes/encounter/Encounter.gd:35	Elicit
+gd	scenes/encounter/Encounter.gd:35	Extend
+gd	scenes/encounter/Encounter.gd:35	Revoice
+gd	scenes/encounter/Encounter.gd:36	Tell
+gd	scenes/encounter/Encounter.gd:36	Praise
+gd	scenes/encounter/Encounter.gd:36	Connect
+gd	scenes/encounter/Encounter.gd:37	Redirect
+gd	scenes/encounter/Encounter.gd:37	Wait
+gd	scenes/encounter/Encounter.gd:41	ask how they got it
+gd	scenes/encounter/Encounter.gd:41	push one step further
+gd	scenes/encounter/Encounter.gd:41	say it back to them
+gd	scenes/encounter/Encounter.gd:42	explain it directly
+gd	scenes/encounter/Encounter.gd:42	name what worked
+gd	scenes/encounter/Encounter.gd:42	link to their world
+gd	scenes/encounter/Encounter.gd:43	bring focus back
+gd	scenes/encounter/Encounter.gd:43	hold the silence
+gd	scenes/encounter/Encounter.gd:46	Elicit: ask how the student got that answer.
+gd	scenes/encounter/Encounter.gd:47	Extend: press the idea one step further.
+gd	scenes/encounter/Encounter.gd:48	Revoice: restate their thinking so it is public and checkable.
+gd	scenes/encounter/Encounter.gd:49	Tell: explain it directly. Useful sometimes, but it can take over their thinking.
+gd	scenes/encounter/Encounter.gd:50	Praise: name a specific useful behavior, not just 'good job'.
+gd	scenes/encounter/Encounter.gd:51	Connect: notice the student's world, then bridge the content to it.
+gd	scenes/encounter/Encounter.gd:52	Redirect: bring attention back with the least-intrusive move that works.
+gd	scenes/encounter/Encounter.gd:53	Wait: hold silence until the Wait-Time bar turns green, then choose a move.
+gd	scenes/encounter/Encounter.gd:57	Noah
+gd	scenes/encounter/Encounter.gd:58	grade 5 fractions
+gd	scenes/encounter/Encounter.gd:60	Oh... I think I get it now!
+gd	scenes/encounter/Encounter.gd:66	Full
+gd	scenes/encounter/Encounter.gd:106	what do you notice?
+gd	scenes/encounter/Encounter.gd:151	You walk over to %s's desk.
+gd	scenes/encounter/Encounter.gd:152	Read the student. Surface reasoning before correcting. After you ask, let the ring on them fill: that is their thinking time.
+gd	scenes/encounter/Encounter.gd:216	%s from saved evidence. Read the student, then choose the fit move.
+gd	scenes/encounter/Encounter.gd:260	Current lesson
+gd	scenes/encounter/Encounter.gd:321	Try: 
+gd	scenes/encounter/Encounter.gd:321	Type teacher talk...
+gd	scenes/encounter/Encounter.gd:329	Read the student.
+gd	scenes/encounter/Encounter.gd:336	ENCOUNTER  -  %s  (%s)
+gd	scenes/encounter/Encounter.gd:336	ENCOUNTER  -  %s
+gd	scenes/encounter/Encounter.gd:338	Need: %s
+gd	scenes/encounter/Encounter.gd:338	Need: read %s's cues
+gd	scenes/encounter/Encounter.gd:399	ENCOUNTER  -  %s (grade 5 fractions)
+gd	scenes/encounter/Encounter.gd:404	Need: surface the student's reasoning
+gd	scenes/encounter/Encounter.gd:409	Engagement
+gd	scenes/encounter/Encounter.gd:410	Order
+gd	scenes/encounter/Encounter.gd:411	Rapport
+gd	scenes/encounter/Encounter.gd:412	Composure
+gd	scenes/encounter/Encounter.gd:441	Bond
+gd	scenes/encounter/Encounter.gd:515	Type teacher talk...
+gd	scenes/encounter/Encounter.gd:522	Mic
+gd	scenes/encounter/Encounter.gd:533	Say
+gd	scenes/encounter/Encounter.gd:543	Type
+gd	scenes/encounter/Encounter.gd:554	ThinkRing
+gd	scenes/encounter/Encounter.gd:610	Item unavailable.
+gd	scenes/encounter/Encounter.gd:616	Breathing Reset used  |  Composure +%d%s
+gd	scenes/encounter/Encounter.gd:616	 profile bonus
+gd	scenes/encounter/Encounter.gd:617	Coach Vee: regulated first. Now choose a smaller, cleaner next move.
+gd	scenes/encounter/Encounter.gd:622	%s needs you to learn their thinking before correcting it.
+gd	scenes/encounter/Encounter.gd:625	Student Profile Card used  |  Asset cue revealed  |  Rapport +%d
+gd	scenes/encounter/Encounter.gd:626	Coach Vee: profile cue: %s
+gd	scenes/encounter/Encounter.gd:632	Noticing Lens used  |  %d ways in
+gd	scenes/encounter/Encounter.gd:633	Coach Vee: more than one approach works for %s: %s. Pick one and follow it through.
+gd	scenes/encounter/Encounter.gd:636	Wait Meter Pin used  |  next move gets full wait-time credit
+gd	scenes/encounter/Encounter.gd:637	Coach Vee: next move gets full think-time credit.
+gd	scenes/encounter/Encounter.gd:641	Lesson Map used  |  Understanding +4  |  Composure +4
+gd	scenes/encounter/Encounter.gd:642	Coach Vee: lesson path checked. Now choose the learner-fit move.
+gd	scenes/encounter/Encounter.gd:645	Practice Goal set  |  clear this encounter for bonus XP
+gd	scenes/encounter/Encounter.gd:646	Coach Vee: focus goal: make one evidence-rich move before resolving the misconception.
+gd	scenes/encounter/Encounter.gd:648	%s cannot be used in this encounter.
+gd	scenes/encounter/Encounter.gd:657	Menu
+gd	scenes/encounter/Encounter.gd:657	Type
+gd	scenes/encounter/Encounter.gd:670	Type mode: the offline demo classifies common teacher moves locally.
+gd	scenes/encounter/Encounter.gd:676	Listening... speak your teacher talk.
+gd	scenes/encounter/Encounter.gd:678	Voice input is not available in this browser.
+gd	scenes/encounter/Encounter.gd:690	DialogueBubble
+gd	scenes/encounter/Encounter.gd:696	DialogueText
+gd	scenes/encounter/Encounter.gd:769	let it land
+gd	scenes/encounter/Encounter.gd:771	your move
+gd	scenes/encounter/Encounter.gd:796	You spoke into their thinking time, so %s dropped the thought. After a question, let the ring fill.
+gd	scenes/encounter/Encounter.gd:818	%s is thinking...
+gd	scenes/encounter/Encounter.gd:869	too soon
+gd	scenes/encounter/Encounter.gd:930	NoticePanel
+gd	scenes/encounter/Encounter.gd:972	You read them right. Your next move that lands counts a little more.
+gd	scenes/encounter/Encounter.gd:976	Coach Vee: 
+gd	scenes/encounter/Encounter.gd:976	Look again: their face and posture say %s. Pick the move that answers that.
+gd	scenes/encounter/Encounter.gd:984	names what they just did
+gd	scenes/encounter/Encounter.gd:984	generic: nothing to name yet
+gd	scenes/encounter/Encounter.gd:1001	That was generic praise: there was nothing specific to name yet. Praise right after they show their thinking, and say what they did.
+gd	scenes/encounter/Encounter.gd:1015	Coach Vee: 
+gd	scenes/encounter/Encounter.gd:1024	generic praise names nothing they did
+gd	scenes/encounter/Encounter.gd:1038	%s is the right idea for %s, just not yet: %s.
+gd	scenes/encounter/Encounter.gd:1038	right idea, too early: 
+gd	scenes/encounter/Encounter.gd:1039	Coach Vee: 
+gd	scenes/encounter/Encounter.gd:1113	You pause to learn what %s cares about beyond this task.
+gd	scenes/encounter/Encounter.gd:1114	You take a beat to notice %s, not just the task.
+gd	scenes/encounter/Encounter.gd:1115	Coach Vee (notice): %s  Press Connect again to bridge the content to it.
+gd	scenes/encounter/Encounter.gd:1135	Oh... when you put it in my world, it actually makes sense.
+gd	scenes/encounter/Encounter.gd:1140	Rapport up | Engagement up
+gd	scenes/encounter/Encounter.gd:1149	Coach Vee: you connected it to %s's world (funds of knowledge). Keep going, they are with you.
+gd	scenes/encounter/Encounter.gd:1151	Coach Vee: connecting built real trust (bond up). For %s the academic unlock is still the right move, but now they will let you lead.
+gd	scenes/encounter/Encounter.gd:1172	 One way in: %s (start with %s).
+gd	scenes/encounter/Encounter.gd:1173	Coach Vee steps in: %s needs %s.%s
+gd	scenes/encounter/Encounter.gd:1205	1:1 Encounter
+gd	scenes/encounter/Encounter.gd:1208	%s reached in %d turns; bond %d%%
+gd	scenes/encounter/Encounter.gd:1224	Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s.
+gd	scenes/encounter/Encounter.gd:1229	Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s.
+gd	scenes/encounter/Encounter.gd:1231	Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s.
+gd	scenes/encounter/Encounter.gd:1259	Session complete with %s  ·  score %d
+gd	scenes/encounter/Encounter.gd:1264	First clear reward
+gd	scenes/encounter/Encounter.gd:1264	Completion
+gd	scenes/encounter/Encounter.gd:1265	%s badge already earned on an earlier clear.
+gd	scenes/encounter/Encounter.gd:1270	Return to room
+gd	scenes/encounter/Encounter.gd:1273	SessionComplete
+gd	scenes/encounter/Encounter.gd:1279	Ask for their thinking first (Elicit), then build on what they said (Extend) before you explain anything.
+gd	scenes/encounter/Encounter.gd:1280	Read the Need line and choose the move it points to: fewer detours, fewer turns.
+gd	scenes/encounter/Encounter.gd:1281	Connect to something from their world, and keep the bar high with warmth.
+gd	scenes/encounter/Encounter.gd:1294	Understanding
+gd	scenes/encounter/Encounter.gd:1295	%d of %d moves landed on their path
+gd	scenes/encounter/Encounter.gd:1296	Pace
+gd	scenes/encounter/Encounter.gd:1297	reached it in %d turn%s
+gd	scenes/encounter/Encounter.gd:1298	Bond
+gd	scenes/encounter/Encounter.gd:1299	trust grew from connecting and warm pressing
+gd	scenes/encounter/Encounter.gd:1299	little warmth or connection yet
+gd	scenes/encounter/Encounter.gd:1334	it met them where they were
+gd	scenes/encounter/Encounter.gd:1337	right idea, too early
+gd	scenes/encounter/Encounter.gd:1340	it did not answer what they needed
+gd	scenes/encounter/Encounter.gd:1342	it kept the conversation open
+gd	scenes/encounter/Encounter.gd:1343	Turn %d  %s  ->  \"%s\"  ->  %s.
+gd	scenes/encounter/Encounter.gd:1353	BADGE UNLOCKED\n%s
+gd	scenes/encounter/Encounter.gd:1355	\nLEVEL %d  +1 UPGRADE
+gd	scenes/encounter/Encounter.gd:1357	\nITEMS %s
+gd	scenes/encounter/Encounter.gd:1370	Coach Vee: Composure bottomed out. Take a breath. This is data, not failure. Re-attempt the segment.
+gd	scenes/encounter/Encounter.gd:1374	Understanding %d%%
+gd	scenes/encounter/Encounter.gd:1380	Understanding %s
+gd	scenes/encounter/Encounter.gd:1382	Engagement %s
+gd	scenes/encounter/Encounter.gd:1384	Rapport %s
+gd	scenes/encounter/Encounter.gd:1386	Order %s
+gd	scenes/encounter/Encounter.gd:1389	Too soon: hold the pause longer
+gd	scenes/encounter/Encounter.gd:1392	On a path that works: %s
+gd	scenes/encounter/Encounter.gd:1392	Core move
+gd	scenes/encounter/Encounter.gd:1392	This addressed %s's need
+gd	scenes/encounter/Encounter.gd:1396	Right idea, too early
+gd	scenes/encounter/Encounter.gd:1398	Not the move %s needs yet
+gd	scenes/encounter/Encounter.gd:1400	classified as %s
+gd	scenes/encounter/Encounter.gd:1464	Bond %d%%
+gd	scenes/encounter/Encounter.gd:1511	Can you walk me through how you got that?
+gd	scenes/encounter/Encounter.gd:1512	Okay, and what happens if you push that idea further?
+gd	scenes/encounter/Encounter.gd:1513	So what you're saying is...
+gd	scenes/encounter/Encounter.gd:1514	Here's how it actually works: let me show you.
+gd	scenes/encounter/Encounter.gd:1515	You just walked me through how you got that. That is the thinking I want to see.
+gd	scenes/encounter/Encounter.gd:1515	Good job!
+gd	scenes/encounter/Encounter.gd:1516	Let's bring our focus back to the problem.
+gd	scenes/encounter/Encounter.gd:1517	(waits quietly, giving you time to think)
+gd	scenes/encounter/Encounter.gd:1518	Tell me about something you're really good at outside class.
+gd	scenes/encounter/Encounter.gd:1519	(addresses the student)
+gd	scenes/encounter/Encounter.gd:1692	Understanding 
+gd	scenes/encounter/Encounter.gd:1697	On a path
+gd	scenes/encounter/Encounter.gd:1697	Not the move
+gd	scenes/encounter/Encounter.gd:1697	Right idea
+gd	scenes/encounter/GroupCheckIn.gd:14	comparing fractions
+gd	scenes/encounter/GroupCheckIn.gd:16	the group thinks 1/8 is bigger than 1/4 because 8 > 4
+gd	scenes/encounter/GroupCheckIn.gd:54	Talia
+gd	scenes/encounter/GroupCheckIn.gd:55	Sam
+gd	scenes/encounter/GroupCheckIn.gd:56	Noah
+gd	scenes/encounter/GroupCheckIn.gd:64	You crouch by the table. The group is mid-task. Sample them: observe first, then surface their thinking.
+gd	scenes/encounter/GroupCheckIn.gd:65	Coach Vee: button order: Observe/Probe to reveal, Press after the error is visible, Redistribute when one voice dominates.
+gd	scenes/encounter/GroupCheckIn.gd:122	Content-Type: application/json
+gd	scenes/encounter/GroupCheckIn.gd:143	%s (group): \"%s\"
+gd	scenes/encounter/GroupCheckIn.gd:143	Group
+gd	scenes/encounter/GroupCheckIn.gd:144	Group
+gd	scenes/encounter/GroupCheckIn.gd:148	Coach Vee: %s %s
+gd	scenes/encounter/GroupCheckIn.gd:150	Understanding %d%% | Participation %d%%
+gd	scenes/encounter/GroupCheckIn.gd:153	Group
+gd	scenes/encounter/GroupCheckIn.gd:176	(group keeps working)
+gd	scenes/encounter/GroupCheckIn.gd:177	Coach Vee: %s
+gd	scenes/encounter/GroupCheckIn.gd:179	(group keeps working)
+gd	scenes/encounter/GroupCheckIn.gd:179	Understanding %d%% | Participation %d%%
+gd	scenes/encounter/GroupCheckIn.gd:182	(group keeps working)
+gd	scenes/encounter/GroupCheckIn.gd:196	Next: press Observe or Probe before Press.
+gd	scenes/encounter/GroupCheckIn.gd:198	Next: press Redistribute if participation is low, otherwise Press again.
+gd	scenes/encounter/GroupCheckIn.gd:200	Next: press Redistribute to balance airtime.
+gd	scenes/encounter/GroupCheckIn.gd:202	Next: press Press to work the shared error.
+gd	scenes/encounter/GroupCheckIn.gd:203	Next: Move On.
+gd	scenes/encounter/GroupCheckIn.gd:210	This pod is on track - they reasoned past their shared error AND everyone is in it.
+gd	scenes/encounter/GroupCheckIn.gd:211	Coach Vee: you surfaced their thinking, pressed the crack, and rebalanced the talk. That is monitoring done right.
+gd	scenes/encounter/GroupCheckIn.gd:220	Group
+gd	scenes/encounter/GroupCheckIn.gd:223	Understanding %d%%  Participation %d%%
+gd	scenes/encounter/GroupCheckIn.gd:263	Status: %s  (concept: %s)  |  Next: press Press or Redistribute
+gd	scenes/encounter/GroupCheckIn.gd:263	Status: hidden  |  Next: press Observe or Probe
+gd	scenes/encounter/GroupCheckInUi.gd:9	Observe
+gd	scenes/encounter/GroupCheckInUi.gd:9	Probe
+gd	scenes/encounter/GroupCheckInUi.gd:9	Press
+gd	scenes/encounter/GroupCheckInUi.gd:10	Redistribute
+gd	scenes/encounter/GroupCheckInUi.gd:10	Move on
+gd	scenes/encounter/GroupCheckInUi.gd:21	Group check-in  -  %s
+gd	scenes/encounter/GroupCheckInUi.gd:30	Status: hidden (observe or probe to surface it)
+gd	scenes/encounter/GroupCheckInUi.gd:33	Group understanding
+gd	scenes/encounter/GroupCheckInUi.gd:35	Participation balance
+gd	scenes/encounter/GroupCheckInUi.gd:41	DialogueBubble
+gd	scenes/encounter/GroupCheckInUi.gd:49	DialogueText
+gd	scenes/encounter/GroupDebriefPanel.gd:8	GroupComplete
+gd	scenes/encounter/GroupDebriefPanel.gd:19	GROUP DEBRIEF
+gd	scenes/encounter/GroupDebriefPanel.gd:21	CLEARED   |   Score {score}
+gd	scenes/encounter/GroupDebriefPanel.gd:24	Trace: 
+gd	scenes/encounter/GroupDebriefPanel.gd:24	no scored moves yet
+gd	scenes/encounter/GroupDebriefPanel.gd:25	Focus: sample reasoning, press the shared error, rebalance airtime.
+gd	scenes/encounter/GroupDebriefPanel.gd:26	Next: 
+gd	scenes/encounter/GroupDebriefPanel.gd:29	Return to room
+gd	scenes/encounter/GroupDebriefPanel.gd:39	Understanding %d%% | Participation %d%% | Revealed
+gd	scenes/encounter/GroupDebriefPanel.gd:45	 | Badge %s
+gd	scenes/encounter/GroupDebriefPanel.gd:47	 | Level %d | +upgrade
+gd	scenes/encounter/GroupDebriefPanel.gd:49	 | +items
+gd	scenes/encounter/GymEncounter.gd:22	Elicit
+gd	scenes/encounter/GymEncounter.gd:22	Extend
+gd	scenes/encounter/GymEncounter.gd:22	Revoice
+gd	scenes/encounter/GymEncounter.gd:23	Tell
+gd	scenes/encounter/GymEncounter.gd:23	Praise
+gd	scenes/encounter/GymEncounter.gd:23	Redir.
+gd	scenes/encounter/GymEncounter.gd:23	Wait
+gd	scenes/encounter/GymEncounter.gd:55	Full
+gd	scenes/encounter/GymEncounter.gd:131	Student
+gd	scenes/encounter/GymEncounter.gd:134	Oh, I get it now!
+gd	scenes/encounter/GymEncounter.gd:178	GYM: %s
+gd	scenes/encounter/GymEncounter.gd:178	Capstone
+gd	scenes/encounter/GymEncounter.gd:184	Composure
+gd	scenes/encounter/GymEncounter.gd:186	Class Order
+gd	scenes/encounter/GymEncounter.gd:229	DialogueBubble
+gd	scenes/encounter/GymEncounter.gd:234	DialogueText
+gd	scenes/encounter/GymEncounter.gd:241	Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck.
+gd	scenes/encounter/GymEncounter.gd:244	Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.
+gd	scenes/encounter/GymEncounter.gd:272	Type what you would say to the selected student.
+gd	scenes/encounter/GymEncounter.gd:279	Mic
+gd	scenes/encounter/GymEncounter.gd:290	Say
+gd	scenes/encounter/GymEncounter.gd:299	Type
+gd	scenes/encounter/GymEncounter.gd:348	Item unavailable.
+gd	scenes/encounter/GymEncounter.gd:354	Breathing Reset  |  Composure +%d%s
+gd	scenes/encounter/GymEncounter.gd:354	 profile bonus
+gd	scenes/encounter/GymEncounter.gd:355	Coach Vee: you regulated while managing the room. Now pick the highest-need student.
+gd	scenes/encounter/GymEncounter.gd:361	Quiet Signal  |  Order +%d%s
+gd	scenes/encounter/GymEncounter.gd:361	 profile bonus
+gd	scenes/encounter/GymEncounter.gd:362	Coach Vee: a known signal lowered noise without shaming any student.
+gd	scenes/encounter/GymEncounter.gd:368	Student Profile Card  |  %s need revealed%s
+gd	scenes/encounter/GymEncounter.gd:368	Student
+gd	scenes/encounter/GymEncounter.gd:368	  |  Understanding +4
+gd	scenes/encounter/GymEncounter.gd:372	Coach Vee: %s's need is %s. Ways in: %s.
+gd	scenes/encounter/GymEncounter.gd:372	Student
+gd	scenes/encounter/GymEncounter.gd:375	Noticing Lens  |  inspect target cue
+gd	scenes/encounter/GymEncounter.gd:376	Coach Vee: %s is at %d%% understanding and %d%% restless. Choose a move that fits that state.
+gd	scenes/encounter/GymEncounter.gd:376	Student
+gd	scenes/encounter/GymEncounter.gd:390	Equity Snapshot  |  highlighted the most at-risk unresolved student%s
+gd	scenes/encounter/GymEncounter.gd:390	  |  Order +5
+gd	scenes/encounter/GymEncounter.gd:391	Coach Vee: this is participation monitoring. Use it before the room drifts.
+gd	scenes/encounter/GymEncounter.gd:394	Wait Meter Pin  |  next move gets full wait-time credit
+gd	scenes/encounter/GymEncounter.gd:395	Coach Vee: use the guaranteed pause before pressing a learner under load.
+gd	scenes/encounter/GymEncounter.gd:400	Lesson Map  |  room drift reduced
+gd	scenes/encounter/GymEncounter.gd:401	Coach Vee: you re-centered the task structure. Now target one learner deliberately.
+gd	scenes/encounter/GymEncounter.gd:404	Practice Goal set  |  clear the capstone for bonus XP
+gd	scenes/encounter/GymEncounter.gd:405	Coach Vee: goal focus: reach every student without overusing Tell.
+gd	scenes/encounter/GymEncounter.gd:458	Select a student, then choose a move.
+gd	scenes/encounter/GymEncounter.gd:458	Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck.
+gd	scenes/encounter/GymEncounter.gd:460	Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.
+gd	scenes/encounter/GymEncounter.gd:475	Coach Vee steps in: %s needs %s. One way in: %s (start with %s).
+gd	scenes/encounter/GymEncounter.gd:489	Current target: %s. Need: %s.
+gd	scenes/encounter/GymEncounter.gd:489	Current target: %s. Read the cues.
+gd	scenes/encounter/GymEncounter.gd:494	Menu
+gd	scenes/encounter/GymEncounter.gd:494	Type
+gd	scenes/encounter/GymEncounter.gd:504	Type mode: write teacher talk to the selected student.
+gd	scenes/encounter/GymEncounter.gd:513	Listening... speak your teacher talk.
+gd	scenes/encounter/GymEncounter.gd:515	Voice input is not available in this browser.
+gd	scenes/encounter/GymEncounter.gd:557	%s is already resolved. Pick another student.
+gd	scenes/encounter/GymEncounter.gd:558	Coach Vee: %s is already with you. Turn to someone who needs you.
+gd	scenes/encounter/GymEncounter.gd:581	%s: \"...okay, that helps.\"
+gd	scenes/encounter/GymEncounter.gd:582	%s +%d understanding  |  %s
+gd	scenes/encounter/GymEncounter.gd:585	Coach Vee: that fits %s. Keep following it through.
+gd	scenes/encounter/GymEncounter.gd:588	%s: \"Hm... I'm not there yet.\"
+gd	scenes/encounter/GymEncounter.gd:589	%s  |  right idea, too early
+gd	scenes/encounter/GymEncounter.gd:590	Coach Vee: %s is right for %s, but %s.
+gd	scenes/encounter/GymEncounter.gd:590	right idea, too early: 
+gd	scenes/encounter/GymEncounter.gd:594	%s: \"Oh... okay, I guess.\"
+gd	scenes/encounter/GymEncounter.gd:595	Composure -4  |  telling did not build %s's reasoning
+gd	scenes/encounter/GymEncounter.gd:596	Coach Vee: telling took over %s's thinking.
+gd	scenes/encounter/GymEncounter.gd:600	Composure -2  |  not the move %s needs yet
+gd	scenes/encounter/GymEncounter.gd:601	Coach Vee: that is not the move %s needs (try: %s).
+gd	scenes/encounter/GymEncounter.gd:630	Student
+gd	scenes/encounter/GymEncounter.gd:630	 shifts with the room.
+gd	scenes/encounter/GymEncounter.gd:630	Order %d%% | Composure %d%%
+gd	scenes/encounter/GymEncounter.gd:639	Teacher
+gd	scenes/encounter/GymEncounter.gd:641	Student
+gd	scenes/encounter/GymEncounter.gd:641	 considers the move.
+gd	scenes/encounter/GymEncounter.gd:641	Order %d%% | Composure %d%%
+gd	scenes/encounter/GymEncounter.gd:668	Content-Type: application/json
+gd	scenes/encounter/GymEncounter.gd:683	Student
+gd	scenes/encounter/GymEncounter.gd:689	Coach Vee: 
+gd	scenes/encounter/GymEncounter.gd:737	Student
+gd	scenes/encounter/GymEncounter.gd:747	Current capstone
+gd	scenes/encounter/GymEncounter.gd:756	Student
+gd	scenes/encounter/GymEncounter.gd:770	Can you walk me through how you are thinking?
+gd	scenes/encounter/GymEncounter.gd:772	What happens if you push that idea one step further?
+gd	scenes/encounter/GymEncounter.gd:774	So what I hear you saying is...
+gd	scenes/encounter/GymEncounter.gd:776	Let me show you the answer directly.
+gd	scenes/encounter/GymEncounter.gd:778	I name what you did well.
+gd	scenes/encounter/GymEncounter.gd:780	Let's bring our focus back to the task.
+gd	scenes/encounter/GymEncounter.gd:782	(waits quietly)
+gd	scenes/encounter/GymEncounter.gd:783	I address the student.
+gd	scenes/encounter/GymEncounter.gd:827	Level %d reached. Upgrade point earned.
+gd	scenes/encounter/GymEncounter.gd:833	Capstone
+gd	scenes/encounter/GymEncounter.gd:834	Gym
+gd	scenes/encounter/GymEncounter.gd:837	%d/%d reached  Order %d%%  Composure %d%%
+gd	scenes/encounter/GymEncounter.gd:843	Coach Vee: you held the whole room and reached every student. Capstone cleared!
+gd	scenes/encounter/GymEncounter.gd:846	Coach Vee: the room got away from you (%d/%d reached). Circulate faster next time.
+gd	scenes/encounter/GymEncounter.gd:869	GymComplete
+gd	scenes/encounter/GymEncounter.gd:878	GYM DEBRIEF
+gd	scenes/encounter/GymEncounter.gd:880	%s   |   Score {score}
+gd	scenes/encounter/GymEncounter.gd:880	CLEARED
+gd	scenes/encounter/GymEncounter.gd:880	TRY AGAIN
+gd	scenes/encounter/GymEncounter.gd:881	Reached %d/%d | Order %d%% | Composure %d%%
+gd	scenes/encounter/GymEncounter.gd:883	 | +upgrade
+gd	scenes/encounter/GymEncounter.gd:886	Trace: 
+gd	scenes/encounter/GymEncounter.gd:886	no scored moves yet
+gd	scenes/encounter/GymEncounter.gd:887	Next: 
+gd	scenes/encounter/GymEncounter.gd:889	Return to hub
+gd	scenes/encounter/GymEncounter.gd:897	Coach Vee  >
+gd	scenes/encounter/GymEncounter.gd:934	GYM: target = %s  (%s)
+gd	scenes/encounter/GymEncounter.gd:934	GYM: target = %s
+gd	scenes/encounter/LectureScene.gd:19	Present
+gd	scenes/encounter/LectureScene.gd:19	Question
+gd	scenes/encounter/LectureScene.gd:19	Wait
+gd	scenes/encounter/LectureScene.gd:20	Repair
+gd	scenes/encounter/LectureScene.gd:20	Check
+gd	scenes/encounter/LectureScene.gd:52	Full
+gd	scenes/encounter/LectureScene.gd:130	Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.
+gd	scenes/encounter/LectureScene.gd:164	Student
+gd	scenes/encounter/LectureScene.gd:174	Student
+gd	scenes/encounter/LectureScene.gd:180	Current lecture
+gd	scenes/encounter/LectureScene.gd:213	LECTURE: %s
+gd	scenes/encounter/LectureScene.gd:213	Lesson
+gd	scenes/encounter/LectureScene.gd:219	Lesson Progress
+gd	scenes/encounter/LectureScene.gd:220	Comprehension
+gd	scenes/encounter/LectureScene.gd:221	Attention
+gd	scenes/encounter/LectureScene.gd:222	Composure
+gd	scenes/encounter/LectureScene.gd:285	DialogueBubble
+gd	scenes/encounter/LectureScene.gd:292	DialogueText
+gd	scenes/encounter/LectureScene.gd:299	Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.
+gd	scenes/encounter/LectureScene.gd:303	Coach Vee: Repair when progress outruns comprehension; otherwise Check.
+gd	scenes/encounter/LectureScene.gd:329	Type what you would say to the class.
+gd	scenes/encounter/LectureScene.gd:336	Mic
+gd	scenes/encounter/LectureScene.gd:347	Say
+gd	scenes/encounter/LectureScene.gd:356	Type
+gd	scenes/encounter/LectureScene.gd:404	Item unavailable.
+gd	scenes/encounter/LectureScene.gd:410	Breathing Reset  |  Composure +%d%s
+gd	scenes/encounter/LectureScene.gd:410	 profile bonus
+gd	scenes/encounter/LectureScene.gd:411	Coach Vee: you reset before continuing. Now choose a smaller, more diagnostic next move.
+gd	scenes/encounter/LectureScene.gd:415	Quiet Signal  |  Attention +%d%s
+gd	scenes/encounter/LectureScene.gd:415	 profile bonus
+gd	scenes/encounter/LectureScene.gd:416	Coach Vee: a practiced attention signal restores the room without escalating.
+gd	scenes/encounter/LectureScene.gd:420	Noticing Lens  |  check the highlighted learner
+gd	scenes/encounter/LectureScene.gd:421	Coach Vee: look at %s. If progress is ahead of comprehension, repair before asking harder questions.
+gd	scenes/encounter/LectureScene.gd:421	the highlighted student
+gd	scenes/encounter/LectureScene.gd:429	Equity Snapshot  |  highlighted a student who has not spoken%s
+gd	scenes/encounter/LectureScene.gd:429	  |  Attention +6
+gd	scenes/encounter/LectureScene.gd:430	Coach Vee: equitable participation is a design move, not just a fairness slogan. Ask the highlighted student next.
+gd	scenes/encounter/LectureScene.gd:433	Wait Meter Pin  |  next move gets full wait-time credit
+gd	scenes/encounter/LectureScene.gd:434	Coach Vee: use this pause before asking so more students can enter the question.
+gd	scenes/encounter/LectureScene.gd:438	Lesson Map  |  Comprehension +5  |  Composure +3
+gd	scenes/encounter/LectureScene.gd:439	Coach Vee: you realigned the chunk with the objective. Now check before advancing.
+gd	scenes/encounter/LectureScene.gd:442	Practice Goal set  |  clear this lecture for bonus XP
+gd	scenes/encounter/LectureScene.gd:443	Coach Vee: goal focus: check understanding before presenting two more chunks.
+gd	scenes/encounter/LectureScene.gd:528	Wait %.2fs: READY
+gd	scenes/encounter/LectureScene.gd:528	Wait %.2fs before Question
+gd	scenes/encounter/LectureScene.gd:537	Menu
+gd	scenes/encounter/LectureScene.gd:537	Type
+gd	scenes/encounter/LectureScene.gd:547	Type mode: write your teacher talk; the game maps it to a lecture move.
+gd	scenes/encounter/LectureScene.gd:556	Listening... speak your teacher talk.
+gd	scenes/encounter/LectureScene.gd:558	Voice input is not available in this browser.
+gd	scenes/encounter/LectureScene.gd:608	You present the next part of the lesson.
+gd	scenes/encounter/LectureScene.gd:609	Progress +12  |  Attention %s
+gd	scenes/encounter/LectureScene.gd:613	Progress +12  |  Attention %s
+gd	scenes/encounter/LectureScene.gd:614	Coach Vee: you're getting ahead of them. Stop and check.
+gd	scenes/encounter/LectureScene.gd:617	Coach Vee: that's a lot of talking. They're tuning out, ask a question.
+gd	scenes/encounter/LectureScene.gd:620	Coach Vee: good chunk. Check in before moving on.
+gd	scenes/encounter/LectureScene.gd:625	No student selected to call on.
+gd	scenes/encounter/LectureScene.gd:626	Coach Vee: there's no one highlighted, run a whole-class Check instead.
+gd	scenes/encounter/LectureScene.gd:637	Question -> %s  |  Comprehension +2  |  repeated call
+gd	scenes/encounter/LectureScene.gd:638	Coach Vee: you've already heard from %s. Spread it to the back rows.
+gd	scenes/encounter/LectureScene.gd:645	Question -> %s  |  Comprehension %s  |  Attention %s
+gd	scenes/encounter/LectureScene.gd:647	%s: \"Wait... I'm not sure I followed that part.\"
+gd	scenes/encounter/LectureScene.gd:648	Coach Vee: %s is behind. Re-explain before pressing on.
+gd	scenes/encounter/LectureScene.gd:651	%s answers, and it shows they're with you.
+gd	scenes/encounter/LectureScene.gd:652	Coach Vee: nice check%s.
+gd	scenes/encounter/LectureScene.gd:652	 (good wait time)
+gd	scenes/encounter/LectureScene.gd:656	You pause and give them a few seconds.
+gd	scenes/encounter/LectureScene.gd:657	Wait-Time ready: ask a question after the pause.
+gd	scenes/encounter/LectureScene.gd:658	Coach Vee: wait time lets more of them think. Now pose a question.
+gd	scenes/encounter/LectureScene.gd:665	You re-explain the tricky step a different way.
+gd	scenes/encounter/LectureScene.gd:666	Comprehension %s  |  responsive repair
+gd	scenes/encounter/LectureScene.gd:667	Coach Vee: closing the gap. That's responsive teaching.
+gd	scenes/encounter/LectureScene.gd:674	Whole-class check: everyone shows their answer.
+gd	scenes/encounter/LectureScene.gd:675	Whole-class check  |  Comprehension %s  |  everyone accountable
+gd	scenes/encounter/LectureScene.gd:676	Coach Vee: a whole-class check holds everyone accountable at once.
+gd	scenes/encounter/LectureScene.gd:764	that was Present #%d in a row
+gd	scenes/encounter/LectureScene.gd:765	the confusion gap was already %d points
+gd	scenes/encounter/LectureScene.gd:767	comprehension was only %d%%
+gd	scenes/encounter/LectureScene.gd:769	you picked before the 3-second ring filled
+gd	scenes/encounter/LectureScene.gd:771	the room was mostly with you (gap %d)
+gd	scenes/encounter/LectureScene.gd:794	Teacher
+gd	scenes/encounter/LectureScene.gd:816	Content-Type: application/json
+gd	scenes/encounter/LectureScene.gd:830	Class
+gd	scenes/encounter/LectureScene.gd:837	Coach Vee: 
+gd	scenes/encounter/LectureScene.gd:875	I present the next part of the lesson.
+gd	scenes/encounter/LectureScene.gd:877	I ask the highlighted student to show their thinking.
+gd	scenes/encounter/LectureScene.gd:879	I pause and give the class think time.
+gd	scenes/encounter/LectureScene.gd:881	I re-explain the tricky step another way.
+gd	scenes/encounter/LectureScene.gd:883	I run a whole-class check.
+gd	scenes/encounter/LectureScene.gd:884	I continue the lecture.
+gd	scenes/encounter/LectureScene.gd:949	Level %d reached. Upgrade point earned.
+gd	scenes/encounter/LectureScene.gd:955	Lecture
+gd	scenes/encounter/LectureScene.gd:956	Lecture
+gd	scenes/encounter/LectureScene.gd:959	Comp %d%%  Attention %d%%  Progress %d%%
+gd	scenes/encounter/LectureScene.gd:965	Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!
+gd	scenes/encounter/LectureScene.gd:972	Coach Vee: you lost the room. Present in smaller chunks and check more often.
+gd	scenes/encounter/LectureScene.gd:974	Coach Vee: the lesson ended but comprehension was low (%d%%). Check understanding as you go.
+gd	scenes/encounter/LectureScene.gd:997	LectureComplete
+gd	scenes/encounter/LectureScene.gd:1006	LECTURE DEBRIEF
+gd	scenes/encounter/LectureScene.gd:1008	%s   |   Score {score}
+gd	scenes/encounter/LectureScene.gd:1008	CLEARED
+gd	scenes/encounter/LectureScene.gd:1008	TRY AGAIN
+gd	scenes/encounter/LectureScene.gd:1009	Comp %d%% | Attention %d%% | Progress %d%%
+gd	scenes/encounter/LectureScene.gd:1011	 | +upgrade
+gd	scenes/encounter/LectureScene.gd:1014	Trace: 
+gd	scenes/encounter/LectureScene.gd:1014	no scored moves yet
+gd	scenes/encounter/LectureScene.gd:1015	Next: 
+gd	scenes/encounter/LectureScene.gd:1017	Return to hub
+gd	scenes/encounter/LectureScene.gd:1025	Coach Vee  >
+gd	scenes/encounter/LectureScene.gd:1061	LECTURE: %s   (Question asks -> %s)
+gd	scenes/encounter/LectureScene.gd:1061	Lesson
+gd	scenes/encounter/ReactionCue.gd:10	ReactionCue
+gd	scenes/encounter/ReactionCue.gd:34	ReactionCue
+gd	scenes/encounter/ReactionCue.gd:40	ReactionCueSwatch
+gd	scenes/encounter/ReactionCue.gd:47	ReactionCueText
+gd	scenes/encounter/ReactionCue.gd:58	Read the table: hidden group state
+gd	scenes/encounter/ReactionCue.gd:60	Airtime imbalance: invite a quieter voice
+gd	scenes/encounter/ReactionCue.gd:62	Shared misconception: press for reasoning
+gd	scenes/encounter/ReactionCue.gd:63	Group momentum: ready to consolidate
+gd	scenes/overworld/Overworld.gd:65	The intercom crackles: \"Please send attendance to the office.\"
+gd	scenes/overworld/Overworld.gd:67	Give the class a 30s task, then handle it
+gd	scenes/overworld/Overworld.gd:68	Good. A holding task keeps momentum while you deal with the interruption.
+gd	scenes/overworld/Overworld.gd:69	Stop teaching and do it now
+gd	scenes/overworld/Overworld.gd:70	Dead time. The class drifted while you stopped everything.
+gd	scenes/overworld/Overworld.gd:74	A knock at the door: another teacher needs a quick word.
+gd	scenes/overworld/Overworld.gd:76	Set a task, step to the door, stay facing in
+gd	scenes/overworld/Overworld.gd:77	Withitness preserved. You stayed aware of the room while at the door.
+gd	scenes/overworld/Overworld.gd:78	Step fully into the hall
+gd	scenes/overworld/Overworld.gd:79	Out of sight, out of control. Off-task spiked while your back was turned.
+gd	scenes/overworld/Overworld.gd:83	A student walks in late, mid-lesson.
+gd	scenes/overworld/Overworld.gd:86	Nonverbal nod to an open seat, keep going
+gd	scenes/overworld/Overworld.gd:87	Least-intrusive. You kept the lesson's momentum.
+gd	scenes/overworld/Overworld.gd:88	Walk them to a seat while you keep talking
+gd	scenes/overworld/Overworld.gd:89	Walking over pulled you away from the board; a nod from where you stand was enough here.
+gd	scenes/overworld/Overworld.gd:90	Say quietly: \"Grab a seat, we're on page 4\"
+gd	scenes/overworld/Overworld.gd:91	Fine, but a nod would have done it without a word.
+gd	scenes/overworld/Overworld.gd:92	Stop and question them in front of everyone
+gd	scenes/overworld/Overworld.gd:93	Public call-out cost momentum and rapport. Handle it privately later.
+gd	scenes/overworld/Overworld.gd:97	Two students start a loud side-conversation.
+gd	scenes/overworld/Overworld.gd:101	Move toward them (proximity), keep talking
+gd	scenes/overworld/Overworld.gd:102	Proximity control. Quietest effective move.
+gd	scenes/overworld/Overworld.gd:103	Catch their eye and pause
+gd	scenes/overworld/Overworld.gd:104	The look works, but walking over would have cost nothing at all.
+gd	scenes/overworld/Overworld.gd:105	Say their names quietly, keep teaching
+gd	scenes/overworld/Overworld.gd:106	It worked, and it used words where moving closer would have been enough.
+gd	scenes/overworld/Overworld.gd:107	Call them out across the room
+gd	scenes/overworld/Overworld.gd:108	Shouting across the room escalates and pulls everyone off task.
+gd	scenes/overworld/Overworld.gd:112	Two students start arguing over a shared calculator, voices rising.
+gd	scenes/overworld/Overworld.gd:116	Move toward them, keep talking
+gd	scenes/overworld/Overworld.gd:117	Proximity alone did not stop an argument already under way; a brief word was the smallest step that works here.
+gd	scenes/overworld/Overworld.gd:118	Give them a stern look
+gd	scenes/overworld/Overworld.gd:119	A look does not settle a dispute over a tool; tell them how to share it, briefly.
+gd	scenes/overworld/Overworld.gd:120	Say: \"One calculator, take turns, {a} first\"
+gd	scenes/overworld/Overworld.gd:121	Right-sized: the smallest step that actually solves this one.
+gd	scenes/overworld/Overworld.gd:122	Stop the class and lecture both about sharing
+gd	scenes/overworld/Overworld.gd:123	It stopped the argument and the lesson. A brief private word would have done it.
+gd	scenes/overworld/Overworld.gd:139	Lesson
+gd	scenes/overworld/Overworld.gd:182	Lesson
+gd	scenes/overworld/Overworld.gd:217	Student
+gd	scenes/overworld/Overworld.gd:248	Lesson
+gd	scenes/overworld/Overworld.gd:839	Hud
+gd	scenes/overworld/Overworld.gd:860	ATTENTION
+gd	scenes/overworld/Overworld.gd:865	COMPOSURE
+gd	scenes/overworld/Overworld.gd:871	PERIOD
+gd	scenes/overworld/Overworld.gd:873	DISRUPTIONS
+gd	scenes/overworld/Overworld.gd:875	HEARD
+gd	scenes/overworld/Overworld.gd:909	Arrows walk | Z talk | O goals | Esc leave
+gd	scenes/overworld/Overworld.gd:970	Objectives %d/%d  [O] %s
+gd	scenes/overworld/Overworld.gd:1049	Room cue: read the room. Postures show who is drifting.
+gd	scenes/overworld/Overworld.gd:1051	Hot spot: %s is at %d%% drift. Move close now.
+gd	scenes/overworld/Overworld.gd:1053	Room cue: %s is starting to drift (%d%%).
+gd	scenes/overworld/Overworld.gd:1055	Room cue: settled. Green bars = focused; red = drifting.
+gd	scenes/overworld/Overworld.gd:1063	Press Z to talk to %s
+gd	scenes/overworld/Overworld.gd:1084	Coach Vee: eyes on the room. Turning your back lets them drift.
+gd	scenes/overworld/Overworld.gd:1086	Coach Vee: someone is drifting. Scan, then move closer.
+gd	scenes/overworld/Overworld.gd:1088	Coach Vee: %s is drifting. Move closer (proximity) or scan the room.
+gd	scenes/overworld/Overworld.gd:1090	Coach Vee: a little restlessness building. Keep circulating.
+gd	scenes/overworld/Overworld.gd:1092	Coach Vee: room is settled. Circulate and scan as you teach.
+gd	scenes/overworld/Overworld.gd:1234	still at it
+gd	scenes/overworld/Overworld.gd:1264	Coach Vee: 
+gd	scenes/overworld/Overworld.gd:1295	MISS
+gd	scenes/overworld/Overworld.gd:1306	Classroom
+gd	scenes/overworld/Overworld.gd:1309	Objectives %d/%d  Attention %d%%  Engaged %d/%d
+gd	scenes/overworld/Overworld.gd:1317	+%d XP retry focus met
+gd	scenes/overworld/Overworld.gd:1342	REFLECT 1/2\n\nBefore the score: what stays with you from this period? Naming it is where the practice sticks.
+gd	scenes/overworld/Overworld.gd:1405	Choose another mission
+gd	scenes/overworld/Overworld.gd:1406	Replay this lesson
+gd	scenes/overworld/Overworld.gd:1407	Talk it through
+gd	scenes/overworld/Overworld.gd:1413	Circulate: stand near drifting students and face the room while you talk.
+gd	scenes/overworld/Overworld.gd:1414	Handle interruptions with the smallest move that works (a look, moving closer) before stopping the class.
+gd	scenes/overworld/Overworld.gd:1415	Keep corrections small and private; public escalations cost you composure.
+gd	scenes/overworld/Overworld.gd:1416	Get every student to explain their thinking (Elicit or Revoice), not only the ones who call out.
+gd	scenes/overworld/Overworld.gd:1417	After you ask, wait three seconds before your next move.
+gd	scenes/overworld/Overworld.gd:1418	Notice a student's interest first, then bridge it to the lesson (Connect twice).
+gd	scenes/overworld/Overworld.gd:1431	Objectives
+gd	scenes/overworld/Overworld.gd:1432	all cleared
+gd	scenes/overworld/Overworld.gd:1432	missed: 
+gd	scenes/overworld/Overworld.gd:1433	Attention
+gd	scenes/overworld/Overworld.gd:1434	%ds with your back to the room
+gd	scenes/overworld/Overworld.gd:1434	you kept facing and circulating the room
+gd	scenes/overworld/Overworld.gd:1435	Reach
+gd	scenes/overworld/Overworld.gd:1436	you heard the thinking of %d of %d students
+gd	scenes/overworld/Overworld.gd:1442	%s  ·  period review
+gd	scenes/overworld/Overworld.gd:1444	  ·  replay #%d (the room drifts faster each attempt)
+gd	scenes/overworld/Overworld.gd:1445	Stretch: reach every student and keep attention above 90%.
+gd	scenes/overworld/Overworld.gd:1447	Try again with this objective in mind.
+gd	scenes/overworld/Overworld.gd:1447	It leads your next try (+%d XP).
+gd	scenes/overworld/Overworld.gd:1454	First clear reward
+gd	scenes/overworld/Overworld.gd:1454	Mission badge
+gd	scenes/overworld/Overworld.gd:1457	%s badge already earned on an earlier clear.
+gd	scenes/overworld/Overworld.gd:1458	Clear every objective to earn the %s badge.
+gd	scenes/overworld/Overworld.gd:1458	No badge in this mission.
+gd	scenes/overworld/Overworld.gd:1475	No conferences  ->  no student's thinking was heard  ->  ask at least one student to explain.
+gd	scenes/overworld/Overworld.gd:1477	Move %d  %s  ->  it landed on what the student needed  ->  their understanding moved.
+gd	scenes/overworld/Overworld.gd:1479	it came before three seconds of think time
+gd	scenes/overworld/Overworld.gd:1479	it did not answer what they needed yet
+gd	scenes/overworld/Overworld.gd:1481	Move %d  %s  ->  it did not land  ->  %s.
+gd	scenes/overworld/Overworld.gd:1483	%ds facing the board  ->  drift rose about twice as fast  ->  scan the room as you write.
+gd	scenes/overworld/Overworld.gd:1485	%d flare-up%s  ->  a drifting student boiled over  ->  get there before the bar turns red.
+gd	scenes/overworld/Overworld.gd:1495	Whose thinking I did not hear
+gd	scenes/overworld/Overworld.gd:1497	When the room drifted
+gd	scenes/overworld/Overworld.gd:1499	Where I rushed wait time
+gd	scenes/overworld/Overworld.gd:1501	An asset I could connect to
+gd	scenes/overworld/Overworld.gd:1503	A disruption I would handle smaller
+gd	scenes/overworld/Overworld.gd:1505	A moment I would reframe
+gd	scenes/overworld/Overworld.gd:1508	A move that worked
+gd	scenes/overworld/Overworld.gd:1509	An asset I connected to
+gd	scenes/overworld/Overworld.gd:1510	One stretch goal next time
+gd	scenes/overworld/Overworld.gd:1513	One moment to replay
+gd	scenes/overworld/Overworld.gd:1554	Withitness
+gd	scenes/overworld/Overworld.gd:1555	Least-intrusive management
+gd	scenes/overworld/Overworld.gd:1556	Composure
+gd	scenes/overworld/Overworld.gd:1557	Equity of voice
+gd	scenes/overworld/Overworld.gd:1558	Wait time
+gd	scenes/overworld/Overworld.gd:1559	Funds of knowledge
+gd	scenes/overworld/Overworld.gd:1565	Objectives  %d/%d
+gd	scenes/overworld/Overworld.gd:1586	RETRY FOCUS  
+gd	scenes/overworld/Overworld.gd:1587	Practice
+gd	scenes/overworld/Overworld.gd:1606	voices heard
+gd	scenes/overworld/Overworld.gd:1610	asset connect
+gd	scenes/overworld/Overworld.gd:1628	Continue
+gd	scenes/overworld/Overworld.gd:1757	Stay in the lesson
+gd	scenes/overworld/Overworld.gd:1758	Leave to the mission hub
+gd	scenes/overworld/Overworld.gd:1794	Student
+gd	scenes/overworld/Overworld.gd:1804	Student
+gd	scenes/overworld/Overworld.gd:1829	The pod is working on %s, but their reasoning has not been surfaced yet.
+gd	scenes/overworld/Overworld.gd:1829	the task
+gd	scenes/overworld/Overworld.gd:1830	The pod is still figuring it out.
+gd	scenes/overworld/Overworld.gd:1846	Student
+gd	scenes/ui/CoachCard.gd:20	CoachCard
+gd	scenes/ui/CoachCard.gd:40	COACH VEE'S FOCUS  ·  
+gd	scenes/ui/CoachCard.gd:106	COACHING
+gd	scenes/ui/CoachCard.gd:109	Coach Vee  ·  
+gd	scenes/ui/CoachCard.gd:109	no moves recorded
+gd	scenes/ui/CoachCard.gd:114	Last focus: %s   %s  (%d/%d)
+gd	scenes/ui/CoachCard.gd:114	MET
+gd	scenes/ui/CoachCard.gd:114	NOT YET
+gd	scenes/ui/CoachCard.gd:123	No moves were recorded this round. Next time, try one move that asks for a student's thinking.
+gd	scenes/ui/CoachCard.gd:130	WHAT WORKED
+gd	scenes/ui/CoachCard.gd:134	%s  ·  %s  ->  try %s
+gd	scenes/ui/CoachCard.gd:138	TRY INSTEAD
+gd	scenes/ui/CoachCard.gd:160	NEXT ROUND FOCUS:  
+gd	scenes/ui/CoachCard.gd:160	Repeat what worked, on purpose.
+gd	scenes/ui/CoachCard.gd:167	Rehearse with this focus
+gd	scenes/ui/CoachCard.gd:185	Continue
+gd	scenes/ui/CoachCard.gd:237	Try saying:  
+gd	scenes/ui/Hub.gd:32	CHALK & CHANCE
+gd	scenes/ui/Hub.gd:40	Lv %d
+gd	scenes/ui/Hub.gd:45	Teacher level. Next +1 upgrade point in %d XP.
+gd	scenes/ui/Hub.gd:59	%d / %d XP
+gd	scenes/ui/Hub.gd:61	   %d upgrade point%s
+gd	scenes/ui/Hub.gd:72	Badges %d/5
+gd	scenes/ui/Hub.gd:101	%s badge: %s%s
+gd	scenes/ui/Hub.gd:101	  (not earned yet)
+gd	scenes/ui/Hub.gd:108	Evidence
+gd	scenes/ui/Hub.gd:108	Your evidence journal: skill estimates from the moves you used.
+gd	scenes/ui/Hub.gd:109	Upgrade
+gd	scenes/ui/Hub.gd:109	Spend upgrade points earned from level-ups.
+gd	scenes/ui/Hub.gd:110	Profile
+gd	scenes/ui/Hub.gd:111	Items
+gd	scenes/ui/Hub.gd:111	Equip classroom items.
+gd	scenes/ui/Hub.gd:112	Board
+gd	scenes/ui/Hub.gd:112	Run history and reports.
+gd	scenes/ui/Hub.gd:113	Settings
+gd	scenes/ui/Hub.gd:113	Audio, text size, motion, classroom look.
+gd	scenes/ui/Hub.gd:151	Coach Vee:  
+gd	scenes/ui/Hub.gd:204	+  Import a lesson plan...
+gd	scenes/ui/Hub.gd:213	Move: arrows or WASD. Select/talk: Z, Enter, or Space.
+gd	scenes/ui/Hub.gd:232	Overlay
+gd	scenes/ui/Hub.gd:292	MissionBriefingOverlay
+gd	scenes/ui/Hub.gd:346	CASE
+gd	scenes/ui/Hub.gd:347	SUCCESS
+gd	scenes/ui/Hub.gd:348	EVIDENCE
+gd	scenes/ui/Hub.gd:349	ADAPTIVE START
+gd	scenes/ui/Hub.gd:350	FIRST MOVE
+gd	scenes/ui/Hub.gd:353	Back
+gd	scenes/ui/Hub.gd:362	Start rehearsal
+gd	scenes/ui/Hub.gd:405	Resolve every learner while class order stays intact.
+gd	scenes/ui/Hub.gd:416	Present briefly, wait, then Question a highlighted learner before moving on.
+gd	scenes/ui/Hub.gd:418	Visit one pod, surface shared reasoning, then redistribute airtime.
+gd	scenes/ui/Hub.gd:420	Circulate first, use proximity, then confer with a drifting learner.
+gd	scenes/ui/Hub.gd:421	Elicit reasoning, use wait-time, then press or revoice without taking over.
+gd	scenes/ui/Hub.gd:441	%s | saved evidence %d | mastery signal %d%% | opening pressure tuned.
+gd	scenes/ui/Hub.gd:533	Locked
+gd	scenes/ui/Hub.gd:534	Click to see how to unlock this mission.
+gd	scenes/ui/Hub.gd:537	Earn the %s badge
+gd	scenes/ui/Hub.gd:546	Replay
+gd	scenes/ui/Hub.gd:546	Start
+gd	scenes/ui/Hub.gd:553	CLEARED
+gd	scenes/ui/Hub.gd:555	LOCKED
+gd	scenes/ui/Hub.gd:557	NEXT
+gd	scenes/ui/Hub.gd:558	OPEN
+gd	scenes/ui/Hub.gd:576	Badge: %s
+gd	scenes/ui/Hub.gd:576	No badge
+gd	scenes/ui/Hub.gd:578	Capstone
+gd	scenes/ui/Hub.gd:579	%s  |  %s  |  %d learners  |  %s
+gd	scenes/ui/Hub.gd:584	Focus: resolve every learner while class order stays intact.
+gd	scenes/ui/Hub.gd:589	Focus: 
+gd	scenes/ui/Hub.gd:593	Reward: practice data and competency evidence
+gd	scenes/ui/Hub.gd:594	+%d XP
+gd	scenes/ui/Hub.gd:598	Collected: 
+gd	scenes/ui/Hub.gd:598	Reward: 
+gd	scenes/ui/Hub.gd:608	NO UPGRADE POINTS YET
+gd	scenes/ui/Hub.gd:609	Level up by clearing missions. Each level-up grants one upgrade point for steadier presence, better wait-time, or stronger relationship sense.
+gd	scenes/ui/Hub.gd:610	Play the NEXT mission, earn XP, then come back to spend the point.
+gd	scenes/ui/Hub.gd:616	MISSION LOCKED
+gd	scenes/ui/Hub.gd:617	%s opens after you earn the %s badge.
+gd	scenes/ui/Hub.gd:618	Clear the earlier mission that practices %s, then this classroom becomes available.
+gd	scenes/ui/Hub.gd:624	NoticeOverlay
+gd	scenes/ui/Hub.gd:668	Got it
+gd	scenes/ui/Hub.gd:679	SettingsOverlay
+gd	scenes/ui/Hub.gd:695	SETTINGS
+gd	scenes/ui/Hub.gd:703	Click Voice status if spoken lines are silent.
+gd	scenes/ui/Hub.gd:712	Music
+gd	scenes/ui/Hub.gd:712	On
+gd	scenes/ui/Hub.gd:712	Off
+gd	scenes/ui/Hub.gd:713	Sound effects
+gd	scenes/ui/Hub.gd:713	On
+gd	scenes/ui/Hub.gd:713	Off
+gd	scenes/ui/Hub.gd:714	Text size
+gd	scenes/ui/Hub.gd:714	Large
+gd	scenes/ui/Hub.gd:714	Normal
+gd	scenes/ui/Hub.gd:715	Motion, shake & flashes
+gd	scenes/ui/Hub.gd:715	Reduced
+gd	scenes/ui/Hub.gd:715	Normal
+gd	scenes/ui/Hub.gd:716	Story cinematics
+gd	scenes/ui/Hub.gd:716	On
+gd	scenes/ui/Hub.gd:716	Off
+gd	scenes/ui/Hub.gd:717	Classroom look
+gd	scenes/ui/Hub.gd:717	Korea
+gd	scenes/ui/Hub.gd:767	Close
+gd	scenes/ui/Hub.gd:783	UpgradeOverlay
+gd	scenes/ui/Hub.gd:799	LEVEL UP REWARDS
+gd	scenes/ui/Hub.gd:807	Upgrade Points: %d
+gd	scenes/ui/Hub.gd:824	%s  Rank %d/%d\n%s
+gd	scenes/ui/Hub.gd:831	Close
+gd	scenes/ui/Hub.gd:858	EvidenceJournalOverlay
+gd	scenes/ui/Hub.gd:874	EVIDENCE JOURNAL
+gd	scenes/ui/Hub.gd:882	Live ECD model: each turn updates a competency estimate, evidence count, and uncertainty.
+gd	scenes/ui/Hub.gd:905	session evidence model
+gd	scenes/ui/Hub.gd:910	RECENT RUN EVIDENCE — %d saved run%s; open Board for details.
+gd	scenes/ui/Hub.gd:922	Download transcript
+gd	scenes/ui/Hub.gd:928	Save this session's teacher moves and simulated learner responses as Markdown.
+gd	scenes/ui/Hub.gd:930	Complete at least one dialogue turn first.
+gd	scenes/ui/Hub.gd:936	Transcript saved
+gd	scenes/ui/Hub.gd:937	Transcript saved
+gd	scenes/ui/Hub.gd:939	Download failed
+gd	scenes/ui/Hub.gd:940	Could not save the transcript.
+gd	scenes/ui/Hub.gd:945	Close
+gd	scenes/ui/Hub.gd:988	%3d%%  ev %02d  unc %.2f
+gd	scenes/ui/Hub.gd:1030	Jacobs et al. 2010
+gd	scenes/ui/Hub.gd:1032	Rowe 1986
+gd	scenes/ui/Hub.gd:1034	Simonsen et al. 2008
+gd	scenes/ui/Hub.gd:1036	Moll & Gonzalez; HLP 12
+gd	scenes/ui/Hub.gd:1038	Chapin/O'Connor moves
+gd	scenes/ui/Hub.gd:1040	Hattie & Timperley 2007
+gd	scenes/ui/Hub.gd:1042	Reinke et al. 2008
+gd	scenes/ui/Hub.gd:1044	Formative evidence
+gd	scenes/ui/Hub.gd:1047	Evidence model
+gd	scenes/ui/Hub.gd:1052	No posted run yet. Clear a lesson to turn moves into evidence.
+gd	scenes/ui/Hub.gd:1057	Run
+gd	scenes/ui/Hub.gd:1062	LeaderboardOverlay
+gd	scenes/ui/Hub.gd:1079	LEADERBOARD / COACH REPORT
+gd	scenes/ui/Hub.gd:1087	Level %d  |  XP %d  |  next upgrade in %d XP
+gd	scenes/ui/Hub.gd:1099	Rank   Score   Mission                         Coach Report
+gd	scenes/ui/Hub.gd:1110	Clear a lesson or encounter to post your first run.
+gd	scenes/ui/Hub.gd:1121	Class
+gd	scenes/ui/Hub.gd:1125	Quality
+gd	scenes/ui/Hub.gd:1127	TeacherSim
+gd	scenes/ui/Hub.gd:1129	Cloud Log
+gd	scenes/ui/Hub.gd:1131	Close
+gd	scenes/ui/Hub.gd:1141	Close
+gd	scenes/ui/Hub.gd:1158	Lesson
+gd	scenes/ui/Hub.gd:1168	LEVEL UP  
+gd	scenes/ui/Hub.gd:1176	Focus 
+gd	scenes/ui/Hub.gd:1178	 | TRACE 
+gd	scenes/ui/Hub.gd:1178	TRACE 
+gd	scenes/ui/Hub.gd:1193	Trace
+gd	scenes/ui/Hub.gd:1205	TraceDetailOverlay
+gd	scenes/ui/Hub.gd:1222	TRACE DETAIL
+gd	scenes/ui/Hub.gd:1236	TraceDetailBody
+gd	scenes/ui/Hub.gd:1246	Close
+gd	scenes/ui/Hub.gd:1258	COMMERCIAL READINESS
+gd	scenes/ui/Hub.gd:1258	QualityReportOverlay
+gd	scenes/ui/Hub.gd:1264	TEACHERSIM DELTA
+gd	scenes/ui/Hub.gd:1264	TeacherSimDeltaOverlay
+gd	scenes/ui/Hub.gd:1270	CLOUD LOG CHECK
+gd	scenes/ui/Hub.gd:1270	Checking current local/cloud status...
+gd	scenes/ui/Hub.gd:1270	CloudLogOverlay
+gd	scenes/ui/Hub.gd:1275	D1 class dashboard reachable.
+gd	scenes/ui/Hub.gd:1275	D1 check failed; local JSONL still captured.
+gd	scenes/ui/Hub.gd:1316	ReportBody
+gd	scenes/ui/Hub.gd:1326	Close
+gd	scenes/ui/Hub.gd:1338	ClassDashboardOverlay
+gd	scenes/ui/Hub.gd:1355	INSTRUCTOR DASHBOARD
+gd	scenes/ui/Hub.gd:1369	ClassDashboardBody
+gd	scenes/ui/Hub.gd:1378	Loading cloud class dashboard...
+gd	scenes/ui/Hub.gd:1385	Cloud dashboard unavailable. Showing local learner snapshot.
+gd	scenes/ui/Hub.gd:1388	Close
+gd	scenes/ui/Hub.gd:1398	Sign in to load the cloud class dashboard.
+gd	scenes/ui/Hub.gd:1416	Equipped
+gd	scenes/ui/Hub.gd:1426	None
+gd	scenes/ui/Hub.gd:1447	ItemsOverlay
+gd	scenes/ui/Hub.gd:1470	ITEM LOADOUT
+gd	scenes/ui/Hub.gd:1478	Base starts empty. Items are earned from mission rewards.
+gd	scenes/ui/Hub.gd:1495	Close
+gd	scenes/ui/Hub.gd:1539	Unequip
+gd	scenes/ui/Hub.gd:1539	Equip
+gd	scenes/ui/Hub.gd:1559	Profile: %s
+gd	scenes/ui/Hub.gd:1559	Steady
+gd	scenes/ui/Hub.gd:1563	Dialogue text: %s
+gd	scenes/ui/Hub.gd:1563	Instant
+gd	scenes/ui/Hub.gd:1563	Typewriter
+gd	scenes/ui/Hub.gd:1571	manage pacing
+gd	scenes/ui/Hub.gd:1573	surface reasoning
+gd	scenes/ui/Hub.gd:1575	share airtime
+gd	scenes/ui/Hub.gd:1577	give useful feedback
+gd	scenes/ui/Hub.gd:1579	handle the capstone
+gd	scenes/ui/Hub.gd:1581	connect to students
+gd	scenes/ui/Hub.gd:1582	clear earlier lessons
+gd	scenes/ui/HubReports.gd:24	ready for env-backed pilot
+gd	scenes/ui/HubReports.gd:24	blocked until signed-in pilot env exists
+gd	scenes/ui/HubReports.gd:25	Hub split started; continue extracting reports, overlays, and mission cards
+gd	scenes/ui/HubReports.gd:27	Keep splitting large UI scenes while adding release polish
+gd	scenes/ui/HubReports.gd:30	Current internal readiness: %d / 100
+gd	scenes/ui/HubReports.gd:31	95-point target: QA-green commercial pilot, not public launch certification
+gd	scenes/ui/HubReports.gd:33	Readiness dimensions
+gd	scenes/ui/HubReports.gd:34	- Evidence transparency: %d / 20
+gd	scenes/ui/HubReports.gd:35	- Play loop completeness: %d / 20
+gd	scenes/ui/HubReports.gd:36	- UI readability and pixel polish: %d / 20
+gd	scenes/ui/HubReports.gd:37	- Adaptive engine: %d / 20
+gd	scenes/ui/HubReports.gd:38	- Cloud and instructor data: %d / 15 (%s)
+gd	scenes/ui/HubReports.gd:40	Proof status
+gd	scenes/ui/HubReports.gd:41	- Contract-proven: telemetry redaction, competency upsert, instructor-only dashboard route
+gd	scenes/ui/HubReports.gd:42	- QA-proven: login-to-play completion, UI layout, screenshots, content surfaces
+gd	scenes/ui/HubReports.gd:43	- Live-proven: pending env-backed learner/instructor D1 run
+gd	scenes/ui/HubReports.gd:44	- External-proven: pending paired TeacherSim comparison
+gd	scenes/ui/HubReports.gd:48	Strong now
+gd	scenes/ui/HubReports.gd:49	- Playable login -> hub -> briefing -> mode -> debrief loop
+gd	scenes/ui/HubReports.gd:50	- Evidence-based Coach Report with clickable Trace Detail
+gd	scenes/ui/HubReports.gd:51	- Adaptive start uses saved competency evidence
+gd	scenes/ui/HubReports.gd:52	- Profile defaults change loadout and in-mode item bonuses
+gd	scenes/ui/HubReports.gd:53	- Product QA, screenshot QA, telemetry QA, and playtest gates exist
+gd	scenes/ui/HubReports.gd:55	Remaining 95-point priorities
+gd	scenes/ui/HubReports.gd:56	1. Structural risk: %s
+gd	scenes/ui/HubReports.gd:57	2. Game feel: add richer completion bursts and portrait/state animation variants
+gd	scenes/ui/HubReports.gd:58	3. Adaptive proof: show before/after difficulty shifts across repeated runs
+gd	scenes/ui/HubReports.gd:59	4. Instructor proof: run live D1 verification with learner and instructor accounts
+gd	scenes/ui/HubReports.gd:60	5. TeacherSim proof: compare feedback specificity, replay quality, and trace interpretability
+gd	scenes/ui/HubReports.gd:65	Adaptive proof
+gd	scenes/ui/HubReports.gd:66	- Shift rule: <45% scaffold, 45-72% standard, >72% challenge after 3+ evidence events
+gd	scenes/ui/HubReports.gd:76	- %s now: %s | mastery %d%% | evidence %d
+gd	scenes/ui/HubReports.gd:78	Adaptive: 
+gd	scenes/ui/HubReports.gd:82	- Replay ladder proof: no evidence -> %s; low repeated evidence -> %s; strong repeated evidence -> %s
+gd	scenes/ui/HubReports.gd:83	Adaptive: 
+gd	scenes/ui/HubReports.gd:84	Adaptive: 
+gd	scenes/ui/HubReports.gd:85	Adaptive: 
+gd	scenes/ui/HubReports.gd:89	- Latest saved run: 
+gd	scenes/ui/HubReports.gd:91	- Latest saved run: none yet; clear one mission to persist the starting level
+gd	scenes/ui/HubReports.gd:104	%s used %s
+gd	scenes/ui/HubReports.gd:104	Run
+gd	scenes/ui/HubReports.gd:104	Adaptive: 
+gd	scenes/ui/HubReports.gd:108	Gap check against classic teacher simulation
+gd	scenes/ui/HubReports.gd:110	Comparison matrix (internal rubric; pilot validation pending)
+gd	scenes/ui/HubReports.gd:111	- Feedback specificity: Classic 2/5 | Chalk & Chance 4/5
+gd	scenes/ui/HubReports.gd:112	- Adaptive replay: Classic 1/5 | Chalk & Chance 4/5
+gd	scenes/ui/HubReports.gd:113	- Classroom ecology: Classic 2/5 | Chalk & Chance 5/5
+gd	scenes/ui/HubReports.gd:114	- Evidence transparency: Classic 1/5 | Chalk & Chance 5/5
+gd	scenes/ui/HubReports.gd:115	- Instructor analytics: Classic 1/5 | Chalk & Chance 3/5 until live D1 pilot
+gd	scenes/ui/HubReports.gd:117	Professional benchmark check
+gd	scenes/ui/HubReports.gd:118	- Mursion-class bar: realistic practice, real-time feedback, AI scoring, analytics
+gd	scenes/ui/HubReports.gd:119	- TeachLivE-class bar: complex human interaction rehearsal with repeatable practice
+gd	scenes/ui/HubReports.gd:120	- simSchool-class bar: scalable modules, diverse learners, automated observation reports
+gd	scenes/ui/HubReports.gd:122	Outstanding design verdict
+gd	scenes/ui/HubReports.gd:123	- Stronger: construct-level evidence trace is visible inside every scored run
+gd	scenes/ui/HubReports.gd:124	- Stronger: adaptive replay changes future mission starts from saved competency evidence
+gd	scenes/ui/HubReports.gd:125	- Stronger: game modes cover individual, lecture, group, room, and capstone ecologies
+gd	scenes/ui/HubReports.gd:126	- Stronger: teacher profile loadouts alter default affordances, not just cosmetic identity
+gd	scenes/ui/HubReports.gd:127	- Not proven yet: live instructor analytics and external paired comparison
+gd	scenes/ui/HubReports.gd:129	Where Chalk & Chance is stronger
+gd	scenes/ui/HubReports.gd:130	- Move-by-move evidence trace, not just end-of-scenario feedback
+gd	scenes/ui/HubReports.gd:131	- Competency model persists and changes future starting difficulty
+gd	scenes/ui/HubReports.gd:132	- Multiple rehearsal ecologies: one learner, lecture, group, room, capstone
+gd	scenes/ui/HubReports.gd:133	- Teacher profiles create different default tools and tactical affordances
+gd	scenes/ui/HubReports.gd:134	- D1 telemetry supports instructor-level class skill views
+gd	scenes/ui/HubReports.gd:136	Novelty claim
+gd	scenes/ui/HubReports.gd:137	Adaptive evidence-transparent rehearsal: each teacher move becomes a construct-level trace that changes later missions.
+gd	scenes/ui/HubReports.gd:139	Next superiority proof
+gd	scenes/ui/HubReports.gd:140	Evidence plan
+gd	scenes/ui/HubReports.gd:141	- Paired A/B: same teacher move sequence in classic sim and Chalk & Chance
+gd	scenes/ui/HubReports.gd:142	- Blind ratings: specificity, replay usefulness, trace interpretability, ecology realism
+gd	scenes/ui/HubReports.gd:143	- Pass gate: Chalk & Chance >= +1 on at least 3 dimensions without losing usability
+gd	scenes/ui/HubReports.gd:145	Run paired player reviews: judge specificity, adaptive replay quality, and trace interpretability.
+gd	scenes/ui/HubReports.gd:146	Target: +1 rubric point over classic TeacherSim on at least 3 of 5 dimensions.
+gd	scenes/ui/HubReports.gd:151	Identity: %s
+gd	scenes/ui/HubReports.gd:151	signed in as %s / %s
+gd	scenes/ui/HubReports.gd:151	offline or demo mode
+gd	scenes/ui/HubReports.gd:153	Cloud write routes: POST /telemetry, POST /competency
+gd	scenes/ui/HubReports.gd:154	Cloud read routes: GET /competency, GET /class_dashboard
+gd	scenes/ui/HubReports.gd:157	D1 snapshot
+gd	scenes/ui/HubReports.gd:158	Learners %d | telemetry events %d
+gd	scenes/ui/HubReports.gd:163	No class competency rows yet.
+gd	scenes/ui/HubReports.gd:169	%s avg %d%% ev %d
+gd	scenes/ui/HubReports.gd:176	Verification path: sign in, clear one mission, return here, confirm D1 counts rise.
+gd	scenes/ui/HubReports.gd:177	Live verifier: scripts/verify_live_d1_flow.ps1 with learner and instructor env vars.
+gd	scenes/ui/HubReports.gd:178	Status: contract-proven locally; live D1 proof pending credentials.
+gd	scenes/ui/HubTraceText.gd:5	%s | Rank %s | Score %03d
+gd	scenes/ui/HubTraceText.gd:6	Lesson
+gd	scenes/ui/HubTraceText.gd:12	Coach focus: 
+gd	scenes/ui/HubTraceText.gd:22	Turn %d | Move %s | Evidence %s | %s
+gd	scenes/ui/HubTraceText.gd:24	Move
+gd	scenes/ui/HubTraceText.gd:25	Skill
+gd	scenes/ui/HubTraceText.gd:30	Signal: 
+gd	scenes/ui/HubTraceText.gd:33	Reaction: 
+gd	scenes/ui/HubTraceText.gd:36	Meter: 
+gd	scenes/ui/HubTraceText.gd:40	TRACE 
+gd	scenes/ui/HubTraceText.gd:42	No saved trace detail for this older run.
+gd	scenes/ui/HubTraceText.gd:46	Next: 
+gd	scenes/ui/HubTraceText.gd:48	Next: 
+gd	scenes/ui/ImportLesson.gd:34	IMPORT A LESSON PLAN
+gd	scenes/ui/ImportLesson.gd:42	Paste your plan (or load a .txt/.md). Activity format sets seating; duration sets the period.\nObjectives become goals, and 'AI' rewrites student dialogue to match your content.
+gd	scenes/ui/ImportLesson.gd:53	e.g.\nGrade: 5\nSubject: Comparing Decimals\nDuration: 45 minutes\nFormat: whole-class discussion / number talk\nObjectives: compare decimals by place value...
+gd	scenes/ui/ImportLesson.gd:68	Use sample
+gd	scenes/ui/ImportLesson.gd:69	Load file
+gd	scenes/ui/ImportLesson.gd:70	Generate (offline)
+gd	scenes/ui/ImportLesson.gd:71	Generate with AI
+gd	scenes/ui/ImportLesson.gd:72	Back
+gd	scenes/ui/ImportLesson.gd:80	*.txt, *.md ; Lesson plan (text)
+gd	scenes/ui/ImportLesson.gd:107	Loaded the sample plan.
+gd	scenes/ui/ImportLesson.gd:117	Loaded %s
+gd	scenes/ui/ImportLesson.gd:122	Paste or load a lesson plan first (a few lines is enough).
+gd	scenes/ui/ImportLesson.gd:129	Paste or load a lesson plan first.
+gd	scenes/ui/ImportLesson.gd:132	Contacting AI backend...
+gd	scenes/ui/ImportLesson.gd:141	Backend unreachable; using offline conversion.
+gd	scenes/ui/ImportLesson.gd:148	AI scenario ready.
+gd	scenes/ui/ImportLesson.gd:151	Backend unavailable; used offline conversion.
+gd	scenes/ui/InstructorAnalyticsText.gd:8	Class %s | learners %d | telemetry events %d
+gd	scenes/ui/InstructorAnalyticsText.gd:13	Live instructor analytics
+gd	scenes/ui/InstructorAnalyticsText.gd:14	Active 24h %d | sessions %d | completed %d | completion %d%%
+gd	scenes/ui/InstructorAnalyticsText.gd:22	Last D1 event: %s
+gd	scenes/ui/InstructorAnalyticsText.gd:47	Live instructor analytics
+gd	scenes/ui/InstructorAnalyticsText.gd:48	Cloud metrics need instructor sign-in; local preview uses this learner's evidence.
+gd	scenes/ui/InstructorAnalyticsText.gd:50	Local learner skill snapshot
+gd	scenes/ui/InstructorAnalyticsText.gd:54	%s  %d%%  ev %d
+gd	scenes/ui/InstructorAnalyticsText.gd:60	Runs recorded locally: %d
+gd	scenes/ui/InstructorAnalyticsText.gd:61	Next practice: %s
+gd	scenes/ui/InstructorAnalyticsText.gd:65	Weakest class skills
+gd	scenes/ui/InstructorAnalyticsText.gd:67	No cloud competency rows yet. Have learners complete one mission.
+gd	scenes/ui/InstructorAnalyticsText.gd:71	%s avg %d%% ev %d risk %d ready %d
+gd	scenes/ui/InstructorAnalyticsText.gd:80	Mode coverage
+gd	scenes/ui/InstructorAnalyticsText.gd:82	No mode telemetry yet.
+gd	scenes/ui/InstructorAnalyticsText.gd:86	%s  events %d  sessions %d
+gd	scenes/ui/InstructorAnalyticsText.gd:93	Learner watchlist
+gd	scenes/ui/InstructorAnalyticsText.gd:95	No learner activity rows yet.
+gd	scenes/ui/InstructorAnalyticsText.gd:99	%s  avg %d%%  weak %s  ev %d
+gd	scenes/ui/InstructorAnalyticsText.gd:100	Learner
+gd	scenes/ui/InstructorAnalyticsText.gd:107	Instructional next steps
+gd	scenes/ui/InstructorAnalyticsText.gd:109	Collect one completed mission per learner before assigning stations.
+gd	scenes/ui/InstructorAnalyticsText.gd:116	Elicit reasoning
+gd	scenes/ui/InstructorAnalyticsText.gd:117	Extend thinking
+gd	scenes/ui/InstructorAnalyticsText.gd:118	Revoicing
+gd	scenes/ui/InstructorAnalyticsText.gd:119	Wait time
+gd	scenes/ui/InstructorAnalyticsText.gd:120	Behavior mgmt
+gd	scenes/ui/InstructorAnalyticsText.gd:121	Restraint
+gd	scenes/ui/InstructorAnalyticsText.gd:122	Specific praise
+gd	scenes/ui/InstructorAnalyticsText.gd:123	Asset connect
+gd	scenes/ui/InstructorAnalyticsText.gd:124	Group monitor
+gd	scenes/ui/InstructorAnalyticsText.gd:125	Formative check
+gd	scenes/ui/InstructorAnalyticsText.gd:126	Status treatment
+gd	scenes/ui/Login.gd:50	CHALK & CHANCE
+gd	scenes/ui/Login.gd:60	Teach. Listen. Adapt.
+gd	scenes/ui/Login.gd:96	Play demo
+gd	scenes/ui/Login.gd:100	Play demo (voice off)
+gd	scenes/ui/Login.gd:108	Demo path: choose a mission, rehearse teacher moves, then review evidence.
+gd	scenes/ui/Login.gd:110	%s course access: enter your name and the course passcode to save progress and evidence.
+gd	scenes/ui/Login.gd:117	Class sign in
+gd	scenes/ui/Login.gd:119	%s sign in
+gd	scenes/ui/Login.gd:125	Class sign in keeps progress tied to a course account.
+gd	scenes/ui/Login.gd:127	The %s class code is already loaded. Students only need their own name and the course passcode.
+gd	scenes/ui/Login.gd:137	Class code
+gd	scenes/ui/Login.gd:137	e.g. UA-CAT531-SUMMER26
+gd	scenes/ui/Login.gd:138	Your name
+gd	scenes/ui/Login.gd:138	First Last
+gd	scenes/ui/Login.gd:139	Course passcode
+gd	scenes/ui/Login.gd:139	enter course passcode
+gd	scenes/ui/Login.gd:148	Sign in / Join
+gd	scenes/ui/Login.gd:150	Join %s / Continue
+gd	scenes/ui/Login.gd:157	Skip sign in
+gd	scenes/ui/Login.gd:179	Offline mode is ready.
+gd	scenes/ui/Login.gd:181	%s ready. Enter your name + course passcode.
+gd	scenes/ui/Login.gd:183	Public demo ready. Voice is off to prevent ElevenLabs overuse.
+gd	scenes/ui/Login.gd:257	Class code
+gd	scenes/ui/Login.gd:262	JavaScriptBridge
+gd	scenes/ui/Login.gd:264	(() => { const q = new URLSearchParams(window.location.search); const h = new URLSearchParams(window.location.hash.slice(1)); const flag = (k) => q.get(k) === '1' || h.get(k) === '1'; return q.get('class_code') || h.get('class_code') || (flag('cat531') ? 'UA-CAT531-SUMMER26' : '') || (flag('cat100') ? 'UA-CAT100-SUMMER26' : ''); })()
+gd	scenes/ui/Login.gd:276	Enter your name and course passcode.
+gd	scenes/ui/Login.gd:278	Enter class code, name, and password.
+gd	scenes/ui/Login.gd:281	Signing in...
+gd	scenes/ui/PreviewScenario.gd:35	REVIEW & ADJUST
+gd	scenes/ui/PreviewScenario.gd:93	Remove a student
+gd	scenes/ui/PreviewScenario.gd:94	Play this lesson
+gd	scenes/ui/PreviewScenario.gd:96	Back
+gd	scenes/ui/PreviewScenario.gd:112	Loadout
+gd	scenes/ui/PreviewScenario.gd:140	AI (content-specific)
+gd	scenes/ui/PreviewScenario.gd:140	offline (format + objectives)
+gd	scenes/ui/PreviewScenario.gd:143	%s\n\nYour class: %d students (%s)\nYour challenge: keep the room with you while every learner contributes.\nWin condition: meet the objective checklist before the period ends.\nFirst recommended move: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nConversion: %s\n\nObjectives:\n%s
+gd	scenes/ui/PreviewScenario.gd:144	Lesson
+gd	scenes/ui/PreviewScenario.gd:153	Scenario check passed.
+gd	scenes/ui/PreviewScenario.gd:156	Fix before playing: 
+gd	scenes/ui/PreviewScenario.gd:171	Present a short chunk, wait, then Question a highlighted student.
+gd	scenes/ui/PreviewScenario.gd:173	Visit one pod, Listen, Surface, then Redistribute airtime.
+gd	scenes/ui/PreviewScenario.gd:175	Circulate first, then confer with a student who is drifting.
+gd	scenes/ui/PreviewScenario.gd:176	Talk to one student, Elicit their reasoning, then use Wait before pressing further.
+gd	scenes/ui/PreviewScenario.gd:182	missing %s
+gd	scenes/ui/PreviewScenario.gd:186	unknown format
+gd	scenes/ui/PreviewScenario.gd:188	unknown mode
+gd	scenes/ui/PreviewScenario.gd:191	needs at least 2 students
+gd	scenes/ui/PreviewScenario.gd:196	each student needs an id
+gd	scenes/ui/PreviewScenario.gd:202	persona override incomplete for %s
+gd	scenes/ui/PreviewScenario.gd:206	needs objectives
+gd	scenes/ui/PreviewScenario.gd:208	period too short
+gd	scenes/ui/PreviewScenario.gd:228	Reach every student (%d)
+gd	scripts/CoachFeedback.gd:11	Elicit
+gd	scripts/CoachFeedback.gd:11	You asked for their reasoning instead of supplying it. Now their thinking is visible, and you can teach to it.
+gd	scripts/CoachFeedback.gd:12	The question came before they were ready, so it didn't open anything up.
+gd	scripts/CoachFeedback.gd:13	\"Walk me through how you got that.\"
+gd	scripts/CoachFeedback.gd:14	Extend
+gd	scripts/CoachFeedback.gd:14	You pushed on an idea that was already out there. That's how a partial answer turns into an argument.
+gd	scripts/CoachFeedback.gd:15	You pushed before there was an idea on the table to push on.
+gd	scripts/CoachFeedback.gd:16	\"Say more. Why does that work?\"
+gd	scripts/CoachFeedback.gd:17	Revoice
+gd	scripts/CoachFeedback.gd:17	You said their idea back to them in clearer words, and they kept ownership of it.
+gd	scripts/CoachFeedback.gd:18	You restated an idea nobody had actually said yet.
+gd	scripts/CoachFeedback.gd:19	\"So you're saying... did I get that right?\"
+gd	scripts/CoachFeedback.gd:20	Tell
+gd	scripts/CoachFeedback.gd:20	You gave a direct explanation at a point where they needed it.
+gd	scripts/CoachFeedback.gd:21	You gave the answer, and their reasoning never came out. Now you don't know what they understand.
+gd	scripts/CoachFeedback.gd:22	\"Before I show you, what's your hunch, and why?\"
+gd	scripts/CoachFeedback.gd:23	Praise
+gd	scripts/CoachFeedback.gd:23	You named exactly what they did, so they know what to do again.
+gd	scripts/CoachFeedback.gd:24	The praise was about the person, not about what they did, so it doesn't tell them anything.
+gd	scripts/CoachFeedback.gd:25	\"You checked your answer against the picture. That's what careful mathematicians do.\"
+gd	scripts/CoachFeedback.gd:26	Connect
+gd	scripts/CoachFeedback.gd:26	You tied the lesson to something they already know from their own life. That's a strength to build on.
+gd	scripts/CoachFeedback.gd:27	The connection felt forced because you didn't know enough about them yet.
+gd	scripts/CoachFeedback.gd:28	\"Where have you seen something split into equal parts before?\"
+gd	scripts/CoachFeedback.gd:29	Redirect
+gd	scripts/CoachFeedback.gd:29	You redirected the behavior quietly and in proportion, and the lesson kept going.
+gd	scripts/CoachFeedback.gd:30	The redirect was stronger than the moment called for. Try a quieter step first.
+gd	scripts/CoachFeedback.gd:31	(Move closer, make eye contact, then a quiet: \"Pencil on problem two, please.\")
+gd	scripts/CoachFeedback.gd:32	Wait
+gd	scripts/CoachFeedback.gd:32	You held the silence. That time is where their thinking happened.
+gd	scripts/CoachFeedback.gd:33	You moved on before the thinking time was over.
+gd	scripts/CoachFeedback.gd:34	(Count three in your head. Then: \"Take your time.\")
+gd	scripts/CoachFeedback.gd:36	Present
+gd	scripts/CoachFeedback.gd:36	You kept it short, so the room could keep up.
+gd	scripts/CoachFeedback.gd:37	Too many Presents in a row. You were talking into confusion you couldn't see.
+gd	scripts/CoachFeedback.gd:38	(One idea, under a minute. Then stop and check.)
+gd	scripts/CoachFeedback.gd:39	Question
+gd	scripts/CoachFeedback.gd:39	You asked at the right moment, so their answer showed you what they understood.
+gd	scripts/CoachFeedback.gd:40	The question came while the room was still confused, so it only exposed that confusion without fixing it.
+gd	scripts/CoachFeedback.gd:41	\"Who can explain why the denominator names the parts?\"
+gd	scripts/CoachFeedback.gd:42	Repair
+gd	scripts/CoachFeedback.gd:42	You noticed confusion and fixed it before moving on.
+gd	scripts/CoachFeedback.gd:43	You re-explained when there wasn't much confusion to fix.
+gd	scripts/CoachFeedback.gd:44	\"Let me show it a different way, with the fraction strips.\"
+gd	scripts/CoachFeedback.gd:45	Check
+gd	scripts/CoachFeedback.gd:45	You checked the whole room, and now you have evidence instead of a guess.
+gd	scripts/CoachFeedback.gd:46	The check didn't lead to anything. Use what it shows you.
+gd	scripts/CoachFeedback.gd:47	\"Thumbs up, sideways, or down: which fraction is bigger, 1/3 or 1/4?\"
+gd	scripts/CoachFeedback.gd:49	Observe
+gd	scripts/CoachFeedback.gd:49	You watched before stepping in, so your next move fit the group.
+gd	scripts/CoachFeedback.gd:50	You watched for too long. The mistake was already out there.
+gd	scripts/CoachFeedback.gd:51	(Stand back, listen for 20 seconds, then step in.)
+gd	scripts/CoachFeedback.gd:52	Probe
+gd	scripts/CoachFeedback.gd:52	Your probe brought the group's hidden misconception out into the open.
+gd	scripts/CoachFeedback.gd:53	You probed a group that had already shown its thinking.
+gd	scripts/CoachFeedback.gd:54	\"How did you all decide that?\"
+gd	scripts/CoachFeedback.gd:55	Press
+gd	scripts/CoachFeedback.gd:55	You pressed on the shared mistake once everyone could see it.
+gd	scripts/CoachFeedback.gd:56	You pressed before the mistake was out in the open. Probe first.
+gd	scripts/CoachFeedback.gd:57	\"Eight is bigger than four, but is an eighth bigger than a fourth?\"
+gd	scripts/CoachFeedback.gd:58	Redistribute
+gd	scripts/CoachFeedback.gd:58	You gave the floor to a quieter voice. That changes who gets to think out loud.
+gd	scripts/CoachFeedback.gd:59	Everyone was already getting a turn, so there was nothing to rebalance.
+gd	scripts/CoachFeedback.gd:60	\"Sam, what do you think about Talia's idea?\"
+gd	scripts/CoachFeedback.gd:98	You used %s %d times and it didn't land. It's not the move, it's how you're using it. See the example below.
+gd	scripts/CoachFeedback.gd:100	You fell back on %s %d times and it didn't land. Next time, try %s instead.
+gd	scripts/CoachFeedback.gd:110	%d of %d moves landed
+gd	scripts/CoachFeedback.gd:120	Core move
+gd	scripts/CoachFeedback.gd:132	%s: you took \"%s\".
+gd	scripts/CoachFeedback.gd:134	  Also works: 
+gd	scripts/CoachFeedback.gd:170	Turn %d
+gd	scripts/CoachFeedback.gd:172	, with %s
+gd	scripts/CoachFeedback.gd:179	first 
+gd	scripts/CoachFeedback.gd:180	That move works for %s, just not yet. Set it up first.
+gd	scripts/CoachFeedback.gd:180	this student
+gd	scripts/CoachFeedback.gd:183	 first
+gd	scripts/CoachFeedback.gd:202	Make %d %s moves land this time.
+gd	scripts/InputFeel.gd:35	HotkeyBadge
+gd	scripts/LessonImport.gd:9	Talia
+gd	scripts/LessonImport.gd:9	Sam
+gd	scripts/LessonImport.gd:9	Diego
+gd	scripts/LessonImport.gd:10	Jordan
+gd	scripts/LessonImport.gd:10	Priya
+gd	scripts/LessonImport.gd:10	Noah
+gd	scripts/LessonImport.gd:11	Mei-Lin
+gd	scripts/LessonImport.gd:11	Deshawn
+gd	scripts/LessonImport.gd:12	Riley
+gd	scripts/LessonImport.gd:12	Marcus
+gd	scripts/LessonImport.gd:22	practice set
+gd	scripts/LessonImport.gd:22	individual work
+gd	scripts/LessonImport.gd:24	direct instruction
+gd	scripts/LessonImport.gd:26	number talk
+gd	scripts/LessonImport.gd:38	Keep class attention >= 65%
+gd	scripts/LessonImport.gd:39	Finish with composure >= 50%
+gd	scripts/LessonImport.gd:40	At most 3 disruptions
+gd	scripts/LessonImport.gd:41	Reach every student (%d)
+gd	scripts/LessonImport.gd:44	Use wait time at least 2 times
+gd	scripts/LessonImport.gd:83	(\\d{1,3})\\s*(?:min|minute)
+gd	scripts/LessonImport.gd:103	lesson plan
+gd	scripts/LessonImport.gd:105	Imported Lesson
+gd	scripts/LessonImport.gd:124	Imported Lesson
+gd	scripts/LessonImport.gd:128	Lecture
+gd	scripts/LessonImport.gd:129	Group Work
+gd	scripts/LessonImport.gd:130	Independent Work
+gd	scripts/LessonImport.gd:131	Discussion
+gd	scripts/LessonImport.gd:134	place value
+gd	scripts/LessonImport.gd:138	main idea
+gd	scripts/LessonImport.gd:149	A compact mini-lesson is about to drift unless checks for understanding keep every learner visible.
+gd	scripts/LessonImport.gd:151	Clusters are active, materials are moving, and the teacher has to surface shared reasoning before airtime narrows.
+gd	scripts/LessonImport.gd:153	The room looks quiet, but the real work is circulation: catch confusion early without breaking momentum.
+gd	scripts/LessonImport.gd:155	A discussion around %s is open, but the teacher must turn scattered student ideas into public reasoning.
+gd	scripts/LessonImport.gd:175	Student
+gd	scripts/PathJudge.gd:30	Core move
+gd	scripts/PathJudge.gd:56	you cut off their thinking time
+gd	scripts/PathJudge.gd:58	the pause was under three seconds
+gd	scripts/PathJudge.gd:88	same move twice in a row, so it landed softer
+gd	scripts/PathJudge.gd:98	right idea, too early: first %s
+gd	scripts/PathJudge.gd:143	 or 
+gd	scripts/ResultsCard.gd:27	ResultsCard
+gd	scripts/ResultsCard.gd:50	Grade
+gd	scripts/ResultsCard.gd:97	Moments that decided it
+gd	scripts/ResultsCard.gd:113	No turning points yet: the period ended before a move landed.
+gd	scripts/ResultsCard.gd:117	Next time
+gd	scripts/ResultsCard.gd:124	Earned
+gd	scripts/ResultsCard.gd:130	Lv %d  +1 upgrade
+gd	scripts/ResultsCard.gd:139	Nothing this time.
+gd	scripts/ResultsCard.gd:213	Excellent work: every part of this held up.
+gd	scripts/ResultsCard.gd:215	Strong session. Small gains left in %s.
+gd	scripts/ResultsCard.gd:217	Solid. %s held the score back a little.
+gd	scripts/ResultsCard.gd:219	You got there, with detours. %s is the part to practise.
+gd	scripts/ResultsCard.gd:220	%s held the score down. That is the place to start.
+gd	scripts/Scaffold.gd:20	Off
+gd	scripts/Scaffold.gd:20	Light
+gd	scripts/Scaffold.gd:20	Partial
+gd	scripts/Scaffold.gd:20	Full
+gd	scripts/Scaffold.gd:43	Not enough evidence yet, so full support is on
+gd	scripts/Scaffold.gd:45	Estimate %d%%, so full support is on
+gd	scripts/Scaffold.gd:48	Estimate %d%%, so some supports are gone
+gd	scripts/Scaffold.gd:51	Estimate %d%%, so you read the student yourself
+gd	scripts/Scaffold.gd:54	Estimate %d%% across %d events, so all supports are off
+gd	scripts/Scaffold.gd:68	Support: Coach Vee stepped in
+gd	scripts/Scaffold.gd:69	Support: %s
+gd	scripts/ThinkRing.gd:36	cut off
+gd	scripts/ThinkRing.gd:44	cut off
+gd	scripts/Tuning.gd:16	...oh. Never mind.
+gd	scripts/Tuning.gd:36	Proximity
+gd	scripts/Tuning.gd:36	Nonverbal
+gd	scripts/Tuning.gd:36	Brief word
+gd	scripts/Tuning.gd:36	Public correction
+gd	scripts/Tuning.gd:45	Confused
+gd	scripts/Tuning.gd:45	Gets it
+gd	scripts/Tuning.gd:45	Withdrawn
+gd	scripts/Tuning.gd:45	Distracted
+gd	scripts/Tuning.gd:64	1:1 Encounter
+gd	scripts/TurnBeat.gd:16	LANDED
+gd	scripts/TurnBeat.gd:16	TOO EARLY
+gd	scripts/TurnBeat.gd:16	NOT YET
+gd	scripts/TurnBeat.gd:16	NOTED
+gd	scripts/UiKit.gd:84	Panel
+gd	scripts/UiKit.gd:85	PanelContainer
+gd	scripts/UiKit.gd:87	Button
+gd	scripts/UiKit.gd:88	Button
+gd	scripts/UiKit.gd:89	Button
+gd	scripts/UiKit.gd:90	Button
+gd	scripts/UiKit.gd:91	Button
+gd	scripts/UiKit.gd:92	Button
+gd	scripts/UiKit.gd:93	Button
+gd	scripts/UiKit.gd:124	MoveHint
+gd	scripts/UiText.gd:13	TitleLabel
+gd	scripts/UiText.gd:14	HeadingLabel
+gd	scripts/UiText.gd:15	BodyLabel
+gd	scripts/UiText.gd:16	CaptionLabel
+gd	scripts/UiText.gd:17	HudLabel
+gd	scripts/UiText.gd:18	HudValueLabel
+gd	scripts/UiText.gd:19	NameTagLabel
+gd	scripts/UiText.gd:20	BoardBodyLabel
+gd	scripts/UiText.gd:24	TitleLabel
+gd	scripts/UiText.gd:24	HeadingLabel
+gd	scripts/UiText.gd:24	HudValueLabel
+gd	autoload/Auth.gd:33	login not set up yet
+gd	autoload/Auth.gd:47	login failed
+gd	autoload/Auth.gd:82	{'Content-Type':'application/json'}
+gd	autoload/Competency.gd:15	Eliciting
+gd	autoload/Competency.gd:15	Extending
+gd	autoload/Competency.gd:15	Revoicing
+gd	autoload/Competency.gd:16	Wait time
+gd	autoload/Competency.gd:16	Mgmt (least-intrusive)
+gd	autoload/Competency.gd:16	Restraint
+gd	autoload/Competency.gd:17	Specific praise
+gd	autoload/Competency.gd:17	Asset connect
+gd	autoload/Competency.gd:18	Group monitoring
+gd	autoload/Competency.gd:18	Formative check
+gd	autoload/Competency.gd:18	Status treatment
+gd	autoload/Competency.gd:19	Noticing
+gd	autoload/GameCoach.gd:7	Signature: simultaneous learner triage + competing classroom demands.
+gd	autoload/GameCoach.gd:10	Signature: pacing, checks for understanding, wait-time, and equity evidence.
+gd	autoload/GameCoach.gd:12	Signature: pod monitoring, shared reasoning, and participation balance.
+gd	autoload/GameCoach.gd:14	Signature: circulation, proximity control, and quiet individual conferences.
+gd	autoload/GameCoach.gd:15	Signature: whole-room orchestration plus differentiated student reasoning.
+gd	autoload/GameCoach.gd:29	Research edge: not one scripted avatar, but a live multi-student capstone.
+gd	autoload/GameCoach.gd:31	Research edge: group-level reasoning and airtime are scored, not just talk quality.
+gd	autoload/GameCoach.gd:33	Research edge: lecture rhythm becomes measurable practice, not a monologue.
+gd	autoload/GameCoach.gd:35	Research edge: wait-time, equity, and withitness are measured together.
+gd	autoload/GameCoach.gd:36	Research edge: every move leaves a construct-level evidence trace.
+gd	autoload/GameCoach.gd:42	Adaptive coach: start with %s. First target: generate evidence for wait-time, equity, and reasoning moves.
+gd	autoload/GameCoach.gd:43	Adaptive coach: next play %s. Focus on %s; current estimate %d%% from %d evidence events.
+gd	autoload/GameCoach.gd:45	practice focus
+gd	autoload/GameCoach.gd:80	Adaptive: scaffold start
+gd	autoload/GameCoach.gd:82	Adaptive: challenge start
+gd	autoload/GameCoach.gd:83	Adaptive: standard start
+gd	autoload/GameCoach.gd:112	evidence gained
+gd	autoload/GameCoach.gd:112	missed evidence
+gd	autoload/GameCoach.gd:132	Practice target: clear a mission to convert choices into evidence-backed coaching.
+gd	autoload/GameCoach.gd:138	Practice target: collect first evidence for %s. Try: %s.
+gd	autoload/GameCoach.gd:141	Practice target: %s is the growth edge (%d%%, %d events). Try: %s.
+gd	autoload/GameCoach.gd:142	Practice: %s %d%% -> %s
+gd	autoload/GameCoach.gd:157	productive pause: more learners can enter
+gd	autoload/GameCoach.gd:159	rapport bridge: learner trust becomes usable evidence
+gd	autoload/GameCoach.gd:161	airtime balanced: quieter voices become visible
+gd	autoload/GameCoach.gd:163	confusion surfaced: misconception is now teachable
+gd	autoload/GameCoach.gd:164	fit signal: the move matched the learning need
+gd	autoload/GameCoach.gd:166	takeover risk: answer-giving reduced learner reasoning
+gd	autoload/GameCoach.gd:168	pressure mistimed: press before shared reasoning stabilized
+gd	autoload/GameCoach.gd:169	mismatch signal: choose a smaller or better-timed move
+gd	autoload/GameCoach.gd:173	The move fit the teaching need.
+gd	autoload/GameCoach.gd:175	Telling moved faster than the learner's reasoning.
+gd	autoload/GameCoach.gd:176	The move did not match the strongest need yet.
+gd	autoload/GameCoach.gd:180	Elicit
+gd	autoload/GameCoach.gd:180	Extend
+gd	autoload/GameCoach.gd:180	Revoice
+gd	autoload/GameCoach.gd:180	Tell
+gd	autoload/GameCoach.gd:181	Praise
+gd	autoload/GameCoach.gd:181	Connect
+gd	autoload/GameCoach.gd:181	Redirect
+gd	autoload/GameCoach.gd:181	Wait
+gd	autoload/GameCoach.gd:182	Present
+gd	autoload/GameCoach.gd:182	Question
+gd	autoload/GameCoach.gd:182	Repair
+gd	autoload/GameCoach.gd:182	Check
+gd	autoload/GameCoach.gd:183	Observe
+gd	autoload/GameCoach.gd:183	Probe
+gd	autoload/GameCoach.gd:183	Press
+gd	autoload/GameCoach.gd:183	Redistribute
+gd	autoload/GameCoach.gd:188	ask the learner to explain their reasoning before you evaluate it
+gd	autoload/GameCoach.gd:189	press for a second representation or a why-because explanation
+gd	autoload/GameCoach.gd:190	make the student's idea public in your own words, then check it
+gd	autoload/GameCoach.gd:191	pause before prompting again so the next response is earned
+gd	autoload/GameCoach.gd:192	use proximity or a quiet redirect before escalating
+gd	autoload/GameCoach.gd:193	avoid taking over; cue the next step instead of telling the answer
+gd	autoload/GameCoach.gd:194	name the exact productive behavior you want repeated
+gd	autoload/GameCoach.gd:195	connect the task to a learner asset or lived example
+gd	autoload/GameCoach.gd:196	observe the pod before intervening so you know the shared error
+gd	autoload/GameCoach.gd:197	ask for a quick sample of thinking, not a yes/no check
+gd	autoload/GameCoach.gd:198	redistribute airtime to a quieter learner with competence
+gd	autoload/GameCoach.gd:201	why?
+gd	autoload/GameCoach.gd:201	new model
+gd	autoload/GameCoach.gd:201	revoice then check
+gd	autoload/GameCoach.gd:202	hold the pause
+gd	autoload/GameCoach.gd:202	quiet cue
+gd	autoload/GameCoach.gd:202	cue, do not tell
+gd	autoload/GameCoach.gd:203	specific praise
+gd	autoload/GameCoach.gd:203	asset link
+gd	autoload/GameCoach.gd:204	quick sample
+gd	autoload/GameCoach.gd:204	rebalance airtime
+gd	autoload/GameCoach.gd:206	produce visible evidence
+gd	autoload/GameCoach.gd:210	Eliciting
+gd	autoload/GameCoach.gd:210	Extending
+gd	autoload/GameCoach.gd:210	Revoicing
+gd	autoload/GameCoach.gd:211	Wait-time
+gd	autoload/GameCoach.gd:211	Mgmt
+gd	autoload/GameCoach.gd:211	Restraint
+gd	autoload/GameCoach.gd:212	Praise
+gd	autoload/GameCoach.gd:212	Asset connect
+gd	autoload/GameCoach.gd:213	Monitoring
+gd	autoload/GameCoach.gd:213	Formative check
+gd	autoload/GameCoach.gd:214	Status treatment
+gd	autoload/GameCoach.gd:228	the capstone replay
+gd	autoload/GameState.gd:25	Base
+gd	autoload/GameState.gd:26	Base
+gd	autoload/GameState.gd:27	Baseline rehearsal with no profile bonus.
+gd	autoload/GameState.gd:33	Steady Lead
+gd	autoload/GameState.gd:34	Steady
+gd	autoload/GameState.gd:35	Safer recovery and order tools.
+gd	autoload/GameState.gd:41	Deep Listener
+gd	autoload/GameState.gd:42	Listen
+gd	autoload/GameState.gd:43	Starts with profile and noticing tools.
+gd	autoload/GameState.gd:49	Equity Scout
+gd	autoload/GameState.gd:50	Equity
+gd	autoload/GameState.gd:51	Defaults toward airtime and wait-time control.
+gd	autoload/GameState.gd:59	Steady Presence
+gd	autoload/GameState.gd:60	+10 max Composure each rank.
+gd	autoload/GameState.gd:64	Wait Mastery
+gd	autoload/GameState.gd:65	Wait-time readiness is 0.25s faster each rank.
+gd	autoload/GameState.gd:69	Relationship Sense
+gd	autoload/GameState.gd:70	Start encounters with more rapport and engagement.
+gd	autoload/GameState.gd:146	Steady Lead
+gd	autoload/GameState.gd:155	+%d Composure
+gd	autoload/GameState.gd:157	Wait window -%.1fs
+gd	autoload/GameState.gd:159	+%d%% starting rapport
+gd	autoload/GameState.gd:161	Baseline: no bonus, no starter items
+gd	autoload/GameState.gd:302	Lesson
+gd	autoload/GameState.gd:303	Practice
+gd	autoload/GameState.gd:312	Base
+gd	autoload/GameState.gd:316	Adaptive: standard start
+gd	autoload/GameState.gd:339	Collect first evidence
+gd	autoload/GameState.gd:340	Clear one mission to produce a coachable trace.
+gd	autoload/GameState.gd:345	Focus
+gd	autoload/Items.gd:8	Lesson Map
+gd	autoload/Items.gd:9	Map
+gd	autoload/Items.gd:10	Preview the lesson flow.
+gd	autoload/Items.gd:15	Breathing Reset
+gd	autoload/Items.gd:16	Breathe
+gd	autoload/Items.gd:17	Recover composure.
+gd	autoload/Items.gd:22	Student Profile Card
+gd	autoload/Items.gd:23	Profile
+gd	autoload/Items.gd:24	Reveal one learner need.
+gd	autoload/Items.gd:29	Quiet Signal
+gd	autoload/Items.gd:30	Signal
+gd	autoload/Items.gd:31	Restore order with a cue.
+gd	autoload/Items.gd:36	Noticing Lens
+gd	autoload/Items.gd:37	Notice
+gd	autoload/Items.gd:38	Surface a cue to notice.
+gd	autoload/Items.gd:43	Equity Snapshot
+gd	autoload/Items.gd:44	Equity
+gd	autoload/Items.gd:45	Check unheard voices.
+gd	autoload/Items.gd:50	Wait Meter Pin
+gd	autoload/Items.gd:51	Wait
+gd	autoload/Items.gd:52	Guarantee deliberate wait.
+gd	autoload/Items.gd:57	Practice Goal Card
+gd	autoload/Items.gd:58	Goal
+gd	autoload/Items.gd:59	Set a focused XP goal.
+gd	autoload/Juice.gd:150	OutcomeChip
+gd	autoload/LLMClient.gd:34	JavaScriptBridge
+gd	autoload/LLMClient.gd:35	(new URLSearchParams(window.location.search).get('public_demo') || new URLSearchParams(window.location.hash.slice(1)).get('public_demo') || '')
+gd	autoload/LLMClient.gd:63	backend error (result %d, code %d)
+gd	autoload/LLMClient.gd:69	backend returned malformed JSON
+gd	autoload/LLMClient.gd:104	Okay... let me walk you through how I was thinking about it.
+gd	autoload/LLMClient.gd:105	Good eliciting move; you surfaced their reasoning instead of correcting it. Press on the crack.
+gd	autoload/LLMClient.gd:109	Hmm, now I'm not so sure about my first answer.
+gd	autoload/LLMClient.gd:110	Nice press. They are reasoning it through themselves instead of being told.
+gd	autoload/LLMClient.gd:113	Yeah, that's what I meant.
+gd	autoload/LLMClient.gd:114	Revoicing builds rapport and makes their thinking public. The move new teachers skip most.
+gd	autoload/LLMClient.gd:117	Oh. Okay, I guess.
+gd	autoload/LLMClient.gd:118	You took over the thinking, so engagement dropped. Necessary sometimes, but try eliciting first.
+gd	autoload/LLMClient.gd:122	Make praise behavior-specific (name what they did), not 'good job'. Generic praise barely moves the needle.
+gd	autoload/LLMClient.gd:125	Okay, sorry.
+gd	autoload/LLMClient.gd:126	Use the least-intrusive redirect that works (proximity or nonverbal before a verbal correction).
+gd	autoload/LLMClient.gd:130	...oh, wait, maybe I had it backwards.
+gd	autoload/LLMClient.gd:131	Wait time paid off. They filled the silence with their own reasoning. Three to five seconds is the sweet spot.
+gd	autoload/LLMClient.gd:135	You broke the silence too early. Hold the pause at least three seconds.
+gd	autoload/LLMClient.gd:137	Pick a teaching move.
+gd	autoload/LLMClient.gd:142	  (For this student, that may not be the move that unlocks them - check the goal at the top.)
+gd	autoload/LLMClient.gd:152	Student
+gd	autoload/Music.gd:6	Music
+gd	autoload/Music.gd:21	Master
+gd	autoload/Music.gd:69	GymEncounter
+gd	autoload/Music.gd:71	MissionCinematic
+gd	autoload/SceneRouter.gd:59	CHALK & CHANCE
+gd	autoload/SceneRouter.gd:70	LOADING REHEARSAL
+gd	autoload/Sfx.gd:11	SFX
+gd	autoload/Sfx.gd:190	Master
+gd	autoload/TTSClient.gd:56	JavaScriptBridge
+gd	autoload/TTSClient.gd:57	(new URLSearchParams(window.location.search).get('voice_token') || new URLSearchParams(window.location.hash.slice(1)).get('voice_token') || '')
+gd	autoload/TTSClient.gd:63	JavaScriptBridge
+gd	autoload/TTSClient.gd:64	(new URLSearchParams(window.location.search).get('public_demo') || new URLSearchParams(window.location.hash.slice(1)).get('public_demo') || '')
+gd	autoload/TTSClient.gd:93	Voice: Off (demo gate)
+gd	autoload/TTSClient.gd:94	Voice: On
+gd	autoload/TTSClient.gd:94	Voice: Off
+gd	autoload/TTSClient.gd:98	Voice is off in the public demo to prevent paid API usage. Use the passcode gate for voice.
+gd	autoload/TTSClient.gd:100	Voice is enabled. Sound toggles both SFX and spoken student lines.
+gd	autoload/TTSClient.gd:101	Voice is unavailable because no TTS endpoint is configured.
+gd	autoload/TTSClient.gd:114	Voice
+gd	autoload/TTSClient.gd:117	Voice
+gd	autoload/TTSClient.gd:118	Master
+gd	autoload/TTSClient.gd:119	Voice
+gd	autoload/Telemetry.gd:21	still here
+gd	autoload/Telemetry.gd:85	window.screen.width + 'x' + window.screen.height
+gd	autoload/Telemetry.gd:86	Intl.DateTimeFormat().resolvedOptions().timeZone
+gd	autoload/Telemetry.gd:250	Student
+gd	autoload/Telemetry.gd:255	Class
+gd	autoload/Telemetry.gd:259	Student
+gd	autoload/Telemetry.gd:283	Elicit student reasoning
+gd	autoload/Telemetry.gd:284	Extend student thinking
+gd	autoload/Telemetry.gd:285	Revoice the student's idea
+gd	autoload/Telemetry.gd:286	Wait and protect thinking time
+gd	autoload/Telemetry.gd:287	Redirect with the least intrusive move
+gd	autoload/Telemetry.gd:288	Tell or explain directly
+gd	autoload/Telemetry.gd:289	Use behavior-specific praise
+gd	autoload/Telemetry.gd:290	Connect to a learner asset or context
+gd	autoload/Telemetry.gd:291	Observe the group before intervening
+gd	autoload/Telemetry.gd:292	Probe the group's reasoning
+gd	autoload/Telemetry.gd:293	Redistribute participation
+gd	autoload/Telemetry.gd:294	Press the group for deeper reasoning
+gd	autoload/Telemetry.gd:295	Ask the class to reason
+gd	autoload/Telemetry.gd:296	Re-explain using another approach
+gd	autoload/Telemetry.gd:297	Run a whole-class check
+gd	autoload/Telemetry.gd:298	Present the next part of the lesson
+gd	autoload/Telemetry.gd:304	Teacher move
+gd	autoload/Telemetry.gd:321	# Chalk & Chance Conversation Transcript
+gd	autoload/Telemetry.gd:323	- Session: `%s`
+gd	autoload/Telemetry.gd:324	- Exported: %s
+gd	autoload/Telemetry.gd:332	- Scenario(s): %s
+gd	autoload/Telemetry.gd:335	> This learner-owned file contains the current session's teacher moves and simulated learner responses. It excludes raw telemetry and account data.
+gd	autoload/Telemetry.gd:339	No conversation turns have been recorded in this session yet.
+gd	autoload/Telemetry.gd:345	## Turn %d
+gd	autoload/Telemetry.gd:351	Teacher
+gd	autoload/Telemetry.gd:353	 move (%s)
+gd	autoload/Telemetry.gd:357	Student
+gd	autoload/Telemetry.gd:363	**Coach note:** 
+gd	autoload/Telemetry.gd:366	**Decision signal:** %s
+gd	autoload/Telemetry.gd:366	Move addressed the target.
+gd	autoload/Telemetry.gd:366	Reconsider or revise this move.
+gd	autoload/Telemetry.gd:377	Complete at least one dialogue turn first.
+gd	autoload/Telemetry.gd:380	JavaScriptBridge
+gd	autoload/Telemetry.gd:391	The browser blocked the download.
+gd	autoload/Telemetry.gd:397	Could not create the transcript file.
+gd	autoload/VoiceInput.gd:22	Voice input is not available in this browser.
+gd	autoload/VoiceInput.gd:85	Voice input is not supported in this browser.
+json	data/scenarios/culturally_responsive_intro.json#title	Know Them First  -  Culturally Responsive Discussion (U-shape)
+json	data/scenarios/culturally_responsive_intro.json#roster[0].name	Jordan
+json	data/scenarios/culturally_responsive_intro.json#roster[1].name	Diego
+json	data/scenarios/culturally_responsive_intro.json#roster[2].name	Riley
+json	data/scenarios/culturally_responsive_intro.json#roster[3].name	Sam
+json	data/scenarios/culturally_responsive_intro.json#roster[4].name	Deshawn
+json	data/scenarios/culturally_responsive_intro.json#roster[5].name	Noah
+json	data/scenarios/culturally_responsive_intro.json#objectives[0].label	Keep class attention >= 60%
+json	data/scenarios/culturally_responsive_intro.json#objectives[1].label	Call on every student (6)
+json	data/scenarios/culturally_responsive_intro.json#objectives[2].label	Connect to >= 3 students' funds of knowledge
+json	data/scenarios/culturally_responsive_intro.json#objectives[3].label	Finish with composure >= 50%
+json	data/scenarios/culturally_responsive_intro.json#note	Weinstein, Tomlinson-Clarke & Curran (2004): management is cultural. Use Connect to notice each student's assets (funds of knowledge) and check your assumption before you correct.
+json	data/scenarios/culturally_responsive_intro.json#story_hook	Before correcting behavior, the teacher has to notice student assets and connect the lesson to lived knowledge.
+json	data/scenarios/custom_comparing_decimals.json#title	Comparing Decimals  -  Discussion (U-shape)
+json	data/scenarios/custom_comparing_decimals.json#roster[0].name	Talia
+json	data/scenarios/custom_comparing_decimals.json#roster[1].name	Sam
+json	data/scenarios/custom_comparing_decimals.json#roster[2].name	Diego
+json	data/scenarios/custom_comparing_decimals.json#roster[3].name	Jordan
+json	data/scenarios/custom_comparing_decimals.json#roster[4].name	Priya
+json	data/scenarios/custom_comparing_decimals.json#roster[5].name	Noah
+json	data/scenarios/custom_comparing_decimals.json#objectives[0].label	Keep class attention >= 65%
+json	data/scenarios/custom_comparing_decimals.json#objectives[1].label	Finish with composure >= 50%
+json	data/scenarios/custom_comparing_decimals.json#objectives[2].label	Every student contributes once
+json	data/scenarios/custom_comparing_decimals.json#objectives[3].label	Use wait time at least 3 times
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.talia_dominator.target_label	Revoice and redirect decimal reasoning
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.talia_dominator.opening_line	It is 0.45. Forty-five is bigger than five, so 0.45 has to be greater than 0.5.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.talia_dominator.win_line	I hear it now: 0.5 is 0.50, so five tenths is greater than forty-five hundredths.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.sam_withdrawn.target_label	Wait, then elicit a place-value idea
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.sam_withdrawn.opening_line	I am not sure. The extra digit in 0.45 makes me think it might be bigger.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.sam_withdrawn.win_line	When I line them up as hundredths, 0.50 is more than 0.45.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.diego_ell.target_label	Wait and revoice tenths versus hundredths
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.diego_ell.opening_line	I think 0.45, because I see forty-five. But maybe tenths and hundredths are different.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.diego_ell.win_line	So 0.5 means five tenths, the same as fifty hundredths, and fifty hundredths is larger.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.jordan_skeptic.target_label	Revoice, then extend to money or place value
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.jordan_skeptic.opening_line	This feels like a trick. If 45 is bigger than 5, why would 0.45 be smaller?
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.jordan_skeptic.win_line	Okay, like money: 50 cents is more than 45 cents, so 0.50 is greater than 0.45.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.priya_quiet.target_label	Elicit with wait time
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.priya_quiet.opening_line	I was thinking 0.5, but I do not want to say it wrong.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.priya_quiet.win_line	0.5 is bigger because it is five tenths, and 0.45 is four tenths and five hundredths.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.noah_g5_fractions.target_label	Elicit and extend Noah's comparison model
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.noah_g5_fractions.opening_line	I think 0.45 is greater because 45 is more than 5, but decimals confuse me.
+json	data/scenarios/custom_comparing_decimals.json#persona_overrides.noah_g5_fractions.win_line	If I write 0.5 as 0.50, then I can compare hundredths: 50 hundredths is greater than 45 hundredths.
+json	data/scenarios/custom_comparing_decimals.json#story_hook	A decimal comparison sounds simple until place-value intuition collides with whole-number thinking in public discussion.
+json	data/scenarios/discussion_fractions.json#title	Fraction Talk  -  Group Discussion (U-shape)
+json	data/scenarios/discussion_fractions.json#roster[0].name	Talia
+json	data/scenarios/discussion_fractions.json#roster[1].name	Sam
+json	data/scenarios/discussion_fractions.json#roster[2].name	Diego
+json	data/scenarios/discussion_fractions.json#roster[3].name	Jordan
+json	data/scenarios/discussion_fractions.json#roster[4].name	Priya
+json	data/scenarios/discussion_fractions.json#roster[5].name	Noah
+json	data/scenarios/discussion_fractions.json#objectives[0].label	Keep class attention >= 65%
+json	data/scenarios/discussion_fractions.json#objectives[1].label	Finish with composure >= 50%
+json	data/scenarios/discussion_fractions.json#objectives[2].label	At most 2 disruptions
+json	data/scenarios/discussion_fractions.json#objectives[3].label	Call on every student (6)
+json	data/scenarios/discussion_fractions.json#objectives[4].label	Use wait time at least 3 times
+json	data/scenarios/discussion_fractions.json#story_hook	A U-shaped fraction talk invites public reasoning, but wait-time and equitable airtime determine whose ideas become visible.
+json	data/scenarios/group_work_fractions.json#title	Group Investigation  -  Group Work (clusters)
+json	data/scenarios/group_work_fractions.json#collective_reasoning	The group is likely to say 1/8 is larger than 1/4 because 8 is more than 4.
+json	data/scenarios/group_work_fractions.json#roster[0].name	Talia
+json	data/scenarios/group_work_fractions.json#roster[1].name	Noah
+json	data/scenarios/group_work_fractions.json#roster[2].name	Mei-Lin
+json	data/scenarios/group_work_fractions.json#roster[3].name	Diego
+json	data/scenarios/group_work_fractions.json#roster[4].name	Deshawn
+json	data/scenarios/group_work_fractions.json#roster[5].name	Marcus
+json	data/scenarios/group_work_fractions.json#roster[6].name	Priya
+json	data/scenarios/group_work_fractions.json#roster[7].name	Sam
+json	data/scenarios/group_work_fractions.json#objectives[0].label	Keep attention >= 60% (groups drift faster)
+json	data/scenarios/group_work_fractions.json#objectives[1].label	At most 3 disruptions
+json	data/scenarios/group_work_fractions.json#objectives[2].label	Composure >= 50%
+json	data/scenarios/group_work_fractions.json#objectives[3].label	Visit every group member (8)
+json	data/scenarios/group_work_fractions.json#story_hook	Clusters are busy with fraction strips, and the teacher must balance collaboration, shared reasoning, and off-task drift.
+json	data/scenarios/gym_capstone.json#title	Capstone: The Lesson That Went Sideways
+json	data/scenarios/gym_capstone.json#roster[0].name	Noah
+json	data/scenarios/gym_capstone.json#roster[1].name	Deshawn
+json	data/scenarios/gym_capstone.json#roster[2].name	Marcus
+json	data/scenarios/gym_capstone.json#roster[3].name	Priya
+json	data/scenarios/gym_capstone.json#persona_overrides.noah_g5_fractions.target_label	Elicit + extend (surface the reasoning)
+json	data/scenarios/gym_capstone.json#persona_overrides.noah_g5_fractions.opening_line	I think I messed up the example. I used the bigger number because it looked bigger, but now everyone is staring at me.
+json	data/scenarios/gym_capstone.json#persona_overrides.noah_g5_fractions.win_line	Oh, I see it now, I had the idea backwards!
+json	data/scenarios/gym_capstone.json#persona_overrides.deshawn_offtask.target_label	Least-intrusive redirect + BSP
+json	data/scenarios/gym_capstone.json#persona_overrides.deshawn_offtask.opening_line	(leans back and starts joking with the side table) This is taking forever.
+json	data/scenarios/gym_capstone.json#persona_overrides.deshawn_offtask.win_line	Alright, I'm back on it.
+json	data/scenarios/gym_capstone.json#persona_overrides.marcus_volatile.target_label	Affect-first: revoice + wait
+json	data/scenarios/gym_capstone.json#persona_overrides.marcus_volatile.opening_line	(pushes the paper away) I already said I don't get it. I'm done.
+json	data/scenarios/gym_capstone.json#persona_overrides.marcus_volatile.win_line	...okay. I'll try the first step.
+json	data/scenarios/gym_capstone.json#persona_overrides.priya_quiet.target_label	Deliberately invite + wait
+json	data/scenarios/gym_capstone.json#persona_overrides.priya_quiet.opening_line	(quietly has a useful idea written down, but keeps her hand low while louder students talk)
+json	data/scenarios/gym_capstone.json#persona_overrides.priya_quiet.win_line	Yes! I had that, thanks for asking me.
+json	data/scenarios/gym_capstone.json#story_hook	The lesson has gone sideways; the teacher must recover order, care, and reasoning across several students at once.
+json	data/scenarios/independent_fractions.json#title	Practice Set  -  Independent Work (rows)
+json	data/scenarios/independent_fractions.json#roster[0].name	Riley
+json	data/scenarios/independent_fractions.json#roster[1].name	Marcus
+json	data/scenarios/independent_fractions.json#roster[2].name	Deshawn
+json	data/scenarios/independent_fractions.json#roster[3].name	Noah
+json	data/scenarios/independent_fractions.json#roster[4].name	Mei-Lin
+json	data/scenarios/independent_fractions.json#roster[5].name	Sam
+json	data/scenarios/independent_fractions.json#roster[6].name	Diego
+json	data/scenarios/independent_fractions.json#roster[7].name	Priya
+json	data/scenarios/independent_fractions.json#objectives[0].label	Hold on-task >= 70% (circulate and confer)
+json	data/scenarios/independent_fractions.json#objectives[1].label	At most 1 disruption
+json	data/scenarios/independent_fractions.json#objectives[2].label	Composure >= 60%
+json	data/scenarios/independent_fractions.json#objectives[3].label	Confer with every student (8)
+json	data/scenarios/independent_fractions.json#story_hook	The room looks orderly, but quiet struggle is hidden in the rows; circulation and proximity decide the period.
+json	data/scenarios/lecture_fractions.json#title	Intro to Fractions  -  Lecture (rows)
+json	data/scenarios/lecture_fractions.json#lecture_focus.big_idea	Fractions name equal-sized parts of one whole.
+json	data/scenarios/lecture_fractions.json#lecture_focus.common_confusion	Students may treat the denominator as a larger whole number instead of the number of equal parts.
+json	data/scenarios/lecture_fractions.json#lecture_focus.check_for_understanding_prompt	If the whole is the same size, what happens to each piece when we cut it into more equal parts?
+json	data/scenarios/lecture_fractions.json#roster[0].name	Talia
+json	data/scenarios/lecture_fractions.json#roster[1].name	Diego
+json	data/scenarios/lecture_fractions.json#roster[2].name	Jordan
+json	data/scenarios/lecture_fractions.json#roster[3].name	Marcus
+json	data/scenarios/lecture_fractions.json#roster[4].name	Priya
+json	data/scenarios/lecture_fractions.json#roster[5].name	Mei-Lin
+json	data/scenarios/lecture_fractions.json#roster[6].name	Deshawn
+json	data/scenarios/lecture_fractions.json#roster[7].name	Noah
+json	data/scenarios/lecture_fractions.json#objectives[0].label	Hold attention >= 70% (rows favor on-task)
+json	data/scenarios/lecture_fractions.json#objectives[1].label	At most 1 disruption
+json	data/scenarios/lecture_fractions.json#objectives[2].label	Composure >= 60%
+json	data/scenarios/lecture_fractions.json#objectives[3].label	Reach every student (8)
+json	data/scenarios/lecture_fractions.json#objectives[4].label	Use wait time at least 2 times
+json	data/scenarios/lecture_fractions.json#story_hook	A calm fraction mini-lesson can become a monologue unless the teacher checks understanding before confusion spreads.
+json	data/scenarios/reading_main_idea.json#title	Finding the Main Idea  -  Discussion (U-shape)
+json	data/scenarios/reading_main_idea.json#roster[0].name	Talia
+json	data/scenarios/reading_main_idea.json#roster[1].name	Sam
+json	data/scenarios/reading_main_idea.json#roster[2].name	Diego
+json	data/scenarios/reading_main_idea.json#roster[3].name	Jordan
+json	data/scenarios/reading_main_idea.json#roster[4].name	Priya
+json	data/scenarios/reading_main_idea.json#roster[5].name	Noah
+json	data/scenarios/reading_main_idea.json#objectives[0].label	Keep class attention >= 65%
+json	data/scenarios/reading_main_idea.json#objectives[1].label	Composure >= 50%
+json	data/scenarios/reading_main_idea.json#objectives[2].label	Call on every student (6)
+json	data/scenarios/reading_main_idea.json#objectives[3].label	Use wait time at least 3 times
+json	data/scenarios/reading_main_idea.json#persona_overrides.noah_g5_fractions.target_label	Elicit and extend Noah's idea of 'main idea'
+json	data/scenarios/reading_main_idea.json#persona_overrides.noah_g5_fractions.opening_line	The main idea is the first sentence, because it comes first.
+json	data/scenarios/reading_main_idea.json#persona_overrides.noah_g5_fractions.win_line	Oh, the first sentence is just a detail. The main idea is what all the sentences are about together.
+json	data/scenarios/reading_main_idea.json#persona_overrides.jordan_skeptic.target_label	Acknowledge relevance, then press
+json	data/scenarios/reading_main_idea.json#persona_overrides.jordan_skeptic.opening_line	Why does it matter what the 'main idea' is? I just read it.
+json	data/scenarios/reading_main_idea.json#persona_overrides.jordan_skeptic.win_line	Okay, finding the main idea is like the headline, it tells you the point fast.
+json	data/scenarios/reading_main_idea.json#persona_overrides.diego_ell.target_label	Wait, then revoice the gist
+json	data/scenarios/reading_main_idea.json#persona_overrides.diego_ell.opening_line	I know the words... but 'main idea', the big one? I am not sure how to say.
+json	data/scenarios/reading_main_idea.json#persona_overrides.diego_ell.win_line	So the main idea is the whole thing together, not one line. The passage is mostly about bees helping plants.
+json	data/scenarios/reading_main_idea.json#persona_overrides.sam_withdrawn.target_label	Warm wait, then elicit
+json	data/scenarios/reading_main_idea.json#persona_overrides.sam_withdrawn.opening_line	(looks down) I don't want to guess wrong.
+json	data/scenarios/reading_main_idea.json#persona_overrides.sam_withdrawn.win_line	Maybe... it's mostly about how bees help flowers grow?
+json	data/scenarios/reading_main_idea.json#persona_overrides.priya_quiet.target_label	Deliberately invite Priya
+json	data/scenarios/reading_main_idea.json#persona_overrides.priya_quiet.opening_line	(has a strong summary ready but waits to be asked)
+json	data/scenarios/reading_main_idea.json#persona_overrides.priya_quiet.win_line	The main idea is that bees and flowers help each other survive.
+json	data/scenarios/reading_main_idea.json#persona_overrides.talia_dominator.target_label	Revoice, then redirect the turn
+json	data/scenarios/reading_main_idea.json#persona_overrides.talia_dominator.opening_line	I know it! It's about bees! It's bees! Call on me!
+json	data/scenarios/reading_main_idea.json#persona_overrides.talia_dominator.win_line	Right, and I'll let someone else add why that's the main idea.
+json	data/scenarios/reading_main_idea.json#story_hook	A literacy discussion about main idea asks the teacher to help students move from first details to the whole point.
+json	data/scenarios/science_force_motion.json#title	Forces & Motion  -  Group Work (clusters)
+json	data/scenarios/science_force_motion.json#collective_reasoning	The group is likely to argue that heavier objects fall faster because they feel stronger or more forceful.
+json	data/scenarios/science_force_motion.json#roster[0].name	Talia
+json	data/scenarios/science_force_motion.json#roster[1].name	Noah
+json	data/scenarios/science_force_motion.json#roster[2].name	Mei-Lin
+json	data/scenarios/science_force_motion.json#roster[3].name	Diego
+json	data/scenarios/science_force_motion.json#roster[4].name	Deshawn
+json	data/scenarios/science_force_motion.json#roster[5].name	Marcus
+json	data/scenarios/science_force_motion.json#roster[6].name	Priya
+json	data/scenarios/science_force_motion.json#roster[7].name	Sam
+json	data/scenarios/science_force_motion.json#objectives[0].label	Keep attention >= 60% (groups drift faster)
+json	data/scenarios/science_force_motion.json#objectives[1].label	At most 3 disruptions
+json	data/scenarios/science_force_motion.json#objectives[2].label	Composure >= 50%
+json	data/scenarios/science_force_motion.json#objectives[3].label	Visit every group member (8)
+json	data/scenarios/science_force_motion.json#persona_overrides.noah_g5_fractions.target_label	Elicit and extend Noah's prediction
+json	data/scenarios/science_force_motion.json#persona_overrides.noah_g5_fractions.opening_line	The heavier ball will hit the ground first, because it's heavier.
+json	data/scenarios/science_force_motion.json#persona_overrides.noah_g5_fractions.win_line	Oh... when we dropped them they landed together. So weight isn't what makes it fall faster.
+json	data/scenarios/science_force_motion.json#persona_overrides.marcus_volatile.target_label	Affect-first, then re-engage
+json	data/scenarios/science_force_motion.json#persona_overrides.marcus_volatile.opening_line	(shoves the materials) Our cart won't roll right, this is dumb!
+json	data/scenarios/science_force_motion.json#persona_overrides.marcus_volatile.win_line	...fine. Maybe the ramp is too flat. Let me try raising it a little.
+json	data/scenarios/science_force_motion.json#persona_overrides.deshawn_offtask.target_label	Least-intrusive redirect to the task
+json	data/scenarios/science_force_motion.json#persona_overrides.deshawn_offtask.opening_line	(spinning the wheel, off task) Watch how fast I can make it go!
+json	data/scenarios/science_force_motion.json#persona_overrides.deshawn_offtask.win_line	Alright, I'll record how far it rolls each push. On it.
+json	data/scenarios/science_force_motion.json#persona_overrides.diego_ell.target_label	Wait and revoice the force idea
+json	data/scenarios/science_force_motion.json#persona_overrides.diego_ell.opening_line	I push... it moves. But 'force', I am not sure the word.
+json	data/scenarios/science_force_motion.json#persona_overrides.diego_ell.win_line	So a push or a pull is a force, and a bigger push makes it go farther.
+json	data/scenarios/science_force_motion.json#persona_overrides.meilin_anxious.target_label	Process feedback, not person-praise
+json	data/scenarios/science_force_motion.json#persona_overrides.meilin_anxious.opening_line	Our group's measurement is probably wrong. I'm bad at science.
+json	data/scenarios/science_force_motion.json#persona_overrides.meilin_anxious.win_line	Okay, measuring the distance three times and averaging is a good method. I can do that.
+json	data/scenarios/science_force_motion.json#persona_overrides.talia_dominator.target_label	Revoice, then share the turn
+json	data/scenarios/science_force_motion.json#persona_overrides.talia_dominator.opening_line	I'll do all the pushing AND the recording AND the talking!
+json	data/scenarios/science_force_motion.json#persona_overrides.talia_dominator.win_line	Okay, I'll push and let Sam record so everyone has a job.
+json	data/scenarios/science_force_motion.json#persona_overrides.priya_quiet.target_label	Deliberately invite Priya's data
+json	data/scenarios/science_force_motion.json#persona_overrides.priya_quiet.opening_line	(quietly has the cleanest data table, rarely asked)
+json	data/scenarios/science_force_motion.json#persona_overrides.priya_quiet.win_line	Our cart went farther each time we pushed harder, here are the numbers.
+json	data/scenarios/science_force_motion.json#persona_overrides.sam_withdrawn.target_label	Warm wait, then elicit
+json	data/scenarios/science_force_motion.json#persona_overrides.sam_withdrawn.opening_line	(hangs back from the group, watching)
+json	data/scenarios/science_force_motion.json#persona_overrides.sam_withdrawn.win_line	Maybe... a smoother ramp lets it roll farther?
+json	data/scenarios/science_force_motion.json#story_hook	Ramps, carts, and confident misconceptions make this a live test of whether group data can change student thinking.
+json	data/persona_library/deshawn_offtask.json#display_name	Deshawn
+json	data/persona_library/deshawn_offtask.json#target_label	Least-to-most redirect
+json	data/persona_library/deshawn_offtask.json#opening_line	(turned around, talking to a friend instead of starting the task)
+json	data/persona_library/deshawn_offtask.json#win_line	Alright, alright, I'm on it. Sorry.
+json	data/persona_library/deshawn_offtask.json#assets[0]	captains his rec basketball team
+json	data/persona_library/deshawn_offtask.json#assets[1]	the kid everyone follows at recess
+json	data/persona_library/deshawn_offtask.json#asset_hint	Deshawn is off-task AND the natural leader the others follow. Build the relationship and channel that leadership - warm demander, not just redirect.
+json	data/persona_library/deshawn_offtask.json#connect_line	Aight, aight. You actually get me. ...Fine, I'll lead by getting MY work done first.
+json	data/persona_library/deshawn_offtask.json#paths[0].label	Least-to-most
+json	data/persona_library/deshawn_offtask.json#paths[0].why	A quiet redirect, then praise the moment he re-engages (Simonsen et al., 2008).
+json	data/persona_library/deshawn_offtask.json#paths[1].label	Catch him on task
+json	data/persona_library/deshawn_offtask.json#paths[1].why	Behavior-specific praise first builds the credit that makes the redirect work.
+json	data/persona_library/deshawn_offtask.json#paths[2].label	Relevance hook
+json	data/persona_library/deshawn_offtask.json#paths[2].why	Give him a reason to be in the task, then hold the line calmly.
+json	data/persona_library/diego_ell.json#display_name	Diego
+json	data/persona_library/diego_ell.json#target_label	Comprehension checks + wait time (ELL)
+json	data/persona_library/diego_ell.json#opening_line	I... I know it, but I not sure how to say it in English.
+json	data/persona_library/diego_ell.json#win_line	Oh! I can show it with the picture first, then say it. One fourth is bigger.
+json	data/persona_library/diego_ell.json#assets[0]	translates for his grandmother at appointments
+json	data/persona_library/diego_ell.json#assets[1]	explains schoolwork to younger cousins in Spanish first
+json	data/persona_library/diego_ell.json#asset_hint	Diego works it out in Spanish before he'll risk English. Letting him reason in his home language first is a resource, not a deficit (Moll's funds of knowledge).
+json	data/persona_library/diego_ell.json#connect_line	Oh - 'lo explico en espanol primero'... yes. When I say it my way first, then I can tell you in English. It makes sense.
+json	data/persona_library/diego_ell.json#paths[0].label	Processing time
+json	data/persona_library/diego_ell.json#paths[0].why	Extended wait time lets him translate and compose his answer (Rowe, 1986).
+json	data/persona_library/diego_ell.json#paths[1].label	Revoice to confirm
+json	data/persona_library/diego_ell.json#paths[1].why	Restating shows you understood and models the academic language.
+json	data/persona_library/diego_ell.json#paths[2].label	Start from his world
+json	data/persona_library/diego_ell.json#paths[2].why	The food-truck pizza is fractions he already knows.
+json	data/persona_library/jordan_skeptic.json#display_name	Jordan
+json	data/persona_library/jordan_skeptic.json#target_label	Connect learning to the student's world
+json	data/persona_library/jordan_skeptic.json#opening_line	When are we ever gonna use fractions in real life?
+json	data/persona_library/jordan_skeptic.json#win_line	Huh. Okay, splitting a bill or a recipe, that actually makes sense.
+json	data/persona_library/jordan_skeptic.json#assets[0]	rebuilds and tunes his older brother's bike
+json	data/persona_library/jordan_skeptic.json#assets[1]	tracks his own stats in a racing game
+json	data/persona_library/jordan_skeptic.json#asset_hint	Jordan keeps asking 'when do we use this?' He rebuilds bikes - gear ratios are exactly this math. The skepticism is a bid for relevance, not defiance.
+json	data/persona_library/jordan_skeptic.json#connect_line	Wait, this is just gear ratios. I do this on the bike every weekend. Okay, NOW it's worth my time.
+json	data/persona_library/jordan_skeptic.json#paths[0].label	Take him seriously
+json	data/persona_library/jordan_skeptic.json#paths[0].why	Treat his question as a real question, then press on the math.
+json	data/persona_library/jordan_skeptic.json#paths[1].label	Relevance first
+json	data/persona_library/jordan_skeptic.json#paths[1].why	Show where it's useful to him, then raise the demand (Hulleman & Harackiewicz, 2009).
+json	data/persona_library/jordan_skeptic.json#paths[2].label	Ask where he'd use it
+json	data/persona_library/jordan_skeptic.json#paths[2].why	Let him build the relevance himself, then build on his answer.
+json	data/persona_library/marcus_volatile.json#display_name	Marcus
+json	data/persona_library/marcus_volatile.json#target_label	Affect-first de-escalation
+json	data/persona_library/marcus_volatile.json#opening_line	(slams the pencil down) This is stupid, I can't do it!
+json	data/persona_library/marcus_volatile.json#win_line	...fine. Okay. Maybe just the first step. Don't make a big thing of it.
+json	data/persona_library/marcus_volatile.json#assets[0]	makes beats on his phone
+json	data/persona_library/marcus_volatile.json#assets[1]	calms himself with a rhythm or a walk
+json	data/persona_library/marcus_volatile.json#asset_hint	Marcus is escalating. He grounds himself through music and rhythm. Connect to that to bring the temperature down before any academic demand.
+json	data/persona_library/marcus_volatile.json#connect_line	...yeah. Music helps me chill. ...Okay. I'm good now. We can do the work.
+json	data/persona_library/marcus_volatile.json#paths[0].label	Affect first
+json	data/persona_library/marcus_volatile.json#paths[0].why	Name the frustration privately before the math (Roorda et al., 2011).
+json	data/persona_library/marcus_volatile.json#paths[1].label	Space, then check in
+json	data/persona_library/marcus_volatile.json#paths[1].why	A calm pause lowers the heat; then you reconnect.
+json	data/persona_library/meilin_anxious.json#display_name	Mei-Lin
+json	data/persona_library/meilin_anxious.json#target_label	Process-focused feedback
+json	data/persona_library/meilin_anxious.json#opening_line	I think I got it wrong again... I'm just not smart enough for this.
+json	data/persona_library/meilin_anxious.json#win_line	Okay... so it's about the strategy I used, not whether I'm smart. I can try that.
+json	data/persona_library/meilin_anxious.json#assets[0]	meticulous illustrator who redraws until it's right
+json	data/persona_library/meilin_anxious.json#assets[1]	helps friends calm down before tests
+json	data/persona_library/meilin_anxious.json#asset_hint	Mei-Lin's perfectionism is the same care that makes her redraw art until it's right. Name the effort, not the result - that's what unlocks her.
+json	data/persona_library/meilin_anxious.json#connect_line	...you noticed how much I revised it? ...okay. Maybe the mistakes are part of getting it right.
+json	data/persona_library/meilin_anxious.json#paths[0].label	Process feedback
+json	data/persona_library/meilin_anxious.json#paths[0].why	Praise the strategy, not her smarts, then stretch it (Hattie & Timperley, 2007).
+json	data/persona_library/meilin_anxious.json#paths[1].label	Normalize the struggle
+json	data/persona_library/meilin_anxious.json#paths[1].why	Time without judgment tells her a hard problem is normal.
+json	data/persona_library/meilin_anxious.json#paths[2].label	Strategy talk
+json	data/persona_library/meilin_anxious.json#paths[2].why	Make her process visible so the feedback has something concrete to name.
+json	data/persona_library/noah_g5_fractions.json#display_name	Noah
+json	data/persona_library/noah_g5_fractions.json#target_label	Eliciting student thinking
+json	data/persona_library/noah_g5_fractions.json#opening_line	Which is bigger, one eighth or one fourth? ...One eighth, because 8 is more than 4.
+json	data/persona_library/noah_g5_fractions.json#win_line	Oh! More pieces means each piece is smaller. One fourth IS bigger. I get it now!
+json	data/persona_library/noah_g5_fractions.json#assets[0]	divides snacks fairly so his little sister never complains
+json	data/persona_library/noah_g5_fractions.json#assets[1]	draws comic panels in equal-sized boxes
+json	data/persona_library/noah_g5_fractions.json#asset_hint	Noah is the one who splits the last brownie so his sister can't argue. He already reasons about equal shares - that's fractions in his own world.
+json	data/persona_library/noah_g5_fractions.json#connect_line	Oh - like splitting the brownie! More people means smaller pieces. So 1/8 is the smaller share. I actually get it now.
+json	data/persona_library/noah_g5_fractions.json#paths[0].label	Diagnose, then press
+json	data/persona_library/noah_g5_fractions.json#paths[0].why	Surface his 4 > 3 theory first, then press on the crack in it (Jacobs et al., 2010).
+json	data/persona_library/noah_g5_fractions.json#paths[1].label	Think time first
+json	data/persona_library/noah_g5_fractions.json#paths[1].why	A real pause lets him start doubting his own rule before you ask.
+json	data/persona_library/noah_g5_fractions.json#paths[2].label	Make his idea public
+json	data/persona_library/noah_g5_fractions.json#paths[2].why	Restating his claim makes it an idea to test, not a mistake to hide.
+json	data/persona_library/priya_quiet.json#display_name	Priya
+json	data/persona_library/priya_quiet.json#target_label	Equitable participation (the easily-overlooked student)
+json	data/persona_library/priya_quiet.json#opening_line	(has the right answer ready, but quietly waits and is rarely called on)
+json	data/persona_library/priya_quiet.json#win_line	Yes! I had that. Thanks for asking me.
+json	data/persona_library/priya_quiet.json#assets[0]	notices what everyone else misses
+json	data/persona_library/priya_quiet.json#assets[1]	writes long thoughtful book reviews
+json	data/persona_library/priya_quiet.json#asset_hint	Priya rarely volunteers, but she catches details no one else does. The asset is there; she just needs to be invited into the air-time.
+json	data/persona_library/priya_quiet.json#connect_line	Oh - you actually want to hear what I thought? ...I did notice something nobody mentioned.
+json	data/persona_library/priya_quiet.json#paths[0].label	Deliberate call with time
+json	data/persona_library/priya_quiet.json#paths[0].why	Pose, pause, then call on her on purpose (Dallimore et al., 2012).
+json	data/persona_library/priya_quiet.json#paths[1].label	Build on her idea
+json	data/persona_library/priya_quiet.json#paths[1].why	Once she speaks, revoicing gives her idea status in the room.
+json	data/persona_library/riley_avoidant.json#display_name	Riley
+json	data/persona_library/riley_avoidant.json#target_label	Diagnose the function before responding
+json	data/persona_library/riley_avoidant.json#opening_line	(pushes the worksheet away) I'm not doing this.
+json	data/persona_library/riley_avoidant.json#win_line	...it's not that I won't. I didn't get the first part and I felt dumb.
+json	data/persona_library/riley_avoidant.json#assets[0]	builds elaborate redstone machines in Minecraft
+json	data/persona_library/riley_avoidant.json#assets[1]	keeps a notebook of game strategies
+json	data/persona_library/riley_avoidant.json#asset_hint	Riley shrugs at the worksheet, but builds intricate redstone logic at home. So this is avoidance / fear of being wrong, NOT a thinking gap. Read the FUNCTION before you respond.
+json	data/persona_library/riley_avoidant.json#connect_line	I mean... I do way harder logic in Minecraft. I guess I just didn't want to mess this up in front of everyone.
+json	data/persona_library/riley_avoidant.json#paths[0].label	Diagnose the function
+json	data/persona_library/riley_avoidant.json#paths[0].why	Find out what the avoidance is protecting before responding (Jacobs et al., 2010).
+json	data/persona_library/riley_avoidant.json#paths[1].label	Lower the stakes
+json	data/persona_library/riley_avoidant.json#paths[1].why	Take the audience pressure off first.
+json	data/persona_library/riley_avoidant.json#paths[2].label	Name a strength
+json	data/persona_library/riley_avoidant.json#paths[2].why	Start from what Riley can do, so the gap feels safe to show.
+json	data/persona_library/sam_withdrawn.json#display_name	Sam
+json	data/persona_library/sam_withdrawn.json#target_label	Re-engaging a withdrawn student
+json	data/persona_library/sam_withdrawn.json#opening_line	(looking down at the desk, not raising a hand)
+json	data/persona_library/sam_withdrawn.json#win_line	...okay. I think... maybe it's the one with the smaller bottom number?
+json	data/persona_library/sam_withdrawn.json#assets[0]	sketches characters in the margins
+json	data/persona_library/sam_withdrawn.json#assets[1]	knows every fact about deep-sea creatures
+json	data/persona_library/sam_withdrawn.json#asset_hint	Sam has gone quiet, but the margins are full of drawings. There's a door in there - an interest you can open before you ask for thinking.
+json	data/persona_library/sam_withdrawn.json#connect_line	...you saw my drawings? I could draw the problem instead of writing it... yeah. Okay. I can try that.
+json	data/persona_library/sam_withdrawn.json#paths[0].label	Warm invitation
+json	data/persona_library/sam_withdrawn.json#paths[0].why	Low pressure plus time makes it safe for him to be wrong in public (Fredricks et al., 2004).
+json	data/persona_library/sam_withdrawn.json#paths[1].label	Connect first
+json	data/persona_library/sam_withdrawn.json#paths[1].why	Start from something he already knows so entering the conversation costs less.
+json	data/persona_library/sam_withdrawn.json#paths[2].label	Low-stakes credit
+json	data/persona_library/sam_withdrawn.json#paths[2].why	Specific credit for effort signals he belongs in the discussion.
+json	data/persona_library/talia_dominator.json#display_name	Talia
+json	data/persona_library/talia_dominator.json#target_label	Equitable participation
+json	data/persona_library/talia_dominator.json#opening_line	Ooh, ooh, I know this one! Can I answer? I always know it!
+json	data/persona_library/talia_dominator.json#win_line	...oh. Yeah. I guess I could let someone else have a turn too.
+json	data/persona_library/talia_dominator.json#assets[0]	genuinely loves the subject and helps peers
+json	data/persona_library/talia_dominator.json#assets[1]	runs the school recycling club
+json	data/persona_library/talia_dominator.json#asset_hint	Talia dominates because she's eager, not selfish - she already helps peers and runs a club. Channel that energy into lifting others, don't just shut it down.
+json	data/persona_library/talia_dominator.json#connect_line	Oh! I could help draw out the quieter folks instead of just answering? ...I'd actually love that.
+json	data/persona_library/talia_dominator.json#paths[0].label	Acknowledge, then share the floor
+json	data/persona_library/talia_dominator.json#paths[0].why	Brief validation meets her need for recognition; then the turn moves on (Dallimore et al., 2012).
+json	data/persona_library/talia_dominator.json#paths[1].label	Specific credit, then redirect
+json	data/persona_library/talia_dominator.json#paths[1].why	Name what she did well, then hand the idea to someone else.
+json	data/persona_library/talia_dominator.json#paths[2].label	Raise the bar
+json	data/persona_library/talia_dominator.json#paths[2].why	Push her to justify, which slows the blurting and opens room for others.
+json	data/narrative/chapters.json#cast.vee.name	Coach Vee
+json	data/narrative/chapters.json#cast.hollis.name	Mr. Hollis
+json	data/narrative/chapters.json#cast.reyes.name	Principal Reyes
+json	data/narrative/chapters.json#cast.you.name	You
+json	data/narrative/chapters.json#chapters.lecture_fractions.month	SEPTEMBER
+json	data/narrative/chapters.json#chapters.lecture_fractions.region	Classroom Management Town
+json	data/narrative/chapters.json#chapters.lecture_fractions.title	The First Bell
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[0].text	Maple Ridge School. 7:52 a.m. Your name is on the door for the first time.
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[1].text	Eight students. One lesson on fractions. I rehearsed this in the car three times.
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[2].text	I'm Vera Okonkwo. Everyone calls me Coach Vee. I won't grade you today. I'll watch what you do.
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[3].text	Here's the trap: a calm lecture feels like it's working. Then you look up, and half the room is gone.
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[4].text	Present a little. Pause. Check. If you only talk, you'll never know who's still with you.
+json	data/narrative/chapters.json#chapters.lecture_fractions.intro[5].text	The bell rings.
+json	data/narrative/chapters.json#chapters.lecture_fractions.outro_win.text	You stopped talking to find out what they knew. Most people take a whole semester to learn that.
+json	data/narrative/chapters.json#chapters.lecture_fractions.outro_retry.text	You taught the whole lesson. Did they learn it? Next time, check before you move on.
+json	data/narrative/chapters.json#chapters.independent_fractions.month	LATE SEPTEMBER
+json	data/narrative/chapters.json#chapters.independent_fractions.region	Classroom Management Town
+json	data/narrative/chapters.json#chapters.independent_fractions.title	Quiet Rows
+json	data/narrative/chapters.json#chapters.independent_fractions.intro[0].text	Practice day. Worksheets out. The room goes quiet.
+json	data/narrative/chapters.json#chapters.independent_fractions.intro[1].text	Quiet means it's going well. Right?
+json	data/narrative/chapters.json#chapters.independent_fractions.intro[2].text	Quiet is not the same as working. Riley hasn't written a word. Marcus is one erased answer away from a meltdown.
+json	data/narrative/chapters.json#chapters.independent_fractions.intro[3].text	Get out from behind the desk. Walk the rows. Stand close. Confer with each of them.
+json	data/narrative/chapters.json#chapters.independent_fractions.intro[4].text	...I'm fine. I'm just thinking.
+json	data/narrative/chapters.json#chapters.independent_fractions.outro_win.text	You found the struggle nobody said out loud. Being close did more than any warning.
+json	data/narrative/chapters.json#chapters.independent_fractions.outro_retry.text	The rows looked calm. The worksheets didn't. Next time, keep moving and look at what they're writing.
+json	data/narrative/chapters.json#chapters.discussion_fractions.month	OCTOBER
+json	data/narrative/chapters.json#chapters.discussion_fractions.region	Questioning Forest
+json	data/narrative/chapters.json#chapters.discussion_fractions.title	The Circle
+json	data/narrative/chapters.json#chapters.discussion_fractions.intro[0].text	You pushed the desks into a U. Now everyone can see everyone.
+json	data/narrative/chapters.json#chapters.discussion_fractions.intro[1].text	Oh! Me! I know it! Can I go first? I always go first.
+json	data/narrative/chapters.json#chapters.discussion_fractions.intro[2].text	Talia will fill every silence you leave. Sam won't fill any of them.
+json	data/narrative/chapters.json#chapters.discussion_fractions.intro[3].text	Wait three seconds before you pick anyone. Then pick with purpose. The quiet thinkers need time before they'll talk.
+json	data/narrative/chapters.json#chapters.discussion_fractions.intro[4].text	Three seconds. It's going to feel like forever.
+json	data/narrative/chapters.json#chapters.discussion_fractions.outro_win.text	You waited long enough for the quiet ideas to come out. Did you see Sam's face?
+json	data/narrative/chapters.json#chapters.discussion_fractions.outro_retry.text	The loudest voices set the direction today. Take the wait time back. That's your job.
+json	data/narrative/chapters.json#chapters.reading_main_idea.month	LATE OCTOBER
+json	data/narrative/chapters.json#chapters.reading_main_idea.region	Questioning Forest
+json	data/narrative/chapters.json#chapters.reading_main_idea.title	The Whole Point
+json	data/narrative/chapters.json#chapters.reading_main_idea.intro[0].text	Reading block. A short article about honeybees, and six different ideas about what it's really about.
+json	data/narrative/chapters.json#chapters.reading_main_idea.intro[1].text	It's about bees. Like, obviously. Can we be done?
+json	data/narrative/chapters.json#chapters.reading_main_idea.intro[2].text	Jordan's right about the detail and wrong about the point. That's where the teaching is.
+json	data/narrative/chapters.json#chapters.reading_main_idea.intro[3].text	Don't hand them the main idea. Ask how they got theirs, then build on it.
+json	data/narrative/chapters.json#chapters.reading_main_idea.outro_win.text	They built the main idea together. You held the question and gave them the thinking.
+json	data/narrative/chapters.json#chapters.reading_main_idea.outro_retry.text	You told them the main idea. Next time, ask them how they got theirs first.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.month	NOVEMBER
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.region	Questioning Forest
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.title	Know Them First
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.intro[0].text	Parent conferences were last night. You learned more in two hours than in two months.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.intro[1].text	Diego helps run his aunt's food truck. Jordan fixes bikes. I didn't know any of it.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.intro[2].text	Every kid walks in already knowing things. Your job is to find where the lesson connects to what they know.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.intro[3].text	At the truck, I cut the pizza in eight. Is that... fractions?
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.intro[4].text	Connect before you correct. See who they are, then teach.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.outro_win.text	You taught fractions with a food truck and a bike chain. They'll remember that lesson.
+json	data/narrative/chapters.json#chapters.culturally_responsive_intro.outro_retry.text	You corrected before you connected. Start with what each student already brings.
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.month	DECEMBER
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.region	Questioning Forest
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.title	Bigger Isn't Longer
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.intro[0].text	Snow outside. Decimals inside. Nobody is thrilled.
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.intro[1].text	0.25 is bigger than 0.5, because 25 is bigger than 5. ...Isn't it?
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.intro[2].text	That's not a careless mistake. It's a theory, and it makes sense to him. Find out why before you fix it.
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.intro[3].text	Let every student put an idea on the table. The wrong ones teach the most.
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.outro_win.text	You let a wrong idea come out in public and the class took it apart. That's hard to do.
+json	data/narrative/chapters.json#chapters.custom_comparing_decimals.outro_retry.text	You fixed the answer, but the wrong idea is still there. Ask about it next time.
+json	data/narrative/chapters.json#chapters.group_work_fractions.month	JANUARY
+json	data/narrative/chapters.json#chapters.group_work_fractions.region	Equity Caverns
+json	data/narrative/chapters.json#chapters.group_work_fractions.title	The Plateau
+json	data/narrative/chapters.json#chapters.group_work_fractions.intro[0].text	Back from break. Clusters, fraction strips, and the kind of noise that could go either way.
+json	data/narrative/chapters.json#chapters.group_work_fractions.intro[1].text	Twenty-eight years, kid. Group work is just recess with worksheets. I stopped doing it in '09.
+json	data/narrative/chapters.json#chapters.group_work_fractions.intro[2].text	Is that where I end up? Tired and certain?
+json	data/narrative/chapters.json#chapters.group_work_fractions.intro[3].text	Years of experience don't make you better on their own. Practice on purpose does. Hollis stopped practicing.
+json	data/narrative/chapters.json#chapters.group_work_fractions.intro[4].text	Visit every group. Make sure every kid gets a real turn to talk.
+json	data/narrative/chapters.json#chapters.group_work_fractions.outro_win.text	Every group, every kid, a real turn. Hollis was watching from the door, by the way.
+json	data/narrative/chapters.json#chapters.group_work_fractions.outro_retry.text	One group took over and another drifted. Visit all of them, and keep turns even.
+json	data/narrative/chapters.json#chapters.science_force_motion.month	MARCH
+json	data/narrative/chapters.json#chapters.science_force_motion.region	Equity Caverns
+json	data/narrative/chapters.json#chapters.science_force_motion.title	Heavy Things Fall Faster
+json	data/narrative/chapters.json#chapters.science_force_motion.intro[0].text	Ramps. Carts. A box of weights. And a very confident misconception.
+json	data/narrative/chapters.json#chapters.science_force_motion.intro[1].text	Mind if I watch? ...I used to love this unit.
+json	data/narrative/chapters.json#chapters.science_force_motion.intro[2].text	Heavy stuff goes faster. Everybody knows that. This is dumb.
+json	data/narrative/chapters.json#chapters.science_force_motion.intro[3].text	Don't argue with Marcus. Let the cart show him. Your job is to get them looking at the results together.
+json	data/narrative/chapters.json#chapters.science_force_motion.outro_win.text	The results changed their minds, not you. Hollis asked to borrow your ramps.
+json	data/narrative/chapters.json#chapters.science_force_motion.outro_retry.text	They ran the experiment but kept their old ideas. Get them talking about the results together.
+json	data/narrative/chapters.json#chapters.gym_capstone.month	MAY
+json	data/narrative/chapters.json#chapters.gym_capstone.region	The Capstone
+json	data/narrative/chapters.json#chapters.gym_capstone.title	The Lesson That Went Sideways
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[0].text	Formal observation. Principal Reyes, a clipboard, and forty-two minutes.
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[1].text	Pretend I'm not here. I'm only writing down what I see.
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[2].text	Eleven minutes in, the projector dies. Marcus's chair hits the floor. Noah's hand is up. Priya is crying quietly.
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[3].text	Nobody rehearses this part.
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[4].text	You've been rehearsing it all year. Order, care, reasoning. One student at a time.
+json	data/narrative/chapters.json#chapters.gym_capstone.intro[5].text	Breathe. Choose. Go.
+json	data/narrative/chapters.json#chapters.gym_capstone.outro_win.text	I've watched a lot of first-years. Most freeze. You picked who to help first, and you were right.
+json	data/narrative/chapters.json#chapters.gym_capstone.outro_retry.text	It went sideways. That's the job some days. Let's look at the first thirty seconds again.

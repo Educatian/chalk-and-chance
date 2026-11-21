@@ -3,7 +3,7 @@
   "display_name": "Jordan",
   "grade_band": "grade_5",
   "subject_context": "whole_class_discussion",
-  "target_label": "Connect learning to the student's world",
+  "target_label": "Connect the math to his world",
   "badge": "echo",
   "win_moves": [
     "revoice",
@@ -17,7 +17,7 @@
     0.45
   ],
   "opening_line": "When are we ever gonna use fractions in real life?",
-  "win_line": "Huh. Okay, splitting a bill or a recipe, that actually makes sense.",
+  "win_line": "Huh. Okay. Splitting a bill, a recipe... yeah, fine, I'd use that.",
   "hidden_need": "disengages until relevance is established; responds to being taken seriously, not dismissed",
   "knowledge_state": {
     "target_concept": "relevance drives engagement; press for reasoning once hooked",
@@ -28,8 +28,8 @@
     "rebuilds and tunes his older brother's bike",
     "tracks his own stats in a racing game"
   ],
-  "asset_hint": "Jordan keeps asking 'when do we use this?' He rebuilds bikes - gear ratios are exactly this math. The skepticism is a bid for relevance, not defiance.",
-  "connect_line": "Wait, this is just gear ratios. I do this on the bike every weekend. Okay, NOW it's worth my time.",
+  "asset_hint": "Jordan keeps asking when he'll ever use this. He rebuilds bikes, and gear ratios are this exact math. He's asking for a reason. He isn't picking a fight.",
+  "connect_line": "Wait. This is just gear ratios? I do that on the bike every weekend. Okay. NOW I'm listening.",
   "connect_resolves": true,
   "paths": [
     {
@@ -44,7 +44,7 @@
           "elicit"
         ]
       ],
-      "why": "Treat his question as a real question, then press on the math."
+      "why": "His question is a real one. Answer it, then press on the math."
     },
     {
       "id": "relevance_first",
@@ -72,7 +72,7 @@
           "extend"
         ]
       ],
-      "why": "Let him build the relevance himself, then build on his answer."
+      "why": "Let him come up with the reason himself, then work from what he says."
     }
   ]
 }

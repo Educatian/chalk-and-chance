@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Per-learner identity over the Cloudflare Worker API (cloudflare/worker.js).
 ## Login = class code + name + password (named accounts, like Design Tension Studio).
 ## Holds the JWT; Telemetry/Competency upload under this learner. If api_base is empty
@@ -30,7 +31,7 @@ func signed_in() -> bool:
 
 func login(p_class: String, p_name: String, p_password: String) -> void:
 	if not configured():
-		login_failed.emit("login not set up yet")
+		login_failed.emit("Sign-in isn't set up yet.")
 		return
 	_post("/auth/login", {"class_code": p_class, "name": p_name, "password": p_password}, false,
 		func(ok: bool, data):
@@ -44,7 +45,7 @@ func login(p_class: String, p_name: String, p_password: String) -> void:
 					GameState.apply_course_baseline(class_code)
 				_unlock_voice_then_login(p_password)
 			else:
-				var msg := "login failed"
+				var msg := "Sign-in didn't work. Check your name and passcode."
 				if typeof(data) == TYPE_DICTIONARY:
 					msg = str(data.get("error", msg))
 				login_failed.emit(msg))
@@ -77,6 +78,8 @@ func beacon(path: String, body: Dictionary, authed := true) -> bool:
 		return false
 	if not authed and not configured():
 		return false
+	if not NetGuard.allowed(api_base):
+		return false   # debug build without --allow-hosted / ?allow_hosted=1
 	if OS.has_feature("web"):
 		var headers_js := "{'Content-Type':'application/json','Authorization':'Bearer '+token}" if authed \
 			else "{'Content-Type':'application/json'}"
@@ -125,6 +128,9 @@ func _post(path: String, body: Dictionary, authed: bool, cb: Callable) -> void:
 	_request(path, HTTPClient.METHOD_POST, body, authed, cb)
 
 func _request(path: String, method: int, body: Dictionary, authed: bool, cb: Callable) -> void:
+	if not NetGuard.allowed(api_base):
+		cb.call(false, null)   # debug build without an explicit opt-in: stay offline
+		return
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.timeout = 15.0

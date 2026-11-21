@@ -10,12 +10,13 @@ extends Node
 
 const SKILLS := ["elicit_reasoning", "extend_thinking", "revoicing", "wait_time",
 	"behavior_mgmt", "restraint", "behavior_specific_praise", "funds_of_knowledge",
-	"group_monitoring", "formative_check", "status_treatment"]
+	"group_monitoring", "formative_check", "status_treatment", "noticing"]
 const LABELS := {
 	"elicit_reasoning": "Eliciting", "extend_thinking": "Extending", "revoicing": "Revoicing",
-	"wait_time": "Wait time", "behavior_mgmt": "Mgmt (least-intrusive)", "restraint": "Restraint",
+	"wait_time": "Wait time", "behavior_mgmt": "Low-key redirects", "restraint": "Restraint",
 	"behavior_specific_praise": "Specific praise", "funds_of_knowledge": "Asset connect",
 	"group_monitoring": "Group monitoring", "formative_check": "Formative check", "status_treatment": "Status treatment",
+	"noticing": "Noticing",
 }
 # group check-in monitoring move -> the competency it evidences
 const GROUP_TAG_SKILL := {
@@ -64,7 +65,8 @@ func score_y(tag: String, judge: Dictionary, deltas: Dictionary) -> int:
 		"elicit", "extend": return 1 if bool(judge.get("targets_misconception", judge.get("targets", false))) else 0
 		"wait": return 1 if bool(judge.get("wait_time_ok", judge.get("wait_ok", false))) else 0
 		"redirect": return 1 if float(deltas.get("order", 0.0)) > 0.0 else 0
-		"revoice", "praise": return 1 if float(deltas.get("trust", 0.0)) > 0.0 else 0
+		"praise": return 1 if str(judge.get("praise_kind", "specific")) != "generic" and float(deltas.get("trust", 0.0)) > 0.0 else 0
+		"revoice": return 1 if float(deltas.get("trust", 0.0)) > 0.0 else 0
 		"connect": return 1
 		"tell": return 0
 		_: return 0

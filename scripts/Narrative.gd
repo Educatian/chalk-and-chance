@@ -34,6 +34,23 @@ static func go_hub_with_outro(scenario: Dictionary, won: bool) -> void:
 	else:
 		SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
 
+## A beat's text with {persona_id} filled from the scenario roster. If a named student is
+## not in this roster, the beat's "fallback" line (no names) is used instead.
+static func line_text(beat: Dictionary, cfg: Dictionary) -> String:
+	var text := str(beat.get("text", ""))
+	var names := {}
+	for r in cfg.get("roster", []):
+		if typeof(r) == TYPE_DICTIONARY:
+			names[str(r.get("id", ""))] = str(r.get("name", ""))
+	var re := RegEx.new()
+	re.compile("\\{([a-z0-9_]+)\\}")
+	for m in re.search_all(text):
+		var pid := m.get_string(1)
+		if not names.has(pid):
+			return str(beat.get("fallback", re.sub(text, "someone", true)))
+		text = text.replace("{%s}" % pid, str(names[pid]))
+	return text
+
 ## Coach line for the debrief: outro_win or outro_retry.
 static func outro(id: String, won: bool) -> Dictionary:
 	return chapter(id).get("outro_win" if won else "outro_retry", {})

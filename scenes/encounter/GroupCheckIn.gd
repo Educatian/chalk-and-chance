@@ -1,4 +1,6 @@
 extends Control
+const NetGuard = preload("res://scripts/NetGuard.gd")
+const Tuning = preload("res://scripts/Tuning.gd")
 const UiText = preload("res://scripts/UiText.gd")
 const GroupDebriefPanel = preload("res://scenes/encounter/GroupDebriefPanel.gd")
 const GroupCheckInUi = preload("res://scenes/encounter/GroupCheckInUi.gd")
@@ -60,8 +62,8 @@ func _ready() -> void:
 	_build_ui()
 	_apply_adaptive_difficulty()
 	_refresh()
-	_set_dialogue("You crouch by the table. The group is mid-task. Sample them: observe first, then surface their thinking.")
-	_set_coach("Coach Vee: button order: Observe/Probe to reveal, Press after the error is visible, Redistribute when one voice dominates.")
+	_set_dialogue("You crouch by the table. They're mid-task. Watch first, then ask how they're thinking.")
+	_set_coach("Coach Vee: Observe or Probe to see their thinking. Press once the mistake is out. Redistribute if one kid won't stop talking.")
 
 func _apply_adaptive_difficulty() -> void:
 	var d := Game.adaptive_difficulty(["group_monitoring", "formative_check", "status_treatment"])
@@ -118,7 +120,7 @@ func _on_move(tag: String) -> void:
 		"model_profile": "openrouter_gemini",
 	}
 	var ep := LLMClient.endpoint.replace("/turn", "/group_turn")
-	var err := _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
 		HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		_busy = false
@@ -153,6 +155,8 @@ func _on_reply(result: int, code: int, _h: PackedStringArray, body: PackedByteAr
 		"emotion_shown": str(u.get("emotion_shown", ""))})
 	if "current_scenario_id" in Game:
 		Competency.observe_group(tag, bool(j.get("targets", false)))
+	if bool(j.get("targets", false)) and tag in Tuning.GROUP_VOICE_TAGS:
+		_note_pod_voiced()
 	_refresh()
 	_check_win()
 
@@ -178,18 +182,25 @@ func _local_fallback(tag: String) -> void:
 		"targets": productive, "understanding": understanding, "participation": participation, "offline": true,
 		"student_text": "(group keeps working)"})
 	Competency.observe_group(tag, productive)
+	if productive and tag in Tuning.GROUP_VOICE_TAGS:
+		_note_pod_voiced()
 	_refresh()
 	_check_win()
 
+## B6: a productive Probe/Redistribute heard this pod's thinking.
+func _note_pod_voiced() -> void:
+	for m in members:
+		Game.note_voiced(str((m as Dictionary).get("persona_id", "")))
+
 func _group_button_hint(tag: String, productive: bool) -> String:
 	if not revealed:
-		return "Next: press Observe or Probe before Press."
+		return "Next: Observe or Probe before you Press."
 	if tag == "press" and productive:
-		return "Next: press Redistribute if participation is low, otherwise Press again."
+		return "Next: Redistribute if one kid is doing the talking. If not, Press again."
 	if participation < 0.6:
-		return "Next: press Redistribute to balance airtime."
+		return "Next: Redistribute so someone else talks."
 	if understanding < 0.7:
-		return "Next: press Press to work the shared error."
+		return "Next: Press on the mistake they share."
 	return "Next: Move On."
 
 func _check_win() -> void:
@@ -197,8 +208,8 @@ func _check_win() -> void:
 		_done = true
 		for b in _buttons:
 			b.disabled = true
-		_set_dialogue("This pod is on track - they reasoned past their shared error AND everyone is in it.")
-		_set_coach("Coach Vee: you surfaced their thinking, pressed the crack, and rebalanced the talk. That is monitoring done right.")
+		_set_dialogue("This table's got it. They talked their way past the mistake, and everyone joined in.")
+		_set_coach("Coach Vee: you got their thinking out and pushed on the weak spot. Then you let the quiet ones talk. That's the job.")
 		var score := _group_score()
 		var reward := {}
 		if target_badge != "":
@@ -250,7 +261,7 @@ func _refresh() -> void:
 	if _p_bar != null:
 		_p_bar.size.x = 220.0 * participation
 	if _status_lbl != null:
-		_status_lbl.text = ("Status: %s  (concept: %s)  |  Next: press Press or Redistribute" % [collective_status, shared_concept]) if revealed else "Status: hidden  |  Next: press Observe or Probe"
+		_status_lbl.text = ("Status: %s  (%s)  |  Next: Press or Redistribute" % [collective_status, shared_concept]) if revealed else "Status: can't tell yet  |  Next: Observe or Probe"
 	if _layer != null:
 		_reaction_cue = ReactionCue.show_group_cue(_layer, _reaction_cue, Vector2(536, 212), understanding, participation, revealed)
 

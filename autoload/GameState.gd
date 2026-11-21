@@ -1,4 +1,5 @@
 extends Node
+const Tuning = preload("res://scripts/Tuning.gd")
 ## Single source of truth for save data: earned badges and per-student progress.
 ## See GAME_CONCEPT.md section 9.2.
 
@@ -23,7 +24,7 @@ const TEACHER_PROFILE_DEFS := {
 	"base": {
 		"name": "Base",
 		"short": "Base",
-		"desc": "Baseline rehearsal with no profile bonus.",
+		"desc": "No bonus. Just you and the class.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.0,
@@ -31,7 +32,7 @@ const TEACHER_PROFILE_DEFS := {
 	"steady": {
 		"name": "Steady Lead",
 		"short": "Steady",
-		"desc": "Safer recovery and order tools.",
+		"desc": "Extra composure, plus tools for keeping order.",
 		"composure_bonus": 10.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.0,
@@ -39,7 +40,7 @@ const TEACHER_PROFILE_DEFS := {
 	"listener": {
 		"name": "Deep Listener",
 		"short": "Listen",
-		"desc": "Starts with profile and noticing tools.",
+		"desc": "Starts with the profile card and noticing tools.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 0,
 		"relationship_bonus": 0.05,
@@ -47,7 +48,7 @@ const TEACHER_PROFILE_DEFS := {
 	"equity": {
 		"name": "Equity Scout",
 		"short": "Equity",
-		"desc": "Defaults toward airtime and wait-time control.",
+		"desc": "Geared for wait time and sharing the floor.",
 		"composure_bonus": 0.0,
 		"wait_reduction_ms": 300,
 		"relationship_bonus": 0.0,
@@ -61,12 +62,12 @@ const UPGRADE_DEFS := {
 	},
 	"wait_mastery": {
 		"name": "Wait Mastery",
-		"desc": "Wait-time readiness is 0.25s faster each rank.",
+		"desc": "Wait time counts 0.25s sooner each rank.",
 		"max": 3,
 	},
 	"relationship_sense": {
 		"name": "Relationship Sense",
-		"desc": "Start encounters with more rapport and engagement.",
+		"desc": "Kids start out a little warmer to you.",
 		"max": 3,
 	},
 }
@@ -157,7 +158,7 @@ func teacher_profile_mechanic_text() -> String:
 	if rel > 0:
 		parts.append("+%d%% starting rapport" % rel)
 	if parts.is_empty():
-		return "Baseline: no bonus, no starter items"
+		return "No bonus, no starting items"
 	return " | ".join(parts)
 
 func set_teacher_profile(id: String, apply_default_loadout: bool = true) -> void:
@@ -301,7 +302,7 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"title": str(entry.get("title", "Lesson")),
 		"mode": str(entry.get("mode", "Practice")),
 		"score": score,
-		"rank": _rank_for_score(score),
+		"rank": _rank_for_score(score, str(entry.get("mode", ""))),
 		"level": teacher_level,
 		"xp": teacher_xp,
 		"badge": str(entry.get("badge", "")),
@@ -312,7 +313,7 @@ func record_leaderboard(entry: Dictionary) -> Dictionary:
 		"coach_focus": str(report.get("focus", "")),
 		"coach_next": str(report.get("next", "")),
 		"coach_evidence": int(report.get("evidence", 0)),
-		"adaptive_level": str(report.get("adaptive_level", "Adaptive: standard start")),
+		"adaptive_level": str(report.get("adaptive_level", "Starting at normal")),
 		"evidence_trace": str(entry.get("trace", "")),
 		"evidence_trace_steps": entry.get("trace_steps", []),
 		"unix": Time.get_unix_time_from_system(),
@@ -335,8 +336,8 @@ func _coach_report_fields() -> Dictionary:
 	var difficulty := Game.adaptive_difficulty(Competency.SKILLS)
 	if weakest.is_empty():
 		return {
-			"focus": "Collect first evidence",
-			"next": "Clear one mission to produce a coachable trace.",
+			"focus": "Nothing yet",
+			"next": "Clear a mission so Coach Vee has something to go on.",
 			"evidence": 0,
 			"adaptive_level": Game.adaptive_difficulty_label(difficulty),
 		}
@@ -352,7 +353,14 @@ func leaderboard_top(limit: int = 8) -> Array:
 	rows.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
 	return rows.slice(0, maxi(0, limit))
 
-func _rank_for_score(score: int) -> String:
+const RANK_ORDER := ["D", "C", "B", "A", "S"]
+
+func _rank_for_score(score: int, mode: String = "") -> String:
+	if mode == Tuning.ENCOUNTER_MODE:
+		for r in ["S", "A", "B", "C"]:
+			if score >= int(Tuning.ENCOUNTER_RANKS[r]):
+				return r
+		return "D"
 	if score >= 260:
 		return "S"
 	if score >= 210:
@@ -362,6 +370,18 @@ func _rank_for_score(score: int) -> String:
 	if score >= 120:
 		return "C"
 	return "D"
+
+## Saved encounter records were graded on the general scale. Re-grade them from their
+## stored score on the encounter scale and keep whichever letter is better: a rank a
+## player already has is never lowered. Other modes are left as stored.
+func upgrade_saved_ranks(records: Array) -> void:
+	for rec in records:
+		if typeof(rec) != TYPE_DICTIONARY or str(rec.get("mode", "")) != Tuning.ENCOUNTER_MODE:
+			continue
+		var old := str(rec.get("rank", "D"))
+		var now := _rank_for_score(int(rec.get("score", 0)), Tuning.ENCOUNTER_MODE)
+		if RANK_ORDER.find(now) > RANK_ORDER.find(old):
+			rec["rank"] = now
 
 func badge_xp(_badge_id: String) -> int:
 	return 120
@@ -502,6 +522,7 @@ func load_game() -> void:
 	upgrade_points = maxi(0, int(parsed.get("upgrade_points", 0)))
 	var _lr = parsed.get("leaderboard_records", [])
 	leaderboard_records = _lr if typeof(_lr) == TYPE_ARRAY else []
+	upgrade_saved_ranks(leaderboard_records)
 	upgrades = DEFAULT_UPGRADES.duplicate()
 	var loaded_upgrades = parsed.get("upgrades", {})
 	if typeof(loaded_upgrades) == TYPE_DICTIONARY:

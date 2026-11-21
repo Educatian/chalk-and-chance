@@ -34,7 +34,7 @@ func _build_shell() -> void:
 	var title := Label.new()
 	title.text = "REVIEW & ADJUST"
 	title.position = Vector2(40, 28)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
@@ -137,10 +137,10 @@ func _refresh() -> void:
 	var objs := ""
 	for o in _scenario.get("objectives", []):
 		objs += "  -  %s\n" % str(o.get("label", ""))
-	var src := "AI (content-specific)" if _scenario.get("persona_overrides", null) != null else "offline (format + objectives)"
+	var src := "AI (fits your content)" if _scenario.get("persona_overrides", null) != null else "offline (from format and objectives)"
 	var first_move := _first_recommended_move()
 	var errors := _validate_scenario(_scenario)
-	_summary.text = "%s\n\nYour class: %d students (%s)\nYour challenge: keep the room with you while every learner contributes.\nWin condition: meet the objective checklist before the period ends.\nFirst recommended move: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nConversion: %s\n\nObjectives:\n%s" % [
+	_summary.text = "%s\n\nYour class: %d students (%s)\nThe job: keep the room with you and hear from everyone.\nTo win: check off every objective before the period ends.\nTry first: %s\n%s\n%s\n\nFormat: %s     Seating: %s     Period: %ds     Badge: %s\nBuilt: %s\n\nObjectives:\n%s" % [
 		str(_scenario.get("title", "Lesson")),
 		names.size(), ", ".join(names), first_move,
 		Game.scenario_signature(_scenario),
@@ -150,7 +150,7 @@ func _refresh() -> void:
 		src, objs]
 	if _validation != null:
 		if errors.is_empty():
-			_validation.text = "Scenario check passed."
+			_validation.text = "Looks good. Ready to play."
 			_validation.add_theme_color_override("font_color", Color(0.68, 0.92, 0.72))
 		else:
 			_validation.text = "Fix before playing: " + "; ".join(errors)
@@ -172,8 +172,8 @@ func _first_recommended_move() -> String:
 		"group_work":
 			return "Visit one pod, Listen, Surface, then Redistribute airtime."
 		"independent":
-			return "Circulate first, then confer with a student who is drifting."
-	return "Talk to one student, Elicit their reasoning, then use Wait before pressing further."
+			return "Walk the room first, then confer with whoever's drifting."
+	return "Talk to one student, Elicit their thinking, then Wait before you push."
 
 func _validate_scenario(scenario: Dictionary) -> Array:
 	var errors: Array = []

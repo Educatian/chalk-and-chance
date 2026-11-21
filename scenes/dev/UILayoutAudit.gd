@@ -136,6 +136,9 @@ func _audit_encounter(prefix: String) -> void:
 	await get_tree().process_frame
 	sc.setup({"persona_id": "noah_g5_fractions", "display_name": "Noah"})
 	await get_tree().process_frame
+	_scan("%s Encounter notice" % prefix, sc)   # B2 strip over the move row
+	_notice(sc)
+	await get_tree().process_frame
 	_scan("%s Encounter menu" % prefix, sc)
 	sc._toggle_input_mode()
 	await get_tree().process_frame
@@ -144,9 +147,15 @@ func _audit_encounter(prefix: String) -> void:
 	for m in ["elicit", "extend", "elicit", "wait", "extend", "elicit", "revoice", "elicit", "extend"]:
 		if sc._resolved:
 			break
+		_notice(sc)
+		sc._ready_at_ms -= 2000   # as if the answer had landed (B1 WT-II)
 		sc._on_move(m)
 		for i in range(6):
 			await get_tree().process_frame
+		if sc._thinking:
+			sc._end_thinking(false)   # fast-forward the student's think time (B1 WT-I)
+			for i in range(6):
+				await get_tree().process_frame
 	await get_tree().process_frame
 	if sc._resolved:
 		_scan("%s Encounter completion" % prefix, sc)
@@ -231,6 +240,18 @@ func _audit_overworld_debrief(prefix: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_scan("%s Overworld independent" % prefix, sc)
+	for i in range(sc.INTERRUPTS.size()):   # every interrupt card, ladder cards included
+		sc._trigger_interrupt(i)
+		await get_tree().process_frame
+		_scan("%s Overworld interrupt %d" % [prefix, i], sc._overlay)
+		var shown: Array = sc._overlay.get_meta("who_names", []) if sc._overlay.has_meta("who_names") else []
+		for b in sc._overlay.find_children("*", "Button", true, false):
+			for st in sc._npcs.keys():
+				var nm := str(sc._npcs[st].get("display_name", ""))
+				if nm != "" and (b as Button).text.contains(nm) and not nm in shown:
+					_issues.append("%s interrupt %d option names %s who is not on the card" % [prefix, i, nm])
+		sc._close_overlay()
+		await get_tree().process_frame
 	_prepare_overworld_clear(sc)
 	sc._end_lesson()
 	await get_tree().process_frame
@@ -248,6 +269,7 @@ func _prepare_overworld_clear(sc: Node) -> void:
 	for st in sc._npcs.keys():
 		sc._npcs[st]["offtask"] = 0.0
 		Game.note_visit(str(sc._npcs[st].get("persona_id", "")))
+		Game.note_voiced(str(sc._npcs[st].get("persona_id", "")))
 	if sc._objective_label != null:
 		sc._objective_label.text = sc._objectives_status(100.0)
 	if sc._attention_fill != null:
@@ -295,6 +317,7 @@ func _scan(label: String, root: Node) -> void:
 		if not _inside_scroll(c) and not VIEW.encloses(r):
 			_issues.append("%s clipped: %s %s" % [label, _node_name(c), str(r)])
 		_scan_text_fit(label, c)
+		_scan_pixel_sentence(label, c)
 	var interactives := controls.filter(func(c): return _is_interactive(c) and (not _inside_scroll(c) or _visible_in_scroll(c)))
 	for i in range(interactives.size()):
 		for j in range(i + 1, interactives.size()):
@@ -477,3 +500,26 @@ func _visible_in_scroll(c: Control) -> bool:
 
 func _node_name(c: Control) -> String:
 	return "%s(%s)" % [c.name, c.get_class()]
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")
+
+## The pixel face is for titles, names and numbers; a sentence (4+ words with sentence
+## punctuation) in it is an issue.
+func _scan_pixel_sentence(label: String, c: Control) -> void:
+	var t := ""
+	if c is Label:
+		t = (c as Label).text
+	elif c is Button:
+		t = (c as Button).text
+	else:
+		return
+	var tt := t.strip_edges()
+	var sentence := tt.ends_with(".") or tt.ends_with("?") or tt.ends_with("!") or tt.contains(". ")
+	if tt.split(" ", false).size() < 4 or not sentence:   # titles and names may stay pixel
+		return
+	var f := c.get_theme_font("font")
+	if f != null and str(f.resource_path).contains("Galmuri"):
+		_issues.append("%s pixel-face sentence: %s \"%s\"" % [label, _node_name(c), t.left(60)])

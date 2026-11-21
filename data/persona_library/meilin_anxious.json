@@ -12,7 +12,7 @@
     "wait"
   ],
   "opening_line": "I think I got it wrong again... I'm just not smart enough for this.",
-  "win_line": "Okay... so it's about the strategy I used, not whether I'm smart. I can try that.",
+  "win_line": "Okay... so it's about what I tried. Not if I'm smart. I can... I can try that.",
   "traits": {
     "confidence": 0.2,
     "talkativeness": 0.4,
@@ -44,11 +44,11 @@
   ],
   "answer_flip_policy": "Do not feel reassured by generic praise. Your anxiety only eases when the teacher gives feedback about the process or a concrete next step rather than your ability.",
   "assets": [
-    "meticulous illustrator who redraws until it's right",
+    "redraws her drawings until they're right",
     "helps friends calm down before tests"
   ],
-  "asset_hint": "Mei-Lin's perfectionism is the same care that makes her redraw art until it's right. Name the effort, not the result - that's what unlocks her.",
-  "connect_line": "...you noticed how much I revised it? ...okay. Maybe the mistakes are part of getting it right.",
+  "asset_hint": "Mei-Lin redraws her art until it's right, and that same care is what makes her a perfectionist here. Name the effort, not the result. That's what gets her moving.",
+  "connect_line": "...you saw how many times I fixed it? ...okay. Maybe messing up is part of getting it right.",
   "connect_resolves": false,
   "paths": [
     {
@@ -77,7 +77,7 @@
           "elicit"
         ]
       ],
-      "why": "Time without judgment tells her a hard problem is normal."
+      "why": "Give her time, and no judgment. That tells her hard is normal."
     },
     {
       "id": "strategy_talk",
@@ -91,7 +91,7 @@
           "extend"
         ]
       ],
-      "why": "Make her process visible so the feedback has something concrete to name."
+      "why": "Get her to say how she did it, so your feedback has something real to name."
     }
   ]
 }

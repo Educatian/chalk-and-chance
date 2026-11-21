@@ -332,11 +332,11 @@ func conversation_markdown() -> String:
 		lines.append("- Scenario(s): %s" % ", ".join(scenarios))
 	lines.append_array([
 		"",
-		"> This learner-owned file contains the current session's teacher moves and simulated learner responses. It excludes raw telemetry and account data.",
+		"> Your moves and the students' replies from this session. No telemetry or account data.",
 		"",
 	])
 	if _conversation_events.is_empty():
-		lines.append("No conversation turns have been recorded in this session yet.")
+		lines.append("Nothing recorded yet this session.")
 		return "\n".join(lines) + "\n"
 
 	for i in range(_conversation_events.size()):
@@ -344,7 +344,7 @@ func conversation_markdown() -> String:
 		var scenario_label := str(entry.get("scenario_id", "")).strip_edges()
 		var heading := "## Turn %d" % (i + 1)
 		if scenario_label != "":
-			heading += " — " + scenario_label
+			heading += " - " + scenario_label
 		lines.append(heading)
 		lines.append("")
 		var move_tag := str(entry.get("move_tag", "")).strip_edges()
@@ -363,7 +363,7 @@ func conversation_markdown() -> String:
 			lines.append("**Coach note:** " + tip)
 		if bool(entry.get("has_target", false)):
 			lines.append("")
-			lines.append("**Decision signal:** %s" % ("Move addressed the target." if bool(entry.get("target_met", false)) else "Reconsider or revise this move."))
+			lines.append("**How it went:** %s" % ("That move fit." if bool(entry.get("target_met", false)) else "Worth trying a different move here."))
 		lines.append("")
 	return "\n".join(lines) + "\n"
 
@@ -374,7 +374,7 @@ func _conversation_one_line(text: String) -> String:
 ## The return object is intentionally small so UI and QA can report success without parsing JS.
 func download_conversation() -> Dictionary:
 	if _conversation_events.is_empty():
-		return {"ok": false, "error": "Complete at least one dialogue turn first."}
+		return {"ok": false, "error": "Talk to a student first. Nothing to save yet."}
 	var filename := conversation_filename()
 	var content := conversation_markdown()
 	if OS.has_feature("web") and ClassDB.class_exists("JavaScriptBridge"):

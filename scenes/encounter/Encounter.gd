@@ -7,7 +7,6 @@ const UiText = preload("res://scripts/UiText.gd")
 
 const Art = preload("res://scripts/Art.gd")
 const PixelUi = preload("res://scripts/PixelUi.gd")
-const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 const PathJudge = preload("res://scripts/PathJudge.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
@@ -15,6 +14,9 @@ const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd
 const InputFeel = preload("res://scripts/InputFeel.gd")
 const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const UiKit = preload("res://scripts/UiKit.gd")
+const Tuning = preload("res://scripts/Tuning.gd")
+const ThinkRing = preload("res://scripts/ThinkRing.gd")
+const ResultsCard = preload("res://scripts/ResultsCard.gd")
 ## v2 layout (480x270 authored = 1 unit per texel): portrait panel left, meters and the
 ## student's line in chalkboard panels right, verdict + coach line, move buttons below.
 const PORTRAIT_PANEL := Rect2(8, 20, 140, 140)
@@ -43,12 +45,12 @@ const MOVE_HINTS := {
 const MOVE_HELP := {
 	"elicit": "Elicit: ask how the student got that answer.",
 	"extend": "Extend: press the idea one step further.",
-	"revoice": "Revoice: restate their thinking so it is public and checkable.",
-	"tell": "Tell: explain it directly. Useful sometimes, but it can take over their thinking.",
-	"praise": "Praise: name a specific useful behavior, not just 'good job'.",
-	"connect": "Connect: notice the student's world, then bridge the content to it.",
-	"redirect": "Redirect: bring attention back with the least-intrusive move that works.",
-	"wait": "Wait: hold silence until the Wait-Time bar turns green, then choose a move.",
+	"revoice": "Revoice: say their idea back so everyone can check it.",
+	"tell": "Tell: explain it yourself. Sometimes you have to. Often it does their thinking for them.",
+	"praise": "Praise: say exactly what they did. 'Good job' doesn't count.",
+	"connect": "Connect: find out what they're into, then hook the lesson to it.",
+	"redirect": "Redirect: get them back on task with the smallest move that works.",
+	"wait": "Wait: stay quiet until the Wait-Time bar goes green. Then pick a move.",
 }
 
 var persona_id := "noah_g5_fractions"
@@ -93,6 +95,19 @@ var _port_tween: Tween = null    # portrait bounce on emotion change
 var _last_wait_ms: int = 0       # wait time of the move in flight (for telemetry)
 var _last_input_mode := "menu"
 var _last_free_text := ""
+var _ring: Control                # B1: think-time ring around the student (ThinkRing)
+var _thinking := false           # WT-I: the student is thinking after a question
+var _think_resp: Dictionary = {} # their answer, held until the think time is over
+var _think_t0 := 0
+var _long_fired := false         # idle past Tuning.WT_LONG_MS already cost engagement
+var _praise_btn: Button          # B3: its hint says live whether praise would be specific
+var _shown_emotion := "neutral"   # the portrait state the player can read
+var _noticed_cat := ""            # B2: category last noticed (prompt again when it changes)
+var _notice_panel: Control        # B2: "what do you notice?" strip over the move row
+var _notice_btns: Array = []
+var _notice_hidden: Array = []    # move buttons hidden while the strip is up
+var _notice_bonus := false        # B2: a correct read boosts the next landed move
+var _notice_prompts := 0          # B2: extra inputs this encounter (reported)
 
 # Node refs built in _ready().
 var _name_label: Label
@@ -108,9 +123,6 @@ var _coach: Label
 var _result: Label
 var _dialogue_tween: Tween
 var _coach_tween: Tween
-var _wait_label: Label
-var _wait_bar: ColorRect             # fill; drawn as ColorRects so height is exact
-var _wait_bar_bg: ColorRect
 var _bond_fill: ColorRect
 var _bond_label: Label
 var _bars: Dictionary = {}   # key -> ColorRect fill
@@ -137,7 +149,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_meters()
 	_set_dialogue("You walk over to %s's desk." % display_name)
-	_set_coach("Read the student. Surface reasoning before correcting. Wait for green to earn a bonus.")
+	_set_coach("Look at them first. Find out what they think before you correct it. After you ask, let the ring fill. That's their thinking time.")
 	_update_portrait("neutral")
 	_meters_live = true
 	_arm_turn()
@@ -158,6 +170,8 @@ func setup(data: Dictionary) -> void:
 	_refresh_bond()
 	_scaffold = Scaffold.level_for(Scaffold.skills_for_moves(win_moves))
 	_apply_scaffold()
+	_refresh_praise_hint()
+	_maybe_prompt_notice()   # B2: the strip names this student
 
 ## Warm demander / care ethic: a relationship built in earlier periods carries over and
 ## makes this student a little easier to reach (trust precedes risk-taking).
@@ -199,7 +213,7 @@ func _apply_adaptive_difficulty() -> void:
 	else:
 		_win_understanding = WIN_UNDERSTANDING
 	if level != "standard" and _coach != null:
-		_set_coach("%s from saved evidence. Read the student, then choose the fit move." % Game.adaptive_difficulty_label(d))
+		_set_coach("%s, based on your past rounds. Read them, then pick the move that fits." % Game.adaptive_difficulty_label(d))
 	_refresh_meters()
 
 ## Lesson-plan import / any scenario may override a persona's lines and targets for its
@@ -299,17 +313,12 @@ func _apply_scaffold() -> void:
 	_scaffold_badge.tooltip_text = str(_scaffold.get("reason", ""))
 	_scaffold_badge.add_theme_color_override("font_color", Scaffold.badge_color(int(_scaffold["level"]), _stepped_in))
 	_refresh_intro()
-	if _wait_label != null:
-		_wait_label.visible = lvl >= Scaffold.PARTIAL
-	if _wait_bar != null:
-		_wait_bar.visible = lvl >= Scaffold.LIGHT
-		_wait_bar_bg.visible = lvl >= Scaffold.LIGHT
 	if _text_input != null:
 		var starter := ""
 		if lvl == Scaffold.FULL and _pj != null and not _pj.paths.is_empty():
 			var opener := str((_pj.paths[0]["steps"] as Array)[0][0])
 			starter = str(CoachFeedback.MOVES.get(opener, {}).get("starter", ""))
-		_text_input.placeholder_text = ("Try: " + starter) if starter != "" and starter.begins_with("\"") else "Type teacher talk..."
+		_text_input.placeholder_text = ("Try: " + starter) if starter != "" and starter.begins_with("\"") else "Type what you'd say..."
 	if lvl < Scaffold.PARTIAL and _result != null and str(_result.text).contains(": "):
 		_set_result("")
 	if not _stepped_in:
@@ -317,7 +326,7 @@ func _apply_scaffold() -> void:
 			Scaffold.FULL:
 				pass
 			Scaffold.PARTIAL:
-				_set_coach("Read the student.")
+				_set_coach("Watch them first.")
 			_:
 				_set_coach("")
 
@@ -392,7 +401,7 @@ func _build_ui() -> void:
 	_name_label.size = Vector2(380, 12)
 	_name_label.clip_text = true
 	# The most important guidance sits inside the line panel, in the focus colour.
-	_need_label = _make_label("Need: surface the student's reasoning", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
+	_need_label = _make_label("Need: find out how they're thinking", LINE_PANEL.position + Vector2(10, 4), UiText.S_CAPTION, Color("ffd34e"))
 	_need_label.size = Vector2(298, 12)
 	_need_label.clip_text = true
 
@@ -454,22 +463,6 @@ func _build_ui() -> void:
 	_emote.visible = false
 	_layer.add_child(_emote)
 
-	# Wait-Time Ring (a bar in M1).
-	_wait_label = _make_label(_wait_label_text(false), Vector2(392, 24), UiText.S_CAPTION, Color("f2eedd"))
-	_wait_label.size = Vector2(76, 12)
-	_wait_bar_bg = ColorRect.new()
-	_wait_bar_bg.position = Vector2(392, 37)
-	_wait_bar_bg.size = Vector2(70, 8)
-	_wait_bar_bg.color = Color(0, 0, 0, 0.5)
-	_wait_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_layer.add_child(_wait_bar_bg)
-	_wait_bar = ColorRect.new()
-	_wait_bar.position = Vector2(392, 37)
-	_wait_bar.size = Vector2(0, 8)
-	_wait_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_wait_bar_ready(false)
-	_layer.add_child(_wait_bar)
-
 	# Student utterance shown in a speech bubble (9-slice) when art is present.
 	_build_dialogue_box()
 
@@ -505,6 +498,8 @@ func _build_ui() -> void:
 		InputFeel.add_hotkey_badge(b, i, UiText.S_TINY)
 		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
+		if tag == "praise":
+			_praise_btn = b
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
 		_layer.add_child(b)
@@ -517,7 +512,7 @@ func _build_ui() -> void:
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(8, 228)
 	_text_input.size = Vector2(270, 30)
-	_text_input.placeholder_text = "Type teacher talk..."
+	_text_input.placeholder_text = "Type what you'd say..."
 	_text_input.add_theme_font_size_override("font_size", 8)
 	_text_input.visible = false
 	_text_input.text_submitted.connect(func(_t): _on_type_submit())
@@ -554,6 +549,13 @@ func _build_ui() -> void:
 
 	_build_item_row()
 	PixelUi.scale_tree(_layer, UI_SCALE)
+	# B1: the think-time ring sits on the student, in final pixels (built after scaling).
+	_ring = ThinkRing.new()
+	_ring.name = "ThinkRing"
+	_ring.position = PORTRAIT_PANEL.position * UI_SCALE
+	_ring.size = PORTRAIT_PANEL.size * UI_SCALE
+	_ring.visible = false
+	_layer.add_child(_ring)
 	# Move hints are measured before their font resolves; pin them to their slot.
 	if _type_toggle != null:
 		_type_toggle.size = Vector2(80, 35) * UI_SCALE
@@ -605,50 +607,52 @@ func _use_item(id: String) -> void:
 		"item_id": id, "scope": "encounter", "persona_id": persona_id, "turn": _turns,
 		"remaining": int(result.get("remaining", GameState.item_count(id)))})
 	if not bool(result.get("ok", false)):
-		_set_result("Item unavailable.")
+		_set_result("You can't use that right now.")
 		return
 	match id:
 		"breathing_reset":
 			var gain := 22.0 if GameState.teacher_profile_id == "steady" else 18.0
 			composure = clampf(composure + gain, 0.0, GameState.max_composure())
 			_set_result("Breathing Reset used  |  Composure +%d%s" % [int(gain), " profile bonus" if gain > 18.0 else ""])
-			_set_coach("Coach Vee: regulated first. Now choose a smaller, cleaner next move.")
+			_set_coach("Coach Vee: good, you breathed first. Now try something smaller.")
 		"student_profile_card":
 			_asset_learned = true
 			var rapport_gain := 8.0 if GameState.teacher_profile_id == "listener" else 4.0
 			rapport = clampf(rapport + rapport_gain, 0.0, 100.0)
-			var hint := asset_hint if asset_hint != "" else "%s needs you to learn their thinking before correcting it." % display_name
+			var hint := asset_hint if asset_hint != "" else "%s needs you to hear their thinking before you correct it." % display_name
 			if hint.length() > 72:
 				hint = hint.substr(0, 69) + "..."
-			_set_result("Student Profile Card used  |  Asset cue revealed  |  Rapport +%d" % int(rapport_gain))
-			_set_coach("Coach Vee: profile cue: %s" % hint)
+			_set_result("Student Profile Card used  |  New cue  |  Rapport +%d" % int(rapport_gain))
+			_set_coach("Coach Vee: worth knowing. %s" % hint)
 		"noticing_lens":
 			var ways: Array = []
 			if _pj != null:
 				for p in _pj.paths:
 					ways.append(str(p.get("label", "")))
 			_set_result("Noticing Lens used  |  %d ways in" % ways.size())
-			_set_coach("Coach Vee: more than one approach works for %s: %s. Pick one and follow it through." % [display_name, " / ".join(ways)])
+			_set_coach("Coach Vee: a few things could work with %s: %s. Pick one and stick with it." % [display_name, " / ".join(ways)])
 		"wait_meter_pin":
 			_wait_item_ready = true
-			_set_result("Wait Meter Pin used  |  next move gets full wait-time credit")
-			_set_coach("Coach Vee: next move gets full think-time credit.")
+			_set_result("Wait Meter Pin used  |  next move counts as a full pause")
+			_set_coach("Coach Vee: your next move counts as if you waited.")
 		"lesson_map":
 			understanding = clampf(understanding + 0.04, 0.0, 1.0)
 			composure = clampf(composure + 4.0, 0.0, GameState.max_composure())
 			_set_result("Lesson Map used  |  Understanding +4  |  Composure +4")
-			_set_coach("Coach Vee: lesson path checked. Now choose the learner-fit move.")
+			_set_coach("Coach Vee: map checked. Now, what does this student need?")
 		"practice_goal_card":
 			_practice_goal_active = true
-			_set_result("Practice Goal set  |  clear this encounter for bonus XP")
-			_set_coach("Coach Vee: focus goal: make one evidence-rich move before resolving the misconception.")
+			_set_result("Practice Goal set  |  finish this one for bonus XP")
+			_set_coach("Coach Vee: goal. Get them to show their thinking once before you fix the mistake.")
 		_:
-			_set_result("%s cannot be used in this encounter." % Items.name_for(id))
+			_set_result("%s doesn't work here." % Items.name_for(id))
 	_refresh_meters()
 	_refresh_bond()
 	_refresh_item_buttons()
 
 func _toggle_input_mode() -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return   # B2: read the student first
 	_type_mode = not _type_mode
 	_type_toggle.text = "Menu" if _type_mode else "Type"
 	for b in _buttons:
@@ -663,25 +667,20 @@ func _toggle_input_mode() -> void:
 		elif not _buttons.is_empty():
 			_buttons[0].grab_focus()
 	if _type_mode:
-		_set_result("Type mode: the offline demo classifies common teacher moves locally.")
+		_set_result("Type it out. Offline, the game guesses which move you meant.")
 
 func _start_voice_input() -> void:
 	if _text_input == null:
 		return
 	if VoiceInput.start_for_line_edit(_text_input):
-		_set_result("Listening... speak your teacher talk.")
+		_set_result("Listening... go ahead.")
 	else:
-		_set_result("Voice input is not available in this browser.")
+		_set_result("This browser can't use the mic.")
 
 func _preview_move(tag: String) -> void:
 	if _busy or _resolved or _support_level() < Scaffold.PARTIAL:
 		return
 	_set_result(str(MOVE_HELP.get(tag, "")))
-
-func _set_wait_bar_ready(ready: bool) -> void:
-	if _wait_bar == null:
-		return
-	_wait_bar.color = Color(0.30, 0.80, 0.40) if ready else Color(0.55, 0.56, 0.62)
 
 func _build_dialogue_box() -> void:
 	# The student's line sits in the chalkboard panel (LINE_PANEL), written in chalk.
@@ -737,28 +736,95 @@ func _make_meter(name_txt: String, y: float, fill: Color) -> ColorRect:
 func _arm_turn() -> void:
 	_busy = false
 	_ready_at_ms = Time.get_ticks_msec()
-	if _wait_label != null:
-		_wait_label.text = _wait_label_text(false)
+	_long_fired = false
+	_maybe_prompt_notice()
+	_refresh_praise_hint()
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
-	if _busy or _resolved:
+	if _resolved:
+		if _ring != null:
+			_ring.visible = false
 		return
-	var elapsed := float(Time.get_ticks_msec() - _ready_at_ms)
-	var threshold := float(GameState.wait_threshold_ms())
-	if _wait_bar != null:
-		_wait_bar.size = Vector2(70.0 * UI_SCALE * clampf(elapsed / maxf(1.0, threshold), 0.0, 1.0), 8.0 * UI_SCALE)
-	var ready := elapsed >= threshold
-	_set_wait_bar_ready(ready)
-	if _wait_label != null:
-		_wait_label.text = _wait_label_text(ready)
+	if _ring == null:
+		return
+	var now := Time.get_ticks_msec()
+	if _thinking:
+		# WT-I: the student thinks; the answer arrives when the ring is full.
+		var t := float(GameState.wait_threshold_ms())
+		_ring.show_state(ThinkRing.THINK, float(now - _think_t0) / t, tr("thinking..."))
+		if now - _think_t0 >= int(t):
+			_end_thinking(false)
+		return
+	if _busy:
+		return
+	if _notice_panel != null and _notice_panel.visible:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")   # B2: reading first; the pause starts after
+		return
+	# WT-II: let the answer land, then the go cue. Long silence costs a little engagement.
+	var idle := now - _ready_at_ms
+	if _support_level() == Scaffold.OFF and idle < Tuning.WT_LONG_MS:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")   # B5: count the pause yourself
+	elif idle < Tuning.WT2_WINDOW_MS:
+		_ring.show_state(ThinkRing.LAND, float(idle) / Tuning.WT2_WINDOW_MS, tr("let it land"))
+	elif idle < Tuning.WT_LONG_MS or _turns == 0:   # the opening line is reading time
+		_ring.show_state(ThinkRing.READY, 1.0, tr("your move"))
+	else:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")
+		if not _long_fired:
+			_long_fired = true
+			engagement = clampf(engagement + Tuning.WT_LONG_ENGAGEMENT, 0.0, 100.0)
+			_refresh_meters()
+			Juice.float_text(_layer, tr("drifting"), _ring.position + Vector2(_ring.size.x * 0.5 - 30, _ring.size.y - 40), Color("aab6c8"), UiText.fs(14))
+			Telemetry.log_event({"event": "wait_too_long", "scenario_id": str(Game.current_scenario_id),
+				"persona_id": persona_id, "turn": _turns, "idle_ms": idle, "engagement_delta": Tuning.WT_LONG_ENGAGEMENT})
 
-func _wait_label_text(ready: bool) -> String:
-	var seconds := float(GameState.wait_threshold_ms()) / 1000.0
-	# Short enough for the meter panel; the bar beneath shows the countdown itself.
-	return ("Wait %.1fs: READY" if ready else "Wait %.1fs first") % seconds
+## WT-I over: reveal the held answer. cut = the teacher spoke into the think time, so the
+## thought breaks (ring shatters, student drops it) and the question earns no wait credit.
+func _end_thinking(cut: bool) -> void:
+	_thinking = false
+	var resp := _think_resp
+	_think_resp = {}
+	var held_ms := Time.get_ticks_msec() - _think_t0
+	if cut:
+		var judge: Dictionary = resp.get("judge", {})
+		judge["wait_time_ok"] = false
+		resp["judge"] = judge
+		resp["cut"] = true
+		resp["meter_deltas"] = Tuning.CUT_DELTAS.duplicate()
+		resp["student_utterance"] = {"text": Tuning.CUT_LINE, "emotion_shown": "frustrated"}
+		resp["coach_tip"] = "You talked into their thinking time and %s lost the thought. After you ask, let the ring fill." % display_name
+		_ring.shatter()
+		Sfx.play("turn_wrong", -4.0, 1.3)
+		if _student_tex != null:
+			Juice.shake(_student_tex, 6.0, 6)
+	else:
+		_ring.show_state(ThinkRing.READY, 1.0, "")
+		Sfx.play("tick")
+	Telemetry.log_event({"event": "think_time", "scenario_id": str(Game.current_scenario_id),
+		"persona_id": persona_id, "turn": _turns, "held_ms": held_ms, "cut": cut,
+		"threshold_ms": GameState.wait_threshold_ms()})
+	_on_reply(resp)
+
+## Reply arrives: after a question (Tuning.THINK_TAGS) the student thinks first (WT-I).
+func _on_reply_gate(resp: Dictionary) -> void:
+	var tags: Array = resp.get("judge", {}).get("move_tags", [])
+	var tag0 := str(tags[0]) if tags.size() > 0 else ""
+	if tag0 in Tuning.THINK_TAGS and not _resolved:
+		_think_resp = resp
+		_thinking = true
+		_think_t0 = Time.get_ticks_msec()
+		_update_portrait("thinking")
+		_set_dialogue(tr("%s is thinking...") % display_name)
+		return
+	_on_reply(resp)
 
 func _on_move(tag: String) -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return
+	if _thinking:
+		_end_thinking(true)   # the press is spent speaking over them
+		return
 	if _busy or _resolved:
 		return
 	# Connect is handled locally: it is deterministic asset/relationship state, not an
@@ -772,6 +838,11 @@ func _on_move(tag: String) -> void:
 ## move tag via the LLM judge, then the SAME pipeline runs. The raw line is what the
 ## student model and coach see, so it is what goes into the transcript.
 func _on_type_submit(text: String = "") -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		return
+	if _thinking:
+		_end_thinking(true)
+		return
 	if _busy or _resolved:
 		return
 	var line := (text if text != "" else (_text_input.text if _text_input != null else "")).strip_edges()
@@ -790,7 +861,15 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 	if _wait_item_ready:
 		wait_ms = max(wait_ms, GameState.wait_threshold_ms())
 		_wait_item_ready = false
+	# B1 WT-II: a pause of Tuning.WT2_WINDOW_MS after their answer counts as waited (sent
+	# as a full wait so backend/stub judge it the same way); think time is checked after.
+	if wait_ms >= Tuning.WT2_WINDOW_MS:
+		wait_ms = maxi(wait_ms, maxi(int(WAIT_FULL_MS), GameState.wait_threshold_ms()))
+	elif _ring != null:
+		Juice.float_text(_layer, tr("too soon"), _ring.position + Vector2(_ring.size.x * 0.5 - 30, _ring.size.y - 40), Color("ffb27a"), UiText.fs(14))
 	_last_wait_ms = wait_ms
+	if _ring != null:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")
 	var is_free := free_text != ""
 	_last_input_mode = "free_text" if is_free else "menu"
 	_last_free_text = free_text
@@ -818,11 +897,108 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		"move_history": _move_history.slice(maxi(0, _move_history.size() - 6)),
 		"model_profile": "openrouter_gemini",
 	}
-	if not LLMClient.reply_ready.is_connected(_on_reply):
-		LLMClient.reply_ready.connect(_on_reply, CONNECT_ONE_SHOT)
+	if not LLMClient.reply_ready.is_connected(_on_reply_gate):
+		LLMClient.reply_ready.connect(_on_reply_gate, CONNECT_ONE_SHOT)
 	LLMClient.send_move(payload)
 
+## B2: when the student's readable state changes (and at the start), ask what you notice
+## before the next move. One tap; the move row is covered until you answer.
+func _maybe_prompt_notice() -> void:
+	if _resolved or _thinking:
+		return
+	if _notice_panel != null and _notice_panel.visible:
+		(_notice_panel.get_node("Q") as Label).text = tr("Read %s first: what do you notice?") % display_name
+		return
+	var truth: Array = Tuning.NOTICE_TRUTH.get(_shown_emotion, ["distracted"])
+	var cat := str(truth[0])
+	if cat == _noticed_cat or _notice_prompts >= Tuning.NOTICE_MAX_PROMPTS:
+		return
+	_notice_prompts += 1
+	if _notice_panel == null:
+		_build_notice_panel()
+	(_notice_panel.get_node("Q") as Label).text = tr("Read %s first: what do you notice?") % display_name
+	_notice_panel.visible = true
+	_notice_hidden = []
+	for b in _buttons + [_text_input, _send_btn, _mic_btn, _type_toggle]:   # the strip replaces the move row until you answer
+		if b != null and (b as Control).visible:
+			(b as Control).visible = false
+			_notice_hidden.append(b)
+	_notice_btns[0].grab_focus()
+
+func _build_notice_panel() -> void:
+	_notice_panel = UiKit.panel("board")
+	_notice_panel.name = "NoticePanel"
+	_notice_panel.position = Vector2(8, 188) * UI_SCALE
+	_notice_panel.size = Vector2(380, 76) * UI_SCALE
+	_notice_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_layer.add_child(_notice_panel)
+	var q := Label.new()
+	q.name = "Q"
+	q.position = Vector2(14, 8)
+	q.add_theme_font_size_override("font_size", UiText.fs(14))
+	q.add_theme_color_override("font_color", Color("f2eedd"))
+	_notice_panel.add_child(q)
+	q.size = Vector2(_notice_panel.size.x - 28, 22)
+	var bw := (_notice_panel.size.x - 28 - 3 * 8) / 4.0
+	for i in range(Tuning.NOTICE_CHIPS.size()):
+		var chip := str(Tuning.NOTICE_CHIPS[i])
+		var b := Button.new()
+		b.text = tr(str(Tuning.NOTICE_LABELS[chip]))
+		UiKit.style_button(b, UiText.fs(14))
+		InputFeel.add_hotkey_badge(b, i, UiText.fs(12))
+		b.pressed.connect(_on_notice.bind(chip))
+		_notice_panel.add_child(b)
+		b.position = Vector2(14 + i * (bw + 8), 40)
+		b.size = Vector2(bw, 52)
+		_notice_btns.append(b)
+
+func _on_notice(chip: String) -> void:
+	var truth: Array = Tuning.NOTICE_TRUTH.get(_shown_emotion, ["distracted"])
+	var right := chip in truth
+	_noticed_cat = str(truth[0])
+	_notice_panel.visible = false
+	for b in _notice_hidden:
+		if is_instance_valid(b):
+			(b as Control).visible = true
+	_notice_hidden = []
+	_notice_bonus = right
+	if _buttons.size() > 0:
+		_buttons[0].grab_focus()
+	Competency.observe_skill("noticing", "notice::%s" % persona_id, right)
+	Telemetry.log_event({"event": "notice", "scenario_id": str(Game.current_scenario_id), "persona_id": persona_id,
+		"turn": _turns, "chip": chip, "shown": _shown_emotion, "right": right, "prompt_n": _notice_prompts})
+	if right:
+		Sfx.play("tick")
+		_set_result(tr("You read them right. If your next move lands, it counts a bit more."))
+		_release_result()
+	else:
+		Sfx.play("turn_neutral")
+		_set_coach("Coach Vee: " + tr("Look again. Their face and posture say %s. Answer that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
+		_release_coach()
+	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
+
+func _refresh_praise_hint() -> void:
+	if _praise_btn != null:
+		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
+		if ph != null:
+			ph.text = tr("names what they just did") if _praise_specific() else tr("nothing to name yet")
+
+## B3: praise is specific only when there is something nameable: the last move landed, or
+## praise fits the student's path now (a designed "catch them doing it right" moment).
+func _praise_specific() -> bool:
+	if not _move_history.is_empty() and bool(_move_history[-1].get("targets", false)):
+		return true
+	return _pj != null and _pj.fits_now("praise")
+
 func _on_reply(resp: Dictionary) -> void:
+	var ptags: Array = resp.get("judge", {}).get("move_tags", [])
+	if ptags.size() > 0 and str(ptags[0]) == "praise":
+		var pj: Dictionary = resp.get("judge", {})
+		pj["praise_kind"] = "specific" if _praise_specific() else "generic"
+		resp["judge"] = pj
+		if pj["praise_kind"] == "generic":
+			resp["meter_deltas"] = Tuning.PRAISE_GENERIC_DELTAS.duplicate()
+			resp["coach_tip"] = "That praise was generic. They hadn't done anything yet to name. Praise right after they show their thinking, and say what they did."
 	var before := _meter_snapshot()
 	_hold_text = true
 	_meter_delay = TURN_CUE_AT
@@ -844,10 +1020,17 @@ func _on_reply(resp: Dictionary) -> void:
 	var tag0: String = str(tags[0]) if tags.size() > 0 else ""
 	# Path judge is authoritative for fit: the same move can be right now and early later.
 	var fit := {}
-	if tag0 != "" and _pj != null:
-		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)))
+	if str(judge.get("praise_kind", "")) == "generic":
+		fit = {"fit": "miss", "credit": 0.0, "path_id": "", "path_label": "", "done": false, "note": "the praise named nothing they did"}
+		targets = false
+	elif tag0 != "" and _pj != null:
+		fit = _pj.evaluate(tag0, bool(judge.get("wait_time_ok", false)), bool(resp.get("cut", false)))
 		targets = str(fit["fit"]) == "advance"
 		var credit := float(fit["credit"])
+		if _notice_bonus and str(fit["fit"]) == "advance":
+			credit += Tuning.NOTICE_CREDIT_BONUS   # B2: you read them right first
+			fit["credit"] = credit
+		_notice_bonus = false
 		understanding = clampf(understanding - float(deltas.get("understanding", 0.0)) + credit, 0.0, 1.0)
 		deltas["understanding"] = credit
 		_refresh_meters()
@@ -865,6 +1048,8 @@ func _on_reply(resp: Dictionary) -> void:
 		"reaction": str(utter.get("text", "")), "meter": _result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas),
 		"student": display_name, "fit": str(fit.get("fit", "")), "path": str(fit.get("path_label", "")), "note": str(fit.get("note", "")),
 		"scaffold": _support_level()})
+	if targets and tag0 in Tuning.VOICE_TAGS:
+		Game.note_voiced(persona_id)   # B6: their thinking was heard
 	# Warm demander: appropriate demand that lands builds the bond; cold takeover erodes it.
 	if targets:
 		GameState.add_bond(persona_id, 0.05)
@@ -884,7 +1069,8 @@ func _on_reply(resp: Dictionary) -> void:
 		"turn": _turns,
 		"scaffold": {"level": int(_scaffold["level"]), "effective": _support_level(), "stepped_in": _stepped_in,
 			"prob": float(_scaffold.get("prob", 0.5)), "evidence": int(_scaffold.get("evidence", 0))},
-		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text},
+		"move": {"tag": tag0, "wait_ms": _last_wait_ms, "input_mode": _last_input_mode, "text": _last_free_text,
+			"praise_kind": str(judge.get("praise_kind", "")), "think_cut": bool(resp.get("cut", false))},
 		"judge": {"tags": tags, "targets": targets, "wait_ok": bool(judge.get("wait_time_ok", false))},
 		"deltas": deltas,
 		"meters": {
@@ -924,9 +1110,9 @@ func _do_connect() -> void:
 		GameState.add_bond(persona_id, 0.10)
 		_refresh_meters()
 		_refresh_bond()
-		var hint := asset_hint if asset_hint != "" else "You pause to learn what %s cares about beyond this task." % display_name
-		_set_dialogue("You take a beat to notice %s, not just the task." % display_name)
-		_set_coach("Coach Vee (notice): %s  Press Connect again to bridge the content to it." % hint)
+		var hint := asset_hint if asset_hint != "" else "You ask %s what they're into outside of class." % display_name
+		_set_dialogue("You stop and actually look at %s." % display_name)
+		_set_coach("Coach Vee: %s  Press Connect again to tie the lesson to it." % hint)
 		_update_portrait("thinking")
 		_play_turn_beat(TurnBeat.NEUTRAL, before)
 		_arm_turn()
@@ -960,9 +1146,9 @@ func _do_connect() -> void:
 		_win("connect")
 		return
 	if connect_resolves:
-		_set_coach("Coach Vee: you connected it to %s's world (funds of knowledge). Keep going, they are with you." % display_name)
+		_set_coach("Coach Vee: you hooked it to something %s cares about. They're with you now. Keep going." % display_name)
 	else:
-		_set_coach("Coach Vee: connecting built real trust (bond up). For %s the academic unlock is still the right move, but now they will let you lead." % display_name)
+		_set_coach("Coach Vee: that built some trust. %s still needs the lesson move, but now they'll let you lead." % display_name)
 	_arm_turn()
 
 ## Contingent support: three misses in a row -> Coach Vee steps in with the need and
@@ -1035,14 +1221,14 @@ func _present_win(route: String, warm: bool, reward: Dictionary, run_record: Dic
 	Sfx.play("win")
 	if route == "connect":
 		# The connect_line is already shown as the resolving dialogue.
-		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
+		_set_coach("Coach Vee: you got to %s through something they already know. You never had to tell them. Badge: %s." % [display_name, target_badge.to_upper()])
 	else:
 		_set_dialogue("%s: \"%s\"" % [display_name, win_line])
 		TTSClient.speak(persona_id, win_line, "excited")
 		if warm:
-			_set_coach("Coach Vee: warmth AND high expectations. You held the bar and they trusted you to. Warm demander. Badge: %s." % target_badge.to_upper())
+			_set_coach("Coach Vee: you were kind and you didn't lower the bar. They trusted you to hold it. Badge: %s." % target_badge.to_upper())
 		else:
-			_set_coach("Coach Vee: they reasoned to it themselves, you did not tell them. Solid. (Build the relationship too; connection makes the next period easier.) Badge: %s." % target_badge.to_upper())
+			_set_coach("Coach Vee: they got there on their own. Solid. Get to know them a bit next time, it makes tomorrow easier. Badge: %s." % target_badge.to_upper())
 	_show_session_complete_panel(target_badge, reward, run_record)
 
 ## Product-grade end-of-encounter readout: reward, level, score, rank, evidence, next focus.
@@ -1066,135 +1252,95 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	if _coach != null:
 		_coach.visible = false
 
-	var overlay := Control.new()
-	overlay.name = "SessionComplete"
-	_layer.add_child(overlay)
+	var parts := _result_parts()
+	var weak := ResultsCard.weakest(parts)
+	var rank := str(run_record.get("rank", "-"))
+	var card := ResultsCard.build(_layer, {
+		"title": "Done with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
+		"rank": rank,
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"]).to_lower()),
+		"parts": parts,
+		"rewards": {"badge": badge_id if bool(reward.get("badge_new", false)) else "",
+			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Completion",
+			"none": "You already have the %s badge." % badge_id.capitalize(),
+			"level_up": bool(reward.get("level_up", false)),
+			"level_after": int(reward.get("level_after", GameState.teacher_level)), "items": reward.get("items_awarded", {})},
+		"moments": _pivotal_moments(),
+		"next": str(NEXT_TARGET[weak]),
+		"buttons": [{"label": "Return to room", "primary": true,
+			"cb": func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")}],
+	})
+	card.name = "SessionComplete"
+	for b in card.find_children("*", "Button", true, false):
+		_continue_btn = b
 
-	var panel := Panel.new()
-	panel.position = Vector2(34, 74)
-	panel.size = Vector2(436, 190)
-	overlay.add_child(panel)
-	CompletionFx.add_completion_burst(overlay, Rect2(panel.position, panel.size), true, str(run_record.get("rank", "-")))
+## Teaching-language next target for the weakest part (understanding, pace, bond).
+const NEXT_TARGET := [
+	"Ask for their thinking first (Elicit), then build on what they said (Extend) before you explain anything.",
+	"Read the Need line and pick the move it points to. You'll get there in fewer turns.",
+	"Hook it to something they care about. Stay warm and keep the bar high.",
+]
 
-	_overlay_label(overlay, "SESSION COMPLETE", Vector2(48, 88), UiText.S_DISPLAY - 1, Color(0.97, 0.95, 0.86), Vector2(300, 16))
-	var score_lbl := _overlay_label(overlay, "", Vector2(48, 108), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
-	CompletionFx.count_up(score_lbl, "Score {score}   |   Level %d" % GameState.teacher_level, int(run_record.get("score", 0)))
-
-	var reward_line := "Badge %s" % badge_id.to_upper()
-	if bool(reward.get("level_up", false)):
-		reward_line += " | Level %d | +upgrade" % int(reward.get("level_after", GameState.teacher_level))
-	var item_text := _items_awarded_text(reward.get("items_awarded", {}))
-	if item_text != "":
-		reward_line += " | +items"
-	_overlay_label(overlay, reward_line, Vector2(48, 122), UiText.S_CAPTION, Color(0.96, 0.86, 0.50), Vector2(300, 14))
-	_overlay_label(overlay, _score_driver_text(run_record), Vector2(48, 136), UiText.S_CAPTION, Color(0.72, 0.82, 0.96), Vector2(300, 12))
-
-	var rows: Array = Competency.summary().filter(func(r): return r["n"] > 0)
-	rows = rows.slice(0, 3)
-	_overlay_label(overlay, "Evidence estimates from moves you actually used", Vector2(48, 152), UiText.S_CAPTION, Color(0.72, 0.78, 0.88), Vector2(404, 12))
-	var y := 168
-	for r in rows:
-		_overlay_label(overlay, str(r["label"]), Vector2(50, y), UiText.S_CAPTION, Color(0.86, 0.90, 0.96), Vector2(132, 11))
-		var bg := ColorRect.new()
-		bg.position = Vector2(188, y + 2)
-		bg.size = Vector2(170, 8)
-		bg.color = Color(0, 0, 0, 0.5)
-		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		overlay.add_child(bg)
-		var fill := ColorRect.new()
-		fill.position = bg.position
-		var p: float = r["prob"]
-		fill.size = Vector2(maxf(2.0, 170.0 * p), 8)
-		fill.color = Color(0.35, 0.78, 0.42) if p >= 0.6 else (Color(0.85, 0.70, 0.30) if p >= 0.4 else Color(0.85, 0.45, 0.35))
-		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		overlay.add_child(fill)
-		_overlay_label(overlay, "n=%d" % int(r["n"]), Vector2(364, y), UiText.S_CAPTION, Color(0.70, 0.76, 0.84), Vector2(40, 11))
-		y += 15
-	if rows.is_empty():
-		_overlay_label(overlay, "No competency estimate yet. Try one evidence-rich move next time.", Vector2(50, 168), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(390, 22))
-	else:
-		_overlay_label(overlay, _move_fingerprint_text(), Vector2(48, 214), UiText.S_CAPTION, Color(0.66, 0.90, 0.78), Vector2(260, 12))
-		_overlay_label(overlay, _short_practice_target(), Vector2(48, 228), UiText.S_CAPTION, Color(0.72, 0.92, 0.78), Vector2(260, 28))
-
-	_continue_btn = Button.new()
-	_continue_btn.text = "Return to room"
-	_continue_btn.position = Vector2(320, 224)
-	_continue_btn.size = Vector2(126, 30)
-	_continue_btn.add_theme_font_size_override("font_size", 7)
-	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
-	overlay.add_child(_continue_btn)
-	PixelUi.scale_tree(overlay, UI_SCALE)
-	_continue_btn.grab_focus()
-
-func _overlay_label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
-	var l := Label.new()
-	l.text = text
-	l.position = pos
-	l.size = size
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.clip_text = true
-	l.horizontal_alignment = align
-	l.add_theme_font_size_override("font_size", fs + GameState.ui_font_delta())
-	l.add_theme_color_override("font_color", color)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(l)
-	return l
-
-func _score_driver_text(run_record: Dictionary) -> String:
+## The three score parts the run score is made of, each with the decision behind it.
+func _result_parts() -> Array:
+	var landed := 0
+	for m in _move_history:
+		if bool(m.get("targets", false)):
+			landed += 1
 	var u := int(round(understanding * 100.0))
 	var pace := maxi(0, 42 - _turns * 4)
 	var bond_pts := int(round(GameState.bond(persona_id) * 30.0))
-	return "Score: understand %d + pace %d + bond %d = %03d" % [
-		u,
-		pace,
-		bond_pts,
-		int(run_record.get("score", 0)),
+	return [
+		{"label": "Understanding", "frac": u / 100.0, "value": "%d" % u,
+			"cause": "%d of %d moves landed on their path" % [landed, _move_history.size()]},
+		{"label": "Pace", "frac": pace / 42.0, "value": "%d" % pace,
+			"cause": "reached it in %d turn%s" % [_turns, "" if _turns == 1 else "s"]},
+		{"label": "Bond", "frac": bond_pts / 30.0, "value": "%d" % bond_pts,
+			"cause": "they trust you more now" if bond_pts >= 10 else "not much connection yet"},
 	]
 
-func _move_fingerprint_text() -> String:
-	if _move_history.is_empty():
-		return "Move fingerprint: no scored moves yet"
-	var counts := {}
-	for m in _move_history:
-		var tag := str(m.get("tag", ""))
-		if tag == "":
-			continue
-		counts[tag] = int(counts.get(tag, 0)) + 1
-	var parts: Array = []
-	var short := {
-		"elicit": "E",
-		"extend": "X",
-		"revoice": "R",
-		"wait": "W",
-		"redirect": "D",
-		"praise": "P",
-		"tell": "T",
-		"connect": "C",
-	}
-	for tag in ["elicit", "extend", "revoice", "wait", "redirect", "praise", "tell", "connect"]:
-		if int(counts.get(tag, 0)) > 0:
-			parts.append("%s%d" % [str(short.get(tag, tag.substr(0, 1).to_upper())), int(counts[tag])])
-	if parts.is_empty():
-		return "Moves: no scored moves yet"
-	return "Moves: " + " ".join(parts)
+## A4: up to three turning points from this encounter: the first move that landed, the
+## first early/missed move, and the deciding move. Each reads: move -> reaction -> why.
+func _pivotal_moments() -> Array:
+	var picks: Array = []
+	var first_hit := -1
+	var first_off := -1
+	for i in range(_move_history.size()):
+		var fit := str(_move_history[i].get("fit", ""))
+		if first_hit < 0 and fit == "advance":
+			first_hit = i
+		if first_off < 0 and fit in ["early", "miss"]:
+			first_off = i
+	for i in [first_hit, first_off, _move_history.size() - 1]:
+		if i >= 0 and not i in picks:
+			picks.append(i)
+	picks.sort()
+	var out: Array = []
+	for i in picks:
+		out.append(_moment_line(_move_history[i]))
+	return out
 
-func _short_practice_target() -> String:
-	var target := Game.evidence_practice_target(false)
-	if target.begins_with("Practice: "):
-		target = target.substr(10)
-	var re := RegEx.new()
-	re.compile(" \\d+% -> ")
-	return "Practice: " + re.sub(target, " -> ")
-
-func _show_continue_button() -> void:
-	_continue_btn = Button.new()
-	_continue_btn.text = "Return to room"
-	_continue_btn.position = Vector2(326, 176)
-	_continue_btn.size = Vector2(126, 24)
-	_continue_btn.add_theme_font_size_override("font_size", 7)
-	_continue_btn.pressed.connect(func(): SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn"))
-	_layer.add_child(_continue_btn)
-	_continue_btn.grab_focus()
+func _moment_line(m: Dictionary) -> Dictionary:
+	var fit := str(m.get("fit", ""))
+	var tag := str(m.get("tag", ""))
+	var said := str(m.get("reaction", ""))
+	if said.length() > 56:
+		said = said.substr(0, 54).strip_edges() + "…"
+	var why := ""
+	var kind := "neutral"
+	match fit:
+		"advance":
+			kind = "right"
+			why = "it fit where they were" + (": %s" % str(m["path"]).to_lower() if str(m.get("path", "")) != "" else "")
+		"early":
+			kind = "early"
+			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "right idea, too early"
+		"miss":
+			kind = "wrong"
+			why = str(m.get("note", "")) if str(m.get("note", "")) != "" else "it wasn't what they needed"
+		_:
+			why = "it kept the conversation open"
+	return {"kind": kind, "text": "Turn %d  %s  ->  \"%s\"  ->  %s." % [int(m.get("turn", 0)), tag.capitalize(), said, why]}
 
 func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 	if badge_id == "":
@@ -1221,7 +1367,7 @@ func _show_badge_card(badge_id: String, reward: Dictionary = {}) -> void:
 func _force_recover() -> void:
 	composure = minf(40.0, GameState.max_composure())
 	_refresh_meters()
-	_set_coach("Coach Vee: Composure bottomed out. Take a breath. This is data, not failure. Re-attempt the segment.")
+	_set_coach("Coach Vee: you're running on empty. Breathe. It happens to everyone. Try that part again.")
 	_arm_turn()
 
 func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary) -> String:
@@ -1240,10 +1386,10 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 		parts.append("Order %s" % _signed(order_delta))
 	var fit_kind := str(_last_fit.get("fit", ""))
 	if tag == "wait" and not wait_ok:
-		parts.append("Too soon: hold the pause longer")
+		parts.append("Too soon. Hold the pause longer")
 	elif targets:
 		var path := str(_last_fit.get("path_label", ""))
-		parts.append(("On a path that works: %s" % path) if path != "" and path != "Core move" else "This addressed %s's need" % display_name)
+		parts.append(("On a path that works: %s" % path) if path != "" and path != "Core move" else "That's what %s needed" % display_name)
 		if str(_last_fit.get("note", "")) != "":
 			parts.append(str(_last_fit["note"]).capitalize())
 	elif fit_kind == "early":
@@ -1251,7 +1397,7 @@ func _result_text(tag: String, targets: bool, wait_ok: bool, deltas: Dictionary)
 	elif tag != "":
 		parts.append("Not the move %s needs yet" % display_name)
 	if _last_input_mode == "free_text":
-		parts.append("classified as %s" % tag.capitalize())
+		parts.append("read as %s" % tag.capitalize())
 	return "  |  ".join(parts)
 
 func _items_awarded_text(items) -> String:
@@ -1363,13 +1509,13 @@ func _emotion_for(emotion_shown: String, tags: Array) -> String:
 func _move_gloss(tag: String) -> String:
 	match tag:
 		"elicit": return "Can you walk me through how you got that?"
-		"extend": return "Okay, and what happens if you push that idea further?"
+		"extend": return "Okay. And what if you take that one step further?"
 		"revoice": return "So what you're saying is..."
-		"tell": return "Here's how it actually works: let me show you."
-		"praise": return "I like how you explained your thinking there."
-		"redirect": return "Let's bring our focus back to the problem."
-		"wait": return "(waits quietly, giving you time to think)"
-		"connect": return "Tell me about something you're really good at outside class."
+		"tell": return "Here, let me just show you how it works."
+		"praise": return "You walked me through how you got that. That's what I want to see." if _praise_specific() else "Good job!"
+		"redirect": return "Hey, eyes back on the problem."
+		"wait": return "(waits quietly)"
+		"connect": return "What are you really good at outside of school?"
 		_: return "(addresses the student)"
 
 func _affect_for(tags: Array) -> String:
@@ -1388,6 +1534,7 @@ func _affect_for(tags: Array) -> String:
 ## Swap to the best AVAILABLE imagegen2 portrait for the given emotion; if none of the
 ## fallback chain exists yet, tint the placeholder rect so state is still legible.
 func _update_portrait(emotion: String) -> void:
+	_shown_emotion = emotion
 	if _student_tex == null:
 		return
 	var chain: Array = EMOTION_FALLBACK.get(emotion, [emotion, "neutral", "thinking"])
@@ -1600,6 +1747,10 @@ func _input(event: InputEvent) -> void:
 
 ## Number keys 1-8 choose a move directly (menu mode only).
 func _unhandled_key_input(event: InputEvent) -> void:
+	if _notice_panel != null and _notice_panel.visible:
+		if InputFeel.press_hotkey(_notice_btns, event):
+			get_viewport().set_input_as_handled()
+		return
 	if _busy or _resolved or _type_mode:
 		return
 	if InputFeel.press_hotkey(_buttons, event):

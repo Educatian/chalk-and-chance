@@ -11,22 +11,24 @@
     {"id": "funds_of_knowledge", "label": "Connecting to student assets", "anchor": "Moll & Gonzalez; TeachingWorks HLP 12"},
     {"id": "group_monitoring", "label": "Group monitoring", "anchor": "Kounin withitness / classroom monitoring"},
     {"id": "formative_check", "label": "Formative checking", "anchor": "Black & Wiliam 1998; formative assessment"},
-    {"id": "status_treatment", "label": "Status treatment", "anchor": "Cohen & Lotan; complex instruction status treatment"}
+    {"id": "status_treatment", "label": "Status treatment", "anchor": "Cohen & Lotan; complex instruction status treatment"},
+    {"id": "noticing", "label": "Noticing student thinking", "anchor": "Jacobs, Lamb & Philipp 2010 (professional noticing: attend, interpret)"}
   ],
   "evidence_rules": {
-    "_doc": "tag -> {skills tapped (Q-matrix row), y_from: how to read success from the telemetry turn}. y_from values: targets=judge.targets; wait_ok=judge.wait_ok; order_up/trust_up=delta>0; const1/const0=fixed.",
+    "_doc": "tag -> {skills tapped (Q-matrix row), y_from: how to read success from the telemetry turn}. y_from values: targets=judge.targets; wait_ok=judge.wait_ok; order_up/trust_up=delta>0; specific_praise=trust_up and move.praise_kind != generic (B3); const1/const0=fixed. notice is logged as its own event (B2), not a turn.",
     "elicit":   {"skills": ["elicit_reasoning"], "y_from": "targets"},
     "extend":   {"skills": ["extend_thinking"], "y_from": "targets"},
     "revoice":  {"skills": ["revoicing"], "y_from": "trust_up"},
     "wait":     {"skills": ["wait_time"], "y_from": "wait_ok"},
     "redirect": {"skills": ["behavior_mgmt"], "y_from": "order_up"},
     "tell":     {"skills": ["restraint"], "y_from": "const0"},
-    "praise":   {"skills": ["behavior_specific_praise"], "y_from": "trust_up"},
+    "praise":   {"skills": ["behavior_specific_praise"], "y_from": "specific_praise"},
     "connect":  {"skills": ["funds_of_knowledge"], "y_from": "const1"},
     "observe":  {"skills": ["group_monitoring"], "y_from": "productive_group_move"},
     "probe":    {"skills": ["formative_check"], "y_from": "productive_group_move"},
     "press":    {"skills": ["group_monitoring"], "y_from": "productive_group_move"},
-    "redistribute": {"skills": ["status_treatment"], "y_from": "productive_group_move"}
+    "redistribute": {"skills": ["status_treatment"], "y_from": "productive_group_move"},
+    "notice": {"skills": ["noticing"], "y_from": "targets"}
   },
   "session_competencies": {
     "_doc": "competencies measured at the session level (not per-move), computed in fit_competencies.py.",

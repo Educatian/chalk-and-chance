@@ -31,7 +31,7 @@ func _build() -> void:
 	var title := Label.new()
 	title.text = "CHALK & CHANCE"
 	title.position = Vector2(40, 20)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(24))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	add_child(title)
@@ -39,10 +39,10 @@ func _build() -> void:
 	var lv := Label.new()
 	lv.text = "Lv %d" % GameState.teacher_level
 	lv.position = Vector2(42, 62)
-	lv.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	lv.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	lv.add_theme_font_size_override("font_size", UiText.fs(18))
 	lv.add_theme_color_override("font_color", Color("ffd34e"))
-	lv.tooltip_text = "Teacher level. Next +1 upgrade point in %d XP." % GameState.xp_to_next_level()
+	lv.tooltip_text = "Your level. %d more XP to the next upgrade point." % GameState.xp_to_next_level()
 	lv.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(lv)
 	var xp_bg := ColorRect.new()
@@ -64,14 +64,32 @@ func _build() -> void:
 	xp_txt.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92))
 	add_child(xp_txt)
 
+	var earned_n := 0
+	for b0 in ["routine", "echo", "balance", "mirror", "insight"]:
+		if GameState.has_badge(b0):
+			earned_n += 1
 	var bcap := Label.new()
-	bcap.text = "Badges"
+	bcap.text = "Badges %d/5" % earned_n
 	bcap.position = Vector2(42, 98)
 	bcap.add_theme_font_size_override("font_size", UiText.fs(12))
 	bcap.add_theme_color_override("font_color", Color(0.70, 0.78, 0.88))
 	add_child(bcap)
-	var bx := 100.0
+	var bx := 128.0
 	for bid in ["routine", "echo", "balance", "mirror", "insight"]:
+		# One slot per badge, spaced apart: earned = full colour in a gold ring,
+		# not yet = an empty slate slot holding a faint grey silhouette.
+		var got := GameState.has_badge(bid)
+		var slot := Panel.new()
+		slot.position = Vector2(bx - 3, 91)
+		slot.size = Vector2(34, 34)
+		var ssb := StyleBoxFlat.new()
+		ssb.bg_color = Color(0.10, 0.12, 0.20) if got else Color(0.07, 0.08, 0.13)
+		ssb.border_color = Color("ffd34e") if got else Color(0.25, 0.30, 0.40)
+		ssb.set_border_width_all(2)
+		ssb.set_corner_radius_all(17)
+		slot.add_theme_stylebox_override("panel", ssb)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(slot)
 		var icon := TextureRect.new()
 		icon.texture = Art.tex("res://assets/ui/badge_%s.png" % bid)
 		icon.position = Vector2(bx, 94)
@@ -79,19 +97,19 @@ func _build() -> void:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var got := GameState.has_badge(bid)
-		icon.modulate = Color.WHITE if got else Color(1, 1, 1, 0.28)
+		icon.modulate = Color.WHITE if got else Color(0.42, 0.46, 0.55, 0.45)
 		icon.tooltip_text = "%s badge: %s%s" % [_badge_name(bid), _badge_desc(bid), "" if got else "  (not earned yet)"]
 		icon.mouse_filter = Control.MOUSE_FILTER_PASS
 		add_child(icon)
-		bx += 34.0
+		icon.size = Vector2(28, 28)
+		bx += 46.0
 
 	var commands := [
-		["Evidence", _open_evidence_journal, "Your evidence journal: skill estimates from the moves you used."],
-		["Upgrade", _open_upgrades_or_explain, "Spend upgrade points earned from level-ups."],
+		["Skills", _open_evidence_journal, "How each skill is going, from the moves you've made."],
+		["Upgrade", _open_upgrades_or_explain, "Spend the points you get when you level up."],
 		["Profile", null, ""],
-		["Items", _open_items, "Equip classroom items."],
-		["Board", _open_leaderboard, "Run history and reports."],
+		["Items", _open_items, "Pick what to bring to class."],
+		["Board", _open_leaderboard, "Past runs and reports."],
 		["Settings", _open_settings, "Audio, text size, motion, classroom look."],
 	]
 	var cx := vp.x - 42.0 - 6 * 96.0
@@ -122,26 +140,25 @@ func _build() -> void:
 	# The coach recommendation as one highlighted callout.
 	var callout := Panel.new()
 	callout.position = Vector2(42, 134)
-	callout.size = Vector2(vp.x - 84, 44)
+	callout.size = Vector2(vp.x - 84, 54)
 	add_child(callout)
 	var accent := ColorRect.new()
 	accent.position = Vector2(48, 140)
-	accent.size = Vector2(4, 32)
+	accent.size = Vector2(4, 42)
 	accent.color = Color("ffd34e")
 	add_child(accent)
 	var coach := Label.new()
 	coach.text = "Coach Vee:  " + Game.practice_recommendation()
 	coach.position = Vector2(62, 140)
-	coach.size = Vector2(vp.x - 116, 32)
+	coach.size = Vector2(vp.x - 116, 42)
 	coach.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	coach.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	coach.clip_text = true
+	coach.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	coach.add_theme_font_size_override("font_size", UiText.fs(14))
 	coach.add_theme_color_override("font_color", Color(0.80, 0.95, 0.84))
 	coach.tooltip_text = Game.practice_recommendation()
 	coach.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(coach)
-	coach.size = Vector2(vp.x - 116, 32)   # after the font resolves, or the label clamps wider
+	coach.size = Vector2(vp.x - 116, 42)   # after the font resolves, or the label clamps wider
 
 	var open_ids: Array = []
 	var locked_ids: Array = []
@@ -154,7 +171,7 @@ func _build() -> void:
 			open_ids.append(sid)
 	var ordered_ids := open_ids + locked_ids
 
-	var list_top := 188.0
+	var list_top := 198.0
 	var scroll := ScrollContainer.new()
 	scroll.follow_focus = true
 	scroll.position = Vector2(42, list_top)
@@ -321,15 +338,15 @@ func _open_mission_briefing(id: String) -> void:
 	title.position = Vector2(480, 76)
 	title.size = Vector2(344, 48)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
 	_add_brief_label(overlay, "CASE", str(cfg.get("story_hook", "")), Vector2(480, 138), Vector2(344, 76), Color(0.84, 0.82, 0.74), fd, 48)
 	_add_brief_label(overlay, "SUCCESS", _brief_objectives_text(cfg), Vector2(480, 222), Vector2(344, 94), Color(0.90, 0.92, 0.96), fd, 46)
-	_add_brief_label(overlay, "EVIDENCE", Game.scenario_edge_label(cfg), Vector2(480, 324), Vector2(344, 62), Color(0.66, 0.90, 0.78), fd, 48)
-	_add_brief_label(overlay, "ADAPTIVE START", _scenario_adaptive_text(cfg), Vector2(96, 354), Vector2(356, 46), Color(0.96, 0.86, 0.50), fd, 48)
+	_add_brief_label(overlay, "SCORED ON", Game.scenario_edge_label(cfg), Vector2(480, 324), Vector2(344, 62), Color(0.66, 0.90, 0.78), fd, 48)
+	_add_brief_label(overlay, "DIFFICULTY", _scenario_adaptive_text(cfg), Vector2(96, 354), Vector2(356, 46), Color(0.96, 0.86, 0.50), fd, 48)
 	_add_brief_label(overlay, "FIRST MOVE", _mission_first_move(cfg), Vector2(96, 410), Vector2(724, 34), Color(0.72, 0.92, 0.78), fd, 92)
 
 	var back := Button.new()
@@ -385,7 +402,7 @@ func _wrap_words(text: String, max_chars: int) -> String:
 func _brief_objectives_text(cfg: Dictionary) -> String:
 	var objectives: Array = cfg.get("objectives", [])
 	if objectives.is_empty():
-		return "Resolve every learner while class order stays intact."
+		return "Reach every student without losing the room."
 	var labels: Array = []
 	for o in objectives.slice(0, 3):
 		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
@@ -396,12 +413,12 @@ func _mission_first_move(cfg: Dictionary) -> String:
 	var fmt := str(cfg.get("format", "discussion"))
 	match fmt:
 		"lecture":
-			return "Present briefly, wait, then Question a highlighted learner before moving on."
+			return "Present a short chunk. Pause. Then Question a highlighted student before going on."
 		"group_work":
-			return "Visit one pod, surface shared reasoning, then redistribute airtime."
+			return "Sit with one table and hear what they think. Then get a quiet kid talking."
 		"independent":
-			return "Circulate first, use proximity, then confer with a drifting learner."
-	return "Elicit reasoning, use wait-time, then press or revoice without taking over."
+			return "Get up and walk. Stand near whoever's drifting, then talk to them quietly."
+	return "Ask how they got it. Wait. Then push, or say it back, but don't take over."
 
 func _scenario_skill_focus(cfg: Dictionary) -> Array:
 	var mode := str(cfg.get("mode", ""))
@@ -421,7 +438,7 @@ func _scenario_adaptive_text(cfg: Dictionary) -> String:
 	var d := Game.adaptive_difficulty(_scenario_skill_focus(cfg))
 	var p := int(round(float(d.get("prob", 0.5)) * 100.0))
 	var evidence := int(d.get("evidence", 0))
-	return "%s | saved evidence %d | mastery signal %d%% | opening pressure tuned." % [
+	return "%s, from %d past moves. You're at %d%%." % [
 		Game.adaptive_difficulty_label(d),
 		evidence,
 		p,
@@ -475,7 +492,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.clip_text = true
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	top.add_child(title)
@@ -489,8 +506,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 
 	var story := Label.new()
 	story.text = str(cfg.get("story_hook", ""))
-	story.clip_text = true
-	story.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	story.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	story.add_theme_font_size_override("font_size", UiText.fs(14))
 	story.add_theme_color_override("font_color", Color(0.88, 0.88, 0.84))
 	story.tooltip_text = story.text
@@ -499,8 +515,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 
 	var focus := Label.new()
 	focus.text = _mission_focus(cfg)
-	focus.clip_text = true
-	focus.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	focus.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	focus.add_theme_font_size_override("font_size", UiText.fs(12))
 	focus.add_theme_color_override("font_color", Color(0.66, 0.90, 0.78))
 	info.add_child(focus)
@@ -566,7 +581,7 @@ func _mission_meta(cfg: Dictionary) -> String:
 func _mission_focus(cfg: Dictionary) -> String:
 	var objectives: Array = cfg.get("objectives", [])
 	if objectives.is_empty():
-		return "Focus: resolve every learner while class order stays intact."
+		return "Focus: reach everyone without losing the room."
 	var labels: Array = []
 	for o in objectives.slice(0, 2):
 		if typeof(o) == TYPE_DICTIONARY and str(o.get("label", "")) != "":
@@ -575,7 +590,7 @@ func _mission_focus(cfg: Dictionary) -> String:
 
 func _mission_reward_text(badge: String, earned: bool) -> String:
 	if badge == "":
-		return "Reward: practice data and competency evidence"
+		return "Reward: practice (no badge here)"
 	var reward_bits := ["+%d XP" % GameState.badge_xp(badge)]
 	var items: Dictionary = Items.BADGE_REWARDS.get(badge, {})
 	for id in items.keys():
@@ -591,8 +606,8 @@ func _open_upgrades_or_explain() -> void:
 		return
 	_open_notice(
 		"NO UPGRADE POINTS YET",
-		"Level up by clearing missions. Each level-up grants one upgrade point for steadier presence, better wait-time, or stronger relationship sense.",
-		"Play the NEXT mission, earn XP, then come back to spend the point."
+		"Level up by clearing missions. Each level gives you one point to put into presence, wait time, or how well you read a room.",
+		"Play the next mission to earn XP, then come back and spend the point."
 	)
 
 func _open_locked_mission_notice(id: String, cfg: Dictionary) -> void:
@@ -600,7 +615,7 @@ func _open_locked_mission_notice(id: String, cfg: Dictionary) -> void:
 	_open_notice(
 		"MISSION LOCKED",
 		"%s opens after you earn the %s badge." % [str(cfg.get("title", id)), _badge_name(required)],
-		"Clear the earlier mission that practices %s, then this classroom becomes available." % _badge_desc(required)
+		"Clear the earlier mission first (the one where you %s)." % _badge_desc(required)
 	)
 
 func _open_notice(title_text: String, body_text: String, next_text: String) -> void:
@@ -626,7 +641,7 @@ func _open_notice(title_text: String, body_text: String, next_text: String) -> v
 	title.position = Vector2(242, 150)
 	title.size = Vector2(476, 34)
 	title.clip_text = true
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(14))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -679,13 +694,13 @@ func _open_settings() -> void:
 	var title := Label.new()
 	title.text = "SETTINGS"
 	title.position = Vector2(222, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(18))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
 	var notice := Label.new()
-	notice.text = "Click Voice status if spoken lines are silent."
+	notice.text = "No voices? Click Voice status."
 	notice.position = Vector2(222, 122)
 	notice.size = Vector2(516, 64)
 	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -783,7 +798,7 @@ func _open_upgrades() -> void:
 	var title := Label.new()
 	title.text = "LEVEL UP REWARDS"
 	title.position = Vector2(218, 92)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -856,15 +871,15 @@ func _open_evidence_journal() -> void:
 	overlay.add_child(panel)
 
 	var title := Label.new()
-	title.text = "EVIDENCE JOURNAL"
+	title.text = "SKILL NOTEBOOK"
 	title.position = Vector2(112, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(16))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
 	var summary := Label.new()
-	summary.text = "Live ECD model: each turn updates a competency estimate, evidence count, and uncertainty."
+	summary.text = "Every move you make nudges these bars. More moves, steadier numbers."
 	summary.position = Vector2(114, 106)
 	summary.size = Vector2(720, 34)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -887,12 +902,12 @@ func _open_evidence_journal() -> void:
 	var y := 176.0
 	for i in range(mini(rows.size(), 6)):
 		var row: Dictionary = rows[i]
-		_add_evidence_row(overlay, row, str(anchors.get(str(row.get("skill", "")), "session evidence model")), y)
+		_add_evidence_row(overlay, row, str(anchors.get(str(row.get("skill", "")), "from your play")), y)
 		y += 38.0
 
 	var recent := Label.new()
 	var recent_count := GameState.leaderboard_top(30).size()
-	recent.text = "RECENT RUN EVIDENCE — %d saved run%s; open Board for details." % [
+	recent.text = "RECENT RUNS: %d saved run%s. Open Board for more." % [
 		recent_count,
 		"" if recent_count == 1 else "s",
 	]
@@ -910,9 +925,9 @@ func _open_evidence_journal() -> void:
 	download.add_theme_font_size_override("font_size", UiText.fs(12))
 	download.disabled = Telemetry.conversation_count() <= 0
 	download.tooltip_text = (
-		"Save this session's teacher moves and simulated learner responses as Markdown."
+		"Save what you said and what the students said back, as Markdown."
 		if not download.disabled
-		else "Complete at least one dialogue turn first."
+		else "Talk to a student first. Nothing to save yet."
 	)
 	HubUi.apply_button_style(download, true)
 	download.pressed.connect(func():
@@ -946,6 +961,8 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 
 	var label := Label.new()
 	label.text = str(row.get("label", row.get("skill", "")))
+	label.tooltip_text = str(SKILL_GLOSS.get(str(row.get("skill", "")), ""))
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
 	label.position = Vector2(116, y)
 	label.size = Vector2(166, 24)
 	label.clip_text = true
@@ -970,7 +987,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = "%3d%%  ev %02d  unc %.2f" % [pct, n, unc]
+	stat.text = "%3d%%  %02d moves  +-%.2f" % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))
@@ -985,6 +1002,12 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	cite.add_theme_font_size_override("font_size", UiText.fs(10))
 	cite.add_theme_color_override("font_color", Color(0.68, 0.88, 0.96))
 	overlay.add_child(cite)
+
+## Plain-words gloss for the teaching terms behind the friendlier skill names.
+const SKILL_GLOSS := {
+	"behavior_mgmt": "Least-intrusive management: use the smallest move that stops it (a look, moving closer) before a word, and a word before calling it out.",
+	"funds_of_knowledge": "Funds of knowledge: what a student already knows from home, family and their own interests, used as a way into the lesson.",
+}
 
 func _evidence_color(pct: int, n: int) -> Color:
 	if n <= 0:
@@ -1016,9 +1039,9 @@ func _short_anchor(anchor: String) -> String:
 	if a.find("Rowe") != -1:
 		return "Rowe 1986"
 	if a.find("Simonsen") != -1:
-		return "Simonsen et al. 2008"
+		return "least-intrusive, Simonsen 2008"   # the term stays where players meet it
 	if a.find("Moll") != -1:
-		return "Moll & Gonzalez; HLP 12"
+		return "funds of knowledge, Moll"
 	if a.find("Chapin") != -1 or a.find("O'Connor") != -1:
 		return "Chapin/O'Connor moves"
 	if a.find("Hattie") != -1:
@@ -1026,15 +1049,15 @@ func _short_anchor(anchor: String) -> String:
 	if a.find("Reinke") != -1:
 		return "Reinke et al. 2008"
 	if a.find("formative") != -1:
-		return "Formative evidence"
+		return "Formative checks"
 	if a.length() <= 32:
 		return a
-	return "Evidence model"
+	return "From your play"
 
 func _recent_evidence_text() -> String:
 	var rows := GameState.leaderboard_top(3)
 	if rows.is_empty():
-		return "No posted run yet. Clear a lesson to turn moves into evidence."
+		return "No runs yet. Finish a lesson and it shows up here."
 	var bits: Array = []
 	for r in rows.slice(0, 2):
 		var coach_next := str(r.get("coach_next", ""))
@@ -1063,7 +1086,7 @@ func _open_leaderboard() -> void:
 	var title := Label.new()
 	title.text = "LEADERBOARD / COACH REPORT"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1206,7 +1229,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	var title := Label.new()
 	title.text = "TRACE DETAIL"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1286,7 +1309,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	var title := Label.new()
 	title.text = title_text
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1339,7 +1362,7 @@ func _open_class_dashboard() -> void:
 	var title := Label.new()
 	title.text = "INSTRUCTOR DASHBOARD"
 	title.position = Vector2(138, 82)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
@@ -1454,13 +1477,13 @@ func _open_items() -> void:
 	var title := Label.new()
 	title.text = "ITEM LOADOUT"
 	title.position = Vector2(138, 74)
-	title.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+	title.add_theme_font_override("font", load("res://ui/fonts/Galmuri11-Bold.ttf"))
 	title.add_theme_font_size_override("font_size", UiText.fs(17))
 	title.add_theme_color_override("font_color", Color(0.97, 0.95, 0.86))
 	overlay.add_child(title)
 
 	var help := Label.new()
-	help.text = "Base starts empty. Items are earned from mission rewards."
+	help.text = "Nothing here yet. You earn items by clearing missions."
 	help.position = Vector2(140, 106)
 	help.size = Vector2(680, 24)
 	help.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1555,9 +1578,9 @@ func _badge_desc(id: String) -> String:
 		"routine":
 			return "manage pacing"
 		"echo":
-			return "surface reasoning"
+			return "get kids explaining"
 		"balance":
-			return "share airtime"
+			return "share the talking"
 		"mirror":
 			return "give useful feedback"
 		"insight":

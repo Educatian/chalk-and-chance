@@ -52,7 +52,7 @@
   "objectives": [
     {
       "id": "attn",
-      "label": "Hold on-task >= 70% (circulate and confer)",
+      "label": "Keep 70%+ on task (walk and confer)",
       "metric": "attention_min",
       "target": 70
     },
@@ -64,7 +64,7 @@
     },
     {
       "id": "comp",
-      "label": "Composure >= 60%",
+      "label": "Keep composure at 60%+",
       "metric": "composure_min",
       "target": 60
     },
@@ -78,5 +78,5 @@
   "badge": "routine",
   "backdrop": "res://assets/backdrops/independent_fractions.png",
   "backdrop_thumb": "res://assets/backdrops/independent_fractions_thumb.png",
-  "story_hook": "The room looks orderly, but quiet struggle is hidden in the rows; circulation and proximity decide the period."
+  "story_hook": "The rows look calm. That doesn't mean anyone's working. You'll only find out by walking them."
 }

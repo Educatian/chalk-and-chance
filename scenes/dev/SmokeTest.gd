@@ -43,9 +43,7 @@ func _ready() -> void:
 	for m in script_moves:
 		if enc._resolved:
 			break
-		enc._on_move(m)
-		await get_tree().process_frame
-		await get_tree().process_frame
+		await _move(enc, m)
 		print("move=%-7s understanding=%.2f engagement=%.0f rapport=%.0f resolved=%s"
 			% [m, enc.understanding, enc.engagement, enc.rapport, str(enc._resolved)])
 
@@ -64,21 +62,35 @@ func _ready() -> void:
 	enc2.setup({"persona_id": "deshawn_offtask", "display_name": "Deshawn"})
 	await get_tree().process_frame
 	for i in range(6):
-		enc2._on_move("elicit")
-		await get_tree().process_frame
-		await get_tree().process_frame
+		await _move(enc2, "elicit")
 	var elicit_resolved: bool = enc2._resolved
 	print("DESHAWN via elicit: understanding=%.2f resolved=%s (expect false)" % [enc2.understanding, str(elicit_resolved)])
 	# Least-to-most path: redirect, then praise the re-engagement (alternating, not mashing).
 	for i in range(9):
 		if enc2._resolved:
 			break
-		enc2._on_move("redirect" if i % 2 == 0 else "praise")
-		await get_tree().process_frame
-		await get_tree().process_frame
+		await _move(enc2, "redirect" if i % 2 == 0 else "praise")
 	print("DESHAWN via redirect->praise: understanding=%.2f resolved=%s badges=%s" % [enc2.understanding, str(enc2._resolved), str(GameState.badges)])
 	if (not elicit_resolved) and enc2._resolved and ("routine" in GameState.badges):
 		print("DIFFERENTIATION: PASS")
 	else:
 		print("DIFFERENTIATION: FAIL")
 	get_tree().quit()
+
+## B2: answer the noticing strip like a player would, so moves are not blocked.
+func _notice(enc: Node) -> void:
+	if enc._notice_panel != null and enc._notice_panel.visible:
+		enc._on_notice("confused")
+
+## One teacher move the way a player makes it: read the student (B2), let the answer land
+## (B1 WT-II), press, and let the student finish thinking (B1 WT-I, fast-forwarded).
+func _move(enc: Node, tag: String) -> void:
+	_notice(enc)
+	enc._ready_at_ms -= 2000
+	enc._on_move(tag)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if enc._thinking:
+		enc._end_thinking(false)
+		await get_tree().process_frame
+		await get_tree().process_frame

@@ -90,7 +90,19 @@ func _dev_room_hook() -> bool:
 		Game.current_scenario_id = room if room != "" else "discussion_fractions"
 		Game.start_lesson(Game.current_scenario_id, 120.0)
 		SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {"persona_id": win, "display_name": win.split("_")[0].capitalize()})
-		get_tree().create_timer(2.0).timeout.connect(func():
+		# ?dev_moves=elicit,tell,extend plays those moves dev_gap s apart (1.6) before the win.
+		var moves: Array = Array(str(JavaScriptBridge.eval(q + ".get('dev_moves') || ''", true)).split(",", false))
+		var gap := float(str(JavaScriptBridge.eval(q + ".get('dev_gap') || '1.6'", true)))
+		var t := 2.0
+		for mv in moves:
+			get_tree().create_timer(t).timeout.connect(func():
+				var e = SceneRouter._current
+				if e != null and e.has_method("_on_move"):
+					if e._notice_panel != null and e._notice_panel.visible:
+						e._on_notice("confused")
+					e._on_move(str(mv)))
+			t += gap
+		get_tree().create_timer(t).timeout.connect(func():
 			var enc = SceneRouter._current
 			if enc != null and enc.has_method("_win"):
 				enc._win("reasoning"))
@@ -106,6 +118,12 @@ func _dev_room_hook() -> bool:
 		SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": cfg})
 	else:
 		SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
+		var dev_int := int(str(JavaScriptBridge.eval(q + ".get('dev_interrupt') || '-1'", true)))
+		if dev_int >= 0:
+			get_tree().create_timer(2.5).timeout.connect(func():
+				var ow2 = SceneRouter._current
+				if ow2 != null and ow2.has_method("_trigger_interrupt"):
+					ow2._trigger_interrupt(dev_int))
 		if end_lesson:
 			get_tree().create_timer(2.5).timeout.connect(func():
 				var ow = SceneRouter._current

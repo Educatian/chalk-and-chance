@@ -41,7 +41,7 @@ func _ready() -> void:
 	_expect_contains(markdown, "I compared the two examples.", "simulated learner response")
 	_expect_contains(markdown, "Redistribute participation", "group menu move label")
 	_expect_contains(markdown, "Most students show option B.", "lecture response")
-	_expect_contains(markdown, "Decision signal", "decision evidence")
+	_expect_contains(markdown, "How it went", "decision evidence")
 	_expect_not_contains(markdown, "must-not-appear", "raw telemetry field")
 	_expect_not_contains(markdown, "anon_id", "anonymous account metadata")
 	_expect_not_contains(markdown, "class_code", "class account metadata")

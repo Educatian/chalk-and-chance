@@ -22,8 +22,12 @@ func start_lesson(scenario_id: String, period_seconds: float) -> void:
 	lesson = {
 		"active": true, "scenario_id": scenario_id,
 		"period_left": period_seconds, "composure": GameState.max_composure(), "disruptions": 0,
-		"offtask": {}, "visited": {}, "moves": [],
+		"offtask": {}, "visited": {}, "voiced": {}, "moves": [],
 	}
+
+## B8: {scenario_id, metric} of the objective the last debrief named as the next target.
+## Session memory only (not saved): it carries into the next attempt of that mission.
+var retry_focus: Dictionary = {}
 
 func clear_lesson() -> void:
 	lesson = {}
@@ -38,6 +42,18 @@ func note_visit(persona_id: String) -> void:
 	var v: Dictionary = lesson.get("visited", {})
 	v[persona_id] = int(v.get(persona_id, 0)) + 1
 	lesson["visited"] = v
+
+## B6: this student's thinking was heard (an Elicit/Revoice landed, or a productive group
+## Probe/Redistribute in their pod). engaged_min counts these, not visits.
+func note_voiced(persona_id: String) -> void:
+	if not lesson.get("active", false) or persona_id == "":
+		return
+	var v: Dictionary = lesson.get("voiced", {})
+	v[persona_id] = int(v.get(persona_id, 0)) + 1
+	lesson["voiced"] = v
+
+func voiced_count() -> int:
+	return (lesson.get("voiced", {}) as Dictionary).size()
 
 func log_move(tag: String, wait_ok: bool, targets: bool) -> void:
 	if not lesson.get("active", false):

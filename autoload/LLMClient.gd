@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Wraps the Godot <-> LLM /turn contract (GAME_CONCEPT.md section 7.6).
 ## In M1 it runs a local STUB whose judge deltas follow the literature-tagged
 ## rubric of section 7.4. Set use_stub=false (and run tools/llm_backend) for the
@@ -47,7 +48,7 @@ func _read_api_base() -> String:
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:
 	_last_payload = payload
-	if use_stub:
+	if use_stub or not NetGuard.allowed(endpoint):
 		call_deferred("_emit_stub", payload)
 		return
 	var headers := PackedStringArray(["Content-Type: application/json"])
@@ -101,45 +102,45 @@ func _emit_stub(payload: Dictionary) -> void:
 		"elicit":
 			deltas = {"understanding": 0.0, "trust": 0.02, "engagement": 0.06, "order": 0.0, "composure": 0.02}
 			feedback_type = "process"
-			text = "Okay... let me walk you through how I was thinking about it."
-			coach = "Good eliciting move; you surfaced their reasoning instead of correcting it. Press on the crack."
+			text = "Okay, um... so how I was thinking was..."
+			coach = "You asked how they got it instead of fixing it. Now press on the weak spot."
 		"extend":
 			deltas = {"understanding": 0.0, "trust": 0.0, "engagement": 0.04, "order": 0.0, "composure": 0.0}
 			feedback_type = "process"
-			text = "Hmm, now I'm not so sure about my first answer."
-			coach = "Nice press. They are reasoning it through themselves instead of being told."
+			text = "Hmm. Wait. Now I'm not sure."
+			coach = "Good push. They're working it out on their own."
 		"revoice":
 			deltas = {"understanding": 0.04, "trust": 0.10, "engagement": 0.05, "order": 0.0, "composure": 0.0}
-			text = "Yeah, that's what I meant."
-			coach = "Revoicing builds rapport and makes their thinking public. The move new teachers skip most."
+			text = "Yeah. That's what I meant."
+			coach = "Saying it back builds trust and puts their idea in the room. New teachers skip this one."
 		"tell":
 			deltas = {"understanding": 0.0, "trust": -0.05, "engagement": -0.10, "order": 0.02, "composure": -0.05}
 			text = "Oh. Okay, I guess."
-			coach = "You took over the thinking, so engagement dropped. Necessary sometimes, but try eliciting first."
+			coach = "You did the thinking for them, and they checked out. Sometimes you have to. Ask first."
 		"praise":
 			deltas = {"understanding": 0.0, "trust": 0.08, "engagement": 0.02, "order": 0.05, "composure": 0.02}
 			text = "...thanks."
-			coach = "Make praise behavior-specific (name what they did), not 'good job'. Generic praise barely moves the needle."
+			coach = "Name what they actually did. Plain 'good job' barely moves anything."
 		"redirect":
 			deltas = {"understanding": 0.0, "trust": -0.02, "engagement": 0.0, "order": 0.06, "composure": 0.0}
 			text = "Okay, sorry."
-			coach = "Use the least-intrusive redirect that works (proximity or nonverbal before a verbal correction)."
+			coach = "Quietest fix first. Walk over, or give a look, before you say anything."
 		"wait":
 			if wait_ok:
 				deltas = {"understanding": 0.0, "trust": 0.04, "engagement": 0.06, "order": 0.0, "composure": 0.03}
-				text = "...oh, wait, maybe I had it backwards."
-				coach = "Wait time paid off. They filled the silence with their own reasoning. Three to five seconds is the sweet spot."
+				text = "...oh wait. Maybe I had it backwards?"
+				coach = "The wait worked. They filled the quiet with their own thinking. Three to five seconds."
 			else:
 				deltas = {"understanding": 0.0, "trust": -0.05, "engagement": -0.02, "order": 0.0, "composure": -0.02}
 				text = "..."
-				coach = "You broke the silence too early. Hold the pause at least three seconds."
+				coach = "You jumped in too soon. Hold it at least three seconds."
 		_:
 			coach = "Pick a teaching move."
 
 	# Resolution only advances on the move that works for THIS student (differentiated win).
 	deltas["understanding"] = 0.12 if targets else 0.0
 	if not targets and tag != "" and tag != "tell":
-		coach += "  (For this student, that may not be the move that unlocks them - check the goal at the top.)"
+		coach += "  (Maybe not the move this student needs. Check the goal up top.)"
 
 	var resp := {
 		"judge": {

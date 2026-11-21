@@ -3,7 +3,7 @@
   "display_name": "Priya",
   "grade_band": "grade_5",
   "subject_context": "whole_class_question",
-  "target_label": "Equitable participation (the easily-overlooked student)",
+  "target_label": "Equitable participation (the overlooked kid)",
   "badge": "balance",
   "win_moves": [
     "wait",
@@ -16,8 +16,8 @@
     0.45,
     0.7
   ],
-  "opening_line": "(has the right answer ready, but quietly waits and is rarely called on)",
-  "win_line": "Yes! I had that. Thanks for asking me.",
+  "opening_line": "(has the answer ready, waits quietly, almost never gets called on)",
+  "win_line": "Oh. Yeah, I had that one. ...Thanks for asking me.",
   "hidden_need": "competent and willing but overlooked; needs the teacher to distribute attention deliberately",
   "knowledge_state": {
     "target_concept": "attention equity; quiet competence is easy to skip",
@@ -26,10 +26,10 @@
   "answer_flip_policy": "You participate readily once deliberately and warmly invited; if ignored you stay quiet rather than pushing in.",
   "assets": [
     "notices what everyone else misses",
-    "writes long thoughtful book reviews"
+    "writes long book reviews"
   ],
-  "asset_hint": "Priya rarely volunteers, but she catches details no one else does. The asset is there; she just needs to be invited into the air-time.",
-  "connect_line": "Oh - you actually want to hear what I thought? ...I did notice something nobody mentioned.",
+  "asset_hint": "Priya almost never volunteers, but she catches details nobody else does. She needs you to hand her the floor.",
+  "connect_line": "You want to hear what I thought? ...Um. I noticed something nobody said yet.",
   "connect_resolves": false,
   "paths": [
     {
@@ -58,7 +58,7 @@
           "extend"
         ]
       ],
-      "why": "Once she speaks, revoicing gives her idea status in the room."
+      "why": "Once she talks, say her idea back so the room takes it seriously."
     }
   ]
 }

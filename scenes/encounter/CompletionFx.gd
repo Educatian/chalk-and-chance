@@ -4,7 +4,7 @@ extends RefCounted
 ## on the overlay right after this, so all motion is started one frame later and
 ## measured from the (possibly scaled) nodes instead of the authored rect.
 
-static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, rank: String = "") -> void:
+static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, rank: String = "", show_stamp: bool = true) -> void:
 	if parent is CanvasItem:
 		(parent as CanvasItem).z_index = 10
 
@@ -21,7 +21,7 @@ static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, ra
 	root.add_child(bottom)
 
 	var stamp: Label = null
-	if rank != "" and rank != "-":
+	if show_stamp and rank != "" and rank != "-":
 		stamp = Label.new()
 		stamp.name = "RankStamp"
 		stamp.text = rank
@@ -30,7 +30,7 @@ static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, ra
 		var d := minf(rect.size.y * 0.42, 84.0)
 		stamp.size = Vector2(d, d)
 		stamp.position = rect.position + Vector2(rect.size.x - d - 18.0, 20.0)
-		stamp.add_theme_font_override("font", load("res://ui/fonts/PixelifySans.ttf"))
+		# Smooth face: the pixel face's D reads as 0 at stamp size.
 		stamp.add_theme_font_size_override("font_size", int(d * 0.5))
 		stamp.add_theme_color_override("font_color", _rank_color(rank))
 		stamp.add_theme_color_override("font_outline_color", Color(0.05, 0.06, 0.1))
@@ -44,7 +44,7 @@ static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, ra
 		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.add_child(stamp)
 
-	_animate_later(parent, root, top, rect, palette, stamp, won)
+	_animate_later(parent, root, top, rect, palette, stamp, won, rank)
 
 ## Replace "{score}" in `template` with a number that counts up from 0.
 static func count_up(label: Label, template: String, score: int, duration: float = 0.7) -> void:
@@ -65,7 +65,7 @@ static func count_up(label: Label, template: String, score: int, duration: float
 			Sfx.blip("tick"),
 		0.0, float(score), duration).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 
-static func _animate_later(parent: Node, root: Control, top: ColorRect, rect: Rect2, palette: Array, stamp: Label, won: bool) -> void:
+static func _animate_later(parent: Node, root: Control, top: ColorRect, rect: Rect2, palette: Array, stamp: Label, won: bool, rank: String = "") -> void:
 	await parent.get_tree().process_frame
 	if not is_instance_valid(root):
 		return
@@ -97,7 +97,7 @@ static func _animate_later(parent: Node, root: Control, top: ColorRect, rect: Re
 
 	# Celebration scales with the result so the juice never overstates it:
 	# S/A full confetti + stamp shake, B a light burst, C/D/unranked no confetti.
-	var pieces := confetti_count(stamp.text if stamp != null else "") if won else 0
+	var pieces := confetti_count(rank) if won else 0
 	if not reduced and pieces > 0:
 		_confetti(root, r, palette, factor, pieces)
 	if stamp != null:

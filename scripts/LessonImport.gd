@@ -35,8 +35,8 @@ static func plan_to_scenario(text: String) -> Dictionary:
 	var backdrop := _backdrop_for(fmt, low)
 	var ros := _roster_for(fmt, arr)
 	var objs: Array = [
-		{"id": "attn", "label": "Keep class attention >= 65%", "metric": "attention_min", "target": 65},
-		{"id": "comp", "label": "Finish with composure >= 50%", "metric": "composure_min", "target": 50},
+		{"id": "attn", "label": "Keep attention at 65%+", "metric": "attention_min", "target": 65},
+		{"id": "comp", "label": "Finish with composure at 50%+", "metric": "composure_min", "target": 50},
 		{"id": "dis", "label": "At most 3 disruptions", "metric": "disruptions_max", "target": 3},
 		{"id": "eq", "label": "Reach every student (%d)" % ros.size(), "metric": "engaged_min", "target": ros.size()},
 	]
@@ -146,13 +146,13 @@ static func _backdrop_for(fmt: String, low: String) -> String:
 static func _story_hook_for(fmt: String, subject: String) -> String:
 	match fmt:
 		"lecture":
-			return "A compact mini-lesson is about to drift unless checks for understanding keep every learner visible."
+			return "A short mini-lesson. Easy to lose them unless you keep checking who's still with you."
 		"group_work":
-			return "Clusters are active, materials are moving, and the teacher has to surface shared reasoning before airtime narrows."
+			return "Groups are working and materials are everywhere. Find out what each group thinks before one kid takes over."
 		"independent":
-			return "The room looks quiet, but the real work is circulation: catch confusion early without breaking momentum."
+			return "It looks quiet. Walk the room anyway and catch the confusion early."
 		_:
-			return "A discussion around %s is open, but the teacher must turn scattered student ideas into public reasoning." % subject
+			return "Everyone has an idea about %s. Get those ideas out where the class can test them." % subject
 
 static func _roster_for(fmt: String, arr: String) -> Array:
 	var ids: Array

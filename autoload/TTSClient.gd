@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Speaks student lines aloud via the backend /tts endpoint (ElevenLabs per-persona
 ## child-ish voices). Audio is optional: if the backend is down or returns no audio
 ## (204), the game stays silent and never errors. Latest request wins (we cancel an
@@ -76,6 +77,8 @@ func speak(persona_id: String, text: String, emotion: String = "neutral") -> voi
 	var headers := PackedStringArray(["Content-Type: application/json"])
 	if OS.has_feature("web") and _voice_token != "" and voice_gate_unlocked:
 		headers.append("X-Voice-Token: %s" % _voice_token)
+	if not NetGuard.allowed(endpoint):
+		return
 	var err := _http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
 		push_warning("TTSClient: request error %d (silent)" % err)
@@ -90,15 +93,15 @@ func unlock_voice_token(token: String) -> void:
 
 func voice_status_label() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
-		return "Voice: Off (demo gate)"
+		return "Voice: Off (demo)"
 	return "Voice: On" if enabled else "Voice: Off"
 
 func voice_status_detail() -> String:
 	if voice_gate_required and not voice_gate_unlocked:
-		return "Voice is off in the public demo to prevent paid API usage. Use the passcode gate for voice."
+		return "Voice is off in the public demo. Use a voice passcode to turn it on."
 	if enabled:
-		return "Voice is enabled. Sound toggles both SFX and spoken student lines."
-	return "Voice is unavailable because no TTS endpoint is configured."
+		return "Voice is on. The Sound switch mutes effects and student voices together."
+	return "Voice isn't set up on this server."
 
 func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200 or body.size() < 64:

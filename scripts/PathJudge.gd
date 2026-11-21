@@ -43,15 +43,18 @@ func all_moves() -> Array:
 	return out
 
 ## -> {fit: advance|early|miss, credit, path_id, path_label, done, note}
-func evaluate(tag: String, wait_ok: bool = true) -> Dictionary:
+## cut (B1): the teacher spoke into the think time after this question, so it lands as a miss.
+func evaluate(tag: String, wait_ok: bool = true, cut: bool = false) -> Dictionary:
 	if tag == _last_tag:
 		_streak += 1
 	else:
 		_streak = 0
 	_last_tag = tag
 	var res := {"fit": "miss", "credit": 0.0, "path_id": "", "path_label": "", "done": false, "note": ""}
-	if tag == "" or tag == "tell" or (tag == "wait" and not wait_ok):
-		if tag == "wait":
+	if tag == "" or tag == "tell" or (tag == "wait" and not wait_ok) or cut:
+		if cut:
+			res["note"] = "you cut off their thinking time"
+		elif tag == "wait":
 			res["note"] = "the pause was under three seconds"
 		return res
 	# The student's stage is the furthest step reached on ANY path: once their thinking
@@ -95,6 +98,19 @@ func evaluate(tag: String, wait_ok: bool = true) -> Dictionary:
 				res["note"] = "right idea, too early: first %s" % _step_hint(_openers())
 				return res
 	return res
+
+## True if `tag` fits a step the student has reached on some path (no state change); the
+## same test evaluate() uses for "advance".
+func fits_now(tag: String) -> bool:
+	var stage := 0
+	for p in paths:
+		stage = maxi(stage, int(progress[str(p["id"])]))
+	for p in paths:
+		var steps: Array = p["steps"]
+		for k in range(mini(stage, steps.size() - 1) + 1):
+			if tag in steps[k]:
+				return true
+	return false
 
 ## Moves that open at least one path (what to do before a "later" move).
 func _openers() -> Array:

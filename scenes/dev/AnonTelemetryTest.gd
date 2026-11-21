@@ -1,4 +1,5 @@
 extends Node
+const NetGuard = preload("res://scripts/NetGuard.gd")
 ## Live end-to-end test of the ANONYMOUS / demo telemetry path: exercises the real
 ## Telemetry.flush() routing -> Auth.post_anon() -> deployed Worker -> telemetry_anon_events.
 ## Run with --headless; it force-enables networking (headless normally suppresses it) and
@@ -11,6 +12,12 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 
+	# This test writes rows to the live Worker. Debug builds only do that with an explicit
+	# opt-in (godot ... -- --allow-hosted, or CHALK_ALLOW_HOSTED=1); otherwise it skips.
+	if not NetGuard.allowed(Auth.api_base):
+		print("ANON TELEMETRY TEST: SKIP (live upload needs --allow-hosted)")
+		get_tree().quit()
+		return
 	Telemetry._net = true   # headless suppresses uploads by default; turn it on for this test
 	Telemetry.anon_id = "ci_anon_%d" % (Time.get_ticks_usec() % 1000000)
 
