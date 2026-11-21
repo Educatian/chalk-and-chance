@@ -288,6 +288,8 @@ func _load_persona() -> void:
 	if typeof(data) != TYPE_DICTIONARY:
 		return
 	_persona_data = data
+	if str(data.get("display_name", "")) != "":
+		display_name = str(data["display_name"])   # localized name, whatever the caller passed
 	target_concept = str(data.get("target_label", target_concept))
 	opening_line = str(data.get("opening_line", opening_line))
 	win_line = str(data.get("win_line", win_line))
@@ -1259,7 +1261,7 @@ func _show_session_complete_panel(badge_id: String, reward: Dictionary, run_reco
 	var card := ResultsCard.build(_layer, {
 		"title": "Done with %s  ·  score %d" % [display_name, int(run_record.get("score", 0))],
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, tr(str(parts[weak]["label"])).to_lower()),
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"])),
 		"parts": parts,
 		"rewards": {"badge": badge_id if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear reward" if bool(reward.get("badge_new", false)) else "Completion",
@@ -1293,9 +1295,9 @@ func _result_parts() -> Array:
 	var bond_pts := int(round(GameState.bond(persona_id) * 30.0))
 	return [
 		{"label": "Understanding", "frac": u / 100.0, "value": "%d" % u,
-			"cause": "%d of %d moves landed on their path" % [landed, _move_history.size()]},
+			"cause": tr("{landed} of {total} moves landed on their path").format({"landed": landed, "total": _move_history.size()})},
 		{"label": "Pace", "frac": pace / 42.0, "value": "%d" % pace,
-			"cause": "reached it in %d turn%s" % [_turns, "" if _turns == 1 else "s"]},
+			"cause": (tr("reached it in %d turn") if _turns == 1 else tr("reached it in %d turns")) % _turns},
 		{"label": "Bond", "frac": bond_pts / 30.0, "value": "%d" % bond_pts,
 			"cause": "they trust you more now" if bond_pts >= 10 else "not much connection yet"},
 	]

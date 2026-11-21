@@ -92,3 +92,55 @@ on-task	집중도
 composure	평정심
 disruptions	소란
 asset connect	삶의 지식 잇기
+%d upgrade point	성장 포인트 %d개
+%d upgrade points	성장 포인트 %d개
+%3d%%  %02d moves  +-%.2f	%3d%%  %02d번  ±%.2f
+CLEARED   |   Score {score}	통과   |   점수 {score}
+Understanding %d%% | Participation %d%% | Revealed	이해도 %d%% | 참여 %d%% | 드러남
+ | Badge %s	 | 배지 %s
+ | Level %d | +upgrade	 | Lv %d | 성장 포인트 +1
+ | +items	 | 아이템 +
+%s (group): \"%s\"	%s(모둠): \"%s\"
+LANDED	통했어요
+TOO EARLY	아직 일러요
+NOT YET	아직이에요
+NOTED	확인
+Support: %s	도움: %s
+Support: Coach Vee stepped in	도움: 한 선생님이 거들었어요
+Full	많이
+Partial	보통
+Light	조금
+Off	없음
+Equipped	장착
+Board	순위표
+{landed} of {total} moves landed on their path	{total}번 중 {landed}번 통했어요
+reached it in %d turn	%d턴 만에 도달했어요
+reached it in %d turns	%d턴 만에 도달했어요
+%d flare-up  ->  someone who'd drifted blew up  ->  get there before the bar goes red.	소란 %d번  ->  흐트러진 아이가 결국 터졌어요  ->  막대가 빨개지기 전에 가 봐요.
+%d flare-ups  ->  someone who'd drifted blew up  ->  get there before the bar goes red.	소란 %d번  ->  흐트러진 아이가 결국 터졌어요  ->  막대가 빨개지기 전에 가 봐요.
+RECENT RUNS: %d saved run. Open Board for more.	최근 기록 %d개. 더 보려면 순위표를 열어요.
+RECENT RUNS: %d saved runs. Open Board for more.	최근 기록 %d개. 더 보려면 순위표를 열어요.
+Bond pulled the score down. Start there.	아이와 아직 서먹해요. 거기부터 풀어 봐요.
+Understanding pulled the score down. Start there.	아이가 아직 이해하지 못했어요. 거기부터 다시 봐요.
+Pace pulled the score down. Start there.	돌아오느라 오래 걸렸어요. 거기부터 줄여 봐요.
+Objectives pulled the score down. Start there.	놓친 목표가 많아요. 하나씩 다시 잡아 봐요.
+Attention pulled the score down. Start there.	교실이 자꾸 흐트러졌어요. 거기부터 잡아요.
+Reach pulled the score down. Start there.	아이들 생각을 거의 못 들었어요. 거기부터 해요.
+You got there the long way. Bond is the thing to practice.	해내긴 했어요. 다음엔 아이와 거리를 좁히는 걸 연습해 봐요.
+You got there the long way. Understanding is the thing to practice.	돌아서 해냈어요. 아이 생각을 끌어내는 걸 연습해 봐요.
+You got there the long way. Pace is the thing to practice.	해냈지만 오래 걸렸어요. 바로 필요한 수를 고르는 걸 연습해 봐요.
+You got there the long way. Objectives is the thing to practice.	끝까지 왔지만 놓친 목표가 있어요. 그걸 연습해 봐요.
+You got there the long way. Attention is the thing to practice.	끝까지 왔지만 집중이 자주 흩어졌어요. 교실 살피기를 연습해 봐요.
+You got there the long way. Reach is the thing to practice.	끝까지 왔지만 못 들은 아이가 많아요. 고르게 묻는 걸 연습해 봐요.
+Solid. Bond held the score back a little.	탄탄해요. 아이와 조금 더 가까워지면 돼요.
+Solid. Understanding held the score back a little.	탄탄해요. 이해만 조금 더 다지면 돼요.
+Solid. Pace held the score back a little.	탄탄해요. 시간이 조금 걸린 게 아쉬워요.
+Solid. Objectives held the score back a little.	탄탄해요. 목표 하나가 아쉬워요.
+Solid. Attention held the score back a little.	탄탄해요. 집중이 가끔 흩어진 게 아쉬워요.
+Solid. Reach held the score back a little.	탄탄해요. 몇 명 생각을 못 들은 게 아쉬워요.
+Really good. A little room left in bond.	아주 좋아요. 아이와 조금만 더 가까워지면 돼요.
+Really good. A little room left in understanding.	아주 좋아요. 이해만 조금 더 다지면 돼요.
+Really good. A little room left in pace.	아주 좋아요. 조금만 더 빨리 가면 돼요.
+Really good. A little room left in objectives.	아주 좋아요. 목표만 조금 더 챙기면 돼요.
+Really good. A little room left in attention.	아주 좋아요. 집중만 조금 더 붙잡으면 돼요.
+Really good. A little room left in reach.	아주 좋아요. 몇 명만 더 들으면 돼요.

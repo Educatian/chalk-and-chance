@@ -1449,7 +1449,7 @@ func _card_data(attention: float, stars: int, reward: Dictionary) -> Dictionary:
 	return {
 		"title": title,
 		"rank": rank,
-		"verdict": ResultsCard.verdict(rank, tr(str(parts[weak]["label"])).to_lower()),
+		"verdict": ResultsCard.verdict(rank, str(parts[weak]["label"])),
 		"parts": parts,
 		"rewards": {"badge": _badge if bool(reward.get("badge_new", false)) else "",
 			"caption": "First clear" if bool(reward.get("badge_new", false)) else "Mission badge",
@@ -1483,7 +1483,7 @@ func _classroom_moments(back: int) -> Array:
 	if back >= 10:
 		out.append({"kind": "early", "text": "%ds facing the board  ->  they drifted twice as fast  ->  look back as you write." % back})
 	elif _disruptions > 0:
-		out.append({"kind": "wrong", "text": "%d flare-up%s  ->  someone who'd drifted blew up  ->  get there before the bar goes red." % [_disruptions, "" if _disruptions == 1 else "s"]})
+		out.append({"kind": "wrong", "text": (tr("%d flare-up  ->  someone who'd drifted blew up  ->  get there before the bar goes red.") if _disruptions == 1 else tr("%d flare-ups  ->  someone who'd drifted blew up  ->  get there before the bar goes red.")) % _disruptions})
 	return out
 
 func _reflection_options(attention: float) -> Array:

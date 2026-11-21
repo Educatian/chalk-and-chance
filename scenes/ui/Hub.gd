@@ -58,7 +58,8 @@ func _build() -> void:
 	var xp_txt := Label.new()
 	xp_txt.text = "%d / %d XP" % [GameState.teacher_xp, GameState.xp_for_level(GameState.teacher_level + 1)]
 	if GameState.upgrade_points > 0:
-		xp_txt.text += "   %d upgrade point%s" % [GameState.upgrade_points, "" if GameState.upgrade_points == 1 else "s"]
+		var pts := tr("%d upgrade point") if GameState.upgrade_points == 1 else tr("%d upgrade points")
+		xp_txt.text += "   " + pts % GameState.upgrade_points
 	xp_txt.position = Vector2(310, 64)
 	xp_txt.add_theme_font_size_override("font_size", UiText.fs(12))
 	xp_txt.add_theme_color_override("font_color", Color(0.78, 0.84, 0.92))
@@ -374,8 +375,7 @@ func _open_mission_briefing(id: String) -> void:
 
 func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2, size: Vector2, color: Color, fd: int, wrap_chars: int) -> void:
 	var label := Label.new()
-	# Korean glyphs are about twice as wide as Latin ones: wrap at half the count.
-	var wc := wrap_chars / 2 if TranslationServer.get_locale().begins_with("ko") else wrap_chars
+	var wc := wrap_chars
 	label.text = "%s\n%s" % [tr(head), _wrap_words(tr(body), wc)]
 	label.position = pos
 	label.size = size
@@ -386,6 +386,9 @@ func _add_brief_label(parent: Control, head: String, body: String, pos: Vector2,
 	parent.add_child(label)
 
 func _wrap_words(text: String, max_chars: int) -> String:
+	text = tr(text)   # translate before the line breaks go in, or no key can match
+	if TranslationServer.get_locale().begins_with("ko"):
+		max_chars = maxi(8, max_chars / 2)   # Hangul is about twice as wide as Latin
 	var out: Array = []
 	var line := ""
 	for raw in text.replace("  |  ", " | ").split(" "):
@@ -925,10 +928,7 @@ func _open_evidence_journal() -> void:
 
 	var recent := Label.new()
 	var recent_count := GameState.leaderboard_top(30).size()
-	recent.text = "RECENT RUNS: %d saved run%s. Open Board for more." % [
-		recent_count,
-		"" if recent_count == 1 else "s",
-	]
+	recent.text = (tr("RECENT RUNS: %d saved run. Open Board for more.") if recent_count == 1 else tr("RECENT RUNS: %d saved runs. Open Board for more.")) % recent_count
 	recent.position = Vector2(114, 398)
 	recent.size = Vector2(720, 26)
 	recent.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -1005,7 +1005,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = "%3d%%  %02d moves  +-%.2f" % [pct, n, unc]
+	stat.text = tr("%3d%%  %02d moves  +-%.2f") % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))

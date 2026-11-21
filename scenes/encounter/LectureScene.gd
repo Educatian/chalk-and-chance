@@ -832,7 +832,7 @@ func _on_lecture_reply(result: int, code: int, _headers: PackedStringArray, body
 	var speaker := str(reaction.get("speaker", "Class"))
 	var text := str(reaction.get("text", ""))
 	if text != "":
-		_dialogue.text = "%s: \"%s\"" % [speaker, text]
+		_dialogue.text = "%s: \"%s\"" % [speaker, tr(text)]
 		_lecture_history.append({"speaker": speaker, "text": text})
 	var tip := str(resp.get("coach_tip", ""))
 	if tip != "":

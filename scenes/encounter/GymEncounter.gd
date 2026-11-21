@@ -684,7 +684,7 @@ func _on_llm_reply(result: int, code: int, _headers: PackedStringArray, body: Pa
 	var text := str(utter.get("text", ""))
 	var speaker := str(utter.get("speaker", _last_student.get("name", "Student")))
 	if text != "":
-		_dialogue.text = "%s: \"%s\"" % [speaker, text]
+		_dialogue.text = "%s: \"%s\"" % [speaker, tr(text)]
 		_dialogue_tail.append({"speaker": speaker, "text": text})
 	var tip := str(resp.get("coach_tip", ""))
 	if tip != "":

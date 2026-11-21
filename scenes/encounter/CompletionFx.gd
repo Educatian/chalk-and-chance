@@ -50,6 +50,7 @@ static func add_completion_burst(parent: Node, rect: Rect2, won: bool = true, ra
 static func count_up(label: Label, template: String, score: int, duration: float = 0.7) -> void:
 	if label == null:
 		return
+	template = TranslationServer.translate(template)
 	if bool(GameState.get_setting("reduced_motion", false)) or score <= 0:
 		label.text = template.replace("{score}", "%03d" % score)
 		return

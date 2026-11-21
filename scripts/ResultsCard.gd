@@ -213,7 +213,11 @@ static func _label(root: Control, text: String, pos: Vector2, size: Vector2, fs:
 	return l
 
 ## Verdict sentence for a grade; `weak` names the part that held it back.
-static func verdict(rank: String, weak: String) -> String:
+static func verdict(rank: String, part: String) -> String:
+	return TranslationServer.translate(_verdict_en(rank, part))
+
+static func _verdict_en(rank: String, part: String) -> String:
+	var weak := part.to_lower()
 	match rank:
 		"S":
 			return "Clean run. Nothing to fix."

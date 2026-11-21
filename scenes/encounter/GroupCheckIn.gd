@@ -141,7 +141,7 @@ func _on_reply(result: int, code: int, _h: PackedStringArray, body: PackedByteAr
 	var j: Dictionary = resp.get("judge", {})
 	_apply(j)
 	var u: Dictionary = resp.get("group_utterance", {})
-	_set_dialogue("%s (group): \"%s\"" % [str(u.get("speaker", "Group")), str(u.get("text", "..."))])
+	_set_dialogue("%s (group): \"%s\"" % [str(u.get("speaker", "Group")), tr(str(u.get("text", "...")))])
 	_speak_group_line(str(u.get("speaker", "Group")), str(u.get("text", "")), str(u.get("emotion_shown", "thinking")))
 	# telemetry/ECD: log the monitoring move under its group construct
 	var tag: String = str(j.get("move_tag", requested_tag))
