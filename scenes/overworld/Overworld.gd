@@ -157,6 +157,7 @@ var _hud: Node2D = null
 var _objective_plate: Panel = null
 var _objectives_open := false
 var _objective_toast_left := 0.0
+var _objective_quiet_left := 0.0   # after the player toggles the panel, no auto-open toasts
 var _last_objectives_met := -1
 var _room_cue := ""
 var _interact_label: Label = null
@@ -846,6 +847,10 @@ func _hud_node() -> Node2D:
 const HUD_ATT_W := 150.0
 const HUD_COMP_W := 120.0
 const OBJ_TOAST_SECONDS := 3.0
+## The player's own O press / tap wins: objective-change toasts stay quiet this long after
+## it, so the panel never reopens right after they closed it (attention hovering at an
+## objective's bar flips the met count every few seconds).
+const OBJ_PLAYER_QUIET_SECONDS := 8.0
 
 ## Classroom HUD lives in two bands that never cover a student: the front wall row
 ## (top, y 0-40) and the back wall row + empty aisle (bottom). Seats are rows 3-10.
@@ -882,7 +887,7 @@ func _build_hud() -> void:
 	_objective_toggle.focus_mode = Control.FOCUS_NONE
 	UiKit.style_button(_objective_toggle, 14 + GameState.ui_font_delta())
 	_objective_toggle.z_index = 60
-	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
+	_objective_toggle.pressed.connect(_toggle_objectives_by_player)
 	_hud_node().add_child(_objective_toggle)
 
 	# Expanded objectives: over the left wall columns, clear of every seat.
@@ -957,6 +962,10 @@ func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
 
 ## Collapsed: one line in the top band. Open: list on the left wall. `toast` = auto-open
 ## for a few seconds (an objective changed), then close again unless the player opened it.
+func _toggle_objectives_by_player() -> void:
+	_set_objectives_open(not _objectives_open, false)
+	_objective_quiet_left = OBJ_PLAYER_QUIET_SECONDS
+
 func _set_objectives_open(open: bool, toast: bool) -> void:
 	_objectives_open = open
 	_objective_toast_left = OBJ_TOAST_SECONDS if (open and toast) else 0.0
@@ -1072,9 +1081,10 @@ func _process(delta: float) -> void:
 			if met != _last_objectives_met:
 				var first := _last_objectives_met < 0
 				_last_objectives_met = met
-				if not first and not _objectives_open:
+				if not first and not _objectives_open and _objective_quiet_left <= 0.0:
 					_set_objectives_open(true, true)
 				_refresh_objective_toggle()
+			_objective_quiet_left = maxf(0.0, _objective_quiet_left - delta)
 			if _objective_toast_left > 0.0:
 				_objective_toast_left -= delta
 				if _objective_toast_left <= 0.0:
@@ -1738,7 +1748,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	if event.keycode == KEY_O and not input_locked and not _lesson_over:
-		_set_objectives_open(not _objectives_open, false)
+		_toggle_objectives_by_player()
 		get_viewport().set_input_as_handled()
 		return
 	if event.keycode != KEY_ESCAPE and event.keycode != KEY_BACKSPACE:

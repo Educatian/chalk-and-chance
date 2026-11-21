@@ -40,6 +40,7 @@ func _ready() -> void:
 	_check_roster_safe_lines()
 	_check_net_guard()
 	_check_korean_catalogue()
+	await _check_objectives_toggle()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -305,3 +306,31 @@ func _check_grid_path() -> void:
 	walls[Vector2i(2, 2)] = true
 	_ok("walled-off goal gives no path", InputFeel.grid_path(Vector2i(0, 0), Vector2i(4, 0), walkable).is_empty())
 	_ok("start == goal is a zero-step path", InputFeel.grid_path(Vector2i(1, 1), Vector2i(1, 1), walkable) == [Vector2i(1, 1)])
+
+## O (objectives) must do what the player asked even while the objective count is
+## changing: the auto-open toast used to reopen a panel the player had just closed, so O
+## looked ignored (worst in the independent-work room, where attention hovers at the bar).
+func _check_objectives_toggle() -> void:
+	Game.current_scenario_id = "independent_fractions"
+	var ow: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
+	add_child(ow)
+	for i in 3:
+		await get_tree().process_frame
+	ow._next_interrupt = 9999.0
+	var flips := 0
+	for trial in 10:
+		ow._unhandled_key_input(_key(KEY_O))          # open
+		await get_tree().process_frame
+		ow._unhandled_key_input(_key(KEY_O))          # close
+		ow._last_objectives_met += 1                  # an objective flips right after
+		for i in 3:
+			await get_tree().process_frame
+		if ow._objectives_open:
+			flips += 1
+	_ok("O closes the objectives panel and it stays closed when an objective flips (10 tries)", flips == 0)
+	ow._set_objectives_open(false, false)
+	ow._unhandled_key_input(_key(KEY_O))
+	await get_tree().process_frame
+	_ok("O still opens the panel", ow._objectives_open)
+	ow.queue_free()
+	await get_tree().process_frame
