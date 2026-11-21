@@ -10,6 +10,7 @@ const Narrative = preload("res://scripts/Narrative.gd")
 const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
+const InputFeel = preload("res://scripts/InputFeel.gd")
 const UI_SCALE := 2.0
 const MOVES := [
 	["Present", "present"], ["Question", "ask"], ["Wait", "wait"],
@@ -301,9 +302,12 @@ func _build_ui() -> void:
 		b.size = Vector2(84, 30)
 		b.clip_text = true
 		CompactButtonStyle.apply(b, 7)
+		InputFeel.add_hotkey_badge(b, i, 5)
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
 		_buttons.append(b)
+	if not _buttons.is_empty():
+		_buttons[0].grab_focus.call_deferred()
 
 	_text_input = LineEdit.new()
 	_text_input.position = Vector2(10, 230)
@@ -1045,3 +1049,10 @@ func _set_fill(key: String, frac: float) -> void:
 
 func _signed(n: int) -> String:
 	return "+%d" % n if n > 0 else str(n)
+
+## Number keys choose a move directly (menu mode only).
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _over or (_text_input != null and _text_input.visible):
+		return
+	if InputFeel.press_hotkey(_buttons, event):
+		get_viewport().set_input_as_handled()

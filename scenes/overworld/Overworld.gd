@@ -1119,6 +1119,8 @@ func _show_overlay(text: String, options: Array) -> void:
 			var act := str(opt["_action"])
 			if act == "hub":
 				b.pressed.connect(_go_hub)
+			elif act == "close":
+				b.pressed.connect(_close_overlay)
 			elif act == "coach":
 				b.pressed.connect(_open_coach)
 			else:
@@ -1150,13 +1152,30 @@ func _go_hub() -> void:
 	else:
 		SceneRouter.change_scene("res://scenes/ui/Hub.tscn")
 
-## Press Esc / Backspace during a lesson to return to the mission hub.
+## Esc / Backspace asks before leaving: one stray key press should not end a lesson.
+## While the leave prompt is open, Esc again means "stay".
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.keycode != KEY_ESCAPE and event.keycode != KEY_BACKSPACE:
+		return
+	if _overlay != null and is_instance_valid(_overlay) and _overlay.has_meta("leave_prompt"):
+		_close_overlay()
+		get_viewport().set_input_as_handled()
+		return
 	if input_locked or _lesson_over:
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ESCAPE or event.keycode == KEY_BACKSPACE:
-			_go_hub()
+	_confirm_leave()
+	get_viewport().set_input_as_handled()
+
+func _confirm_leave() -> void:
+	_show_overlay("Leave this lesson?
+The period ends here and this attempt will not be scored.", [
+		{"label": "Stay in the lesson", "_action": "close"},
+		{"label": "Leave to the mission hub", "_action": "hub"},
+	])
+	if _overlay != null:
+		_overlay.set_meta("leave_prompt", true)
 
 # --- queries used by Player --------------------------------------------------
 

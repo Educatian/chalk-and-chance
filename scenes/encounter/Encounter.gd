@@ -11,6 +11,7 @@ const PathJudge = preload("res://scripts/PathJudge.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
+const InputFeel = preload("res://scripts/InputFeel.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -448,6 +449,7 @@ func _build_ui() -> void:
 		b.size = Vector2(bw, 30)
 		b.clip_text = true
 		CompactButtonStyle.apply(b, 7)
+		InputFeel.add_hotkey_badge(b, i, 5)
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
@@ -1416,10 +1418,13 @@ func _set_result(txt: String) -> void:
 	if _result != null:
 		_result.text = txt
 
-## Click anywhere that is not a button to finish the typewriter reveal instantly,
-## so impatient readers are never stuck watching text trickle in.
-func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton and event.pressed):
+## Any press (key, click, pad, touch) first finishes a running text reveal, so impatient
+## readers are never stuck watching text trickle in. Handled in _input so the same press
+## does not also fire the focused move button. Typing in the free-text box is left alone.
+func _input(event: InputEvent) -> void:
+	if not InputFeel.is_skip_press(event):
+		return
+	if event is InputEventKey and _text_input != null and _text_input.has_focus():
 		return
 	var skipped := false
 	for tw in [_dialogue_tween, _coach_tween]:
@@ -1431,4 +1436,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dialogue.visible_characters = -1
 		if _coach != null:
 			_coach.visible_characters = -1
+		get_viewport().set_input_as_handled()
+
+## Number keys 1-8 choose a move directly (menu mode only).
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _busy or _resolved or _type_mode:
+		return
+	if InputFeel.press_hotkey(_buttons, event):
 		get_viewport().set_input_as_handled()

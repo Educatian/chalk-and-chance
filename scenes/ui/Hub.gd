@@ -172,6 +172,7 @@ func _build() -> void:
 
 	var list_top := 212.0
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(42, list_top)
 	scroll.size = Vector2(vp.x - 84, maxf(148.0, vp.y - list_top - 22.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -1238,6 +1239,7 @@ func _open_trace_detail(rec: Dictionary) -> void:
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 120)
 	scroll.size = Vector2(680, 286)
 	overlay.add_child(scroll)
@@ -1317,6 +1319,7 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 120)
 	scroll.size = Vector2(680, 286)
 	overlay.add_child(scroll)
@@ -1369,6 +1372,7 @@ func _open_class_dashboard() -> void:
 	overlay.add_child(title)
 
 	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.position = Vector2(140, 118)
 	scroll.size = Vector2(680, 290)
 	overlay.add_child(scroll)

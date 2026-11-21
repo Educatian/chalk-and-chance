@@ -1,4 +1,5 @@
 extends RefCounted
+const InputFeel = preload("res://scripts/InputFeel.gd")
 
 const Art = preload("res://scripts/Art.gd")
 const ReactionCue = preload("res://scenes/encounter/ReactionCue.gd")
@@ -62,6 +63,7 @@ static func build(host: Node, shared_concept: String, members: Array, understand
 		button.position = Vector2(x, 402)
 		button.size = Vector2(170, 42)
 		button.pressed.connect(on_move.bind(mv[1]))
+		InputFeel.add_hotkey_badge(button, buttons.size(), 11, Vector2(6, 2))
 		layer.add_child(button)
 		buttons.append(button)
 		x += 178

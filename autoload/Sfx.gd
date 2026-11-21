@@ -89,6 +89,7 @@ func _build_library() -> void:
 	_streams["stamp"] = _render([_sweep(180.0, 50.0, 0.18, 0.55, "sine"), _noise(0.12, 0.35, 0.0, 1400.0)])
 	_streams["tick"] = _render([_tone(1567.98, 0.02, 0.12, "square")])
 	_streams["type"] = _render([_tone(740.0, 0.022, 0.08, "square")])
+	_streams["bump"] = _render([_sweep(150.0, 85.0, 0.08, 0.38, "sine"), _noise(0.045, 0.10, 0.0, 900.0)])
 	_streams["whoosh"] = _render([_noise(0.28, 0.16, 0.0, 5000.0, true)])
 	_streams["levelup"] = _render([
 		_tone(G4, 0.08, 0.2, "square"), _tone(C5, 0.08, 0.2, "square", 0.08),

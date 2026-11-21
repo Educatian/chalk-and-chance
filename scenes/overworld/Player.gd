@@ -14,6 +14,14 @@ var tile := 32                    # synced from overworld.TILE in _ready
 var facing := Vector2i(0, 1)
 var _moving := false
 var _anim: AnimatedSprite2D = null
+const InputFeel = preload("res://scripts/InputFeel.gd")
+const TURN_HOLD := 0.08           # hold this long after a turn-in-place before walking
+const BUMP_COOLDOWN_MS := 260
+var _buffer := InputFeel.MoveBuffer.new()
+var _walking := false             # true while a held/buffered walk is in progress
+var _turn_hold := 0.0
+var _last_bump_ms := -10000
+var _bump_tween: Tween = null
 
 func _ready() -> void:
 	if overworld != null:
@@ -80,31 +88,70 @@ func _make_frames(sheet: Texture2D) -> SpriteFrames:
 			sf.add_frame(anim_name, at)
 	return sf
 
-func _process(_delta: float) -> void:
+func _held_dir() -> Vector2i:
+	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
+		return Vector2i(0, -1)
+	if Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
+		return Vector2i(0, 1)
+	if Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
+		return Vector2i(-1, 0)
+	if Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
+		return Vector2i(1, 0)
+	return Vector2i.ZERO
+
+## Taps that land while a step is still tweening are buffered, not dropped.
+func _unhandled_input(event: InputEvent) -> void:
+	if not _moving or not (event is InputEventKey or event is InputEventJoypadButton or event is InputEventAction):
+		return
+	if not event.is_pressed() or event.is_echo():
+		return
+	var d := Vector2i.ZERO
+	if event.is_action("ui_up") or (event is InputEventKey and event.keycode == KEY_W):
+		d = Vector2i(0, -1)
+	elif event.is_action("ui_down") or (event is InputEventKey and event.keycode == KEY_S):
+		d = Vector2i(0, 1)
+	elif event.is_action("ui_left") or (event is InputEventKey and event.keycode == KEY_A):
+		d = Vector2i(-1, 0)
+	elif event.is_action("ui_right") or (event is InputEventKey and event.keycode == KEY_D):
+		d = Vector2i(1, 0)
+	_buffer.press(d, Time.get_ticks_msec())
+
+func _process(delta: float) -> void:
 	if _moving:
 		return
 	if overworld != null and overworld.input_locked:
+		_buffer.clear()
 		_go_idle()
 		return
-	var dir := Vector2i.ZERO
-	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
-		dir = Vector2i(0, -1)
-	elif Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
-		dir = Vector2i(0, 1)
-	elif Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
-		dir = Vector2i(-1, 0)
-	elif Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
-		dir = Vector2i(1, 0)
+	var dir := _held_dir()
+	var buffered := _buffer.take(Time.get_ticks_msec())
+	if dir == Vector2i.ZERO and buffered != Vector2i.ZERO:
+		dir = buffered
+		_walking = true   # a buffered tap continues the walk; no turn pause
 
 	if dir != Vector2i.ZERO:
+		# From a standstill, a new direction first turns in place; holding it walks.
+		if not _walking and dir != facing:
+			facing = dir
+			_turn_hold = TURN_HOLD
+			_go_idle()
+			return
+		if _turn_hold > 0.0:
+			_turn_hold -= delta
+			return
 		facing = dir
+		_walking = true
 		_start_walk()
 		_try_move(dir)
 	elif Input.is_action_just_pressed("ui_accept"):
 		# ui_accept already covers Enter and Space; a raw is_key_pressed check here
 		# would re-trigger the interaction every frame while the key is held.
+		_walking = false
+		_turn_hold = 0.0
 		_try_interact()
 	else:
+		_walking = false
+		_turn_hold = 0.0
 		_go_idle()
 
 func _dir_name() -> String:
@@ -146,6 +193,7 @@ func _try_move(dir: Vector2i) -> void:
 			"position": {"x": position.x, "y": position.y},
 		})
 		_go_idle()
+		_bump(dir)
 		return
 	Telemetry.log_player_movement("step_start", {
 		"from": _tile_dict(from_tile),
@@ -178,6 +226,26 @@ func _try_move(dir: Vector2i) -> void:
 		"dir": _tile_dict(dir),
 		"position": {"x": position.x, "y": position.y},
 	})
+
+## Walking into a desk, wall or student: a soft thud and a 3px nudge, rate-limited so
+## holding the key against a wall does not machine-gun the sound.
+func _bump(dir: Vector2i) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_bump_ms < BUMP_COOLDOWN_MS:
+		return
+	_last_bump_ms = now
+	Sfx.play("bump", -6.0)
+	var visual: Node2D = _anim
+	if visual == null or bool(GameState.get_setting("reduced_motion", false)):
+		return
+	if _bump_tween != null and _bump_tween.is_valid():
+		_bump_tween.kill()
+	var base := visual.position
+	visual.set_meta("rest_pos", visual.get_meta("rest_pos", base))
+	base = visual.get_meta("rest_pos")
+	_bump_tween = create_tween()
+	_bump_tween.tween_property(visual, "position", base + Vector2(dir) * 3.0, 0.05).set_ease(Tween.EASE_OUT)
+	_bump_tween.tween_property(visual, "position", base, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 func _try_interact() -> void:
 	if overworld == null:
