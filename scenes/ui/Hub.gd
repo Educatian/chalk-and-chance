@@ -727,7 +727,7 @@ func _open_settings() -> void:
 		{"label": "Music", "key": "music_enabled", "on": "On", "off": "Off"},
 		{"label": "Sound effects", "key": "audio_enabled", "on": "On", "off": "Off"},
 		{"label": "Text size", "key": "large_text", "on": "Large", "off": "Normal"},
-		{"label": "Motion", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
+		{"label": "Motion, shake & flashes", "key": "reduced_motion", "on": "Reduced", "off": "Normal"},
 		{"label": "Story cinematics", "key": "cinematics", "on": "On", "off": "Off"},
 	]
 	var y := 184.0

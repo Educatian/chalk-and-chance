@@ -12,6 +12,7 @@ const Scaffold = preload("res://scripts/Scaffold.gd")
 const CoachFeedback = preload("res://scripts/CoachFeedback.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
+const TurnBeat = preload("res://scripts/TurnBeat.gd")
 ## UI is authored in a 480x270 space and scaled up to fill the 960x540 viewport,
 ## so a single constant drives the resolution (GAME_CONCEPT.md section 8).
 const UI_SCALE := 2.0
@@ -110,6 +111,13 @@ var _type_mode: bool = false
 var _item_buttons: Array = []
 var _wait_item_ready := false
 var _practice_goal_active := false
+# Turn-resolution beat: while a beat plays, result/coach text is held and revealed in order.
+var _hold_text := false
+var _pending_result := ""
+var _pending_coach := ""
+var _outcome_chip: Label = null
+var _meters_live := false      # false while building: bars snap; true after: bars animate
+var _meter_delay := 0.0
 
 func _ready() -> void:
 	_apply_upgrade_baselines()
@@ -118,6 +126,7 @@ func _ready() -> void:
 	_set_dialogue("You walk over to %s's desk." % display_name)
 	_set_coach("Read the student. Surface reasoning before correcting. Wait for green to earn a bonus.")
 	_update_portrait("neutral")
+	_meters_live = true
 	_arm_turn()
 
 func setup(data: Dictionary) -> void:
@@ -424,8 +433,10 @@ func _build_ui() -> void:
 	_build_dialogue_box()
 
 	# Result chip + coach tip box.
+	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(16, 164), Vector2(56, 10), 6)
 	_result = _make_label("", Vector2(16, 164), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 10)
+	_outcome_chip.set_meta("shift_label", _result)
 	_result.clip_text = true
 	_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_coach = _make_label("", Vector2(16, 174), 7, Color(0.70, 0.90, 0.75))
@@ -450,6 +461,7 @@ func _build_ui() -> void:
 		b.clip_text = true
 		CompactButtonStyle.apply(b, 7)
 		InputFeel.add_hotkey_badge(b, i, 5)
+		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(tag))
 		b.mouse_entered.connect(_preview_move.bind(tag))
 		b.focus_entered.connect(_preview_move.bind(tag))
@@ -743,7 +755,6 @@ func _on_type_submit(text: String = "") -> void:
 ## Shared send path for both menu moves and free text.
 func _dispatch_move(tag: String, free_text: String) -> void:
 	_busy = true
-	Sfx.play("click")
 	_turns += 1
 	var raw_wait_ms := Time.get_ticks_msec() - _ready_at_ms
 	var wait_ms := GameState.effective_wait_ms(raw_wait_ms)
@@ -783,6 +794,9 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 	LLMClient.send_move(payload)
 
 func _on_reply(resp: Dictionary) -> void:
+	var before := _meter_snapshot()
+	_hold_text = true
+	_meter_delay = TURN_CUE_AT
 	var deltas: Dictionary = resp.get("meter_deltas", {})
 	understanding = clampf(understanding + float(deltas.get("understanding", 0.0)), 0.0, 1.0)
 	engagement = clampf(engagement + float(deltas.get("engagement", 0.0)) * 100.0, 0.0, 100.0)
@@ -814,7 +828,7 @@ func _on_reply(resp: Dictionary) -> void:
 	_last_fit = fit
 	_update_contingency(targets, tag0)
 	_set_result(_result_text(tag0, targets, bool(judge.get("wait_time_ok", false)), deltas))
-	Sfx.play("good" if targets else "bad")
+	var kind := TurnBeat.outcome(targets, str(fit.get("fit", "")))
 	Game.log_move(tag0, bool(judge.get("wait_time_ok", false)), targets)
 	# Accumulate the student's reply + the move outcome for coherence and adaptive coaching.
 	_transcript.append({"speaker": display_name, "text": str(utter.get("text", ""))})
@@ -856,20 +870,24 @@ func _on_reply(resp: Dictionary) -> void:
 	# Live ECD competency estimate (in-engine multivariate Elo over the same evidence).
 	Competency.observe(tag0, persona_id, win_moves, judge, deltas)
 
+	# Judgment, scoring and logging are done. Game state continues immediately (same
+	# timing as before); only the presentation is staged by the beat.
+	_play_turn_beat(kind, before)
 	if composure <= 0.0:
 		_force_recover()
 		return
-
 	if _check_win(targets, tags):
 		_win("reasoning")
 		return
-
 	_arm_turn()
 
 ## Connect: notice a student's funds of knowledge, then bridge the content to it.
 ## A second, asset-based route to reaching some students (softens single-right-move).
 func _do_connect() -> void:
 	_busy = true
+	var before := _meter_snapshot()
+	_meter_delay = TURN_CUE_AT
+	_hold_text = true
 	if not _asset_learned:
 		_asset_learned = true
 		rapport = clampf(rapport + 6.0, 0.0, 100.0)
@@ -881,6 +899,7 @@ func _do_connect() -> void:
 		_set_dialogue("You take a beat to notice %s, not just the task." % display_name)
 		_set_coach("Coach Vee (notice): %s  Press Connect again to bridge the content to it." % hint)
 		_update_portrait("thinking")
+		_play_turn_beat(TurnBeat.NEUTRAL, before)
 		_arm_turn()
 		return
 	# Bridge content to the now-known asset.
@@ -906,6 +925,8 @@ func _do_connect() -> void:
 		"reaction": line, "meter": "Rapport up | Engagement up", "student": display_name,
 		"fit": str(cfit.get("fit", "")), "path": str(cfit.get("path_label", ""))})
 	_update_portrait("excited" if connect_resolves else "thinking")
+	var ckind := TurnBeat.RIGHT if (connect_resolves or connect_advances) else TurnBeat.NEUTRAL
+	_play_turn_beat(ckind, before)
 	if connect_resolves and understanding >= WIN_UNDERSTANDING:
 		_win("connect")
 		return
@@ -955,7 +976,6 @@ func _win(route: String = "reasoning") -> void:
 	_resolved = true
 	_busy = true
 	_disable_moves()
-	_update_portrait("excited")
 	Telemetry.log_event({"event": "resolve", "persona_id": persona_id, "route": route,
 		"turns": _turns, "understanding": understanding, "badge": target_badge,
 		"bond": GameState.bond(persona_id)})
@@ -975,9 +995,15 @@ func _win(route: String = "reasoning") -> void:
 		"trace": Game.evidence_trace_from_moves(_move_history),
 		"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 	})
-	Sfx.play("badge")
 	var warm := GameState.bond(persona_id) >= 0.4
 	GameState.record_student(persona_id, {"resolved": true, "best_understanding": understanding, "bond": GameState.bond(persona_id)})
+	# Land the turn beat now (its cue is muted once resolved) and go straight to the win.
+	Juice.skip_beats(self)
+	_present_win(route, warm, reward, run_record)
+
+func _present_win(route: String, warm: bool, reward: Dictionary, run_record: Dictionary) -> void:
+	_update_portrait("excited")
+	Sfx.play("win")
 	if route == "connect":
 		# The connect_line is already shown as the resolving dialogue.
 		_set_coach("Coach Vee: you reached %s through their own world, not by telling. Funds of knowledge in action. Badge: %s." % [display_name, target_badge.to_upper()])
@@ -1243,13 +1269,22 @@ func _refresh_meters() -> void:
 ## Fill widths are set in post-scale_tree pixels (all callers run after _build_ui).
 func _set_meter_fill(key: String, frac: float) -> void:
 	var fill: ColorRect = _bars.get(key, null)
-	if fill != null:
-		fill.size = Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
+	if fill == null:
+		return
+	var target := Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 12.0 * UI_SCALE)
+	if _meters_live:
+		Juice.bar_to(fill, target, 0.35, _meter_delay)
+	else:
+		fill.size = target
 
 func _refresh_bond() -> void:
 	var b := GameState.bond(persona_id)
 	if _bond_fill != null:
-		_bond_fill.size = Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
+		var target := Vector2(84.0 * UI_SCALE * clampf(b, 0.0, 1.0), 8.0 * UI_SCALE)
+		if _meters_live:
+			Juice.bar_to(_bond_fill, target, 0.35, _meter_delay)
+		else:
+			_bond_fill.size = target
 	if _bond_label != null:
 		_bond_label.text = "Bond %d%%" % int(round(b * 100.0))
 
@@ -1394,6 +1429,9 @@ func _set_dialogue(txt: String) -> void:
 		_reveal_label(_dialogue, txt, true)
 
 func _set_coach(txt: String) -> void:
+	if _hold_text:
+		_pending_coach = txt
+		return
 	if _coach != null:
 		_reveal_label(_coach, txt, false)
 
@@ -1415,8 +1453,65 @@ func _reveal_label(label: Label, txt: String, is_dialogue: bool) -> void:
 		_coach_tween = tween_ref
 
 func _set_result(txt: String) -> void:
+	if _hold_text:
+		_pending_result = txt
+		return
 	if _result != null:
 		_result.text = txt
+
+# --- turn-resolution beat ------------------------------------------------------
+
+const TURN_CUE_AT := 0.12     # outcome cue, chip, meter motion, deltas
+const TURN_COACH_AT := 0.42   # coach line starts revealing
+const TURN_END_AT := 0.75     # control returns (wait-time ring restarts here)
+
+func _meter_snapshot() -> Dictionary:
+	return {"engagement": engagement, "order": order, "rapport": rapport, "composure": composure}
+
+## Student reaction is already showing (portrait + line). Then: outcome cue + chip + meters
+## easing + floating deltas, then the coach line, then control comes back. Any press skips.
+func _play_turn_beat(kind: String, before: Dictionary) -> void:
+	Juice.skip_beats(self)
+	_hold_text = true
+	var beat := TurnBeat.new()
+	beat.at(TURN_CUE_AT, func():
+		if not _resolved:
+			Sfx.play(TurnBeat.cue(kind))
+		_show_outcome(kind)
+		_release_result()
+		_float_meter_deltas(before))
+	beat.at(TURN_COACH_AT, _release_coach)
+	beat.at(TURN_END_AT, func():
+		_hold_text = false
+		_meter_delay = 0.0)
+	Juice.play_beat(self, beat)
+
+func _release_result() -> void:
+	var t := _pending_result
+	_pending_result = ""
+	if t != "" and _result != null:
+		_result.text = t
+
+func _release_coach() -> void:
+	var t := _pending_coach
+	_pending_coach = ""
+	if t != "" and _coach != null:
+		_reveal_label(_coach, t, false)
+
+func _show_outcome(kind: String) -> void:
+	Juice.show_outcome(_outcome_chip, kind)
+
+## "+6" / "-10" next to each meter that moved, coloured by direction.
+func _float_meter_deltas(before: Dictionary) -> void:
+	var now := _meter_snapshot()
+	for key in ["engagement", "order", "rapport", "composure"]:
+		var d := int(round(float(now[key]) - float(before.get(key, now[key]))))
+		var fill: ColorRect = _bars.get(key, null)
+		if d == 0 or fill == null:
+			continue
+		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
+		var pos := Vector2((86.0 + 150.0 + 4.0) * UI_SCALE, fill.position.y - 3.0 * UI_SCALE)
+		Juice.float_text(_layer, _signed(d), pos, col, int(8 * UI_SCALE))
 
 ## Any press (key, click, pad, touch) first finishes a running text reveal, so impatient
 ## readers are never stuck watching text trickle in. Handled in _input so the same press
@@ -1426,7 +1521,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and _text_input != null and _text_input.has_focus():
 		return
-	var skipped := false
+	var skipped := Juice.skip_beats(self)
 	for tw in [_dialogue_tween, _coach_tween]:
 		if tw != null and tw.is_valid() and tw.is_running():
 			tw.kill()

@@ -19,6 +19,7 @@ const A5 := 880.0
 const C6 := 1046.5
 const E6 := 1318.5
 const G4 := 392.0
+const E4 := 329.63
 const C4 := 261.63
 
 var _streams: Dictionary = {}
@@ -69,7 +70,8 @@ func _on_node_added(node: Node) -> void:
 		b.focus_entered.connect(func():
 			if not b.disabled and b.get_viewport() != null and b.get_viewport().gui_get_focus_owner() == b and not b.is_hovered():
 				play("hover", -10.0))
-		b.pressed.connect(func(): play("click"))
+		# Buttons may name their own press cue (e.g. teaching moves use "commit").
+		b.pressed.connect(func(): play(str(b.get_meta("sfx_press", "click"))))
 
 # --- synthesis -------------------------------------------------------------------
 
@@ -89,6 +91,19 @@ func _build_library() -> void:
 	_streams["stamp"] = _render([_sweep(180.0, 50.0, 0.18, 0.55, "sine"), _noise(0.12, 0.35, 0.0, 1400.0)])
 	_streams["tick"] = _render([_tone(1567.98, 0.02, 0.12, "square")])
 	_streams["type"] = _render([_tone(740.0, 0.022, 0.08, "square")])
+	# Signature cues for the teaching-move turn. Soft triangle voices so a wrong move is
+	# informative, not a buzzer; "too early" is an unresolved step up, distinct from wrong.
+	_streams["commit"] = _render([_sweep(260.0, 165.0, 0.06, 0.32, "sine"), _noise(0.025, 0.10, 0.0, 2600.0), _tone(C6, 0.02, 0.06, "square")])
+	_streams["turn_right"] = _render([_tone(E5, 0.10, 0.22, "triangle"), _tone(A5, 0.18, 0.22, "triangle", 0.07), _tone(E6, 0.14, 0.05, "sine", 0.07)])
+	_streams["turn_early"] = _render([_tone(D5, 0.09, 0.20, "triangle"), _tone(E5, 0.16, 0.17, "triangle", 0.08)])
+	_streams["turn_wrong"] = _render([_tone(G4, 0.11, 0.20, "triangle"), _tone(E4, 0.20, 0.17, "triangle", 0.09)])
+	_streams["turn_neutral"] = _render([_tone(A5, 0.06, 0.12, "triangle")])
+	_streams["win"] = _render([
+		_tone(C5, 0.10, 0.18, "triangle"), _tone(E5, 0.10, 0.18, "triangle", 0.09),
+		_tone(G5, 0.10, 0.18, "triangle", 0.18), _tone(C6, 0.42, 0.20, "triangle", 0.27),
+		_tone(C6, 0.30, 0.07, "square", 0.27), _tone(G4, 0.45, 0.10, "sine", 0.27),
+		_noise(0.30, 0.05, 0.27, 6000.0, true),
+	])
 	_streams["bump"] = _render([_sweep(150.0, 85.0, 0.08, 0.38, "sine"), _noise(0.045, 0.10, 0.0, 900.0)])
 	_streams["whoosh"] = _render([_noise(0.28, 0.16, 0.0, 5000.0, true)])
 	_streams["levelup"] = _render([

@@ -1,7 +1,10 @@
 extends Node
-## Dev: headless checks for the feel pass (input helpers). Prints FEEL PASS/FAIL.
+## Dev: headless checks for the feel pass (input helpers, turn beat, honest feedback).
+## Prints FEEL PASS/FAIL.
 ## Run: godot --headless --path . res://scenes/dev/FeelCheck.tscn
 const InputFeel = preload("res://scripts/InputFeel.gd")
+const TurnBeat = preload("res://scripts/TurnBeat.gd")
+const CompletionFx = preload("res://scenes/encounter/CompletionFx.gd")
 var fails := 0
 
 func _ok(label: String, cond: bool) -> void:
@@ -21,6 +24,9 @@ func _ready() -> void:
 	_check_skip()
 	_check_move_buffer()
 	await _check_hotkey_press()
+	_check_outcomes()
+	_check_beat_order()
+	await _check_juice()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -78,3 +84,63 @@ func _check_hotkey_press() -> void:
 	_ok("out-of-range hotkey is ignored", not InputFeel.press_hotkey(buttons, _key(KEY_9)))
 	for btn in buttons:
 		btn.queue_free()
+
+func _check_outcomes() -> void:
+	_ok("on-target move reads as right", TurnBeat.outcome(true, "advance") == TurnBeat.RIGHT)
+	_ok("'right idea, too early' reads as early, not wrong", TurnBeat.outcome(false, "early") == TurnBeat.EARLY)
+	_ok("a miss reads as wrong", TurnBeat.outcome(false, "miss") == TurnBeat.WRONG)
+	var cues := [TurnBeat.cue(TurnBeat.RIGHT), TurnBeat.cue(TurnBeat.EARLY), TurnBeat.cue(TurnBeat.WRONG)]
+	_ok("right / early / wrong each have their own cue", cues[0] != cues[1] and cues[1] != cues[2] and cues[0] != cues[2])
+	_ok("early and wrong have different labels", TurnBeat.label(TurnBeat.EARLY) != TurnBeat.label(TurnBeat.WRONG))
+	for c in cues + ["commit", "win", "bump", "turn_neutral"]:
+		_ok("Sfx has cue '%s'" % c, Sfx._streams.has(c))
+	_ok("rank D gets no confetti", CompletionFx.confetti_count("D") == 0)
+	_ok("rank B gets less confetti than S", CompletionFx.confetti_count("B") < CompletionFx.confetti_count("S"))
+
+func _check_beat_order() -> void:
+	var log: Array = []
+	var beat := TurnBeat.new()
+	beat.at(0.42, func(): log.append("coach"))
+	beat.at(0.12, func(): log.append("cue"))
+	beat.at(0.75, func(): log.append("end"))
+	beat.advance(0.05)
+	_ok("nothing fires before its time", log.is_empty())
+	beat.advance(0.10)
+	_ok("cue fires first, alone", log == ["cue"])
+	beat.advance(0.30)
+	_ok("coach line follows the cue", log == ["cue", "coach"])
+	_ok("beat not done before the end step", not beat.is_done())
+	beat.finish()
+	_ok("finish runs the rest in order, once", log == ["cue", "coach", "end"] and beat.is_done())
+	beat.finish()
+	_ok("finishing twice does not repeat steps", log.size() == 3)
+
+func _check_juice() -> void:
+	var owner := Node.new()
+	add_child(owner)
+	var hits: Array = []
+	var beat := TurnBeat.new()
+	beat.at(5.0, func(): hits.append(1))
+	Juice.play_beat(owner, beat)
+	_ok("Juice tracks a running beat", Juice.has_beat(owner))
+	_ok("skip_beats reports it skipped", Juice.skip_beats(owner))
+	_ok("skipping runs the pending step", hits == [1] and not Juice.has_beat(owner))
+	var freed := TurnBeat.new()
+	freed.at(0.01, func(): hits.append(2))
+	Juice.play_beat(owner, freed)
+	owner.free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_ok("a freed owner's beat is dropped, never run", hits == [1])
+	var bar := ColorRect.new()
+	add_child(bar)
+	bar.size = Vector2(10, 4)
+	var was: bool = bool(GameState.get_setting("reduced_motion", false))
+	GameState.settings["reduced_motion"] = true
+	Juice.bar_to(bar, Vector2(80, 4))
+	_ok("reduced motion: bars snap to their value", bar.size == Vector2(80, 4))
+	GameState.settings["reduced_motion"] = false
+	Juice.bar_to(bar, Vector2(20, 4))
+	_ok("with motion: bars ease (not instant)", bar.size != Vector2(20, 4))
+	GameState.settings["reduced_motion"] = was
+	bar.queue_free()

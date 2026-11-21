@@ -11,6 +11,7 @@ const CoachCard = preload("res://scenes/ui/CoachCard.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
+const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const UI_SCALE := 2.0
 const MOVES := [
 	["Present", "present"], ["Question", "ask"], ["Wait", "wait"],
@@ -57,6 +58,8 @@ var _scenario_attempt := 0
 var _last_evidence: Dictionary = {}
 var _highlight: ColorRect
 var _buttons: Array = []
+var _outcome_chip: Label = null
+var _bars_live := false
 var _text_input: LineEdit = null
 var _send_btn: Button = null
 var _mic_btn: Button = null
@@ -103,6 +106,7 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	_bars_live = true
 	var sid := str(scenario.get("id", Game.current_scenario_id))
 	_scenario_attempt = GameState.note_attempt("lecture:" + sid)
 	_attempt_id = "%s-%d-%d" % [sid, int(Time.get_unix_time_from_system()), randi() % 100000]
@@ -285,8 +289,10 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_container_rect", dialogue_box)
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
+	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(12, 216), Vector2(52, 9), 5)
 	_result = _label("Guide: Present -> Wait -> Question/Check. Repair when comprehension lags.", Vector2(12, 216), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(456, 9)
+	_outcome_chip.set_meta("shift_label", _result)
 	_result.clip_text = true
 	_coach = _label("Coach Vee: Repair when progress outruns comprehension; otherwise Check.", Vector2(12, 224), 6, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(456, 8)
@@ -303,6 +309,7 @@ func _build_ui() -> void:
 		b.clip_text = true
 		CompactButtonStyle.apply(b, 7)
 		InputFeel.add_hotkey_badge(b, i, 5)
+		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
 		_buttons.append(b)
@@ -565,13 +572,14 @@ func _classify_lecture_text(text: String) -> String:
 	return "present"
 
 func _on_move(tag: String) -> void:
+	Juice.skip_beats(self)   # a new move lands the previous beat first
 	if _over:
 		return
+	var before := [progress, comprehension, attention, composure]
 	var input_mode := _next_input_mode
 	var free_text := _next_free_text
 	_next_input_mode = "menu"
 	_next_free_text = ""
-	Sfx.play("click")
 	var raw_wait_ms := Time.get_ticks_msec() - _ready_ms
 	var wait_ms := GameState.effective_wait_ms(raw_wait_ms)
 	var wait_ok := raw_wait_ms >= GameState.wait_threshold_ms()
@@ -693,6 +701,7 @@ func _on_move(tag: String) -> void:
 	_check_end()
 	if not _over:
 		_request_lecture_turn(tag, wait_ms, wait_ok, input_mode, free_text)
+		_play_turn_beat(TurnBeat.RIGHT if productive else TurnBeat.WRONG, _bar_deltas(before))
 	_arm_turn()
 
 func _observe_lecture_competency(tag: String, wait_ok: bool, gap_before: float) -> void:
@@ -943,13 +952,13 @@ func _finish(won: bool) -> void:
 			"trace": Game.evidence_trace_from_moves(_move_history),
 			"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 		})
-		Sfx.play("badge")
+		Sfx.play("win")
 		_coach.text = "Coach Vee: you delivered the lesson AND kept them with you. Comprehension %d%%. Well paced!" % int(comprehension)
 		for i in range(students.size()):
 			_react(i, "excited", "exclaim")
 		_show_complete_panel(true, reward, run_record)
 	else:
-		Sfx.play("bad")
+		Sfx.play("turn_wrong")
 		if attention <= 0.0:
 			_coach.text = "Coach Vee: you lost the room. Present in smaller chunks and check more often."
 		else:
@@ -1044,8 +1053,45 @@ func _refresh() -> void:
 
 func _set_fill(key: String, frac: float) -> void:
 	var fill: ColorRect = _bars.get(key, null)
-	if fill != null:
-		fill.size = Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 11.0 * UI_SCALE)
+	if fill == null:
+		return
+	var target := Vector2(150.0 * UI_SCALE * clampf(frac, 0.0, 1.0), 11.0 * UI_SCALE)
+	if _bars_live:
+		Juice.bar_to(fill, target, 0.35, 0.10)
+	else:
+		fill.size = target
+
+## [text, position, colour] for each bar that moved this turn.
+func _bar_deltas(before: Array) -> Array:
+	var out: Array = []
+	var now := [progress, comprehension, attention, composure]
+	var keys := ["progress", "comp", "attn", "composure"]
+	for i in range(keys.size()):
+		var d := int(round(float(now[i]) - float(before[i])))
+		var fill: ColorRect = _bars.get(keys[i], null)
+		if d == 0 or fill == null:
+			continue
+		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
+		out.append([_signed(d), Vector2((120.0 + 150.0 + 4.0) * UI_SCALE, fill.position.y - 3.0 * UI_SCALE), col])
+	return out
+
+# --- turn-resolution beat ------------------------------------------------------
+
+## Outcome cue + chip + bars easing + floating deltas, then control comes back.
+## Judgment and logging already happened; any press skips to the end.
+func _play_turn_beat(kind: String, deltas: Array) -> void:
+	var beat := TurnBeat.new()
+	beat.at(0.10, func():
+		Sfx.play(TurnBeat.cue(kind))
+		Juice.show_outcome(_outcome_chip, kind)
+		for d in deltas:
+			Juice.float_text(_layer, d[0], d[1], d[2], int(7 * UI_SCALE)))
+	Juice.play_beat(self, beat)
+
+## Any press finishes a running beat first (and is not also used as a click).
+func _input(event: InputEvent) -> void:
+	if InputFeel.is_skip_press(event) and Juice.skip_beats(self):
+		get_viewport().set_input_as_handled()
 
 func _signed(n: int) -> String:
 	return "+%d" % n if n > 0 else str(n)

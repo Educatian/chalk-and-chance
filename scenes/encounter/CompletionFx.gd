@@ -95,8 +95,11 @@ static func _animate_later(parent: Node, root: Control, top: ColorRect, rect: Re
 		tw.tween_property(overlay, "position:y", overlay.position.y - 14.0 * factor, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	Sfx.play("whoosh", -6.0)
 
-	if not reduced and won:
-		_confetti(root, r, palette, factor)
+	# Celebration scales with the result so the juice never overstates it:
+	# S/A full confetti + stamp shake, B a light burst, C/D/unranked no confetti.
+	var pieces := confetti_count(stamp.text if stamp != null else "") if won else 0
+	if not reduced and pieces > 0:
+		_confetti(root, r, palette, factor, pieces)
 	if stamp != null:
 		if reduced:
 			Sfx.play("stamp")
@@ -112,13 +115,23 @@ static func _animate_later(parent: Node, root: Control, top: ColorRect, rect: Re
 			st.parallel().tween_property(stamp, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 			st.parallel().tween_property(stamp, "rotation", -0.12, 0.16)
 			st.tween_callback(func():
-				_shake(overlay if overlay != null else root, 6.0 * factor)
+				if won and stamp.text in ["S", "A"]:
+					_shake(overlay if overlay != null else root, 6.0 * factor)
 				if won and stamp.text in ["S", "A"]:
 					Sfx.play("badge", -2.0))
 
-static func _confetti(root: Control, r: Rect2, palette: Array, factor: float) -> void:
+## Confetti pieces for a rank: 24 for S/A, 10 for B, none below (or unranked).
+static func confetti_count(rank: String) -> int:
+	match rank:
+		"S", "A":
+			return 24
+		"B":
+			return 10
+	return 0
+
+static func _confetti(root: Control, r: Rect2, palette: Array, factor: float, count: int = 24) -> void:
 	var origin := r.position + Vector2(r.size.x * 0.5, 10.0 * factor)
-	for i in range(24):
+	for i in range(count):
 		var spark := ColorRect.new()
 		spark.size = Vector2(5 + (i % 3) * 2, 5 + ((i + 1) % 3) * 2) * factor
 		spark.position = origin

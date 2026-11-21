@@ -13,6 +13,7 @@ const PathJudge = preload("res://scripts/PathJudge.gd")
 const Scaffold = preload("res://scripts/Scaffold.gd")
 const CompactButtonStyle = preload("res://scenes/encounter/CompactButtonStyle.gd")
 const InputFeel = preload("res://scripts/InputFeel.gd")
+const TurnBeat = preload("res://scripts/TurnBeat.gd")
 const UI_SCALE := 2.0
 const WIN_U := 0.80
 const MOVES := [
@@ -27,6 +28,8 @@ var composure := 100.0
 var order := 100.0
 var _ready_ms := 0
 var _over := false
+var _outcome_chip: Label = null
+var _bars_live := false
 var _llm_busy := false
 var _turns := 0
 var _dialogue_tail: Array = []
@@ -100,6 +103,7 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	_bars_live = true
 	var all_moves: Array = []
 	for st in students:
 		for m in st.get("win_moves", []):
@@ -227,8 +231,10 @@ func _build_ui() -> void:
 	_dialogue.set_meta("qa_container_rect", dialogue_box)
 	_dialogue.set_meta("qa_text_rect", dialogue_text)
 	_dialogue.set_meta("qa_min_padding", 4.0)
+	_outcome_chip = Juice.make_outcome_chip(_layer, Vector2(16, 204), Vector2(52, 9), 5)
 	_result = _label("Button guide: select the highest-need student, then match their Need line; avoid Tell unless stuck.", Vector2(16, 204), 7, Color(0.96, 0.86, 0.50))
 	_result.size = Vector2(448, 9)
+	_outcome_chip.set_meta("shift_label", _result)
 	_result.clip_text = true
 	_coach = _label("Coach Vee: Need shows the likely button. Use Profile/Noticing items when the right move is unclear.", Vector2(16, 213), 7, Color(0.72, 0.92, 0.78))
 	_coach.size = Vector2(448, 13)
@@ -246,6 +252,7 @@ func _build_ui() -> void:
 		b.clip_text = true
 		CompactButtonStyle.apply(b, 7)
 		InputFeel.add_hotkey_badge(b, i, 5)
+		b.set_meta("sfx_press", "commit")
 		b.pressed.connect(_on_move.bind(str(MOVES[i][1])))
 		_layer.add_child(b)
 		_buttons.append(b)
@@ -528,13 +535,13 @@ func _classify_gym_text(text: String) -> String:
 	return "elicit"
 
 func _on_move(tag: String) -> void:
+	Juice.skip_beats(self)   # a new move lands the previous beat first
 	if _over:
 		return
 	var input_mode := _next_input_mode
 	var free_text := _next_free_text
 	_next_input_mode = "menu"
 	_next_free_text = ""
-	Sfx.play("click")
 	_turns += 1
 	var s: Dictionary = students[sel]
 	if s.get("resolved", false):
@@ -551,6 +558,8 @@ func _on_move(tag: String) -> void:
 	# Multi-path judge: right move at the right moment for THIS student.
 	var fit: Dictionary = s["pj"].evaluate(tag, wait_ok)
 	var targets := str(fit["fit"]) == "advance"
+	var kind := TurnBeat.outcome(targets, str(fit["fit"]))
+	var before := [composure, order]
 	s["last_fit"] = fit
 	s["scaffold"] = _support_level()
 
@@ -564,26 +573,22 @@ func _on_move(tag: String) -> void:
 		_result.text = "%s +%d understanding  |  %s" % [s["name"], int(round((float(s["u"]) - old_u) * 100.0)), str(fit["path_label"])]
 		if str(fit["note"]) != "":
 			_result.text += "  |  " + str(fit["note"])
-		Sfx.play("good")
 		_coach.text = "Coach Vee: that fits %s. Keep following it through." % s["name"]
 	elif str(fit["fit"]) == "early":
 		s["u"] = clampf(float(s["u"]) + 0.04, 0.0, 1.0)
 		_dialogue.text = "%s: \"Hm... I'm not there yet.\"" % s["name"]
 		_result.text = "%s  |  right idea, too early" % s["name"]
-		Sfx.play("bad", -4.0)
 		_coach.text = "Coach Vee: %s is right for %s, but %s." % [tag.capitalize(), s["name"], str(fit["note"]).trim_prefix("right idea, too early: ")]
 	elif tag == "tell":
 		s["restless"] = minf(1.0, float(s["restless"]) + 0.1)
 		composure = clampf(composure - 4.0, 0.0, GameState.max_composure())
 		_dialogue.text = "%s: \"Oh... okay, I guess.\"" % s["name"]
 		_result.text = "Composure -4  |  telling did not build %s's reasoning" % s["name"]
-		Sfx.play("bad")
 		_coach.text = "Coach Vee: telling took over %s's thinking." % s["name"]
 	else:
 		composure = clampf(composure - 2.0, 0.0, GameState.max_composure())
 		_dialogue.text = "%s: \"...\"" % s["name"]
 		_result.text = "Composure -2  |  not the move %s needs yet" % s["name"]
-		Sfx.play("bad")
 		_coach.text = "Coach Vee: that is not the move %s needs (try: %s)." % [s["name"], s.get("target_label", "")]
 
 	_update_contingency(targets, s)
@@ -604,9 +609,11 @@ func _on_move(tag: String) -> void:
 			composure = clampf(composure - 3.0, 0.0, GameState.max_composure())
 			students[j]["restless"] = 0.55
 
-	_arm_turn()
 	_refresh()
 	_check_end()
+	if not _over:
+		_play_turn_beat(kind, _bar_deltas(before))
+	_arm_turn()
 	if not _over and not bool(s.get("resolved", false)):
 		_request_llm_turn(tag, wait_ms, wait_ok, targets, s, input_mode, free_text)
 	else:
@@ -823,7 +830,7 @@ func _finish(won: bool) -> void:
 			"trace": Game.evidence_trace_from_moves(_move_history),
 			"trace_steps": Game.evidence_trace_steps_from_moves(_move_history),
 		})
-		Sfx.play("badge")
+		Sfx.play("win")
 		_coach.text = "Coach Vee: you held the whole room and reached every student. Capstone cleared!"
 		_show_complete_panel(true, resolved, reward, run_record)
 	else:
@@ -921,7 +928,44 @@ func _set_fill(fill: ColorRect, frac: float) -> void:
 	if fill == null:
 		return
 	var w: float = fill.get_meta("w", 150.0)
-	fill.size = Vector2(w * UI_SCALE * clampf(frac, 0.0, 1.0), fill.size.y)
+	var target := Vector2(w * UI_SCALE * clampf(frac, 0.0, 1.0), fill.size.y)
+	if _bars_live:
+		Juice.bar_to(fill, target, 0.35, 0.10)
+	else:
+		fill.size = target
+
+## [text, position, colour] for the class bars that moved this turn.
+func _bar_deltas(before: Array) -> Array:
+	var out: Array = []
+	var now := [composure, order]
+	var fills := [_comp_fill, _order_fill]
+	for i in range(fills.size()):
+		var d := int(round(float(now[i]) - float(before[i])))
+		var fill: ColorRect = fills[i]
+		if d == 0 or fill == null:
+			continue
+		var col := Color(0.55, 0.95, 0.60) if d > 0 else Color(1.0, 0.62, 0.52)
+		var w: float = fill.get_meta("w", 150.0)
+		out.append([_signed(d), fill.position + Vector2((w + 4.0) * UI_SCALE, -4.0 * UI_SCALE), col])
+	return out
+
+# --- turn-resolution beat ------------------------------------------------------
+
+## Outcome cue + chip + bars easing + floating deltas, then control comes back.
+## Judgment and logging already happened; any press skips to the end.
+func _play_turn_beat(kind: String, deltas: Array) -> void:
+	var beat := TurnBeat.new()
+	beat.at(0.10, func():
+		Sfx.play(TurnBeat.cue(kind))
+		Juice.show_outcome(_outcome_chip, kind)
+		for d in deltas:
+			Juice.float_text(_layer, d[0], d[1], d[2], int(7 * UI_SCALE)))
+	Juice.play_beat(self, beat)
+
+## Any press finishes a running beat first (and is not also used as a click).
+func _input(event: InputEvent) -> void:
+	if InputFeel.is_skip_press(event) and Juice.skip_beats(self):
+		get_viewport().set_input_as_handled()
 
 ## Number keys choose a move directly (menu mode only).
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -929,3 +973,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if InputFeel.press_hotkey(_buttons, event):
 		get_viewport().set_input_as_handled()
+
+func _signed(n: int) -> String:
+	return "+%d" % n if n > 0 else str(n)
