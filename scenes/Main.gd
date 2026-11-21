@@ -93,7 +93,9 @@ func _dev_room_hook() -> bool:
 	if win != "":
 		Game.current_scenario_id = room if room != "" else "discussion_fractions"
 		Game.start_lesson(Game.current_scenario_id, 120.0)
-		SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {"persona_id": win, "display_name": win.split("_")[0].capitalize()})
+		var pdata = load("res://scripts/Content.gd").json("res://data/persona_library/%s.json" % win)
+		var pname := str(pdata.get("display_name", "")) if typeof(pdata) == TYPE_DICTIONARY else ""
+		SceneRouter.change_scene("res://scenes/encounter/Encounter.tscn", {"persona_id": win, "display_name": pname if pname != "" else win.split("_")[0].capitalize()})
 		# ?dev_moves=elicit,tell,extend plays those moves dev_gap s apart (1.6) before the win.
 		var moves: Array = Array(str(JavaScriptBridge.eval(q + ".get('dev_moves') || ''", true)).split(",", false))
 		var gap := float(str(JavaScriptBridge.eval(q + ".get('dev_gap') || '1.6'", true)))
