@@ -87,7 +87,7 @@ var INTERRUPTS := [
 			 "coach": "Least-intrusive. You kept the lesson's momentum."},
 			{"label": "Walk them to a seat while you keep talking", "dcomp": -4.0, "dnoise": 8.0, "ddis": 0, "tier": 1, "works": false,
 			 "coach": "Walking over pulled you away from the board; a nod from where you stand was enough here."},
-			{"label": "Quiet word: \"Grab a seat, we're on page 4\"", "dcomp": -4.0, "dnoise": 7.0, "ddis": 0, "tier": 3, "works": true,
+			{"label": "Say quietly: \"Grab a seat, we're on page 4\"", "dcomp": -4.0, "dnoise": 7.0, "ddis": 0, "tier": 3, "works": true,
 			 "coach": "Fine, but a nod would have done it without a word."},
 			{"label": "Stop and question them in front of everyone", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
 			 "coach": "Public call-out cost momentum and rapport. Handle it privately later."},
@@ -115,7 +115,7 @@ var INTERRUPTS := [
 			 "coach": "Proximity alone did not stop an argument already under way; a brief word was the smallest step that works here."},
 			{"label": "Give them a stern look", "dcomp": -5.0, "dnoise": 8.0, "ddis": 1, "tier": 2, "works": false,
 			 "coach": "A look does not settle a dispute over a tool; tell them how to share it, briefly."},
-			{"label": "Brief word: \"One calculator, take turns, Sam first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
+			{"label": "Say: \"One calculator, take turns, Sam first\"", "dcomp": -3.0, "dnoise": -6.0, "ddis": 0, "tier": 3, "works": true,
 			 "coach": "Right-sized: the smallest step that actually solves this one."},
 			{"label": "Stop the class and lecture both about sharing", "dcomp": -10.0, "dnoise": 14.0, "ddis": 1, "tier": 4, "works": true,
 			 "coach": "It stopped the argument and the lesson. A brief private word would have done it."},
@@ -1091,9 +1091,9 @@ func _process(delta: float) -> void:
 
 # --- interrupt events + lesson debrief ---------------------------------------
 
-func _trigger_interrupt() -> void:
+func _trigger_interrupt(idx: int = -1) -> void:
 	Sfx.play("interrupt")
-	var ev: Dictionary = INTERRUPTS[randi() % INTERRUPTS.size()]
+	var ev: Dictionary = INTERRUPTS[idx if idx >= 0 and idx < INTERRUPTS.size() else randi() % INTERRUPTS.size()]
 	_interrupt_clock_left = Tuning.INTERRUPT_CLOCK_SECONDS
 	var opts: Array = ev["options"]
 	if bool(ev.get("ladder", false)):
@@ -1474,7 +1474,7 @@ func _objective_short_label(o: Dictionary) -> String:
 		"composure_min":
 			return "composure"
 		"engaged_min":
-			return "conferences"
+			return "voices heard"
 		"waittime_min":
 			return "wait-time"
 		"connect_min":

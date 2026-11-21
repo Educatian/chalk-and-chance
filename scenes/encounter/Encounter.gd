@@ -170,6 +170,8 @@ func setup(data: Dictionary) -> void:
 	_refresh_bond()
 	_scaffold = Scaffold.level_for(Scaffold.skills_for_moves(win_moves))
 	_apply_scaffold()
+	_refresh_praise_hint()
+	_maybe_prompt_notice()   # B2: the strip names this student
 
 ## Warm demander / care ethic: a relationship built in earlier periods carries over and
 ## makes this student a little easier to reach (trust precedes risk-taking).
@@ -736,10 +738,7 @@ func _arm_turn() -> void:
 	_ready_at_ms = Time.get_ticks_msec()
 	_long_fired = false
 	_maybe_prompt_notice()
-	if _praise_btn != null:
-		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
-		if ph != null:
-			ph.text = tr("names what they just did") if _praise_specific() else tr("generic: nothing to name yet")
+	_refresh_praise_hint()
 	_refresh_item_buttons()
 
 func _process(_delta: float) -> void:
@@ -758,6 +757,9 @@ func _process(_delta: float) -> void:
 			_end_thinking(false)
 		return
 	if _busy:
+		return
+	if _notice_panel != null and _notice_panel.visible:
+		_ring.show_state(ThinkRing.HIDDEN, 0.0, "")   # B2: reading first; the pause starts after
 		return
 	# WT-II: let the answer land, then the go cue. Long silence costs a little engagement.
 	var idle := now - _ready_at_ms
@@ -904,6 +906,9 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 func _maybe_prompt_notice() -> void:
 	if _resolved or _thinking:
 		return
+	if _notice_panel != null and _notice_panel.visible:
+		(_notice_panel.get_node("Q") as Label).text = tr("Read %s first: what do you notice?") % display_name
+		return
 	var truth: Array = Tuning.NOTICE_TRUTH.get(_shown_emotion, ["distracted"])
 	var cat := str(truth[0])
 	if cat == _noticed_cat or _notice_prompts >= Tuning.NOTICE_MAX_PROMPTS:
@@ -957,6 +962,8 @@ func _on_notice(chip: String) -> void:
 			(b as Control).visible = true
 	_notice_hidden = []
 	_notice_bonus = right
+	if _buttons.size() > 0:
+		_buttons[0].grab_focus()
 	Competency.observe_skill("noticing", "notice::%s" % persona_id, right)
 	Telemetry.log_event({"event": "notice", "scenario_id": str(Game.current_scenario_id), "persona_id": persona_id,
 		"turn": _turns, "chip": chip, "shown": _shown_emotion, "right": right, "prompt_n": _notice_prompts})
@@ -969,8 +976,12 @@ func _on_notice(chip: String) -> void:
 		_set_coach("Coach Vee: " + tr("Look again: their face and posture say %s. Pick the move that answers that.") % tr(str(Tuning.NOTICE_LABELS[str(truth[0])])).to_lower())
 		_release_coach()
 	_ready_at_ms = Time.get_ticks_msec()   # the pause starts once you have read them
-	if _buttons.size() > 0:
-		_buttons[0].grab_focus()
+
+func _refresh_praise_hint() -> void:
+	if _praise_btn != null:
+		var ph := _praise_btn.get_node_or_null("MoveHint") as Label
+		if ph != null:
+			ph.text = tr("names what they just did") if _praise_specific() else tr("generic: nothing to name yet")
 
 ## B3: praise is specific only when there is something nameable: the last move landed, or
 ## praise fits the student's path now (a designed "catch them doing it right" moment).

@@ -111,6 +111,12 @@ func _dev_room_hook() -> bool:
 		SceneRouter.change_scene("res://scenes/encounter/LectureScene.tscn", {"scenario": cfg})
 	else:
 		SceneRouter.change_scene("res://scenes/overworld/Overworld.tscn")
+		var dev_int := int(str(JavaScriptBridge.eval(q + ".get('dev_interrupt') || '-1'", true)))
+		if dev_int >= 0:
+			get_tree().create_timer(2.5).timeout.connect(func():
+				var ow2 = SceneRouter._current
+				if ow2 != null and ow2.has_method("_trigger_interrupt"):
+					ow2._trigger_interrupt(dev_int))
 		if end_lesson:
 			get_tree().create_timer(2.5).timeout.connect(func():
 				var ow = SceneRouter._current
