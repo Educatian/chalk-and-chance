@@ -56,7 +56,7 @@ static func _items_awarded_text(items) -> String:
 	for id in items.keys():
 		var amt := int(items[id])
 		if amt > 0:
-			parts.append("%s x%d" % [Items.short_name_for(str(id)), amt])
+			parts.append(TranslationServer.translate("%s x%d") % [Items.short_name_for(str(id)), amt])
 	return ", ".join(parts)
 
 static func _label(parent: Node, text: String, pos: Vector2, fs: int, color: Color, size: Vector2) -> Label:

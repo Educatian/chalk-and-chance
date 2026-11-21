@@ -599,7 +599,7 @@ func _mission_reward_text(badge: String, earned: bool) -> String:
 	var reward_bits := ["+%d XP" % GameState.badge_xp(badge)]
 	var items: Dictionary = Items.BADGE_REWARDS.get(badge, {})
 	for id in items.keys():
-		reward_bits.append("%s x%d" % [Items.short_name_for(str(id)), int(items[id])])
+		reward_bits.append(tr("%s x%d") % [Items.short_name_for(str(id)), int(items[id])])
 	return ("Collected: " if earned else "Reward: ") + ", ".join(reward_bits)
 
 func _go_import() -> void:
@@ -1177,7 +1177,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 	overlay.add_child(row_bg)
 
 	var label := Label.new()
-	label.text = "#%d  %s   %03d   %s" % [
+	label.text = tr("#%d  %s   %03d   %s") % [
 		pos,
 		str(rec.get("rank", "-")),
 		int(rec.get("score", 0)),
@@ -1461,7 +1461,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		var slot := Panel.new()
 		slot.position = Vector2(x, pos.y - 4)
 		slot.size = Vector2(34, 34)
-		slot.tooltip_text = "%s x%d" % [Items.name_for(str(id)), GameState.item_count(str(id))]
+		slot.tooltip_text = tr("%s x%d") % [Items.name_for(str(id)), GameState.item_count(str(id))]
 		add_child(slot)
 		if tex != null:
 			PixelUi.add_centered_icon(slot, tex, 3.0)
@@ -1544,7 +1544,7 @@ func _add_item_row(overlay: Control, id: String, x: float, y: float) -> void:
 		overlay.add_child(icon_slot)
 		PixelUi.add_centered_icon(icon_slot, tex, 3.0)
 	var label := Label.new()
-	label.text = "%s  x%d" % [Items.name_for(id), count]
+	label.text = tr("%s  x%d") % [Items.name_for(id), count]
 	label.position = Vector2(x + 48, y + 3)
 	label.size = Vector2(196, 24)
 	label.add_theme_font_size_override("font_size", UiText.fs(12))

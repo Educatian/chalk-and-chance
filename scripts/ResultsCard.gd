@@ -138,7 +138,7 @@ static func build(parent: Node, data: Dictionary) -> Control:
 	if typeof(items) == TYPE_DICTIONARY:
 		for id in items.keys():
 			if int(items[id]) > 0 and rx < r.end.x - 120:
-				rx = _icon_chip(root, Items.icon_for(str(id)), "%s x%d" % [Items.short_name_for(str(id)), int(items[id])], Vector2(rx, y))
+				rx = _icon_chip(root, Items.icon_for(str(id)), TranslationServer.translate("%s x%d") % [Items.short_name_for(str(id)), int(items[id])], Vector2(rx, y))
 	for e in rw.get("extra", []):
 		rx = _icon_chip(root, ICONS["right"], str(e), Vector2(rx, y))
 	if rx == x0 + 156.0:

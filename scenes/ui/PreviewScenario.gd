@@ -122,7 +122,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		var slot := Panel.new()
 		slot.position = Vector2(x, pos.y - 4)
 		slot.size = Vector2(34, 34)
-		slot.tooltip_text = "%s x%d" % [Items.name_for(item_id), GameState.item_count(item_id)]
+		slot.tooltip_text = tr("%s x%d") % [Items.name_for(item_id), GameState.item_count(item_id)]
 		add_child(slot)
 		if tex != null:
 			PixelUi.add_centered_icon(slot, tex, 3.0)

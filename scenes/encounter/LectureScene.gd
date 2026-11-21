@@ -375,7 +375,7 @@ func _build_item_row() -> void:
 		b.position = Vector2(x, y)
 		b.size = Vector2(34, 34)
 		b.set_meta("item_id", item_id)
-		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
+		b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "lecture")
 		CompactButtonStyle.apply(b, UiText.S_CAPTION)
 		b.pressed.connect(_use_item.bind(item_id))
@@ -394,7 +394,7 @@ func _refresh_item_buttons() -> void:
 		var id := str(b.get_meta("item_id", ""))
 		if id != "":
 			b.disabled = not GameState.can_use_item(id, "lecture") or _over
-			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
+			b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
 
 func _use_item(id: String) -> void:
 	if _over:

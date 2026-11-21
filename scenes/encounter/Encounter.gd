@@ -581,7 +581,7 @@ func _build_item_row() -> void:
 		b.position = Vector2(x, y)
 		b.size = Vector2(32, 32)
 		b.set_meta("item_id", item_id)
-		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
+		b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "encounter")
 		CompactButtonStyle.apply(b, UiText.S_CAPTION)
 		b.pressed.connect(_use_item.bind(item_id))
@@ -600,7 +600,7 @@ func _refresh_item_buttons() -> void:
 		var id := str(b.get_meta("item_id", ""))
 		if id != "":
 			b.disabled = not GameState.can_use_item(id, "encounter") or _busy or _resolved
-			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
+			b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
 
 func _use_item(id: String) -> void:
 	if _busy or _resolved:
@@ -1421,7 +1421,7 @@ func _items_awarded_text(items) -> String:
 	for id in dict.keys():
 		var amount := int(dict[id])
 		if amount > 0:
-			parts.append("%s x%d" % [Items.short_name_for(str(id)), amount])
+			parts.append(tr("%s x%d") % [Items.short_name_for(str(id)), amount])
 	return ", ".join(parts)
 
 func _signed(n: int) -> String:

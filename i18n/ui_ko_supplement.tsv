@@ -167,3 +167,9 @@ Coach Vee	한 선생님
 U-shape	ㄷ자 배치
 Rows	줄 배치
 Clusters	모둠 배치
+%s x%d	%s %d개
+%s  x%d	%s  %d개
+%s x%d\n%s	%s %d개\n%s
+#%d  %s   %03d   %s	%d위  %s   %d점   %s
+- 15s	-15초
++ 15s	+15초
