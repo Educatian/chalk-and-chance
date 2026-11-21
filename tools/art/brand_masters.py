@@ -18,6 +18,7 @@ from brand import GLYPHS, P, ROOT, new, put, rect, disc, text, text_w, upscale, 
 OUT = os.path.join(ROOT, 'assets', 'brand')
 DOCS = os.path.join(ROOT, 'docs', 'brand')
 GALMURI = os.path.join(ROOT, 'ui', 'fonts', 'Galmuri11-Bold.ttf')
+PRETENDARD = os.path.join(ROOT, 'ui', 'fonts', 'Pretendard-Medium.ttf')
 TAG_EN = "Practice the moments you can't plan."
 TAG_KO = '계획대로 안 되는 순간까지, 미리 연습해요.'
 
@@ -39,6 +40,36 @@ def disc(img, cx, cy, r, key, ring=None):
                 put(img, x, y, key)
             elif ring and d2 <= (r + 1.4) ** 2:
                 put(img, x, y, ring)
+
+
+# Drawn at mark size (12x15 texels), two-texel strokes, open counters top and bottom.
+AMP32 = [
+    "...#####....",
+    "..##...##...",
+    "..##...##...",
+    "..##...##...",
+    "...##.##....",
+    "....###.....",
+    "...##.##..##",
+    "..##...##.##",
+    ".##.....###.",
+    ".##......##.",
+    ".##.....####",
+    ".##....##.##",
+    "..##..##...#",
+    "...####.....",
+    "............",
+]
+
+
+def _amp32(img, x0, y0, key, dust=None):
+    for j, row in enumerate(AMP32):
+        for i, c in enumerate(row):
+            if c == '#':
+                k = key
+                if dust and hashf(i, j, 3) % 23 == 0:
+                    k = dust
+                put(img, x0 + i, y0 + j, k)
 
 
 def _amp(img, x0, y0, key, dust=None, k=2):
@@ -82,7 +113,7 @@ def mark(frac=0.75, way='color'):
             x = int(round(16 + dr * math.cos(a - da)))
             y = int(round(16 + dr * math.sin(a - da)))
             put(m, x, y, 'chalk' if i == 0 else dust)
-    _amp(m, 9, 8, amp, dust if way == 'color' else None)
+    _amp32(m, 10, 9, amp, dust if way == 'color' else None)
     return m
 
 
@@ -102,7 +133,7 @@ def mark16(way='color'):
                 put(m, x, y, fill)
             elif track:
                 put(m, x, y, track)
-    small = [".##..", "#..#.", ".##..", "#.##.", "#..##", ".##.#"]
+    small = [".##..", "#..#.", ".##..", "#.#.#", "#..#.", ".##.#"]   # AMP32 at half size
     for j, row in enumerate(small):
         for i, c in enumerate(row):
             if c == '#':
@@ -153,14 +184,22 @@ def pixel_text(s, size, key):
     return out
 
 
-def lockup_ko(way='color'):
-    """Korean lockup: the English mark kept as is (one game everywhere), a Korean
-    tagline set under the wordmark in the pixel face."""
-    lk = lockup_h(way)
-    tag = pixel_text(TAG_KO, 12, 'chalk_gy' if way == 'color' else 'slate')
-    out = new(max(lk.width, 37 + tag.width), lk.height + 3 + tag.height)
+def lockup_ko(way='color', k=4):
+    """Korean lockup at k x: the English mark as is (one game everywhere) and the Korean
+    tagline under the wordmark in the smooth Korean face (Pretendard), sized to fit
+    inside the wordmark's width so it never outweighs the name."""
+    lk = upscale(lockup_h(way), k)
+    word_x = 37 * k
+    room = lk.width - word_x
+    col = P['chalk_gy'] if way == 'color' else P['slate']
+    size = 8 * k
+    f = ImageFont.truetype(PRETENDARD, size)
+    while f.getlength(TAG_KO) > room and size > 4 * k:
+        size -= 1
+        f = ImageFont.truetype(PRETENDARD, size)
+    out = Image.new('RGBA', (lk.width, lk.height + int(size * 1.6)), (0, 0, 0, 0))
     out.alpha_composite(lk, (0, 0))
-    out.alpha_composite(tag, (37, lk.height + 3))
+    ImageDraw.Draw(out).text((word_x + k, lk.height + 2), TAG_KO, font=f, fill=col)
     return out
 
 
@@ -220,9 +259,15 @@ def key_art():
         student(pid, fr, x, 128, 2)   # a gap in the middle, behind the raised hand
     for x, (pid, fr) in zip((262, 344, 426), (('jordan_skeptic', 0), ('priya_quiet', 4), ('meilin_anxious', 0))):
         student(pid, fr, x, 168, 3)
-    # the think ring over the raised hand, filling
-    ring = upscale(mark(0.62, 'color'), 2)
-    art.alpha_composite(ring, (344 + 24 - 32, 98))
+    # the in-game think ring around the student with her hand up, filling (no ampersand:
+    # this is the mechanic, the logo is already on the screen)
+    hx, hy = 344 + 24, 168 + 18
+    for a10 in range(0, 3600, 10):
+        a = math.radians(a10 / 10.0 - 90)
+        for rr in (27, 28, 29):
+            x = int(round(hx + rr * math.cos(a)))
+            y = int(round(hy + rr * math.sin(a)))
+            put(art, x, y, 'focus' if a10 < 3600 * 0.62 else 'slate')
     # left fade so the logo and menu read over the art
     fade = new(W, H)
     bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
@@ -289,12 +334,20 @@ def main():
         save(lockup_h(way), 'lockup/horizontal_%s_x1.png' % way)
         save(lockup_v(way), 'lockup/stacked_%s_x4.png' % way, 4)
         save(mark16(way), 'mark/mark16_%s.png' % way)
-    save(lockup_ko('color'), 'lockup/korean_color_x4.png', 4)
-    save(lockup_ko('light'), 'lockup/korean_light_x4.png', 4)
+    save(lockup_ko('color'), 'lockup/korean_color_x4.png')
+    save(lockup_ko('light'), 'lockup/korean_light_x4.png')
     save(word('color'), 'lockup/wordmark_color_x4.png', 4)
     for i in range(13):
         save(mark(i / 12.0, 'color'), 'anim/ring_%02d.png' % i)   # x1: the game scales by whole numbers
     save(word('color'), 'anim/wordmark.png')
+    # small UI glyph: voice off (speaker with a cross), for the title corner
+    vo = new(12, 12)
+    for (x, y, w_, h_) in ((1, 4, 3, 4), (4, 3, 1, 6), (5, 2, 1, 8), (6, 1, 1, 10)):
+        rect(vo, x, y, w_, h_, 'chalk')
+    for i in range(4):
+        put(vo, 8 + i, 4 + i, 'notyet')
+        put(vo, 11 - i, 4 + i, 'notyet')
+    save(vo, 'ui/voice_off.png')
     # icons
     icons = {}
     for sz in (16, 32, 48, 64, 128, 256, 512):
@@ -380,10 +433,10 @@ def sheets():
     m1.alpha_composite(lockup_h('color'), (40, 14))
     S.alpha_composite(m1, (24, y + 34))
     ko = Image.new('RGBA', (980, 230), P['ink'])
-    kl = upscale(lockup_ko('color'), 3)
+    kl = lockup_ko('color', 3)
     ko.alpha_composite(kl, ((980 - kl.width) // 2, (230 - kl.height) // 2))
     S.alpha_composite(ko, (24, y + 120))
-    d.text((24, y + 360), 'Korean lockup (proposed): the same English mark everywhere, a Korean tagline in the pixel face (Galmuri, covers Hangul).',
+    d.text((24, y + 360), 'Korean lockup: the same English mark everywhere, the Korean tagline in the smooth Korean face (Pretendard), within the wordmark width.',
            font=body, fill=P['slate'])
     d.text((24, y + 388), 'English tagline: ' + TAG_EN, font=body, fill=P['slate'])
     S.convert('RGB').save(os.path.join(DOCS, 'logo_sheet.png'))

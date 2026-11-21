@@ -49,11 +49,10 @@ func _ready() -> void:
 	add_child(_menu)
 
 	var demo := Button.new()
-	demo.text = "Play demo"
-	if is_course:
-		demo.visible = false
-	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
-		demo.text = "Play demo (voice off)"
+	demo.text = "Play"
+	demo.visible = not is_course
+	if OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
+		_add_voice_off_icon(vp)
 	demo.custom_minimum_size = Vector2(col_w, 44)
 	demo.add_theme_font_size_override("font_size", UiText.fs(18))
 	_apply_button_style(demo, true)
@@ -111,12 +110,8 @@ func _ready() -> void:
 
 	Auth.login_ok.connect(_go_hub)
 	Auth.login_failed.connect(func(m): _set_status(m, true); if _btn != null: _btn.disabled = false)
-	if not Auth.configured():
-		_set_status("Playing offline.", false)
-	elif is_course:
-		_set_status("%s is ready. Enter your name and the course passcode." % course_label, false)
-	elif OS.has_feature("web") and TTSClient.voice_gate_required and not TTSClient.voice_gate_unlocked:
-		_set_status("Public demo. Voice is off here to keep costs down.", false)
+	if is_course:
+		_set_status("Enter your name and the course passcode.", false)
 
 	# Intro: the ring fills, then the tagline and menu fade in. Any press skips it.
 	_tagline.modulate.a = 0.0
@@ -130,6 +125,18 @@ func _ready() -> void:
 			demo.grab_focus()
 		else:
 			_name_in.grab_focus())
+
+## Voice is off in the public build: a small speaker-off icon in the corner says so.
+func _add_voice_off_icon(vp: Vector2) -> void:
+	var ic := TextureRect.new()
+	ic.texture = load("res://assets/brand/ui/voice_off.png")
+	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ic.tooltip_text = "Voice is off"
+	ic.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(ic)
+	ic.size = Vector2(24, 24)
+	ic.position = Vector2(vp.x - 40, 14)
 
 func _input(event: InputEvent) -> void:
 	if _logo != null and not _logo.done and (event is InputEventKey or event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventJoypadButton) and event.is_pressed():

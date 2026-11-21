@@ -93,7 +93,7 @@ func _run() -> void:
 	_stage = "login or hub"
 	var c := _cur()
 	if c != null and c.name == "Login":
-		var skip := _find_button(c, "Play demo")
+		var skip := _find_button(c, "Play")
 		_check("boots into Login with the demo available", skip != null and not skip.disabled)
 		if skip != null:
 			skip.pressed.emit()
