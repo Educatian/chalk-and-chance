@@ -98,3 +98,47 @@ Screens: `docs/qa/korean-hosted/ko_diego_ell_m*.png`, `ko_noah_g5_fractions_m*.p
    Every fallback point now logs one JSON line, `{"evt":"llm_fallback","where":...,"reason":...}` (student, student_rejected, coach, coach_rejected, classifier, openrouter-truncated). After the next deploy, `wrangler tail` or the Workers logs show the cause directly.
 
 Stub tests: `node --test cloudflare/test/locale.test.mjs`, 18 cases, no network.
+
+
+## Re-check after the fixes (Worker 78d6b250 from main fe9d6c5, 2026-11-22, 8 calls, UTC)
+- **Setup:** same method and allow-list as before (`CC_ALLOW` = the Worker's `/turn` only, `CC_ALLOW_MAX=4` per student). Both runs reported `NETWORK blocked=0`; there were no retries. A dry run first confirmed exactly 4 `POST /turn` per sequence and nothing else.
+- **On screen:** "shown" is checked exactly against the Worker's `student_utterance.text`, as in the second set.
+- **Fallback detection:** a reply counts as a fallback if it equals one of the Worker's fixed lines, or matches the template `제 생각은요, ${opening line}`.
+
+| run | time (UTC) | locale | move | latency | Worker student line (verbatim) | student | shown on screen, exact | coach tip (verbatim) | coach |
+|---|---|---|---|---|---|---|---|---|---|
+| 민호 (diego_ell), ko #1 | 2026-11-22T10:29:53Z | `ko` | elicit | 1156 ms | 제 생각은요, 답 알아요. 한국어로 말하는 데 시간이 조금 필요해요. | **fallback** (template `제 생각은요, ${opening line}`) | yes: `민호: "제 생각은요, 답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."` | 좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요. | fallback |
+| 민호 (diego_ell), ko #2 | 2026-11-22T10:30:13Z | `ko` | revoice | 1588 ms | 네, 맞아요. 그림으로 보여줘도 돼요? | model | yes: `민호: "네, 맞아요. 그림으로 보여줘도 돼요?"` | 되말하기로 아이 생각이 모두에게 보이게 됐어요. | fallback |
+| 민호 (diego_ell), ko #3 | 2026-11-22T10:30:33Z | `ko` | extend | 1142 ms | 네, 그림으로 보여줄게요. 이걸로 설명할 수 있어요. | model | yes: `민호: "네, 그림으로 보여줄게요. 이걸로 설명할 수 있어요."` | 잘 더 물었어요. 아이가 스스로 따져 보고 있어요. | fallback |
+| 민호 (diego_ell), ko #4 | 2026-11-22T10:30:53Z | `ko` | praise | 843 ms | 네, 이 그림으로 설명할 수 있어요. 이 조각이 더 커요. | model | yes: `민호: "네, 이 그림으로 설명할 수 있어요. 이 조각이 더 커요."` | '잘했어'보다 무엇을 잘했는지 짚어 줘요. | fallback |
+| 도윤 (noah_g5_fractions), ko #1 | 2026-11-22T10:31:38Z | `ko` | elicit | 913 ms | 8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요. | model | yes: `도윤: "8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요."` | 아이의 생각을 묻는 발문 좋았어요. 다음엔 3-5초 정도 기다려 주면 아이가 더 깊이 생각할 시간을 줄 수 있을 거예요. | model |
+| 도윤 (noah_g5_fractions), ko #2 | 2026-11-22T10:31:58Z | `ko` | extend | 634 ms | 더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요? | model | yes: `도윤: "더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?"` | 아이의 생각을 더 깊게 탐색하기 위해 '더 묻기'를 사용했네요. 이제 아이가 스스로 답을 찾을 수 있도록 잠시 기다려 주는 건 어떨까요? | model |
+| 도윤 (noah_g5_fractions), ko #3 | 2026-11-22T10:32:18Z | `ko` | revoice | 994 ms | 제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요. | **fallback** (template `제 생각은요, ${opening line}`) | yes: `도윤: "제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."` | 되말하기로 아이 생각이 모두에게 보이게 됐어요. | fallback |
+| 도윤 (noah_g5_fractions), ko #4 | 2026-11-22T10:32:38Z | `ko` | praise | 632 ms | 근데 8분의 1이 더 얇아 보이긴 해요. | model | yes: `도윤: "근데 8분의 1이 더 얇아 보이긴 해요."` | 아이의 생각을 칭찬으로 마무리했네요. 이제 아이의 생각을 더 깊게 탐색해 볼까요? | model |
+
+**Result: worse for students, slightly better for the coach.** Not good enough; the owner may want to roll the Worker back.
+
+| | before the fixes (first set) | after the fixes |
+|---|---|---|
+| student replies from the model | 8/8 | **6/8** (민호 #1 and 도윤 #3 are the fallback template) |
+| coach tips from the model | 2/8 | **3/8** |
+| all 8 replies on screen exactly as sent | | yes |
+| latency | | 632–1588 ms |
+
+**Likely cause of the student fallbacks: the new filters, not the network.** Both calls returned fast (1156 ms, 994 ms), which fits two rejected attempts and then the fallback.
+- **민호 #1** is the first turn. His only previous line is his scripted opening line, and an "elicit" naturally asks him to restate that idea. The repeat or same-opening filter would reject it.
+- **도윤 #3** (revoice) asks him to confirm what was said back, which again invites restating his idea.
+- The Worker now logs every fallback with its reason (`{"evt":"llm_fallback","where":"student_rejected",...}`), so the logs at **10:29:53** and **10:32:18 UTC** will confirm which filter fired.
+- **Suggested fix** (not applied; needs owner approval and a redeploy):
+  - don't apply the repeat and opening filters against the scripted opening line;
+  - on turn 1 and after a revoice, allow agreeing with or restating one's own idea;
+  - when both attempts are rejected only for repetition, prefer the model's second attempt over the fixed line.
+
+**What did improve:**
+- **Repetition across turns:** where the model answered, each reply moves on.
+  - 민호: "그림으로 보여줘도 돼요?" → "그림으로 보여줄게요. 이걸로 설명할 수 있어요." → "이 조각이 더 커요."
+  - 도윤: "분모가 더 크면 더 큰 거잖아요" → "분모를 더 크게 해야 하는 거 아니에요?" → "근데 8분의 1이 더 얇아 보이긴 해요" (a first crack).
+- **Copied opening:** gone; no "아니 그게요…" anywhere.
+- **Coach:** the 3 model tips use 아이 and plain 해요체 and name the move made ("생각을 묻는 발문", "'더 묻기'를 사용했네요", "칭찬으로 마무리했네요"). But 5 of 8 are still fixed tips, all 4 of 민호's among them. Their logged reasons (`coach`, `coach_rejected`, `openrouter truncated`) are at the times above.
+
+Screens: `docs/qa/korean-hosted/ko3_*_m0..m3.png`; raw bodies and polled screen lines: `ko3_*_calls.json`, `ko3_*_screen_log.txt`.
