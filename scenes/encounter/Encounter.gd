@@ -882,7 +882,6 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 		{"input_mode": "free_text", "text": free_text, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms} if is_free
 		else {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms})
 	var payload := {
-		"session_id": "m1",
 		"scenario_id": str(Game.current_scenario_id),
 		"scenario_context": _scenario_context,
 		"target_behavior": "elicit_student_thinking",

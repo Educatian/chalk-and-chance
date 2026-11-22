@@ -11,7 +11,7 @@ The owner's requirement (2026-11-22) is that logs are kept permanently. This pag
 | `telemetry_events` | one game event of a signed-in learner | `user_id` (from the verified JWT), `session_id`, `construct_id`, `event` = the whole sanitised event JSON | forever |
 | `telemetry_anon_events` | one game event of demo / not-signed-in play | `anon_id` (per-browser random id from the client, e.g. `a_1795346350_509200`), `session_id`, `construct_id`, `event` JSON | forever |
 | `competency` | current skill estimate per learner + skill | theta, prob, n, updated_at (overwritten, not appended) | latest only |
-| `rate_limits` | a per-IP counter window | key `bucket:IP:window:slot` (**contains the raw IP**), count, expiry | ≤ 1 hour; pruned at random |
+| `rate_limits` | a per-IP counter window | key `bucket:<ip-hash>:window:slot`, where `<ip-hash>` is HMAC-SHA256 of the IP with `WORKER_SECRET` (16 base64url chars; no raw IP since the follow-up PR), count, expiry | ≤ 1 hour; pruned at random |
 
 The `event` JSON is full fidelity, clamped to 600 characters per string and 8 KB per event:
 - dialogue text, including **teacher-typed free text** (`move.text`);
@@ -47,10 +47,10 @@ The Worker has no `[observability]`, so `console.log` lines vanish.
 - **Written after the response** through `ctx.waitUntil`. Every error in the log path is swallowed, so **a failed log write never fails or changes a request**. This holds even before the migration is applied (tested).
 - **Identifiers follow the existing telemetry practice and add no new ones:**
   - `user_id` comes only from a **verified** JWT, the same id as `telemetry_events.user_id`. An invalid token logs no id; the 401 status shows the failure.
-  - `anon_id` is the per-browser id the client already sends to `/telemetry_anon`.
+  - `anon_id` is the per-browser id the client already sends to `/telemetry_anon`. Since the follow-up PR, the client also sends it on `/turn`, `/group_turn` and `/lecture_turn`, normalised the same way, so rows join to `telemetry_anon_events`.
   - `session_id` is taken as the client sends it.
   - Location is country and Cloudflare colo, which is coarser than telemetry's `conn`.
-- **Gap:** `/turn` requests carry no `anon_id` or `user_id`, and their `session_id` is the constant `"m1"`. A model-call row can therefore only be linked to a play session by time and location. Adding `anon_id` to the `/turn` payload would be a small client change, and it is listed as a decision below.
+- **LLM routes (follow-up PR):** the client sends the telemetry `session_id` (it used to send the constants `m1` / `grp` / `gym` / `lecture`) and, for demo play, its `anon_id`. A signed-in learner sends the JWT instead, and the row gets the verified `user_id`. Nothing in the Worker or the local backend keyed on the old constants; they were only echoed back.
 - **Never stored:**
   - request bodies, passwords and passcodes, JWTs, voice tokens, Authorization / X-Voice-Token headers, raw IPs;
   - the bodies of `/auth/login` and `/voice_token`, which the log path never reads;
@@ -103,6 +103,52 @@ head_sampling_rate = 1
 - **Retention:** short (days), so it is not the permanent record.
 - **Limits:** Free plan 200k events/day; Paid 20 M/month included, then $0.60/M (published limits; please confirm).
 
+## Running the archive on demand (verification)
+The cron runs on the 1st of each month. To run and verify the archive now, against the hosted Worker:
+
+**Setup (once).** Choose a long random token and store it as a secret:
+```sh
+cd cloudflare && wrangler secret put ADMIN_TOKEN
+```
+- `/admin/archive` exists only while that secret is set; without it the route answers 404.
+- A wrong token gets 403. The route is rate-limited, and the token is redacted from `server_log` rows.
+- A separate token is used instead of a signature made with `WORKER_SECRET`, so that the JWT signing key never has to leave Cloudflare or be rotated to run a check.
+
+**1. Dry run.** It writes nothing anywhere:
+```sh
+curl -s -X POST https://chalk-and-chance-api.jewoong-moon.workers.dev/admin/archive   -H "X-Admin-Token: $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"mode":"dry"}'
+```
+It returns:
+- `would_write`: key, rows and id range per chunk;
+- `cursor`;
+- `not_yet_eligible_rows`: rows less than one hour old, which wait for the next run;
+- `would_prune_rows`, `prune_cutoff` and `archive_enabled`.
+
+**2. Real run, once.** It never prunes:
+```sh
+curl -s -X POST https://chalk-and-chance-api.jewoong-moon.workers.dev/admin/archive   -H "X-Admin-Token: $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"mode":"run"}'
+```
+- It writes the gzipped NDJSON chunk or chunks and `server_log/manifest.json` to the bucket.
+- Each chunk is read back and verified (sha256 and row count) before the cursor moves.
+- It deletes nothing from D1, even rows older than `LOG_KEEP_MONTHS`: it only reports `would_prune_rows`.
+- The response has `objects`, `cursor_before`, `cursor`, `archived_rows`, `pruned` (always 0), and `checks`:
+  - `objects_written`, `read_back_verified`, `manifest_cursor_moved`, `archived_rows_still_in_d1` and `nothing_pruned`;
+  - `pass` is true only if all five hold.
+- It is still a no-op (`{"skipped":"off"}`) unless `LOG_ARCHIVE` is `on`.
+- A second run within the hour shows `manifest_cursor_moved: false`, because only the first run's own log rows are new.
+
+**3. Independent read-only check.**
+```sh
+python -I tools/logs/verify_archive.py
+```
+It downloads the manifest and every chunk and checks:
+- sha256, row count, id order and range, and that chunks do not overlap;
+- that the cursor is the last chunk's last id;
+- that each archived row is identical to its D1 row and that no D1 row in the range was skipped;
+- that nothing was pruned.
+
+It prints PASS or FAIL per check and `RESULT: PASS` at the end, with exit code 0. It uses only `wrangler r2 object get --pipe` and D1 `SELECT`s.
+
 ## Owner steps (in order)
 1. Merge. Apply the migration: `wrangler d1 execute chalk_db --remote --file cloudflare/migrations/0001_server_log.sql`.
 2. `wrangler deploy`. This binds `LOG_BUCKET` and `CF_VERSION_METADATA` and registers the monthly cron, which does nothing while `LOG_ARCHIVE` is unset.
@@ -114,6 +160,6 @@ head_sampling_rate = 1
 1. **Workers plan.** On Free, the 500 MB D1 cap is near: 183 MB used.
 2. **`LOG_KEEP_MONTHS`.** The default is 12 months in D1 before archived rows are pruned. A setting of `0` would keep D1 small; a very large number never prunes.
 3. **Consent/IRB.** Rejected model texts can quote teacher-typed text. Separately, teacher-typed text is already stored in `telemetry_*_events.event.move.text`; that is not new, but it is worth confirming it is covered.
-4. **Linking `/turn` rows to play sessions.** Should the client add its `anon_id` / session id to `/turn`? It is a small client change, not in this PR.
+4. ~~Linking `/turn` rows to play sessions~~: done in the follow-up PR (client sends `anon_id` + the real `session_id`).
 5. **`[observability]`.** Turn it on as the live view, yes or no.
-6. **Pre-existing:** `rate_limits` keys contain raw IPs for up to an hour. A hash of the IP would do the same job.
+6. ~~Raw IPs in `rate_limits` keys~~: replaced with a keyed hash in the follow-up PR. Rows written before that deploy expire within an hour.
