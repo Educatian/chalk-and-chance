@@ -73,8 +73,10 @@ func _dev_room_hook() -> bool:
 		return false
 	var q := "new URLSearchParams(window.location.search)"
 	# Any dev_* run is a test: offline students, no voice, nothing sent to the hosted API.
+	# Exception for a bounded hosted check: dev_* plus ?allow_hosted=1 keeps the students
+	# live (the /turn call), while voice and every upload stay off.
 	if str(JavaScriptBridge.eval("window.location.search", true)).contains("dev_"):
-		LLMClient.use_stub = true
+		LLMClient.use_stub = str(JavaScriptBridge.eval(q + ".get('allow_hosted') || ''", true)) != "1"
 		TTSClient.enabled = false
 		Telemetry._net = false
 	_start_probe()
@@ -114,7 +116,8 @@ func _dev_room_hook() -> bool:
 				var e = SceneRouter._current
 				if e != null and e.has_method("_on_move"):
 					if e._notice_panel != null and e._notice_panel.visible:
-						e._on_notice("confused")
+						# read the student right, so a wrong read never swallows the scripted move
+						e._on_notice(str(load("res://scripts/Tuning.gd").NOTICE_TRUTH.get(e._shown_emotion, ["distracted"])[0]))
 					e._on_move(str(mv)))
 			t += gap
 		# ?dev_hold=s keeps the last move on screen longer; ?dev_bond=0..1 seeds the saved bond.

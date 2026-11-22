@@ -5,6 +5,8 @@ browser and recorded. The run exits 3 if any such request was attempted (use
 
 usage: python -I tools/qa/web_run.py OUTDIR steps.json [WxH] [--expect-blocked]
 env:   CC_URL (page to open, must be local), CC_BOOT (seconds to wait after load)
+       CC_ALLOW + CC_ALLOW_MAX: one exact URL that may be POSTed to, at most N times (bounded
+       hosted check; calls recorded to OUTDIR/hosted_calls.json); all else non-local aborted
 steps: ["click",x,y] ["key","Enter"] ["hold","ArrowDown",ms] ["wait",s] ["shot",name]
        ["burst",name,count,interval_ms] ["eval","js"]
        ["press","Button text"]   press a visible button (debug web builds; English or shown text)
@@ -41,13 +43,45 @@ def main():
     def log(s):
         print("[%7.2fs] %s" % (time.time() - t0, s), flush=True)
 
+    # Bounded hosted check (opt-in): CC_ALLOW names ONE exact URL (e.g. the Worker's /turn)
+    # that may be called, at most CC_ALLOW_MAX POSTs; each call is fetched here, timed and
+    # recorded to OUTDIR/hosted_calls.json. Everything else non-local is still aborted.
+    allow = os.environ.get("CC_ALLOW", "")
+    allow_max = int(os.environ.get("CC_ALLOW_MAX", "0"))
+    calls = []
+
     def guard(route):
-        host = urlparse(route.request.url).hostname or ""
-        if host in LOCAL or route.request.url.startswith(("data:", "blob:")):
+        req = route.request
+        host = urlparse(req.url).hostname or ""
+        if host in LOCAL or req.url.startswith(("data:", "blob:")):
             route.continue_()
-        else:
-            blocked.append((route.request.method, route.request.url))
-            route.abort()
+            return
+        if allow and req.url.split("?")[0] == allow and req.method == "OPTIONS":
+            route.continue_()          # CORS preflight only, no model call
+            return
+        if allow and req.url.split("?")[0] == allow and req.method == "POST" and len(calls) < allow_max:
+            rec = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "request": json.loads(req.post_data or "{}")}
+            t1 = time.time()
+            try:
+                resp = route.fetch(timeout=60000)
+                rec["latency_ms"] = int((time.time() - t1) * 1000)
+                rec["status"] = resp.status
+                body = resp.text()
+                try:
+                    rec["response"] = json.loads(body)
+                except ValueError:
+                    rec["response_text"] = body[:2000]
+                route.fulfill(response=resp)
+            except Exception as e:      # noqa: BLE001 - recorded, never retried
+                rec["latency_ms"] = int((time.time() - t1) * 1000)
+                rec["error"] = str(e)[:300]
+                route.abort()
+            calls.append(rec)
+            log("HOSTED call %d/%d %s %dms" % (len(calls), allow_max, req.url, rec["latency_ms"]))
+            json.dump(calls, open("%s/hosted_calls.json" % out, "w", encoding="utf8"), ensure_ascii=False, indent=1)
+            return
+        blocked.append((req.method, req.url))
+        route.abort()
 
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True, args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
@@ -76,7 +110,7 @@ def main():
                 time.sleep(st[2] / 1000)
                 pg.keyboard.up(st[1])
             elif op == "wait":
-                time.sleep(st[1])
+                pg.wait_for_timeout(st[1] * 1000)   # keeps Playwright pumping events (routes are handled on time)
             elif op == "press":
                 pg.evaluate("t => window.cc_press && window.cc_press(t)", st[1])
                 time.sleep(0.6)
