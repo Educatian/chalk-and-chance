@@ -1,0 +1,567 @@
+[
+ {
+  "utc": "2026-11-22T11:09:06Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "어떻게 그렇게 생각했는지 말해 줄래?"
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [],
+   "runtime_state": {
+    "engagement": 0.4,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.5,
+    "turns_elapsed": 1,
+    "understanding": 0.15
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "도윤이는 마지막 남은 브라우니를 동생이 따지지 못하게 딱 반으로 자르는 애예요. 똑같이 나누는 건 이미 몸에 배어 있어요. 도윤이한테는 그게 분수예요.",
+     "name": "도윤",
+     "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "생각 끌어내기",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "elicit",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 823,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "elicit"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "process",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.12,
+    "trust": 0.02,
+    "engagement": 0.06,
+    "order": 0,
+    "composure": 0.02
+   },
+   "student_utterance": {
+    "speaker": "도윤",
+    "text": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요.",
+    "emotion_shown": "guarded"
+   },
+   "coach_tip": "아이의 생각을 물어봤어요. 이제 아이가 말할 수 있도록 3~5초 정도 기다려 줄까요?",
+   "diag": {
+    "student": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    },
+    "coach": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    }
+   }
+  }
+ },
+ {
+  "utc": "2026-11-22T11:09:26Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "어떻게 그렇게 생각했는지 말해 줄래?"
+    },
+    {
+     "speaker": "도윤",
+     "text": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요."
+    },
+    {
+     "speaker": "teacher",
+     "text": "좋아. 그럼 거기서 한 걸음 더 가 보면 어떨까?"
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [
+    {
+     "construct": "elicit_reasoning",
+     "fit": "advance",
+     "meter": "이해도 30%  |  이해도 +15  |  참여 +6  |  신뢰 +2  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요.",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "elicit",
+     "targets": true,
+     "turn": 1
+    }
+   ],
+   "runtime_state": {
+    "engagement": 0.46,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.52,
+    "turns_elapsed": 2,
+    "understanding": 0.3
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "도윤이는 마지막 남은 브라우니를 동생이 따지지 못하게 딱 반으로 자르는 애예요. 똑같이 나누는 건 이미 몸에 배어 있어요. 도윤이한테는 그게 분수예요.",
+     "name": "도윤",
+     "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "생각 끌어내기",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "extend",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 682,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "extend"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "process",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.1,
+    "trust": 0,
+    "engagement": 0.04,
+    "order": 0,
+    "composure": 0
+   },
+   "student_utterance": {
+    "speaker": "도윤",
+    "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+    "emotion_shown": "thinking"
+   },
+   "coach_tip": "아이의 생각을 더 깊게 파고들기 위해 '더 묻기'를 사용했네요. 이제 아이가 그 생각을 더 발전시킬 수 있도록 기다려 주는 건 어떨까요?",
+   "diag": {
+    "student": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    },
+    "coach": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    }
+   }
+  }
+ },
+ {
+  "utc": "2026-11-22T11:09:46Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "어떻게 그렇게 생각했는지 말해 줄래?"
+    },
+    {
+     "speaker": "도윤",
+     "text": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요."
+    },
+    {
+     "speaker": "teacher",
+     "text": "좋아. 그럼 거기서 한 걸음 더 가 보면 어떨까?"
+    },
+    {
+     "speaker": "도윤",
+     "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?"
+    },
+    {
+     "speaker": "teacher",
+     "text": "그러니까 네 말은…"
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [
+    {
+     "construct": "elicit_reasoning",
+     "fit": "advance",
+     "meter": "이해도 30%  |  이해도 +15  |  참여 +6  |  신뢰 +2  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요.",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "elicit",
+     "targets": true,
+     "turn": 1
+    },
+    {
+     "construct": "extend_thinking",
+     "fit": "advance",
+     "meter": "이해도 45%  |  이해도 +15  |  참여 +4  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "extend",
+     "targets": true,
+     "turn": 2
+    }
+   ],
+   "runtime_state": {
+    "engagement": 0.5,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.52,
+    "turns_elapsed": 3,
+    "understanding": 0.45
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "도윤이는 마지막 남은 브라우니를 동생이 따지지 못하게 딱 반으로 자르는 애예요. 똑같이 나누는 건 이미 몸에 배어 있어요. 도윤이한테는 그게 분수예요.",
+     "name": "도윤",
+     "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "생각 끌어내기",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "revoice",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 562,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "revoice"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "none",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.04,
+    "trust": 0.1,
+    "engagement": 0.05,
+    "order": 0,
+    "composure": 0
+   },
+   "student_utterance": {
+    "speaker": "도윤",
+    "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+    "emotion_shown": "thinking"
+   },
+   "coach_tip": "되말하기로 아이 생각이 모두에게 보이게 됐어요. 이제 아이가 스스로 답을 찾도록 3~5초 기다려 줘요.",
+   "diag": {
+    "student": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    },
+    "coach": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    }
+   }
+  }
+ },
+ {
+  "utc": "2026-11-22T11:10:06Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "도윤",
+     "text": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요."
+    },
+    {
+     "speaker": "teacher",
+     "text": "좋아. 그럼 거기서 한 걸음 더 가 보면 어떨까?"
+    },
+    {
+     "speaker": "도윤",
+     "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?"
+    },
+    {
+     "speaker": "teacher",
+     "text": "그러니까 네 말은…"
+    },
+    {
+     "speaker": "도윤",
+     "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?"
+    },
+    {
+     "speaker": "teacher",
+     "text": "어떻게 생각했는지 차근차근 말해 줬구나. 선생님은 그런 게 보고 싶었어."
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [
+    {
+     "construct": "elicit_reasoning",
+     "fit": "advance",
+     "meter": "이해도 30%  |  이해도 +15  |  참여 +6  |  신뢰 +2  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요.",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "elicit",
+     "targets": true,
+     "turn": 1
+    },
+    {
+     "construct": "extend_thinking",
+     "fit": "advance",
+     "meter": "이해도 45%  |  이해도 +15  |  참여 +4  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "extend",
+     "targets": true,
+     "turn": 2
+    },
+    {
+     "construct": "revoicing",
+     "fit": "advance",
+     "meter": "이해도 60%  |  이해도 +15  |  참여 +5  |  신뢰 +10  |  통하는 길: 진단하고 파고들기",
+     "note": "",
+     "path": "진단하고 파고들기",
+     "reaction": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+     "scaffold": 3,
+     "student": "도윤",
+     "tag": "revoice",
+     "targets": true,
+     "turn": 3
+    }
+   ],
+   "runtime_state": {
+    "engagement": 0.53,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.62,
+    "turns_elapsed": 4,
+    "understanding": 0.6
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "도윤이는 마지막 남은 브라우니를 동생이 따지지 못하게 딱 반으로 자르는 애예요. 똑같이 나누는 건 이미 몸에 배어 있어요. 도윤이한테는 그게 분수예요.",
+     "name": "도윤",
+     "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "생각 끌어내기",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "praise",
+    "raw_wait_time_ms": 19314,
+    "wait_time_ms": 19314
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 1049,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "praise"
+    ],
+    "targets_misconception": false,
+    "feedback_type": "self",
+    "wait_time_ok": true
+   },
+   "meter_deltas": {
+    "understanding": 0,
+    "trust": 0.08,
+    "engagement": 0.02,
+    "order": 0.05,
+    "composure": 0.02
+   },
+   "student_utterance": {
+    "speaker": "도윤",
+    "text": "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+    "emotion_shown": "thinking"
+   },
+   "coach_tip": "아이의 생각을 칭찬으로 마무리했네요. 이제 아이의 생각이 어떻게 더 발전할 수 있을지, '더 묻기'로 연결해 볼까요?",
+   "diag": {
+    "student": {
+     "source": "retry",
+     "attempts": 2,
+     "rule": "same_opening",
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null,
+     "rejected": [
+      "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?",
+      "음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요?"
+     ]
+    },
+    "coach": {
+     "source": "model",
+     "attempts": 1,
+     "rule": null,
+     "upstream_status": null,
+     "upstream_retries": 0,
+     "repaired": null
+    }
+   }
+  }
+ }
+]

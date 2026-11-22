@@ -132,3 +132,27 @@ Same allow-list. Both runs reported `NETWORK blocked=0`, with no retries by the 
 - 민호 moves on, though narrowly; every turn is about drawing.
 - 도윤 states "8이 4보다 크니까 8분의 1이 더 커요" on #1, #3 (after a revoice, allowed) and #4 (kept after one retry). #2 is a real move ("왜 8분의 1이 더 커요?").
 - The prompt rule alone does not stop 도윤 restating after a revoice or praise.
+
+
+## Re-check 4 after the parser fix (Worker c6641bae from main cb5c3f6; 2026-11-22, 8 calls, `CC_DIAG=1`, UTC)
+Same allow-list and the same check as re-check 3. Both runs reported `NETWORK blocked=0`, with no runner retries. The dry run first confirmed 4 `POST /turn` per sequence, all blocked. Full `diag` is in `korean-hosted/ko6_*_calls.json`.
+
+| call | time (UTC) | move | latency | student line (verbatim) | student diag | shown | coach tip (verbatim) | coach diag |
+|---|---|---|---|---|---|---|---|---|
+| 민호 #1 | 2026-11-22T11:07:21Z | elicit | 2171 ms | 음... 그림으로 보여줘도 돼요? | model / attempts 1 | yes | 아이에게 생각 묻기를 잘 했어요. 이제 3-5초 정도 기다려 주면서 아이가 스스로 답을 구성할 시간을 더 줘 보세요. | model / attempts 1 |
+| 민호 #2 | 2026-11-22T11:07:41Z | revoice | 1638 ms | 네, 그림으로 보여드릴게요. 좀만 기다려 주세요. | model / attempts 1 | yes | 되말하기로 아이 생각을 모두에게 보이게 했어요. 이제 아이가 더 설명할 수 있도록 3~5초 기다려 줘요. | model / attempts 1 |
+| 민호 #3 | 2026-11-22T11:08:01Z | extend | 707 ms | 아, 네. 그림으로요. 제가 좀 더 생각해 볼게요. | model / attempts 1 | yes | 아이의 생각을 더 깊이 탐색하기 위해 '더 묻기'를 사용했어요. 다음에는 아이가 스스로 답을 찾도록 조금 더 기다려 주는 건 어떨까요? | model / attempts 1 |
+| 민호 #4 | 2026-11-22T11:08:21Z | praise | 757 ms | 네, 그림으로 보여드릴게요. 좀만 기다려 주세요. | model / attempts 1 | yes | 아이의 생각을 칭찬으로만 마무리하면, 아이가 더 깊이 생각할 기회를 놓칠 수 있어요. 다음엔 아이의 말을 되짚어주거나 더 묻는 발문으로 이어가면 어떨까요? | model / attempts 1 |
+| 도윤 #1 | 2026-11-22T11:09:06Z | elicit | 823 ms | 8분의 1이 더 커요. 분모가 더 크면 분수도 더 큰 거잖아요. | model / attempts 1 | yes | 아이의 생각을 물어봤어요. 이제 아이가 말할 수 있도록 3~5초 정도 기다려 줄까요? | model / attempts 1 |
+| 도윤 #2 | 2026-11-22T11:09:26Z | extend | 682 ms | 음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요? | model / attempts 1 | yes | 아이의 생각을 더 깊게 파고들기 위해 '더 묻기'를 사용했네요. 이제 아이가 그 생각을 더 발전시킬 수 있도록 기다려 주는 건 어떨까요? | model / attempts 1 |
+| 도윤 #3 | 2026-11-22T11:09:46Z | revoice | 562 ms | 음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요? | model / attempts 1 | yes | 되말하기로 아이 생각이 모두에게 보이게 됐어요. 이제 아이가 스스로 답을 찾도록 3~5초 기다려 줘요. | model / attempts 1 |
+| 도윤 #4 | 2026-11-22T11:10:06Z | praise | 1049 ms | 음... 8분의 1이 더 커요. 분모가 더 크면 더 많은 조각으로 나눈 거니까 더 작아지는 거 아니에요? | retry / same_opening / attempts 2 | yes | 아이의 생각을 칭찬으로 마무리했네요. 이제 아이의 생각이 어떻게 더 발전할 수 있을지, '더 묻기'로 연결해 볼까요? | model / attempts 1 |
+
+**Pass.**
+- **Students: 8/8 from the model** (7 `model`, 1 `retry`). All were shown on screen exactly as sent, with no rule fallbacks and no upstream errors.
+- **Coach: 8/8 from the model**, all on the first try. There are no `parse_error`s (re-check 3 had 5/8), and no `repaired` marks from "..." anymore.
+
+**Quality notes. These do not block the pass.**
+- **도윤 repeats one line:** #2–#4 are the same line ("…더 작아지는 거 아니에요?"). #3 follows a revoice, where a restate is allowed. #4 was a soft `same_opening`; the retry came back identical and was kept as designed. The line itself moves on from #1, because 도윤 starts to doubt the misconception.
+- **민호 repeats too:** #4 repeats #2 ("네, 그림으로 보여드릴게요. 좀만 기다려 주세요."). The repeat check compares only with the previous line, so it does not catch this.
+- **Possible follow-up, prompt only (no new filter):** give the model the student's last two lines with "do not reuse any of these".
