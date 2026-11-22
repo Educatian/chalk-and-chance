@@ -1,0 +1,72 @@
+[   3.61s] expect Encounter 40
+[   5.61s] wait 2
+[   5.62s] eval: ["민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\" || 민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\""]
+[   5.62s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[   7.62s] wait 2
+[   7.62s] eval: ["민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\" || 민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\""]
+[   7.62s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[   7.63s] HOSTED call 1/2 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 883ms
+[   9.63s] wait 2
+[   9.64s] eval: []
+[   9.64s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  11.64s] wait 2
+[  11.64s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  11.64s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  13.66s] wait 2
+[  13.66s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  13.66s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  15.67s] wait 2
+[  15.67s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  15.67s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  17.68s] wait 2
+[  17.69s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  17.69s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  19.69s] wait 2
+[  19.69s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  19.69s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  21.69s] wait 2
+[  21.70s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  21.70s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  23.71s] wait 2
+[  23.71s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  23.71s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  23.82s] shot m0
+[  25.83s] wait 2
+[  25.84s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  25.84s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  27.57s] HOSTED call 2/2 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 828ms
+[  27.84s] wait 2
+[  27.85s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  27.85s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  29.85s] wait 2
+[  29.85s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  29.85s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  31.86s] wait 2
+[  31.86s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  31.86s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  33.87s] wait 2
+[  33.88s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  33.88s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  35.88s] wait 2
+[  35.89s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  35.89s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  37.90s] wait 2
+[  37.90s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  37.90s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  39.92s] wait 2
+[  39.92s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  39.92s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  41.93s] wait 2
+[  41.93s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  41.93s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  43.93s] wait 2
+[  43.94s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  43.94s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  44.00s] shot m1
+[  46.00s] wait 2
+[  46.00s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  46.00s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  48.01s] wait 2
+[  48.01s] eval: ["민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\" || 민호: \"아니 그게요… 그림으로 먼저 보여줘도 돼요?\""]
+[  48.01s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+NETWORK blocked=0 hosts=[]

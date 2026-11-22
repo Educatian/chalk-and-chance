@@ -15,7 +15,12 @@
 ## How "model" vs "fallback" is decided
 The Worker answers with a fixed line when the model call fails or is rejected: `CANNED_STUDENT_KO` / `COACH_TIPS_KO` in `cloudflare/locale.js`, `cannedStudent` / `coachTip` in `cloudflare/turn.js`. A reply that exactly equals one of those lines is marked *fallback*; anything else came from the model. The Worker log for each time below shows the same thing (an OpenRouter error or a rejected reply).
 
-## Calls (times are UTC, for the Worker logs)
+> **Correction (read this first).** The first table below checks the **Worker's responses only**. In those 8 runs the game screen showed the client's local stub lines, not those responses.
+> - **Cause:** the runner slept with `time.sleep`, so Playwright handed each request to the Worker only at the next step, about 18 s later, past the client's 12 s request timeout. The client then fell back to its stub. The `dialogue_tail` it sent on later calls therefore held stub lines.
+> - **Fix:** the runner now waits with `page.wait_for_timeout`.
+> - **In-game check:** the second table below (4 calls, approved as extra budget) checks that the line on screen equals the Worker's response for each call.
+
+## Calls, first set: Worker responses only, not an in-game check (times are UTC, for the Worker logs)
 | run | time (UTC) | locale sent | move | HTTP | student reply (verbatim) | student | coach tip (verbatim) | coach | latency |
 |---|---|---|---|---|---|---|---|---|---|
 | 민호 (diego_ell), ko #1 | 2026-11-22T09:57:24Z | `ko` | elicit | 200 | 선생님… 그림으로 먼저 보여줘도 돼요? | model | 학생의 생각을 물어보는 좋은 시작이에요! 다음에는 조금 더 기다려 주면 학생이 더 편안하게 답할 수 있을 거예요. | model | not measured (see note) |
@@ -31,6 +36,25 @@ The Worker answers with a fixed line when the model call fails or is rejected: `
 
 - **Latency (Korean runs):** not measured. The runner slept between steps with `time.sleep`, so Playwright handled each request only at the next step, and the recorded ~15–18 s is the step spacing, not the Worker.
 - **Latency (English control):** measured properly after the runner was fixed to wait with `page.wait_for_timeout`: 783 ms for a model reply, 211 ms for a fallback reply.
+
+## Calls, second set: in-game check (2026-11-22, 4 calls, UTC)
+- **Same setup:** the allow-list was only `/turn` (`CC_ALLOW_MAX=2` per run), and both runs reported `NETWORK blocked=0`. No `/telemetry_anon` or other request was attempted, and there were no retries.
+- **How the screen was checked:** the debug probe (`window.__cc_state`) was read every 2 s. A call passes only if, after it and before the next one, a visible line equals `<name>: "<the Worker's student_utterance.text>"` exactly. The polled lines are in `korean-hosted/ko2_*_screen_log.txt`.
+
+| run | time (UTC) | locale sent | move | latency | Worker student line (verbatim) | student | shown on screen, exact | coach tip (verbatim) | coach |
+|---|---|---|---|---|---|---|---|---|---|
+| 민호 (diego_ell), ko #1 | 2026-11-22T10:14:12Z | `ko` | elicit | 883 ms | 아니 그게요… 그림으로 먼저 보여줘도 돼요? | model | yes: `민호: "아니 그게요… 그림으로 먼저 보여줘도 돼요?"` | 학생의 생각을 묻는 좋은 시작이에요. 다음에는 조금 더 기다려 주면서 학생이 답을 생각해 볼 시간을 더 주는 건 어떨까요? | model |
+| 민호 (diego_ell), ko #2 | 2026-11-22T10:14:32Z | `ko` | revoice | 828 ms | 아니 그게요… 그림으로 먼저 보여줘도 돼요? | model | yes: `민호: "아니 그게요… 그림으로 먼저 보여줘도 돼요?"` | 되말하기로 아이 생각이 모두에게 보이게 됐어요. | fallback |
+| 도윤 (noah_g5_fractions), ko #1 | 2026-11-22T10:15:01Z | `ko` | elicit | 607 ms | 음… 8이 4보다 크니까 8분의 1이 더 큰 거 아니에요? | model | yes: `도윤: "음… 8이 4보다 크니까 8분의 1이 더 큰 거 아니에요?"` | 학생의 생각을 잘 이끌어냈어요. 다음엔 조금 더 기다려 줄까요? | model |
+| 도윤 (noah_g5_fractions), ko #2 | 2026-11-22T10:15:21Z | `ko` | extend | 901 ms | 8이 4보다 더 크니까 8분의 1이 더 큰 거 아니에요? | model | yes: `도윤: "8이 4보다 더 크니까 8분의 1이 더 큰 거 아니에요?"` | 잘 더 물었어요. 아이가 스스로 따져 보고 있어요. | fallback |
+
+**Result:** 4 of 4 Korean model replies appeared on screen exactly as the Worker sent them, in 607–901 ms. Korean in game is confirmed.
+
+**Repetition with real history.** On each second call the model had its own first reply in `dialogue_tail`, and it still repeated itself:
+- 민호 #2 is word for word the same as #1 ("아니 그게요… 그림으로 먼저 보여줘도 돼요?");
+- 도윤 #2 differs only by "더".
+
+So the repetition is real, not only an artifact of the first set. The teacher lines in the tail are also English glosses ("So what you're saying is...") in Korean mode. Both are addressed in the prompt-quality fixes.
 
 ## Verdict
 **Students: the Korean path works.**
