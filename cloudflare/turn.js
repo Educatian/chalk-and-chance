@@ -3,7 +3,7 @@
 // coach). OpenRouter key is a Worker secret (OPENROUTER_API_KEY); never reaches the client.
 import { RUBRIC, PERSONAS, STUDENT_PROMPT, COACH_PROMPT } from "./gamedata.js";
 import { isKorean, personaFor, studentRulesKo, coachRulesKo, LEAK_PATTERNS_KO, CANNED_STUDENT_KO,
-  COACH_TIPS_KO, heuristicClassifyKo } from "./locale.js";
+  COACH_TIPS_KO, heuristicClassifyKo, validateCoach } from "./locale.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MOVE_TAGS = ["elicit", "extend", "revoice", "tell", "praise", "redirect", "wait", "connect"];
@@ -266,11 +266,17 @@ async function makeCoach(req, persona, verdict, key, ko = false) {
     let sys = COACH_PROMPT;
     for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
     sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse the scenario context to coach the teacher's move, but do not reveal the content answer or final resolution.`;
-    if (ko) sys += "\n" + coachRulesKo();
-    const raw = await callOpenRouter([{ role: "system", content: sys },
-      { role: "user", content: "Give your one coaching note now. JSON only." }], key, "google/gemini-2.5-flash-lite", 0.4, 120);
-    const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
-    return tip || coachTip(verdict, ko);
+    if (ko) sys += "\n" + coachRulesKo(tag);
+    let messages = [{ role: "system", content: sys },
+      { role: "user", content: "Give your one coaching note now. JSON only." }];
+    for (const temp of [0.4, 0.2]) {      // one retry if the voice or the move name is off
+      const raw = await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 120);
+      const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
+      const [ok, why] = validateCoach(tip, ko, tag);
+      if (ok) return tip;
+      messages = [...messages, { role: "system", content: `That note was rejected: ${why}. One or two short sentences. JSON only.` }];
+    }
+    return coachTip(verdict, ko);
   } catch (_e) {
     return coachTip(verdict, ko);
   }

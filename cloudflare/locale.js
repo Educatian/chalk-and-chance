@@ -23,7 +23,27 @@ export function personaFor(id, persona, ko) {
 }
 
 export const studentRulesKo = (name) => STUDENT_KO_RULES.split("[[KO_NAME]]").join(name || "학생");
-export const coachRulesKo = () => COACH_KO_RULES;
+export const MOVE_NAMES_KO = {
+  elicit: "생각 묻기", extend: "더 묻기", revoice: "되말하기", tell: "설명하기",
+  praise: "칭찬하기", connect: "삶과 잇기", redirect: "주의 돌리기", wait: "기다려 주기",
+};
+export const coachRulesKo = (tag) => COACH_KO_RULES.split("[[MOVE_KO]]").join(MOVE_NAMES_KO[tag] || "가르치는 수");
+
+// Model-written coach tips must sound like the fixed ones and name the move actually made.
+export function validateCoach(tip, ko, tag) {
+  const t = String(tip || "").trim();
+  if (!t) return [false, "empty"];
+  if ((t.match(/[.!?](\s|$)/g) || []).length > 2 || t.length > (ko ? 140 : 240)) return [false, "longer than two short sentences"];
+  if (ko) {
+    if (/[A-Za-z]{3,}/.test(t)) return [false, "English words"];
+    if (t.includes("학생")) return [false, "say 아이, not 학생"];
+    if (/(주셨|하셨|드려요|드립니다|습니다)/.test(t)) return [false, "plain 해요체, no honorific endings"];
+    const own = MOVE_NAMES_KO[tag];
+    const others = Object.entries(MOVE_NAMES_KO).filter(([k]) => k !== tag).map(([, v]) => v);
+    if (own && !t.includes(own) && others.some((o) => t.includes(o))) return [false, "named a different move; this turn's move is " + own];
+  }
+  return [true, "ok"];
+}
 export const groupRulesKo = () => STUDENT_KO_RULES.split("Your name is [[KO_NAME]]. ").join("Use the speaker's name as given. ");
 export const lectureRulesKo = () =>
   "\n# LANGUAGE: KOREAN\n- Write the reaction text and coach_tip in natural Korean 해요체 (class reactions may be short descriptions in Korean). " +

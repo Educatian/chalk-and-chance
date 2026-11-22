@@ -132,7 +132,9 @@ export const STUDENT_KO_RULES = `
 `;
 export const COACH_KO_RULES = `
 # LANGUAGE: KOREAN (this player plays in Korean)
-- Write "coach_tip" in natural Korean 해요체, as 한 선생님 (an experienced teacher) talking to a student teacher: one short sentence, warm and direct.
+- Write "coach_tip" in natural Korean 해요체, as 한 선생님 (an experienced teacher) talking to a student teacher: one or two short sentences, warm and direct, the same voice as "되말하기로 아이 생각이 모두에게 보이게 됐어요." or "3~5초 기다려 줘요. 침묵은 아이가 채우게 둬요."
+- The teacher's move this turn was [[MOVE_KO]]. Name that move by this name; never call it by another move's name.
+- Call the student "아이", never "학생". Plain 해요체 (…했어요, …해 봐요), never honorific endings to the teacher such as 주셨어요, 하셨어요, 드려요.
 - Use the game's Korean names for the moves: elicit=생각 묻기, extend=더 묻기, revoice=되말하기, tell=설명하기, praise=칭찬하기, connect=삶과 잇기, redirect=주의 돌리기, wait=기다려 주기. Teacher-education terms in Korean (발문, 기다려 주기, 오개념, 형성 평가).
 - No translationese, no English words, no "당신". Do not reveal the content answer.
 `;
