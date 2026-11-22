@@ -7,6 +7,9 @@ usage: python -I tools/qa/web_run.py OUTDIR steps.json [WxH] [--expect-blocked]
 env:   CC_URL (page to open, must be local), CC_BOOT (seconds to wait after load)
        CC_ALLOW + CC_ALLOW_MAX: one exact URL that may be POSTed to, at most N times (bounded
        hosted check; calls recorded to OUTDIR/hosted_calls.json); all else non-local aborted
+       CC_LIVE_HOSTS: comma-separated hosts that are allowed (live-site check; CC_URL may then be
+       on one of them). Every request to them is recorded to OUTDIR/live_requests.json (utc,
+       method, url, status, bytes; telemetry POST bodies too). All other hosts stay aborted.
 steps: ["click",x,y] ["key","Enter"] ["hold","ArrowDown",ms] ["wait",s] ["shot",name]
        ["burst",name,count,interval_ms] ["eval","js"]
        ["press","Button text"]   press a visible button (debug web builds; English or shown text)
@@ -34,8 +37,10 @@ def main():
     out, steps = args[0], json.load(open(args[1], encoding="utf8"))
     w, h = (int(v) for v in (args[2] if len(args) > 2 else "1280x720").split("x"))
     url = os.environ.get("CC_URL", "")
-    if urlparse(url).hostname not in LOCAL:
-        raise SystemExit("CC_URL must be a local page (127.0.0.1/localhost): %r" % url)
+    live = {h.strip() for h in os.environ.get("CC_LIVE_HOSTS", "").split(",") if h.strip()}
+    if urlparse(url).hostname not in LOCAL | live:
+        raise SystemExit("CC_URL must be a local page (127.0.0.1/localhost) or on CC_LIVE_HOSTS: %r" % url)
+    live_log = []
     boot = float(os.environ.get("CC_BOOT", "14"))
     blocked = []
     t0 = time.time()
@@ -53,6 +58,21 @@ def main():
     def guard(route):
         req = route.request
         host = urlparse(req.url).hostname or ""
+        if host in live:
+            rec = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "method": req.method, "url": req.url}
+            if req.method == "POST" and "/telemetry" in req.url:
+                rec["body"] = json.loads(req.post_data or "{}")
+            try:
+                resp = route.fetch(timeout=90000)
+                rec["status"] = resp.status
+                rec["bytes"] = len(resp.body())
+                route.fulfill(response=resp)
+            except Exception as e:      # noqa: BLE001 - recorded, never retried
+                rec["error"] = str(e)[:300]
+                route.abort()
+            live_log.append(rec)
+            json.dump(live_log, open("%s/live_requests.json" % out, "w", encoding="utf8"), ensure_ascii=False, indent=1)
+            return
         if host in LOCAL or req.url.startswith(("data:", "blob:")):
             route.continue_()
             return
@@ -95,7 +115,7 @@ def main():
         pg.on("response", lambda r: log("HTTP %d %s" % (r.status, r.url)) if r.status >= 400 else None)
         pg.on("console", lambda m: log("console: " + m.text[:160]) if ("error" in m.text.lower() or "warn" in m.text.lower()) else None)
         pg.goto(url, wait_until="load", timeout=90000)
-        time.sleep(boot)
+        pg.wait_for_timeout(boot * 1000)   # not time.sleep: route handlers must keep running
         for st in steps:
             op = st[0]
             if op == "click":

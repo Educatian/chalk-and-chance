@@ -1,0 +1,106 @@
+[
+ {
+  "utc": "2026-11-22T11:18:52Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/?public_demo=1",
+  "status": 200,
+  "bytes": 5734
+ },
+ {
+  "utc": "2026-11-22T11:18:52Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.png",
+  "status": 200,
+  "bytes": 4293
+ },
+ {
+  "utc": "2026-11-22T11:18:52Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.js",
+  "status": 200,
+  "bytes": 279815
+ },
+ {
+  "utc": "2026-11-22T11:18:52Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.pck",
+  "status": 200,
+  "bytes": 13081732
+ },
+ {
+  "utc": "2026-11-22T11:18:52Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.wasm",
+  "status": 200,
+  "bytes": 39514754
+ },
+ {
+  "utc": "2026-11-22T11:19:22Z",
+  "method": "POST",
+  "url": "https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon",
+  "body": {
+   "anon_id": "a_1795346350_509200",
+   "events": [
+    {
+     "anon_id": "a_1795346350_509200",
+     "client": {
+      "lang": "en-US",
+      "locale": "en_US",
+      "platform": "Web",
+      "referrer": "",
+      "screen": "1280x720",
+      "tz": "America/Chicago",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "url": "https://educatian.github.io/chalk-and-chance-play/?public_demo=1"
+     },
+     "engine": "4.7.2-stable (official)",
+     "event": "session_start",
+     "session_id": "sess_1795346350_9200",
+     "t_ms": 517,
+     "unix": 1795346350.902
+    },
+    {
+     "anon_id": "a_1795346350_509200",
+     "echo": false,
+     "event": "input_key",
+     "key_label": "Enter",
+     "keycode": 4194309,
+     "physical_keycode": 4194309,
+     "pressed": true,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346350_9200",
+     "t_ms": 2700,
+     "unicode": 0,
+     "unix": 1795346353.086
+    },
+    {
+     "anon_id": "a_1795346350_509200",
+     "echo": false,
+     "event": "input_key",
+     "key_label": "Enter",
+     "keycode": 4194309,
+     "physical_keycode": 4194309,
+     "pressed": false,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346350_9200",
+     "t_ms": 2715,
+     "unicode": 0,
+     "unix": 1795346353.1
+    },
+    {
+     "anon_id": "a_1795346350_509200",
+     "disabled": false,
+     "event": "ui_button_pressed",
+     "path": "/root/Main/SceneStack/Login/@VBoxContainer@29/@Button@31",
+     "scene": "res://scenes/ui/Hub.tscn",
+     "session_id": "sess_1795346350_9200",
+     "t_ms": 2900,
+     "text": "Play",
+     "unix": 1795346353.285
+    }
+   ]
+  },
+  "status": 200,
+  "bytes": 12
+ }
+]
