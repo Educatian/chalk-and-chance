@@ -1,0 +1,27 @@
+[   9.61s] wait 3
+[   9.72s] shot title
+[  10.23s] key Enter
+[  12.84s] console: TypeError: Failed to fetch
+    at Object.create (http://127.0.0.1:8764/index.js:1:187617)
+    at _godot_js_fetch_create (http://127.0.0.1:8764/index.js:1:188630
+[  13.24s] wait 3
+[  13.31s] shot hub
+[  13.81s] key Enter
+[  15.81s] wait 2
+[  15.90s] shot briefing
+[  16.40s] key Enter
+[  16.41s] console: TypeError: Failed to fetch
+    at Object.create (http://127.0.0.1:8764/index.js:1:187617)
+    at _godot_js_fetch_create (http://127.0.0.1:8764/index.js:1:188630
+[  19.41s] wait 3
+[  19.46s] shot cinematic
+[  19.96s] key Escape
+[  19.99s] console: TypeError: Failed to fetch
+    at Object.create (http://127.0.0.1:8764/index.js:1:187617)
+    at _godot_js_fetch_create (http://127.0.0.1:8764/index.js:1:188630
+[  23.98s] wait 4
+[  24.04s] shot lecture
+NETWORK blocked=3 hosts=['chalk-and-chance-api.jewoong-moon.workers.dev']
+NETWORK blocked POST https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon
+NETWORK blocked POST https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon
+NETWORK blocked POST https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon

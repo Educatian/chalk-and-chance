@@ -85,9 +85,11 @@ def main():
 
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True, args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-        ctx = b.new_context(viewport={"width": w, "height": h})
+        # CC_LOCALE (e.g. ko-KR) sets the browser language, to check the game follows it.
+        ctx = b.new_context(viewport={"width": w, "height": h}, locale=os.environ.get("CC_LOCALE") or None)
         ctx.route("**/*", guard)
         pg = ctx.new_page()
+        pg.on("response", lambda r: log("HTTP %d %s" % (r.status, r.url)) if r.status >= 400 else None)
         pg.on("console", lambda m: log("console: " + m.text[:160]) if ("error" in m.text.lower() or "warn" in m.text.lower()) else None)
         pg.goto(url, wait_until="load", timeout=90000)
         time.sleep(boot)

@@ -1,0 +1,6 @@
+[   9.60s] wait 3
+[   9.72s] shot title
+[   9.75s] click 1155 35
+[  12.75s] wait 3
+[  12.81s] shot switched
+NETWORK blocked=0 hosts=[]
