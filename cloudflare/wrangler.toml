@@ -10,3 +10,19 @@ database_id = "9649ef4d-b263-4a97-987c-ac7391f4f243"
 
 # WORKER_SECRET (JWT signing key) is set as a secret, NOT here:
 #   wrangler secret put WORKER_SECRET
+
+# Worker version id in every server_log row (cloudflare/serverlog.js).
+[version_metadata]
+binding = "CF_VERSION_METADATA"
+
+# server_log archive to R2 (serverlog.js archiveServerLog). The bucket name below is the ONE
+# place it is set; tools/logs/export_logs.py reads it from here. The job does nothing until
+# the secret/var LOG_ARCHIVE is "on" (wrangler secret put LOG_ARCHIVE). Optional
+# LOG_KEEP_MONTHS (default 12): rows older than that are deleted from D1, but only once they
+# are in a verified archive.
+[[r2_buckets]]
+binding = "LOG_BUCKET"
+bucket_name = "chalk-and-chance-logs"
+
+[triggers]
+crons = ["17 3 1 * *"]   # 03:17 UTC on the 1st of each month

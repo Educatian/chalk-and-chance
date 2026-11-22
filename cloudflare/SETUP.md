@@ -68,3 +68,7 @@ cd cloudflare && wrangler deploy
 No secrets, D1 schema or bindings change. The web game must also be rebuilt from this branch so
 it sends `locale` (the Worker change is harmless without it; the client change is harmless
 without the Worker change).
+
+## Durable server logs
+
+Every API request also writes one `server_log` row (diag, status, latency, version; no secrets or typed text). Apply `migrations/0001_server_log.sql` once. The R2 archive and the off-Cloudflare export are described in `docs/ops/server-logging.md`.

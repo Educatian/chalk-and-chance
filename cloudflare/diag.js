@@ -52,9 +52,14 @@ export function includeRejected(req) {
   return h.get("x-cc-diag") === "1" && !h.get("authorization");
 }
 
+// The server log (serverlog.js) always keeps the rejected texts. They ride along under a
+// Symbol key, which JSON.stringify skips, so the response only carries them for a debug request.
+export const REJECTED = Symbol.for("cc.rejected");
+
 export function finishDiag(d, withTexts) {
   const out = { ...d };
   if (!withTexts || !out.rejected.length) delete out.rejected;
+  if (d.rejected.length) out[REJECTED] = d.rejected.slice();
   return out;
 }
 
