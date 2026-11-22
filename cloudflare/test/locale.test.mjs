@@ -171,7 +171,7 @@ test("a coach reply cut off at max_tokens: logged as truncated, parse failure lo
   let out;
   const logs = await withLogs(async () => { out = await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" }); });
   assert.ok(logs.some((l) => l.where === "openrouter" && l.reason.includes("truncated")));
-  assert.ok(logs.some((l) => l.where === "coach"));
+  assert.ok(logs.some((l) => l.where === "coach_rejected" && l.reason === "parse_error"));
   assert.equal(out.coach_tip, "좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요.");
 });
 

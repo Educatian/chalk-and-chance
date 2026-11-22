@@ -3,6 +3,7 @@
 // reaction and Coach Vee's pacing feedback.
 
 import { isKorean, lectureRulesKo } from "./locale.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag } from "./diag.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -61,7 +62,7 @@ async function callOpenRouter(messages, key) {
       response_format: { type: "json_object" },
     }),
   });
-  if (!r.ok) throw new Error(`openrouter ${r.status}`);
+  if (!r.ok) throw new UpstreamError(r.status);
   return (await r.json()).choices[0].message.content;
 }
 
@@ -169,13 +170,33 @@ export async function handleLectureTurn(req, env) {
   const tag = String((body.teacher_move || {}).menu_tag || "").trim();
   const fallback = cannedLecture(body, tag);
   const key = (env.OPENROUTER_API_KEY || "").trim();
+  const d = newDiag();
+  const texts = includeRejected(req);
+  const done = (out) => ({ session_id: body.session_id || "lecture", ...out, diag: { reaction: finishDiag(d, texts) } });
   if (!key || body.model_profile === "stub") {
-    return { session_id: body.session_id || "lecture", ...fallback };
+    Object.assign(d, { source: "fallback", rule: key ? "stub_profile" : "no_key" });
+    return done(fallback);
+  }
+  d.attempts = 1;
+  let raw = "";
+  try {
+    raw = await callWithUpstreamRetry(() => callOpenRouter(lectureMessages(body, tag), key), d);
+  } catch (e) {
+    Object.assign(d, { source: "fallback", rule: "upstream:" + (e && e.status ? e.status : "network") });
+    return done(fallback);
   }
   try {
-    const raw = await callOpenRouter(lectureMessages(body, tag), key);
-    return { session_id: body.session_id || "lecture", ...parseLecture(raw, fallback) };
+    const out = parseLecture(raw, fallback);
+    if (out === fallback) {   // the reaction gave the content answer away
+      Object.assign(d, { source: "fallback", rule: "leak:content_answer" });
+      d.rejected.push(String(raw).slice(0, 400));
+    } else if (d.upstream_retries) {
+      d.source = "retry";
+    }
+    return done(out);
   } catch (_e) {
-    return { session_id: body.session_id || "lecture", ...fallback };
+    Object.assign(d, { source: "fallback", rule: "parse_error" });
+    d.rejected.push(String(raw).slice(0, 400));
+    return done(fallback);
   }
 }

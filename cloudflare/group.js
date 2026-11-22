@@ -2,6 +2,7 @@
 // Deterministic monitoring judge + a collective LLM group utterance. OpenRouter key is a
 // Worker secret.
 import { isKorean, groupRulesKo } from "./locale.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag } from "./diag.js";
 import { GROUP_PROMPT } from "./gamedata.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -92,22 +93,36 @@ function cannedGroup(tag, speaker, body = {}) {
   return { speaker, text: c[tag] || "We're still working on it.", emotion_shown: "thinking" };
 }
 
-async function generateGroup(body, tag, speaker, key) {
-  if (!key || tag === "move_on") return cannedGroup(tag, speaker, body);
+async function generateGroup(body, tag, speaker, key, d = newDiag()) {
+  if (!key || tag === "move_on") {
+    Object.assign(d, { source: "fallback", rule: key ? "move_on_scripted" : "no_key" });
+    return cannedGroup(tag, speaker, body);
+  }
+  d.attempts = 1;
+  let raw = "";
   try {
-    const r = await fetch(OPENROUTER_URL, {
+    raw = await callWithUpstreamRetry(async () => { const r = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: "google/gemini-2.5-flash-lite", messages: groupMessages(body, tag, speaker),
         temperature: 0.7, max_tokens: 160, response_format: { type: "json_object" } }),
     });
-    if (!r.ok) throw new Error(`openrouter ${r.status}`);
-    const raw = (await r.json()).choices[0].message.content;
+    if (!r.ok) throw new UpstreamError(r.status);
+    return (await r.json()).choices[0].message.content; }, d);
+  } catch (e) {
+    Object.assign(d, { source: "fallback", rule: "upstream:" + (e && e.status ? e.status : "network") });
+    return cannedGroup(tag, speaker, body);
+  }
+  try {
     const o = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1));
+    if (d.upstream_retries) d.source = "retry";
+    if (!String(o.text || "").trim()) Object.assign(d, { source: "fallback", rule: "empty" });
     return { speaker: String(o.speaker || speaker).trim() || speaker,
       text: String(o.text || "").trim() || cannedGroup(tag, speaker).text,
       emotion_shown: String(o.emotion_shown || "thinking").trim() };
   } catch (_e) {
+    Object.assign(d, { source: "fallback", rule: "parse_error" });
+    d.rejected.push(String(raw).slice(0, 400));
     return cannedGroup(tag, speaker, body);
   }
 }
@@ -130,7 +145,9 @@ export async function handleGroupTurn(req, env) {
   const revealed = !!(body.group_state || {}).revealed;
   const verdict = groupJudge(tag, revealed);
   const speaker = groupSpeaker(body.members || [], tag);
-  const utter = await generateGroup(body, tag, speaker, (env.OPENROUTER_API_KEY || "").trim());
+  const d = newDiag();
+  const utter = await generateGroup(body, tag, speaker, (env.OPENROUTER_API_KEY || "").trim(), d);
   return { session_id: body.session_id || "grp", judge: verdict, group_utterance: utter,
-    coach_tip: groupCoach(tag, revealed) };
+    coach_tip: groupCoach(tag, revealed),
+    diag: { utterance: finishDiag(d, includeRejected(req)), coach: { source: "fallback", rule: "scripted" } } };
 }
