@@ -877,7 +877,7 @@ func _dispatch_move(tag: String, free_text: String) -> void:
 	_last_input_mode = "free_text" if is_free else "menu"
 	_last_free_text = free_text
 	# The transcript holds the real teacher talk: the typed line, or a gloss of the menu move.
-	_transcript.append({"speaker": "teacher", "text": (free_text if is_free else _move_gloss(tag))})
+	_transcript.append({"speaker": "teacher", "text": (free_text if is_free else tr(_move_gloss(tag)))})
 	var teacher_move: Dictionary = (
 		{"input_mode": "free_text", "text": free_text, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms} if is_free
 		else {"input_mode": "menu", "menu_tag": tag, "wait_time_ms": wait_ms, "raw_wait_time_ms": raw_wait_ms})

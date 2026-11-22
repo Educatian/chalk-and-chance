@@ -102,3 +102,21 @@ test("group and lecture prompts get the Korean rules only for ko", async () => {
     for (const p of prompts) assert.equal(p.includes("LANGUAGE: KOREAN"), ko);
   }
 });
+
+test("the dialogue tail reaches the student prompt in both languages", async () => {
+  const tail = [{ speaker: "teacher", text: "TEACHER-LINE-1" }, { speaker: "Noah", text: "STUDENT-LINE-1" }];
+  for (const locale of ["ko", "en"]) {
+    const calls = stubFetch({ student: ["A brand new answer about eighths."] });
+    await handleTurn(req(turnBody({ locale, dialogue_tail: tail })), { OPENROUTER_API_KEY: "test" });
+    const sys = calls.find((c) => !c.messages[0].content.includes("coach_tip") && !c.messages[0].content.includes("You label")).messages[0].content;
+    assert.ok(sys.includes("TEACHER-LINE-1") && sys.includes("STUDENT-LINE-1"), locale + ": tail in prompt");
+    assert.ok(sys.includes("MOVE ON"), locale + ": move-on rule in prompt");
+  }
+});
+
+test("a reply that repeats the student's previous line is rejected", async () => {
+  const prev = "아니 그게요… 그림으로 먼저 보여줘도 돼요?";
+  stubFetch({ student: ["아니 그게요… 그림으로 먼저 보여줘도 돼요?", "그럼… 8조각으로 자르면 한 조각이 더 작아지는 거예요?"] });
+  const out = await handleTurn(req(turnBody({ locale: "ko", dialogue_tail: [{ speaker: "민호", text: prev }, { speaker: "teacher", text: "그러니까 네 말은…" }] })), { OPENROUTER_API_KEY: "test" });
+  assert.equal(out.student_utterance.text, "그럼… 8조각으로 자르면 한 조각이 더 작아지는 거예요?");
+});

@@ -141,9 +141,34 @@ const LEAK_PATTERNS = [
   /\bsmaller (piece|share)s? .* (bigger|larger)\b/, /\b1\/4 is (bigger|larger)\b/,
   /\bmore pieces .* smaller\b/, /\byou'?re right\b/, /\bi was wrong\b/,
 ];
-function validateStudent(text, persona, resolved, grade, ko = false) {
+// The student's own previous line in the tail the client sent (the newest non-teacher line).
+export function lastStudentLine(req) {
+  const tail = Array.isArray(req.dialogue_tail) ? req.dialogue_tail : [];
+  for (let i = tail.length - 1; i >= 0; i--) {
+    const sp = String((tail[i] || {}).speaker || "").toLowerCase();
+    if (sp && sp !== "teacher") return String(tail[i].text || "");
+  }
+  return "";
+}
+const norm = (s) => String(s || "").toLowerCase().replace(/[\s.,!?…'"“”‘’~\-]/g, "");
+// Character-bigram overlap (Dice), 0..1: language-neutral, so it works for Korean too.
+export function similarity(a, b) {
+  a = norm(a); b = norm(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const grams = (s) => { const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const g = s.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const ga = grams(a), gb = grams(b);
+  let inter = 0;
+  for (const [g, n] of ga) inter += Math.min(n, gb.get(g) || 0);
+  return (2 * inter) / Math.max(1, (a.length - 1) + (b.length - 1));
+}
+
+function validateStudent(text, persona, resolved, grade, ko = false, prev = "") {
   const t = (text || "").trim();
   if (!t) return [false, "empty"];
+  // 0.80: catches verbatim (1.0), near-verbatim (0.90) and reordered restatements (0.81) seen in
+  // the hosted check; replies that moved on scored 0.24-0.51.
+  if (prev && similarity(t, prev) >= 0.80) return [false, "repeated your previous line; move on: a new detail, a changed stance, or an answer to what the teacher just did"];
   const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
   const sentences = (t.match(/[.!?]/g) || []).length;
   if (t.length > cap || sentences > 3) return [false, "too long for grade band"];
@@ -192,12 +217,13 @@ async function generateStudent(req, persona, verdict, key, ko = false) {
   const resolved = !!(req.runtime_state || {}).misconception_resolved;
   const grade = String(persona.grade_band || "");
   let messages = studentMessages(req, persona, verdict, ko);
+  const prev = lastStudentLine(req);
   for (const temp of [0.75, 0.4]) {
     let out;
     try {
       out = parseStudent(await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200));
     } catch (_e) { break; }
-    const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko);
+    const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko, prev);
     if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
     messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
   }
