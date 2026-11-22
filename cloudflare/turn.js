@@ -2,7 +2,7 @@
 // real Gemini students (judge-before-generate + frozen-persona anti-sycophancy + adaptive
 // coach). OpenRouter key is a Worker secret (OPENROUTER_API_KEY); never reaches the client.
 import { RUBRIC, PERSONAS, STUDENT_PROMPT, COACH_PROMPT } from "./gamedata.js";
-import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag, truncateAtSentence } from "./diag.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag, truncateAtSentence, parseFirstJson, sentenceMarks } from "./diag.js";
 import { isKorean, personaFor, studentRulesKo, coachRulesKo, LEAK_PATTERNS_KO, CONTENT_LEAK_PATTERNS_KO,
   CANNED_STUDENT_KO, COACH_TIPS_KO, heuristicClassifyKo, validateCoach } from "./locale.js";
 
@@ -106,7 +106,7 @@ async function classifyMove(text, key, ko = false) {
     const raw = await callOpenRouter(
       [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 500) }],
       key, "google/gemini-2.5-flash-lite", 0.0, 20);
-    const tag = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).tag || "").trim().toLowerCase();
+    const tag = String(parseFirstJson(raw).tag || "").trim().toLowerCase();
     return MOVE_TAGS.includes(tag) ? tag : fallback();
   } catch (e) {
     logFallback("classifier", e && e.message || e, { ko });
@@ -233,7 +233,7 @@ export function judgeStudentReply(text, persona, resolved, grade, ko = false, pr
   }
   const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
   let repaired = null;
-  if (t.length > cap || (t.match(/[.!?]/g) || []).length > 3) {
+  if (t.length > cap || sentenceMarks(t) > 3) {
     t = truncateAtSentence(t, cap, 3);
     repaired = "too_long";
   }
@@ -259,9 +259,7 @@ const SOFT_HINT = {
 };
 
 function parseStudent(raw) {
-  let s = raw.trim();
-  if (s.includes("{") && s.includes("}")) s = s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1);
-  const o = JSON.parse(s);
+  const o = parseFirstJson(raw);
   return { text: String(o.text || "").trim(), emotion_shown: String(o.emotion_shown || "thinking").trim() };
 }
 function scenarioStartingIdea(req) {
@@ -390,7 +388,7 @@ async function makeCoach(req, persona, verdict, key, ko = false, d = newDiag()) 
       }
       let tip;
       try {
-        tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
+        tip = String(parseFirstJson(raw).coach_tip || "").trim();
       } catch (_e) {
         d.rule = "parse_error";
         d.rejected.push(String(raw).slice(0, 400));

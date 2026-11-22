@@ -3,7 +3,7 @@
 // reaction and Coach Vee's pacing feedback.
 
 import { isKorean, lectureRulesKo } from "./locale.js";
-import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag } from "./diag.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag, parseFirstJson } from "./diag.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -148,9 +148,7 @@ function leaksLectureAnswer(text) {
 }
 
 function parseLecture(raw, fallback) {
-  let s = String(raw || "").trim();
-  if (s.includes("{") && s.includes("}")) s = s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1);
-  const o = JSON.parse(s);
+  const o = parseFirstJson(raw);
   const r = o.reaction || {};
   const text = String(r.text || fallback.reaction.text || "The class keeps working.").trim();
   if (leaksLectureAnswer(text)) return fallback;

@@ -2,7 +2,7 @@
 // Deterministic monitoring judge + a collective LLM group utterance. OpenRouter key is a
 // Worker secret.
 import { isKorean, groupRulesKo } from "./locale.js";
-import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag } from "./diag.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag, parseFirstJson } from "./diag.js";
 import { GROUP_PROMPT } from "./gamedata.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -114,7 +114,7 @@ async function generateGroup(body, tag, speaker, key, d = newDiag()) {
     return cannedGroup(tag, speaker, body);
   }
   try {
-    const o = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1));
+    const o = parseFirstJson(raw);
     if (d.upstream_retries) d.source = "retry";
     if (!String(o.text || "").trim()) Object.assign(d, { source: "fallback", rule: "empty" });
     return { speaker: String(o.speaker || speaker).trim() || speaker,

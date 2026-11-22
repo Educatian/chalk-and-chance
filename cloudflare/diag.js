@@ -60,7 +60,7 @@ export function finishDiag(d, withTexts) {
 
 // Cut a reply at a sentence boundary instead of rejecting it for length.
 export function truncateAtSentence(t, maxChars, maxSentences) {
-  const parts = String(t).match(/[^.!?…]+[.!?…]+["'”’]?\s*|[^.!?…]+$/g) || [String(t)];
+  const parts = String(t).match(/[.!?…]*[^.!?…]+[.!?…]+["'”’]?\s*|[.!?…]*[^.!?…]+$/g) || [String(t)];
   let out = "";
   let n = 0;
   for (const p of parts) {
@@ -75,3 +75,28 @@ export function truncateAtSentence(t, maxChars, maxSentences) {
   }
   return out;
 }
+
+// Parse the FIRST balanced JSON object in a model reply and ignore what follows it: models
+// sometimes append junk after valid JSON (e.g. `{"coach_tip":"…"}\n}`). String-aware, so a
+// brace inside a string value does not end the object. Throws if there is no complete object.
+export function parseFirstJson(raw) {
+  const s = String(raw || "");
+  const start = s.indexOf("{");
+  if (start < 0) throw new SyntaxError("no JSON object");
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) return JSON.parse(s.slice(start, i + 1));
+  }
+  throw new SyntaxError("unterminated JSON object");
+}
+
+// Sentence ends: a run of marks ("...", "?!") followed by a space or the end counts once; a
+// leading "…" ("…8분의 1이요") is not a sentence end.
+export const sentenceMarks = (t) => (String(t).match(/[.!?…]+(?=\s|$)/g) || []).length;

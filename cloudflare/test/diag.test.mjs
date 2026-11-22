@@ -108,3 +108,37 @@ test("/group_turn and /lecture_turn carry diag too", async () => {
   const n = await handleLectureTurn(req({ teacher_move: { menu_tag: "present" }, class_state: {}, scenario_context: {} }), {});
   assert.deepEqual([n.diag.reaction.source, n.diag.reaction.rule], ["fallback", "no_key"]);
 });
+
+// Re-check 3 (ae110882): real model outputs that were valid JSON followed by junk.
+import { parseFirstJson, sentenceMarks } from "../diag.js";
+const RC3_COACH = [
+  '{"coach_tip": "아이에게 생각 묻기를 잘 했어요. 이제 3-5초 정도 기다려 주면서 아이가 스스로 답을 찾도록 기회를 더 줘 봐요."}\n}',
+  '{"coach_tip": "되말하기로 아이 생각이 모두에게 보이게 됐어요. 이제 아이가 스스로 답을 찾도록 3~5초 기다려 줘요."}\n요."}\n."}\n줘 봐요."}\n}',
+  '{"coach_tip": "아이에게 그림으로 먼저 보여주겠다고 말할 기회를 주었으니, 이제 그 아이의 생각을 더 깊게 파고들어 볼까요?"}\n까요? 다음엔 3초 정도 기다려 주면 아이가 더 편안하게 말할 수 있을 거예요."}',
+];
+const RC3_STUDENT = '{"text": "음... 8분의 1이랑 4분의 1이랑... 8이 4보다 크니까 8분의 1이 더 큰 거 아니에요?", "emotion_shown": "thinking"}\n" : "thinking"}';
+
+test("parseFirstJson: first balanced object, junk after it ignored, braces in strings ok", () => {
+  for (const raw of RC3_COACH) assert.ok(parseFirstJson(raw).coach_tip.length > 20);
+  assert.equal(parseFirstJson(RC3_STUDENT).emotion_shown, "thinking");
+  assert.equal(parseFirstJson('앞말 {"text":"a } b \\" {","x":{"y":1}} 뒷말 }').text, 'a } b " {');
+  assert.throws(() => parseFirstJson('{"text": "음… 8분의'));
+  assert.throws(() => parseFirstJson("no json"));
+});
+
+test("re-check 3 coach outputs are now used as the model's tip", async () => {
+  for (const raw of RC3_COACH) {
+    stub([say("음… 8분의 1이 더 커요.")], raw);
+    const out = await handleTurn(req(turn({ active_persona_id: "diego_ell" })), KEY);
+    assert.equal(out.diag.coach.source, "model", raw);
+    assert.equal(out.coach_tip, parseFirstJson(raw).coach_tip);
+  }
+});
+
+test("an ellipsis is one sentence mark: short lines are not 'repaired'", async () => {
+  assert.equal(sentenceMarks("음... 8분의 1이랑 4분의 1이랑... 8이 더 커요?"), 3);
+  stub([RC3_STUDENT]);
+  const out = await handleTurn(req(turn()), KEY);
+  assert.deepEqual([out.diag.student.source, out.diag.student.repaired], ["model", null]);
+  assert.equal(out.student_utterance.text, parseFirstJson(RC3_STUDENT).text);
+});
