@@ -109,7 +109,6 @@ func _on_move(tag: String) -> void:
 		_local_fallback(tag)
 		return
 	var payload := {
-		"session_id": "grp",
 		"members": members,
 		"shared_concept": shared_concept,
 		"collective_status": collective_status,
@@ -121,8 +120,8 @@ func _on_move(tag: String) -> void:
 		"locale": LLMClient.locale(),
 	}
 	var ep := LLMClient.endpoint.replace("/turn", "/group_turn")
-	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
-		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, LLMClient.request_headers(),
+		HTTPClient.METHOD_POST, JSON.stringify(LLMClient.stamp_ids(payload)))
 	if err != OK:
 		_busy = false
 		_pending_move_tag = ""

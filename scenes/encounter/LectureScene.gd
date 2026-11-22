@@ -796,7 +796,6 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 	_lecture_history.append({"speaker": "Teacher", "text": _lecture_move_gloss(tag, input_mode, free_text)})
 	var active: Dictionary = _scenario_context.get("active_student", {})
 	var payload := {
-		"session_id": "lecture",
 		"scenario_id": str(Game.current_scenario_id),
 		"scenario_context": _scenario_context,
 		"selected_student": active,
@@ -816,8 +815,8 @@ func _request_lecture_turn(tag: String, wait_ms: int, wait_ok: bool, input_mode:
 	}
 	_last_turn_payload = payload
 	var ep := LLMClient.endpoint.replace("/turn", "/lecture_turn")
-	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),
-		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, LLMClient.request_headers(),
+		HTTPClient.METHOD_POST, JSON.stringify(LLMClient.stamp_ids(payload)))
 	if err != OK:
 		return
 	_llm_busy = true

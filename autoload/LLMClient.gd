@@ -50,14 +50,32 @@ func _read_api_base() -> String:
 static func locale() -> String:
 	return "ko" if str(GameState.get_setting("language", "en")) == "ko" else "en"
 
+## Ids on every /turn, /group_turn and /lecture_turn so the Worker's server_log rows join to
+## telemetry: the telemetry session_id, plus the anon_id for demo play. A signed-in learner
+## sends the JWT instead (the Worker logs the verified user_id), never an anon_id.
+static func stamp_ids(payload: Dictionary) -> Dictionary:
+	payload["session_id"] = Telemetry.session_id
+	if Auth.signed_in():
+		payload.erase("anon_id")
+	else:
+		payload["anon_id"] = Telemetry.anon_id
+	return payload
+
+static func request_headers() -> PackedStringArray:
+	var h := PackedStringArray(["Content-Type: application/json"])
+	if Auth.signed_in():
+		h.append("Authorization: Bearer " + Auth.token)
+	return h
+
 ## payload follows the request shape in GAME_CONCEPT.md 7.6
 func send_move(payload: Dictionary) -> void:
 	payload["locale"] = locale()
+	stamp_ids(payload)
 	_last_payload = payload
 	if use_stub or not NetGuard.allowed(endpoint):
 		call_deferred("_emit_stub", payload)
 		return
-	var headers := PackedStringArray(["Content-Type: application/json"])
+	var headers := request_headers()
 	var body := JSON.stringify(payload)
 	var err := _http.request(endpoint, headers, HTTPClient.METHOD_POST, body)
 	if err != OK:

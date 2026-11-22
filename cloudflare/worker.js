@@ -14,7 +14,7 @@ import { handleTurn } from "./turn.js";
 import { handleTts } from "./tts.js";
 import { handleGroupTurn } from "./group.js";
 import { handleLectureTurn } from "./lecture.js";
-import { peekBody, buildRow, writeServerLog, archiveServerLog } from "./serverlog.js";
+import { peekBody, buildRow, writeServerLog, archiveServerLog, archiveDryRun, archiveOnDemand } from "./serverlog.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -77,11 +77,19 @@ const clientIp = (req) => req.headers.get("CF-Connecting-IP") || "anon";
 // Per-IP rate limit on the paid endpoints (OpenRouter + ElevenLabs cost guard).
 // Checks a per-minute burst cap and a per-hour sustained cap in D1. Returns false when
 // over limit; the game degrades gracefully (LLM->stub, TTS->silent) on the 429.
+// The key holds a keyed hash of the IP (HMAC-SHA256 with WORKER_SECRET, 16 base64url chars),
+// never the IP itself: the same IP always maps to the same counter.
+async function ipKey(env, ip) {
+  const secret = String(env.WORKER_SECRET || "").trim() || "rate-limit-no-secret";
+  const sig = await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(String(ip)));
+  return b64url(sig).slice(0, 16);
+}
 async function rateLimit(env, ip, bucket) {
   const windows = [[40, 60], [300, 3600]];   // [limit, seconds]
   const now = Math.floor(Date.now() / 1000);
+  const who = await ipKey(env, ip);
   for (const [limit, win] of windows) {
-    const k = `${bucket}:${ip}:${win}:${Math.floor(now / win)}`;
+    const k = `${bucket}:${who}:${win}:${Math.floor(now / win)}`;
     const row = await env.DB.prepare(
       "INSERT INTO rate_limits(k,n,exp) VALUES(?,1,?) ON CONFLICT(k) DO UPDATE SET n=n+1 RETURNING n")
       .bind(k, now + win).first();
@@ -285,7 +293,25 @@ async function route(req, env, url, info) {
   if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
   if (url.pathname === "/competency" && req.method === "GET") return await competencyRead(req, env);
   if (url.pathname === "/class_dashboard" && req.method === "GET") return await classDashboard(req, env);
+  if (url.pathname === "/admin/archive" && req.method === "POST" && String(env.ADMIN_TOKEN || "").trim()) {
+    if (!(await rateLimit(env, clientIp(req), "admin"))) return limited(info);
+    return await adminArchive(req, env);
+  }
   return json({ error: "not found" }, 404);
+}
+
+// Run the server_log archive on demand, for verification (owner only). Exists only when the
+// ADMIN_TOKEN secret is set; the caller sends it as X-Admin-Token.
+//   {"mode":"dry"} (default): report what a run would write; writes nothing anywhere.
+//   {"mode":"run"}: archive + read-back verify now (no-op unless LOG_ARCHIVE is on), and never
+//   prune: an on-demand run reports would_prune_rows but deletes nothing.
+async function adminArchive(req, env) {
+  const digest = async (t) => new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(String(t))));
+  const [a, b] = await Promise.all([digest(req.headers.get("X-Admin-Token") || ""), digest(String(env.ADMIN_TOKEN).trim())]);
+  if (a.some((x, i) => x !== b[i])) return json({ error: "forbidden" }, 403);
+  let body = {};
+  try { body = await req.json(); } catch (_e) { /* empty body = dry run */ }
+  return json(body && body.mode === "run" ? await archiveOnDemand(env) : await archiveDryRun(env));
 }
 const limited = (info) => { info.note = "rate_limited"; return json({ error: "rate_limited" }, 429); };
 

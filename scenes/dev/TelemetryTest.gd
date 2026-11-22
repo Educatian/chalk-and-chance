@@ -151,6 +151,23 @@ func _verify_file() -> void:
 		_expect_eq(item_event.get("item_id", ""), "noticing_lens", "item id")
 
 	print("TELEMETRY path=%s lines=%d events=%s" % [Telemetry._path, line_count, str(events.keys())])
+	_verify_llm_ids()
+
+## /turn, /group_turn, /lecture_turn carry the telemetry ids (server_log joins to telemetry).
+func _verify_llm_ids() -> void:
+	var saved_token := Auth.token
+	Auth.token = ""
+	var p := LLMClient.stamp_ids({"session_id": "m1"})
+	_expect_eq(p.get("session_id"), Telemetry.session_id, "llm session_id is the telemetry session")
+	_expect_eq(p.get("anon_id"), Telemetry.anon_id, "llm anon_id for demo play")
+	_expect_eq(Array(LLMClient.request_headers()), ["Content-Type: application/json"], "demo: no auth header")
+	Auth.token = "test.jwt.token"
+	p = LLMClient.stamp_ids({"anon_id": "x"})
+	_expect_eq(p.has("anon_id"), false, "signed-in: no anon_id")
+	_expect_eq(Array(LLMClient.request_headers()).has("Authorization: Bearer test.jwt.token"), true, "signed-in: JWT header")
+	Auth.token = saved_token
+	if Telemetry.session_id == "" or Telemetry.anon_id == "":
+		_fail("telemetry ids are empty")
 
 func _expect_eq(actual, expected, label: String) -> void:
 	if actual != expected:

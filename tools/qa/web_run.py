@@ -43,6 +43,7 @@ def main():
     live_log = []
     boot = float(os.environ.get("CC_BOOT", "14"))
     blocked = []
+    blocked_bodies = []
     t0 = time.time()
 
     def log(s):
@@ -104,6 +105,10 @@ def main():
             json.dump(calls, open("%s/hosted_calls.json" % out, "w", encoding="utf8"), ensure_ascii=False, indent=1)
             return
         blocked.append((req.method, req.url))
+        # What a blocked request would have sent (local file only; lets a check assert payloads
+        # such as the ids on /turn without any request leaving the machine).
+        blocked_bodies.append({"method": req.method, "url": req.url, "body": (req.post_data or "")[:8000]})
+        json.dump(blocked_bodies, open("%s/blocked.json" % out, "w", encoding="utf8"), ensure_ascii=False, indent=1)
         route.abort()
 
     with sync_playwright() as p:

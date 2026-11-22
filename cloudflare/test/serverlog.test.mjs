@@ -152,6 +152,7 @@ function fakeR2({ corrupt = false } = {}) {
       store.set(k, buf);
     },
     get: async (k) => (store.has(k) ? obj(store.get(k)) : null),
+    delete: async (k) => { store.delete(k); },
   };
 }
 function seedLog(db, rows) {
@@ -194,4 +195,88 @@ test("archive: a failed verification moves no cursor and prunes nothing", async 
   await assert.rejects(archiveServerLog({ DB: d1(db), LOG_BUCKET: bucket, LOG_ARCHIVE: "on" }, new Date("2027-03-01T00:00:00Z")));
   assert.equal(bucket.store.has("server_log/manifest.json"), false);
   assert.equal(db.prepare("SELECT COUNT(*) n FROM server_log").get().n, 2);
+});
+
+
+// --- follow-ups: ids on the LLM routes, hashed rate-limit keys, on-demand archive ---------
+test("LLM routes: anon_id and the real session_id are logged; a signed-in learner's JWT gives user_id", async () => {
+  const db = freshDb();
+  const env = { ...SECRETS, DB: d1(db) };
+  stubModel([say("음… 8분의 1이 더 커요.")]);
+  await call(env, "/turn", { body: turnBody({ session_id: "sess_1795346350_9200", anon_id: "A_1795346350_509200" }) });
+  const login = JSON.parse((await call(env, "/auth/login", { body: { class_code: "T-CLASS", name: "Lee", password: "pw-123456" } })).text);
+  stubModel([say("음… 왜요?")]);
+  await call(env, "/turn", { body: turnBody({ session_id: "sess_2" }), headers: { Authorization: "Bearer " + login.token } });
+  const rows = db.prepare("SELECT route, anon_id, session_id, user_id FROM server_log WHERE route='/turn' ORDER BY id").all();
+  assert.deepEqual(rows.map((r) => ({ ...r })), [
+    { route: "/turn", anon_id: "a_1795346350_509200", session_id: "sess_1795346350_9200", user_id: null },
+    { route: "/turn", anon_id: null, session_id: "sess_2", user_id: login.user_id },
+  ]);
+});
+
+test("rate_limits: keyed hash of the IP, same IP -> same key, no raw IP stored, same limits", async () => {
+  const db = freshDb();
+  const env = { ...SECRETS, DB: d1(db) };     // /voice_token with no passcode answers 403 cheaply
+  const hit = (ip) => call(env, "/voice_token", { body: {}, headers: { "CF-Connecting-IP": ip } });
+  for (let i = 0; i < 40; i++) assert.equal((await hit("198.51.100.23")).res.status, 403);
+  assert.equal((await hit("198.51.100.23")).res.status, 429);           // 41st in the minute
+  assert.equal((await hit("198.51.100.99")).res.status, 403);           // another IP has its own counter
+  const keys = db.prepare("SELECT k, n FROM rate_limits ORDER BY k").all();
+  assert.ok(!JSON.stringify(keys).includes("198.51.100"), "raw IP in rate_limits");
+  const minute = keys.filter((r) => r.k.split(":")[2] === "60");
+  assert.deepEqual(minute.map((r) => r.n).sort((a, b) => a - b), [1, 41]);   // one stable key per IP
+  assert.match(minute[0].k, /^voice_token:[A-Za-z0-9_-]{16}:60:\d+$/);
+  const other = await call({ ...env, WORKER_SECRET: "another-secret-000000" }, "/voice_token",
+    { body: {}, headers: { "CF-Connecting-IP": "198.51.100.23" } });
+  assert.equal(other.res.status, 403);                                    // key depends on the secret
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM rate_limits WHERE k LIKE 'voice_token:%:60:%'").get().n, 3);
+});
+
+test("/admin/archive: hidden without ADMIN_TOKEN, 403 on a wrong token, dry run writes nothing", async () => {
+  const db = freshDb();
+  const t1 = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+  seedLog(db, [[t1, 1], [new Date(Date.now() - 47 * 3600 * 1000).toISOString(), 2]]);
+  const bucket = fakeR2();
+  const base = { ...SECRETS, DB: d1(db), LOG_BUCKET: bucket };
+  assert.equal((await call(base, "/admin/archive", { body: { mode: "dry" }, headers: { "X-Admin-Token": "x" } })).res.status, 404);
+  const env = { ...base, ADMIN_TOKEN: "admin-token-abcdef123456" };
+  assert.equal((await call(env, "/admin/archive", { body: {}, headers: { "X-Admin-Token": "wrong" } })).res.status, 403);
+  const before = db.prepare("SELECT COUNT(*) n FROM server_log WHERE route='/turn'").get().n;
+  const dry = await call(env, "/admin/archive", { body: { mode: "dry" }, headers: { "X-Admin-Token": env.ADMIN_TOKEN } });
+  const out = JSON.parse(dry.text);
+  assert.equal(dry.res.status, 200);
+  assert.deepEqual([out.dry_run, out.archive_enabled, out.cursor, out.would_prune_rows], [true, false, 0, 0]);
+  assert.deepEqual(out.would_write.map((w) => [w.key, w.rows]), [[`server_log/${t1.slice(0, 7)}/1-2.ndjson.gz`, 2]]);
+  assert.equal(bucket.store.size, 0);                                        // nothing written to R2
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM server_log WHERE route='/turn'").get().n, before);
+  const off = JSON.parse((await call(env, "/admin/archive", { body: { mode: "run" }, headers: { "X-Admin-Token": env.ADMIN_TOKEN } })).text);
+  assert.deepEqual(off, { skipped: "off" });                                 // the real job still obeys LOG_ARCHIVE
+  assert.ok(!JSON.stringify(db.prepare("SELECT * FROM server_log").all()).includes(env.ADMIN_TOKEN));
+});
+
+test("/admin/archive run: object + manifest in R2, read-back verified, cursor moves, nothing pruned", async () => {
+  const db = freshDb();
+  const now = new Date();
+  const ago = (h) => new Date(now.getTime() - h * 3600 * 1000).toISOString();
+  // one row older than the 12-month keep window: an on-demand run must still prune nothing
+  seedLog(db, [[new Date(now.getTime() - 400 * 86400 * 1000).toISOString(), 1], [ago(30), 2], [ago(5), 3]]);
+  const bucket = fakeR2();
+  const env = { ...SECRETS, DB: d1(db), LOG_BUCKET: bucket, LOG_ARCHIVE: "on", ADMIN_TOKEN: "admin-token-abcdef123456" };
+  const out = JSON.parse((await call(env, "/admin/archive", { body: { mode: "run" }, headers: { "X-Admin-Token": env.ADMIN_TOKEN } })).text);
+  assert.equal(out.pass, true, JSON.stringify(out.checks));
+  assert.deepEqual([out.cursor_before, out.cursor, out.archived_rows, out.pruned, out.would_prune_rows], [0, 3, 3, 0, 1]);
+  assert.ok(bucket.store.has(out.objects[0].key) && bucket.store.has("server_log/manifest.json"));
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM server_log WHERE id <= 3").get().n, 3);      // D1 untouched
+  const again = JSON.parse((await call(env, "/admin/archive", { body: { mode: "run" }, headers: { "X-Admin-Token": env.ADMIN_TOKEN } })).text);
+  assert.equal(again.checks.manifest_cursor_moved, false);   // the first run's own log rows are < 1 h old: nothing eligible
+  assert.equal(again.pass, false);
+});
+
+test("archive never moves the cursor past a skipped row (lower id, newer ts)", async () => {
+  const db = freshDb();
+  const now = new Date("2027-03-01T03:17:00Z");
+  // id 2 is fresh (< 1 h old) although id 3 is old: a slow request inserted later
+  seedLog(db, [["2027-02-01T00:00:00.000Z", 1], ["2027-03-01T03:00:00.000Z", 2], ["2027-02-01T00:00:01.000Z", 3]]);
+  const out = await archiveServerLog({ DB: d1(db), LOG_BUCKET: fakeR2(), LOG_ARCHIVE: "on" }, now);
+  assert.equal(out.cursor, 1);                              // stops before id 2; ids 2 and 3 go next time
 });

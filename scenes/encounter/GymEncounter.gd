@@ -649,7 +649,6 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 		_log_gym_turn(tag, input_mode, free_text, wait_ms, wait_ok, targets, student, {}, "")
 		return
 	var payload := {
-		"session_id": "gym",
 		"scenario_id": str(Game.current_scenario_id),
 		"scenario_context": _gym_scenario_context(student),
 		"target_behavior": str(student.get("target_label", "")),
@@ -671,8 +670,8 @@ func _request_llm_turn(tag: String, wait_ms: int, wait_ok: bool, targets: bool, 
 	_last_targets = targets
 	_last_wait_ok = wait_ok
 	_last_student = student
-	var err := ERR_UNAVAILABLE if not NetGuard.allowed(LLMClient.endpoint) else _http.request(LLMClient.endpoint, PackedStringArray(["Content-Type: application/json"]),
-		HTTPClient.METHOD_POST, JSON.stringify(payload))
+	var err := ERR_UNAVAILABLE if not NetGuard.allowed(LLMClient.endpoint) else _http.request(LLMClient.endpoint, LLMClient.request_headers(),
+		HTTPClient.METHOD_POST, JSON.stringify(LLMClient.stamp_ids(payload)))
 	if err != OK:
 		return
 	_llm_busy = true
