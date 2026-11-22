@@ -1,0 +1,160 @@
+[   3.75s] expect Encounter 40
+[   5.75s] wait 2
+[   5.75s] eval: ["도윤: \"8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[   5.75s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[   7.77s] wait 2
+[   7.77s] eval: ["도윤: \"8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[   7.77s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[   7.97s] HOSTED call 1/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 913ms
+[   9.78s] wait 2
+[   9.78s] eval: []
+[   9.78s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  11.79s] wait 2
+[  11.79s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  11.79s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  13.80s] wait 2
+[  13.81s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  13.81s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  15.81s] wait 2
+[  15.81s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  15.81s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  17.82s] wait 2
+[  17.82s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  17.82s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  19.82s] wait 2
+[  19.82s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  19.82s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  21.83s] wait 2
+[  21.83s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  21.83s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  23.83s] wait 2
+[  23.83s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  23.83s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  23.95s] shot m0
+[  25.96s] wait 2
+[  25.97s] eval: ["도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\" || 도윤: \"8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.\""]
+[  25.97s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  27.69s] HOSTED call 2/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 634ms
+[  27.97s] wait 2
+[  27.97s] eval: []
+[  27.97s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  29.99s] wait 2
+[  29.99s] eval: []
+[  29.99s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  31.99s] wait 2
+[  32.00s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  32.00s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  34.00s] wait 2
+[  34.01s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  34.01s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  36.02s] wait 2
+[  36.02s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  36.02s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  38.04s] wait 2
+[  38.04s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  38.04s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  40.04s] wait 2
+[  40.04s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  40.04s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  42.06s] wait 2
+[  42.06s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  42.06s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  44.07s] wait 2
+[  44.07s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  44.07s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  44.13s] shot m1
+[  46.14s] wait 2
+[  46.14s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  46.14s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  48.05s] HOSTED call 3/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 994ms
+[  48.15s] wait 2
+[  48.16s] eval: ["도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\" || 도윤: \"더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?\""]
+[  48.16s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  50.17s] wait 2
+[  50.17s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  50.17s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  52.19s] wait 2
+[  52.19s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  52.19s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  54.20s] wait 2
+[  54.20s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  54.20s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  56.21s] wait 2
+[  56.22s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  56.22s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  58.23s] wait 2
+[  58.23s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  58.23s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  60.24s] wait 2
+[  60.24s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  60.24s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  62.24s] wait 2
+[  62.25s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  62.25s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  64.25s] wait 2
+[  64.26s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  64.26s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  64.32s] shot m2
+[  66.32s] wait 2
+[  66.33s] eval: ["도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\" || 도윤: \"제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.\""]
+[  66.33s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  67.69s] HOSTED call 4/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 632ms
+[  68.34s] wait 2
+[  68.34s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  68.34s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  70.34s] wait 2
+[  70.35s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  70.35s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  72.35s] wait 2
+[  72.35s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  72.35s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  74.37s] wait 2
+[  74.37s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  74.37s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  76.38s] wait 2
+[  76.38s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  76.38s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  78.39s] wait 2
+[  78.39s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  78.39s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  80.41s] wait 2
+[  80.41s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  80.41s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  82.41s] wait 2
+[  82.41s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  82.41s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  84.43s] wait 2
+[  84.43s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  84.43s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  84.50s] shot m3
+[  86.51s] wait 2
+[  86.51s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  86.51s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  88.51s] wait 2
+[  88.52s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  88.52s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  90.52s] wait 2
+[  90.52s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  90.52s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  92.54s] wait 2
+[  92.54s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  92.54s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  94.55s] wait 2
+[  94.55s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  94.55s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  96.56s] wait 2
+[  96.56s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  96.56s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  98.56s] wait 2
+[  98.57s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[  98.57s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 100.57s] wait 2
+[ 100.57s] eval: ["도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\" || 도윤: \"근데 8분의 1이 더 얇아 보이긴 해요.\""]
+[ 100.57s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 102.58s] wait 2
+[ 102.58s] eval: []
+[ 102.58s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 104.59s] wait 2
+[ 104.59s] eval: []
+[ 104.59s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+NETWORK blocked=0 hosts=[]
