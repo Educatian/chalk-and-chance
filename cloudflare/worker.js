@@ -14,6 +14,7 @@ import { handleTurn } from "./turn.js";
 import { handleTts } from "./tts.js";
 import { handleGroupTurn } from "./group.js";
 import { handleLectureTurn } from "./lecture.js";
+import { peekBody, buildRow, writeServerLog, archiveServerLog } from "./serverlog.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -226,43 +227,67 @@ function connCtx(req) {
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+    const t0 = Date.now();
     const url = new URL(req.url);
+    const info = {};
+    const peek = peekBody(req, url.pathname);   // clone taken now, before a handler reads the body
+    let res;
     try {
-      if (url.pathname === "/turn" && req.method === "POST") {
-        if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
-        return json(await handleTurn(req, env));
-      }
-      if (url.pathname === "/tts" && req.method === "POST") {
-        if (!(await rateLimit(env, clientIp(req), "tts"))) return new Response(null, { status: 429, headers: CORS });
-        return await handleTts(req, env);
-      }
-      if (url.pathname === "/voice_token" && req.method === "POST") {
-        if (!(await rateLimit(env, clientIp(req), "voice_token"))) return json({ error: "rate_limited" }, 429);
-        return await voiceToken(req, env);
-      }
-      if (url.pathname === "/group_turn" && req.method === "POST") {
-        if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
-        return json(await handleGroupTurn(req, env));
-      }
-      if (url.pathname === "/lecture_turn" && req.method === "POST") {
-        if (!(await rateLimit(env, clientIp(req), "turn"))) return json({ error: "rate_limited" }, 429);
-        return json(await handleLectureTurn(req, env));
-      }
-      if (url.pathname === "/auth/login" && req.method === "POST") return await login(req, env);
-      if (url.pathname === "/me" && req.method === "GET") return await me(req, env);
-      if (url.pathname === "/telemetry" && req.method === "POST") return await telemetry(req, env);
-      if (url.pathname === "/telemetry_anon" && req.method === "POST") return await telemetryAnon(req, env);
-      if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
-      if (url.pathname === "/competency" && req.method === "GET") return await competencyRead(req, env);
-      if (url.pathname === "/class_dashboard" && req.method === "GET") return await classDashboard(req, env);
-      return json({ error: "not found" }, 404);
+      res = await route(req, env, url, info);
     } catch (e) {
-      return json({ error: String(e) }, 500);
+      info.error = e;
+      res = json({ error: String(e) }, 500);
     }
+    // Durable server log (serverlog.js): after the response, and a failed write never fails it.
+    if (ctx && env.DB) {
+      ctx.waitUntil((async () => {
+        const p = bearer(req) ? await auth(req, env).catch(() => null) : null;
+        await writeServerLog(env, buildRow({ req, env, path: url.pathname, status: res.status,
+          latencyMs: Date.now() - t0, info, peek: await peek, userId: p ? String(p.sub) : null }));
+      })().catch(() => {}));
+    }
+    return res;
+  },
+  // Monthly R2 archive of server_log; returns at once unless LOG_BUCKET is bound and LOG_ARCHIVE=on.
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(archiveServerLog(env));
   },
 };
+
+const withDiag = (info, out) => { info.diag = out && out.diag; return json(out); };
+async function route(req, env, url, info) {
+  if (url.pathname === "/turn" && req.method === "POST") {
+    if (!(await rateLimit(env, clientIp(req), "turn"))) return limited(info);
+    return withDiag(info, await handleTurn(req, env));
+  }
+  if (url.pathname === "/tts" && req.method === "POST") {
+    if (!(await rateLimit(env, clientIp(req), "tts"))) { info.note = "rate_limited"; return new Response(null, { status: 429, headers: CORS }); }
+    return await handleTts(req, env);
+  }
+  if (url.pathname === "/voice_token" && req.method === "POST") {
+    if (!(await rateLimit(env, clientIp(req), "voice_token"))) return limited(info);
+    return await voiceToken(req, env);
+  }
+  if (url.pathname === "/group_turn" && req.method === "POST") {
+    if (!(await rateLimit(env, clientIp(req), "turn"))) return limited(info);
+    return withDiag(info, await handleGroupTurn(req, env));
+  }
+  if (url.pathname === "/lecture_turn" && req.method === "POST") {
+    if (!(await rateLimit(env, clientIp(req), "turn"))) return limited(info);
+    return withDiag(info, await handleLectureTurn(req, env));
+  }
+  if (url.pathname === "/auth/login" && req.method === "POST") return await login(req, env);
+  if (url.pathname === "/me" && req.method === "GET") return await me(req, env);
+  if (url.pathname === "/telemetry" && req.method === "POST") return await telemetry(req, env);
+  if (url.pathname === "/telemetry_anon" && req.method === "POST") return await telemetryAnon(req, env);
+  if (url.pathname === "/competency" && req.method === "POST") return await competency(req, env);
+  if (url.pathname === "/competency" && req.method === "GET") return await competencyRead(req, env);
+  if (url.pathname === "/class_dashboard" && req.method === "GET") return await classDashboard(req, env);
+  return json({ error: "not found" }, 404);
+}
+const limited = (info) => { info.note = "rate_limited"; return json({ error: "rate_limited" }, 429); };
 
 async function voiceToken(req, env) {
   const raw = (await req.text()).replace(/^\uFEFF/, "");
