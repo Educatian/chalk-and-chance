@@ -163,11 +163,15 @@ export function similarity(a, b) {
   return (2 * inter) / Math.max(1, (a.length - 1) + (b.length - 1));
 }
 
+// The first two words (punctuation stripped), e.g. "아니 그게요" / "well eight".
+export const opening = (s) => String(s || "").toLowerCase().replace(/[.,!?…'"“”‘’~\-]/g, " ").trim().split(/\s+/).slice(0, 2).join(" ");
+
 function validateStudent(text, persona, resolved, grade, ko = false, prev = "") {
   const t = (text || "").trim();
   if (!t) return [false, "empty"];
   // 0.80: catches verbatim (1.0), near-verbatim (0.90) and reordered restatements (0.81) seen in
   // the hosted check; replies that moved on scored 0.24-0.51.
+  if (prev && opening(t) && opening(t) === opening(prev)) return [false, "same opening words as your previous line; start differently"];
   if (prev && similarity(t, prev) >= 0.80) return [false, "repeated your previous line; move on: a new detail, a changed stance, or an answer to what the teacher just did"];
   const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
   const sentences = (t.match(/[.!?]/g) || []).length;

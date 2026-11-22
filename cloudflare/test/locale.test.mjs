@@ -120,3 +120,16 @@ test("a reply that repeats the student's previous line is rejected", async () =>
   const out = await handleTurn(req(turnBody({ locale: "ko", dialogue_tail: [{ speaker: "민호", text: prev }, { speaker: "teacher", text: "그러니까 네 말은…" }] })), { OPENROUTER_API_KEY: "test" });
   assert.equal(out.student_utterance.text, "그럼… 8조각으로 자르면 한 조각이 더 작아지는 거예요?");
 });
+
+test("Korean prompt describes hesitation instead of quoting example phrases", async () => {
+  const calls = stubFetch({ student: ["새로운 대답이에요."] });
+  await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" });
+  const sys = calls.map((c) => c.messages[0].content).find((s) => s.includes("LANGUAGE: KOREAN") && !s.includes("coach_tip"));
+  assert.ok(!sys.includes("아니 그게요"), "no literal example opener in the prompt");
+});
+
+test("a reply that opens like the previous line is rejected", async () => {
+  stubFetch({ student: ["아니 그게요… 이번엔 다른 말인데요, 조각 수를 세어 봤어요.", "조각을 세어 보니까 8조각이 더 많아요."] });
+  const out = await handleTurn(req(turnBody({ locale: "ko", dialogue_tail: [{ speaker: "민호", text: "아니 그게요… 그림으로 먼저 보여줘도 돼요?" }] })), { OPENROUTER_API_KEY: "test" });
+  assert.equal(out.student_utterance.text, "조각을 세어 보니까 8조각이 더 많아요.");
+});
