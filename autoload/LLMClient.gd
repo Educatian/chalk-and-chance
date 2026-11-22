@@ -76,6 +76,10 @@ func _on_request_completed(result: int, response_code: int, _headers: PackedStri
 		request_failed.emit("backend returned malformed JSON")
 		_emit_stub(_last_payload)
 		return
+	# The Worker's diag (why a reply was a fixed line) is for checks: printed in debug builds
+	# only, ignored by the game. tools/qa/web_run.py records the whole response anyway.
+	if OS.is_debug_build() and parsed.has("diag"):
+		print("LLM diag: ", JSON.stringify(parsed["diag"]))
 	reply_ready.emit(parsed)
 
 # --- M1 stub -----------------------------------------------------------------

@@ -29,21 +29,24 @@ export const MOVE_NAMES_KO = {
 };
 export const coachRulesKo = (tag) => COACH_KO_RULES.split("[[MOVE_KO]]").join(MOVE_NAMES_KO[tag] || "가르치는 수");
 
-// Coach tips. Returns [ok, reason, hard]: hard problems (empty, mostly English) fall back to
-// the fixed tip; style problems (학생, honorific endings, a little long) get one retry and
-// then the model's tip is kept. A tip may name OTHER moves: the coach prompt asks for the
-// next step, so "다음엔 기다려 주기" is wanted, not a misnamed move.
+// Coach tips. Returns [ok, rule, hard, repairedText]: hard = empty or mostly English (fixed
+// tip); style (학생, honorific endings) is soft (one retry, then the model's tip is kept);
+// length is repaired by cutting at a sentence boundary. Naming other moves is fine: the
+// coach prompt asks for the next step ("다음엔 기다려 주기").
+import { truncateAtSentence } from "./diag.js";
 export function validateCoach(tip, ko, tag) {
-  const t = String(tip || "").trim();
-  if (!t) return [false, "empty", true];
-  if (ko) {
-    const latin = (t.match(/[A-Za-z]/g) || []).length;
-    if (latin > 0.15 * t.replace(/\s/g, "").length) return [false, "mostly English", true];
+  let t = String(tip || "").trim();
+  if (!t) return [false, "empty", true, null];
+  const letters = (t.match(/[A-Za-z\uAC00-\uD7A3]/g) || []).length;
+  if (ko && letters && (t.match(/[A-Za-z]/g) || []).length / letters > 0.5) return [false, "english_mostly", true, null];
+  let fixed = null;
+  if ((t.match(/[.!?](\s|$)/g) || []).length > 2 || t.length > (ko ? 180 : 300)) {
+    fixed = truncateAtSentence(t, ko ? 180 : 300, 2);
+    t = fixed;
   }
-  if ((t.match(/[.!?](\s|$)/g) || []).length > 3 || t.length > (ko ? 180 : 300)) return [false, "keep it to one or two short sentences", false];
-  if (ko && t.includes("학생")) return [false, "say 아이, not 학생", false];
-  if (ko && /(주셨|하셨|드려요|드립니다|습니다)/.test(t)) return [false, "plain 해요체, no honorific endings", false];
-  return [true, "ok", false];
+  if (ko && t.includes("학생")) return [false, "voice:haksaeng", false, fixed];
+  if (ko && /(주셨|하셨|드려요|드립니다|습니다)/.test(t)) return [false, "voice:honorific", false, fixed];
+  return [true, "ok", false, fixed];
 }
 export const groupRulesKo = () => STUDENT_KO_RULES.split("Your name is [[KO_NAME]]. ").join("Use the speaker's name as given. ");
 export const lectureRulesKo = () =>

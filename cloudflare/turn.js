@@ -2,6 +2,7 @@
 // real Gemini students (judge-before-generate + frozen-persona anti-sycophancy + adaptive
 // coach). OpenRouter key is a Worker secret (OPENROUTER_API_KEY); never reaches the client.
 import { RUBRIC, PERSONAS, STUDENT_PROMPT, COACH_PROMPT } from "./gamedata.js";
+import { UpstreamError, newDiag, callWithUpstreamRetry, includeRejected, finishDiag, truncateAtSentence } from "./diag.js";
 import { isKorean, personaFor, studentRulesKo, coachRulesKo, LEAK_PATTERNS_KO, CONTENT_LEAK_PATTERNS_KO,
   CANNED_STUDENT_KO, COACH_TIPS_KO, heuristicClassifyKo, validateCoach } from "./locale.js";
 
@@ -69,7 +70,7 @@ async function callOpenRouter(messages, key, model, temperature, maxTokens) {
   if (!r.ok) {
     let body = "";
     try { body = (await r.text()).slice(0, 200); } catch (_e) { /* no body */ }
-    throw new Error(`openrouter ${r.status} ${body}`);
+    throw new UpstreamError(r.status, body);
   }
   const d = await r.json();
   const choice = (d.choices || [])[0] || {};
@@ -202,33 +203,61 @@ export const opening = (s) => String(s || "").toLowerCase().replace(/[.,!?…'"�
 
 // Returns [ok, reason, soft]: soft = only a repetition problem (retry, then keep the model's
 // line); anything else (empty, too long, English in Korean, a leak) is hard.
-export function validateStudent(text, persona, resolved, grade, ko = false, prev = "") {
-  const t = (text || "").trim();
-  if (!t) return [false, "empty"];
-  const hard = validateHard(t, persona, resolved, grade, ko);
-  if (!hard[0]) return hard;
-  if (prev && opening(t) && opening(t) === opening(prev)) return [false, "same opening words as your previous line; start differently", true];
-  if (prev && similarity(t, prev) >= 0.80) return [false, "repeated your previous line; move on: a new detail, a changed stance, or an answer to what the teacher just did", true];
-  return [true, "ok"];
-}
-function validateHard(t, persona, resolved, grade, ko) {
-  const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
-  const sentences = (t.match(/[.!?]/g) || []).length;
-  if (t.length > cap || sentences > 3) return [false, "too long for grade band"];
-  if (ko && /[A-Za-z]{3,}/.test(t)) return [false, "English words in a Korean reply"];
-  if (!resolved) {
-    const low = t.toLowerCase();
-    for (const p of LEAK_PATTERNS) if (p.test(low)) return [false, "leaked resolution"];
-    if (ko) for (const p of LEAK_PATTERNS_KO) if (p.test(t)) return [false, "leaked resolution"];
-    if (contentMisconception(persona)) {
-      for (const p of CONTENT_LEAK_PATTERNS) if (p.test(low)) return [false, "leaked resolution"];
-      if (ko) for (const p of CONTENT_LEAK_PATTERNS_KO) if (p.test(t)) return [false, "leaked resolution"];
-    }
+// Hard / soft / repair, judged by one principle: a HARD rejection must be something a real
+// fifth grader would never say in this persona and situation.
+//   hard   empty; a mostly-English reply in Korean mode; the correct answer handed over by a
+//          student whose misconception IS that answer (or echoing their win line).
+//   soft   things real children do say: giving in ("선생님 말이 맞는 것 같아요", "I was wrong"),
+//          repeating themselves, a few foreign words (민호's Spanish is by design). One
+//          retry, then the model's line is kept.
+//   repair too long: cut at a sentence boundary, never rejected.
+const GIVES_IN_KO = [[/선생님 말이 맞/, "leak:teacher_is_right"], [/이제 알겠어|이제 이해했/, "leak:gives_in"],
+  [/제가 틀렸/, "leak:admits_wrong"], [/그러니까 답은/, "leak:says_answer_phrase"]];
+const GIVES_IN_EN = [[/\byou'?re right\b/, "leak:teacher_is_right"], [/\bi (get|got) it now\b|\bnow i understand\b/, "leak:gives_in"],
+  [/\bi was wrong\b/, "leak:admits_wrong"], [/\bso (it'?s|the answer is)\b/, "leak:says_answer_phrase"]];
+export const mostlyLatin = (t) => {
+  const letters = (String(t).match(/[A-Za-z\uAC00-\uD7A3]/g) || []).length;
+  return letters > 0 && (String(t).match(/[A-Za-z]/g) || []).length / letters > 0.5;
+};
+
+export function judgeStudentReply(text, persona, resolved, grade, ko = false, prev = "") {
+  let t = (text || "").trim();
+  if (!t) return { kind: "hard", rule: "empty", text: t };
+  if (ko && mostlyLatin(t)) return { kind: "hard", rule: "english_mostly", text: t };
+  const low = t.toLowerCase();
+  if (!resolved && contentMisconception(persona)) {
+    const pats = [...CONTENT_LEAK_PATTERNS, ...(ko ? CONTENT_LEAK_PATTERNS_KO : [])];
+    if (pats.some((p) => p.test(ko ? t : low))) return { kind: "hard", rule: "leak:content_answer", text: t };
     const win = String(persona.win_line || "").toLowerCase();
-    if (win.length > 20 && low.includes(win.slice(0, 25))) return [false, "echoed win_line"];
+    if (win.length > 20 && low.includes(win.slice(0, 25))) return { kind: "hard", rule: "leak:win_line", text: t };
   }
-  return [true, "ok"];
+  const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
+  let repaired = null;
+  if (t.length > cap || (t.match(/[.!?]/g) || []).length > 3) {
+    t = truncateAtSentence(t, cap, 3);
+    repaired = "too_long";
+  }
+  if (!resolved) {
+    for (const [p, rule] of (ko ? GIVES_IN_KO : GIVES_IN_EN)) if (p.test(ko ? t : low)) return { kind: "soft", rule, text: t, repaired };
+  }
+  if (prev && opening(t) && opening(t) === opening(prev)) return { kind: "soft", rule: "same_opening", text: t, repaired };
+  if (prev && similarity(t, prev) >= 0.80) return { kind: "soft", rule: "repeat", text: t, repaired };
+  return { kind: "ok", rule: null, text: t, repaired };
 }
+// Kept for the replay test and callers: [ok, rule, soft].
+export function validateStudent(text, persona, resolved, grade, ko = false, prev = "") {
+  const j = judgeStudentReply(text, persona, resolved, grade, ko, prev);
+  return [j.kind === "ok", j.rule || "ok", j.kind === "soft"];
+}
+const SOFT_HINT = {
+  "leak:teacher_is_right": "don't simply agree with the teacher; say what you think now in your own words",
+  "leak:gives_in": "you haven't changed your mind yet; say what you think now",
+  "leak:admits_wrong": "you haven't changed your mind yet; say what you think now",
+  "leak:says_answer_phrase": "say what you think, not 'the answer is'",
+  same_opening: "start differently from your previous line",
+  repeat: "move on from your previous line: a new detail, a changed stance, or an answer to what the teacher just did",
+};
+
 function parseStudent(raw) {
   let s = raw.trim();
   if (s.includes("{") && s.includes("}")) s = s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1);
@@ -258,30 +287,54 @@ function cannedStudent(verdict, name, req = {}, ko = false) {
   }
   return { speaker: name, text: m[tag] || "...", emotion_shown: "guarded" };
 }
-async function generateStudent(req, persona, verdict, key, ko = false) {
+async function generateStudent(req, persona, verdict, key, ko = false, d = newDiag()) {
   const name = persona.display_name || "Student";
-  if (!key) return cannedStudent(verdict, name, req, ko);
+  if (!key) {
+    Object.assign(d, { source: "fallback", rule: "no_key" });
+    return cannedStudent(verdict, name, req, ko);
+  }
   const resolved = !!(req.runtime_state || {}).misconception_resolved;
   const grade = String(persona.grade_band || "");
   let messages = studentMessages(req, persona, verdict, ko);
   const prev = repeatCheckApplies(req, verdict) ? lastStudentLine(req) : "";
-  let softKeep = null;     // the model's line if its only problem was repetition
+  let keep = null;     // a model line whose only problems were soft
   for (const temp of [0.75, 0.4]) {
+    d.attempts += 1;
+    let raw;
+    try {
+      raw = await callWithUpstreamRetry(() => callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200), d);
+    } catch (e) {
+      d.rule = "upstream:" + (e && e.status ? e.status : "network");
+      logFallback("student", d.rule, { ko });
+      break;   // already retried once with backoff
+    }
     let out;
     try {
-      out = parseStudent(await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200));
-    } catch (e) {
-      logFallback("student", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
-      break;
+      out = parseStudent(raw);
+    } catch (_e) {
+      d.rule = "parse_error";
+      d.rejected.push(String(raw).slice(0, 400));
+      logFallback("student_rejected", d.rule, { ko, temp });
+      continue;
     }
-    const [ok, why, soft] = validateStudent(out.text, persona, resolved, grade, ko, prev);
-    if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
-    logFallback("student_rejected", why, { ko, temp, soft: !!soft });
-    softKeep = soft ? out : null;
-    messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
+    const j = judgeStudentReply(out.text, persona, resolved, grade, ko, prev);
+    if (j.repaired) d.repaired = j.repaired;
+    if (j.kind === "ok") {
+      d.source = (d.attempts > 1 || d.upstream_retries) ? "retry" : "model";
+      return { speaker: name, text: j.text, emotion_shown: out.emotion_shown };
+    }
+    d.rule = j.rule;
+    d.rejected.push(out.text);
+    logFallback("student_rejected", j.rule, { ko, temp, kind: j.kind });
+    if (j.kind === "soft") keep = { text: j.text, emotion_shown: out.emotion_shown };
+    const hint = SOFT_HINT[j.rule] || `that reply was rejected (${j.rule})`;
+    messages = [...messages, { role: "system", content: `Try again: ${hint}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
   }
-  // Both tries repeated themselves: the model's second line beats a fixed one.
-  if (softKeep) return { speaker: name, text: softKeep.text, emotion_shown: softKeep.emotion_shown };
+  if (keep) {   // soft problems only: the model's line beats a fixed one
+    d.source = "retry";
+    return { speaker: name, text: keep.text, emotion_shown: keep.emotion_shown };
+  }
+  d.source = "fallback";
   return cannedStudent(verdict, name, req, ko);
 }
 
@@ -296,8 +349,11 @@ function coachTip(verdict, ko = false) {
     wait: "Hold the pause 3 to 5 seconds; let him fill the silence." };
   return tips[tag] || "Pick a teaching move.";
 }
-async function makeCoach(req, persona, verdict, key, ko = false) {
-  if (!key) return coachTip(verdict, ko);
+async function makeCoach(req, persona, verdict, key, ko = false, d = newDiag()) {
+  if (!key) {
+    Object.assign(d, { source: "fallback", rule: "no_key" });
+    return coachTip(verdict, ko);
+  }
   try {
     const rs = req.runtime_state || {};
     const tag = verdict.move_tags[0] || "";
@@ -322,18 +378,47 @@ async function makeCoach(req, persona, verdict, key, ko = false) {
       { role: "user", content: "Give your one coaching note now. JSON only." }];
     let softTip = "";     // a model tip whose only problem was style
     for (const temp of [0.4, 0.2]) {      // one retry if the voice is off
-      // 220 tokens: a Korean tip of ~90 syllables plus the JSON wrapper did not fit in 120.
-      const raw = await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 220);
-      const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
-      const [ok, why, hard] = validateCoach(tip, ko, tag);
-      if (ok) return tip;
+      d.attempts += 1;
+      let raw;
+      try {
+        // 220 tokens: a Korean tip of ~90 syllables plus the JSON wrapper did not fit in 120.
+        raw = await callWithUpstreamRetry(() => callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 220), d);
+      } catch (e) {
+        d.rule = "upstream:" + (e && e.status ? e.status : "network");
+        logFallback("coach", d.rule, { ko });
+        break;
+      }
+      let tip;
+      try {
+        tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
+      } catch (_e) {
+        d.rule = "parse_error";
+        d.rejected.push(String(raw).slice(0, 400));
+        logFallback("coach_rejected", d.rule, { ko, temp });
+        continue;
+      }
+      const [ok, why, hard, fixed] = validateCoach(tip, ko, tag);
+      if (fixed) d.repaired = "too_long";
+      if (ok) {
+        d.source = (d.attempts > 1 || d.upstream_retries) ? "retry" : "model";
+        return fixed || tip;
+      }
+      d.rule = why;
+      d.rejected.push(tip);
       logFallback("coach_rejected", why, { ko, temp, hard: !!hard });
-      softTip = hard ? "" : tip;
-      messages = [...messages, { role: "system", content: `That note was rejected: ${why}. One or two short sentences. JSON only.` }];
+      if (!hard) softTip = fixed || tip;
+      messages = [...messages, { role: "system", content: `That note was rejected (${why}). One or two short sentences. JSON only.` }];
     }
-    return softTip || coachTip(verdict, ko);
+    if (softTip) {
+      d.source = "retry";
+      return softTip;
+    }
+    d.source = "fallback";
+    return coachTip(verdict, ko);
   } catch (e) {
-    logFallback("coach", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
+    d.source = "fallback";
+    d.rule = d.rule || "error:" + String(e && e.message || e).slice(0, 60);
+    logFallback("coach", d.rule, { ko, move: verdict.move_tags[0] || "" });
     return coachTip(verdict, ko);
   }
 }
@@ -357,10 +442,14 @@ export async function handleTurn(req, env) {
     order: row.order || 0.0, composure: row.composure || 0.0,
   };
   const persona = personaFor(body.active_persona_id, PERSONAS[body.active_persona_id] || body.frozen_persona || {}, ko);
+  const sd = newDiag();
+  const cd = newDiag();
   const [student, coach] = await Promise.all([
-    generateStudent(body, persona, verdict, key, ko),
-    makeCoach(body, persona, verdict, key, ko),
+    generateStudent(body, persona, verdict, key, ko, sd),
+    makeCoach(body, persona, verdict, key, ko, cd),
   ]);
+  const texts = includeRejected(req);
   return { session_id: body.session_id || "web", judge: verdict, meter_deltas: deltas,
-    student_utterance: student, coach_tip: coach };
+    student_utterance: student, coach_tip: coach,
+    diag: { student: finishDiag(sd, texts), coach: finishDiag(cd, texts) } };
 }

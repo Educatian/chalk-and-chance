@@ -63,7 +63,10 @@ def main():
             rec = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "request": json.loads(req.post_data or "{}")}
             t1 = time.time()
             try:
-                resp = route.fetch(timeout=60000)
+                # CC_DIAG=1: ask the Worker for rejected texts (header only sent by this runner;
+                # the release client never sends it, and it has no learner session here).
+                extra = {"x-cc-diag": "1"} if os.environ.get("CC_DIAG") == "1" else {}
+                resp = route.fetch(timeout=60000, headers={**req.headers, **extra})
                 rec["latency_ms"] = int((time.time() - t1) * 1000)
                 rec["status"] = resp.status
                 body = resp.text()
