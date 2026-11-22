@@ -1,0 +1,206 @@
+[
+ {
+  "utc": "2026-11-22T10:00:55Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "Can you walk me through how you got that?"
+    }
+   ],
+   "locale": "en",
+   "model_profile": "openrouter_gemini",
+   "move_history": [],
+   "runtime_state": {
+    "engagement": 0.4,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.5,
+    "turns_elapsed": 1,
+    "understanding": 0.15
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "Noah's the one who splits the last brownie so his sister can't argue. He already thinks in equal shares. That's fractions, in his world.",
+     "name": "Noah",
+     "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth. 'Cause eight's more than four.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "Eliciting student thinking",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "elicit",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 783,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "elicit"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "process",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.12,
+    "trust": 0.02,
+    "engagement": 0.06,
+    "order": 0,
+    "composure": 0.02
+   },
+   "student_utterance": {
+    "speaker": "Noah",
+    "text": "Well, eight is a bigger number than four. So, I think one eighth is bigger.",
+    "emotion_shown": "thinking"
+   },
+   "coach_tip": "You asked the student to explain their thinking, which is a great start for eliciting. What's one way you could encourage them to elaborate further on that initial thought?"
+  }
+ },
+ {
+  "utc": "2026-11-22T10:01:13Z",
+  "request": {
+   "active_persona_id": "noah_g5_fractions",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "Can you walk me through how you got that?"
+    },
+    {
+     "speaker": "Noah",
+     "text": "Well, eight is a bigger number than four. So, I think one eighth is bigger."
+    },
+    {
+     "speaker": "teacher",
+     "text": "Okay. And what if you take that one step further?"
+    }
+   ],
+   "locale": "en",
+   "model_profile": "openrouter_gemini",
+   "move_history": [
+    {
+     "construct": "elicit_reasoning",
+     "fit": "advance",
+     "meter": "Understanding 30%  |  Understanding +15  |  Engagement +6  |  Rapport +2  |  On a path that works: Diagnose, then press",
+     "note": "",
+     "path": "Diagnose, then press",
+     "reaction": "Well, eight is a bigger number than four. So, I think one eighth is bigger.",
+     "scaffold": 3,
+     "student": "Noah",
+     "tag": "elicit",
+     "targets": true,
+     "turn": 1
+    }
+   ],
+   "runtime_state": {
+    "engagement": 0.46,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.52,
+    "turns_elapsed": 2,
+    "understanding": 0.3
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "Noah's the one who splits the last brownie so his sister can't argue. He already thinks in equal shares. That's fractions, in his world.",
+     "name": "Noah",
+     "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth. 'Cause eight's more than four.",
+     "persona_id": "noah_g5_fractions",
+     "target_label": "Eliciting student thinking",
+     "win_moves": [
+      "elicit",
+      "extend",
+      "revoice",
+      "wait"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "extend",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "elicit",
+    "extend",
+    "revoice",
+    "wait"
+   ]
+  },
+  "latency_ms": 211,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "extend"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "process",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.1,
+    "trust": 0,
+    "engagement": 0.04,
+    "order": 0,
+    "composure": 0
+   },
+   "student_utterance": {
+    "speaker": "Noah",
+    "text": "Wait... when you put it that way, I'm not so sure my first answer was right.",
+    "emotion_shown": "guarded"
+   },
+   "coach_tip": "Nice press. He is reasoning it through himself."
+  }
+ }
+]

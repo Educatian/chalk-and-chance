@@ -3,7 +3,7 @@
 // coach). OpenRouter key is a Worker secret (OPENROUTER_API_KEY); never reaches the client.
 import { RUBRIC, PERSONAS, STUDENT_PROMPT, COACH_PROMPT } from "./gamedata.js";
 import { isKorean, personaFor, studentRulesKo, coachRulesKo, LEAK_PATTERNS_KO, CANNED_STUDENT_KO,
-  COACH_TIPS_KO, heuristicClassifyKo } from "./locale.js";
+  COACH_TIPS_KO, heuristicClassifyKo, validateCoach } from "./locale.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MOVE_TAGS = ["elicit", "extend", "revoice", "tell", "praise", "redirect", "wait", "connect"];
@@ -52,6 +52,12 @@ function judge(move, winMoves) {
 }
 
 // --- OpenRouter call ---------------------------------------------------------
+// Every fallback logs one JSON line with its reason (visible in `wrangler tail` and the
+// Workers logs), so a high fallback rate can be traced to its cause.
+export function logFallback(where, reason, extra = {}) {
+  console.log(JSON.stringify({ evt: "llm_fallback", where, reason: String(reason).slice(0, 300), ...extra }));
+}
+
 async function callOpenRouter(messages, key, model, temperature, maxTokens) {
   const r = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -60,9 +66,18 @@ async function callOpenRouter(messages, key, model, temperature, maxTokens) {
     body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens,
       response_format: { type: "json_object" } }),
   });
-  if (!r.ok) throw new Error(`openrouter ${r.status}`);
+  if (!r.ok) {
+    let body = "";
+    try { body = (await r.text()).slice(0, 200); } catch (_e) { /* no body */ }
+    throw new Error(`openrouter ${r.status} ${body}`);
+  }
   const d = await r.json();
-  return d.choices[0].message.content;
+  const choice = (d.choices || [])[0] || {};
+  if (choice.finish_reason === "length") {
+    // Cut off at max_tokens: the JSON is usually unclosed and will not parse.
+    logFallback("openrouter", "truncated at max_tokens", { maxTokens });
+  }
+  return (choice.message || {}).content || "";
 }
 
 // --- free-text classifier ----------------------------------------------------
@@ -92,7 +107,8 @@ async function classifyMove(text, key, ko = false) {
       key, "google/gemini-2.5-flash-lite", 0.0, 20);
     const tag = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).tag || "").trim().toLowerCase();
     return MOVE_TAGS.includes(tag) ? tag : fallback();
-  } catch (_e) {
+  } catch (e) {
+    logFallback("classifier", e && e.message || e, { ko });
     return fallback();
   }
 }
@@ -141,9 +157,38 @@ const LEAK_PATTERNS = [
   /\bsmaller (piece|share)s? .* (bigger|larger)\b/, /\b1\/4 is (bigger|larger)\b/,
   /\bmore pieces .* smaller\b/, /\byou'?re right\b/, /\bi was wrong\b/,
 ];
-function validateStudent(text, persona, resolved, grade, ko = false) {
+// The student's own previous line in the tail the client sent (the newest non-teacher line).
+export function lastStudentLine(req) {
+  const tail = Array.isArray(req.dialogue_tail) ? req.dialogue_tail : [];
+  for (let i = tail.length - 1; i >= 0; i--) {
+    const sp = String((tail[i] || {}).speaker || "").toLowerCase();
+    if (sp && sp !== "teacher") return String(tail[i].text || "");
+  }
+  return "";
+}
+const norm = (s) => String(s || "").toLowerCase().replace(/[\s.,!?…'"“”‘’~\-]/g, "");
+// Character-bigram overlap (Dice), 0..1: language-neutral, so it works for Korean too.
+export function similarity(a, b) {
+  a = norm(a); b = norm(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const grams = (s) => { const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const g = s.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const ga = grams(a), gb = grams(b);
+  let inter = 0;
+  for (const [g, n] of ga) inter += Math.min(n, gb.get(g) || 0);
+  return (2 * inter) / Math.max(1, (a.length - 1) + (b.length - 1));
+}
+
+// The first two words (punctuation stripped), e.g. "아니 그게요" / "well eight".
+export const opening = (s) => String(s || "").toLowerCase().replace(/[.,!?…'"“”‘’~\-]/g, " ").trim().split(/\s+/).slice(0, 2).join(" ");
+
+function validateStudent(text, persona, resolved, grade, ko = false, prev = "") {
   const t = (text || "").trim();
   if (!t) return [false, "empty"];
+  // 0.80: catches verbatim (1.0), near-verbatim (0.90) and reordered restatements (0.81) seen in
+  // the hosted check; replies that moved on scored 0.24-0.51.
+  if (prev && opening(t) && opening(t) === opening(prev)) return [false, "same opening words as your previous line; start differently"];
+  if (prev && similarity(t, prev) >= 0.80) return [false, "repeated your previous line; move on: a new detail, a changed stance, or an answer to what the teacher just did"];
   const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
   const sentences = (t.match(/[.!?]/g) || []).length;
   if (t.length > cap || sentences > 3) return [false, "too long for grade band"];
@@ -192,13 +237,18 @@ async function generateStudent(req, persona, verdict, key, ko = false) {
   const resolved = !!(req.runtime_state || {}).misconception_resolved;
   const grade = String(persona.grade_band || "");
   let messages = studentMessages(req, persona, verdict, ko);
+  const prev = lastStudentLine(req);
   for (const temp of [0.75, 0.4]) {
     let out;
     try {
       out = parseStudent(await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200));
-    } catch (_e) { break; }
-    const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko);
+    } catch (e) {
+      logFallback("student", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
+      break;
+    }
+    const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko, prev);
     if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
+    logFallback("student_rejected", why, { ko, temp });
     messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
   }
   return cannedStudent(verdict, name, req, ko);
@@ -236,12 +286,21 @@ async function makeCoach(req, persona, verdict, key, ko = false) {
     let sys = COACH_PROMPT;
     for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
     sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse the scenario context to coach the teacher's move, but do not reveal the content answer or final resolution.`;
-    if (ko) sys += "\n" + coachRulesKo();
-    const raw = await callOpenRouter([{ role: "system", content: sys },
-      { role: "user", content: "Give your one coaching note now. JSON only." }], key, "google/gemini-2.5-flash-lite", 0.4, 120);
-    const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
-    return tip || coachTip(verdict, ko);
-  } catch (_e) {
+    if (ko) sys += "\n" + coachRulesKo(tag);
+    let messages = [{ role: "system", content: sys },
+      { role: "user", content: "Give your one coaching note now. JSON only." }];
+    for (const temp of [0.4, 0.2]) {      // one retry if the voice or the move name is off
+      // 220 tokens: a Korean tip of ~90 syllables plus the JSON wrapper did not fit in 120.
+      const raw = await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 220);
+      const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
+      const [ok, why] = validateCoach(tip, ko, tag);
+      if (ok) return tip;
+      logFallback("coach_rejected", why, { ko, temp });
+      messages = [...messages, { role: "system", content: `That note was rejected: ${why}. One or two short sentences. JSON only.` }];
+    }
+    return coachTip(verdict, ko);
+  } catch (e) {
+    logFallback("coach", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
     return coachTip(verdict, ko);
   }
 }

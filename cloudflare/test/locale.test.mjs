@@ -102,3 +102,88 @@ test("group and lecture prompts get the Korean rules only for ko", async () => {
     for (const p of prompts) assert.equal(p.includes("LANGUAGE: KOREAN"), ko);
   }
 });
+
+test("the dialogue tail reaches the student prompt in both languages", async () => {
+  const tail = [{ speaker: "teacher", text: "TEACHER-LINE-1" }, { speaker: "Noah", text: "STUDENT-LINE-1" }];
+  for (const locale of ["ko", "en"]) {
+    const calls = stubFetch({ student: ["A brand new answer about eighths."] });
+    await handleTurn(req(turnBody({ locale, dialogue_tail: tail })), { OPENROUTER_API_KEY: "test" });
+    const sys = calls.find((c) => !c.messages[0].content.includes("coach_tip") && !c.messages[0].content.includes("You label")).messages[0].content;
+    assert.ok(sys.includes("TEACHER-LINE-1") && sys.includes("STUDENT-LINE-1"), locale + ": tail in prompt");
+    assert.ok(sys.includes("MOVE ON"), locale + ": move-on rule in prompt");
+  }
+});
+
+test("a reply that repeats the student's previous line is rejected", async () => {
+  const prev = "아니 그게요… 그림으로 먼저 보여줘도 돼요?";
+  stubFetch({ student: ["아니 그게요… 그림으로 먼저 보여줘도 돼요?", "그럼… 8조각으로 자르면 한 조각이 더 작아지는 거예요?"] });
+  const out = await handleTurn(req(turnBody({ locale: "ko", dialogue_tail: [{ speaker: "민호", text: prev }, { speaker: "teacher", text: "그러니까 네 말은…" }] })), { OPENROUTER_API_KEY: "test" });
+  assert.equal(out.student_utterance.text, "그럼… 8조각으로 자르면 한 조각이 더 작아지는 거예요?");
+});
+
+test("Korean prompt describes hesitation instead of quoting example phrases", async () => {
+  const calls = stubFetch({ student: ["새로운 대답이에요."] });
+  await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" });
+  const sys = calls.map((c) => c.messages[0].content).find((s) => s.includes("LANGUAGE: KOREAN") && !s.includes("coach_tip"));
+  assert.ok(!sys.includes("아니 그게요"), "no literal example opener in the prompt");
+});
+
+test("a reply that opens like the previous line is rejected", async () => {
+  stubFetch({ student: ["아니 그게요… 이번엔 다른 말인데요, 조각 수를 세어 봤어요.", "조각을 세어 보니까 8조각이 더 많아요."] });
+  const out = await handleTurn(req(turnBody({ locale: "ko", dialogue_tail: [{ speaker: "민호", text: "아니 그게요… 그림으로 먼저 보여줘도 돼요?" }] })), { OPENROUTER_API_KEY: "test" });
+  assert.equal(out.student_utterance.text, "조각을 세어 보니까 8조각이 더 많아요.");
+});
+
+test("Korean coach: the move actually made is passed into the prompt", async () => {
+  const calls = stubFetch({ student: ["새로운 대답이에요."], coach: "칭찬하기는 무엇을 잘했는지 짚어 줄 때 힘이 생겨요." });
+  const out = await handleTurn(req(turnBody({ locale: "ko", teacher_move: { input_mode: "menu", menu_tag: "praise", wait_time_ms: 3000 } })), { OPENROUTER_API_KEY: "test" });
+  const sys = calls.map((c) => c.messages[0].content).find((s) => s.includes("coach_tip"));
+  assert.ok(sys.includes("The teacher's move this turn was 칭찬하기"));
+  assert.equal(out.coach_tip, "칭찬하기는 무엇을 잘했는지 짚어 줄 때 힘이 생겨요.");
+});
+
+test("Korean coach: wrong move name, 학생, or 주셨어요 is rejected (fixed tip after one retry)", async () => {
+  for (const bad of ["지금 학생의 생각을 잘 되짚어 주셨어요.", "되말하기로 아이 생각을 잘 짚었어요."]) {
+    stubFetch({ student: ["새로운 대답이에요."], coach: bad });
+    const out = await handleTurn(req(turnBody({ locale: "ko", teacher_move: { input_mode: "menu", menu_tag: "praise", wait_time_ms: 3000 } })), { OPENROUTER_API_KEY: "test" });
+    assert.equal(out.coach_tip, "'잘했어'보다 무엇을 잘했는지 짚어 줘요.");
+  }
+});
+
+// Capture the Worker's console.log fallback lines during one call.
+async function withLogs(fn) {
+  const lines = [];
+  const orig = console.log;
+  console.log = (s) => { lines.push(String(s)); };
+  try { await fn(); } finally { console.log = orig; }
+  return lines.filter((l) => l.includes('"llm_fallback"')).map((l) => JSON.parse(l));
+}
+
+test("a coach reply cut off at max_tokens: logged as truncated, parse failure logged, fixed tip", async () => {
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    const sys = body.messages[0].content;
+    const coach = sys.includes("coach_tip");
+    const content = coach ? '{"coach_tip": "아이 생각을 끝까지 들어 준 다음에 한 번 더 물어보면 아이가 스스로' : '{"text":"새 대답이에요.","emotion_shown":"thinking"}';
+    return { ok: true, json: async () => ({ choices: [{ finish_reason: coach ? "length" : "stop", message: { content } }] }) };
+  };
+  let out;
+  const logs = await withLogs(async () => { out = await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" }); });
+  assert.ok(logs.some((l) => l.where === "openrouter" && l.reason.includes("truncated")));
+  assert.ok(logs.some((l) => l.where === "coach"));
+  assert.equal(out.coach_tip, "좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요.");
+});
+
+test("an upstream error (e.g. 429) is logged with its status for student and coach", async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => "rate limited" });
+  const logs = await withLogs(async () => { await handleTurn(req(turnBody({ locale: "en" })), { OPENROUTER_API_KEY: "test" }); });
+  assert.ok(logs.some((l) => l.where === "student" && l.reason.includes("429")));
+  assert.ok(logs.some((l) => l.where === "coach" && l.reason.includes("429")));
+});
+
+test("the coach token budget is enough for a Korean tip", async () => {
+  const calls = stubFetch({ student: ["새 대답이에요."], coach: "생각 묻기로 아이 생각이 드러났어요." });
+  await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" });
+  const coachCall = calls.find((c) => c.messages[0].content.includes("coach_tip"));
+  assert.ok(coachCall.max_tokens >= 200);
+});

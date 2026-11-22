@@ -1,0 +1,3 @@
+[  10.60s] wait 4
+[  10.72s] shot s
+NETWORK blocked=0 hosts=[]

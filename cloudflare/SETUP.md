@@ -62,7 +62,7 @@ A missing `locale` (older clients) keeps today's English behaviour.
 **Until this is deployed, the hosted students keep answering in English.** To ship it:
 ```bash
 python cloudflare/build_gamedata.py   # already run in the PR; re-run after editing personas/prompts
-node --test cloudflare/test/          # local stub, no network
+node --test cloudflare/test/locale.test.mjs   # local stub, no network
 cd cloudflare && wrangler deploy
 ```
 No secrets, D1 schema or bindings change. The web game must also be rebuilt from this branch so

@@ -1,0 +1,210 @@
+[
+ {
+  "utc": "2026-11-22T10:14:12Z",
+  "request": {
+   "active_persona_id": "diego_ell",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "Can you walk me through how you got that?"
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [],
+   "runtime_state": {
+    "engagement": 0.4,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.5,
+    "turns_elapsed": 1,
+    "understanding": 0.15
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "민호는 한국어로 말하기 전에 스페인어로 먼저 풀어 봐요. 스페인어로 먼저 생각하게 두세요. 민호가 가진 힘이에요 (Moll, 삶의 지식).",
+     "name": "민호",
+     "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.",
+     "persona_id": "diego_ell",
+     "target_label": "이해 확인과 기다려 주기 (한국어를 배우는 학생)",
+     "win_moves": [
+      "wait",
+      "revoice",
+      "elicit",
+      "extend",
+      "connect"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "elicit",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "wait",
+    "revoice",
+    "elicit",
+    "extend",
+    "connect"
+   ]
+  },
+  "latency_ms": 883,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "elicit"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "process",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.12,
+    "trust": 0.02,
+    "engagement": 0.06,
+    "order": 0,
+    "composure": 0.02
+   },
+   "student_utterance": {
+    "speaker": "민호",
+    "text": "아니 그게요… 그림으로 먼저 보여줘도 돼요?",
+    "emotion_shown": "shy"
+   },
+   "coach_tip": "학생의 생각을 묻는 좋은 시작이에요. 다음에는 조금 더 기다려 주면서 학생이 답을 생각해 볼 시간을 더 주는 건 어떨까요?"
+  }
+ },
+ {
+  "utc": "2026-11-22T10:14:32Z",
+  "request": {
+   "active_persona_id": "diego_ell",
+   "dialogue_tail": [
+    {
+     "speaker": "teacher",
+     "text": "Can you walk me through how you got that?"
+    },
+    {
+     "speaker": "민호",
+     "text": "아니 그게요… 그림으로 먼저 보여줘도 돼요?"
+    },
+    {
+     "speaker": "teacher",
+     "text": "So what you're saying is..."
+    }
+   ],
+   "locale": "ko",
+   "model_profile": "openrouter_gemini",
+   "move_history": [
+    {
+     "construct": "elicit_reasoning",
+     "fit": "early",
+     "meter": "이해도 18%  |  이해도 +3  |  참여 +6  |  신뢰 +2  |  맞는 방향, 아직 일러요",
+     "note": "right idea, too early: first Wait or Revoice or Connect",
+     "path": "생각할 시간",
+     "reaction": "아니 그게요… 그림으로 먼저 보여줘도 돼요?",
+     "scaffold": 3,
+     "student": "민호",
+     "tag": "elicit",
+     "targets": false,
+     "turn": 1
+    }
+   ],
+   "runtime_state": {
+    "engagement": 0.46,
+    "misconception_resolved": false,
+    "trust_in_teacher": 0.52,
+    "turns_elapsed": 2,
+    "understanding": 0.18
+   },
+   "scenario_context": {
+    "active_student": {
+     "asset_hint": "민호는 한국어로 말하기 전에 스페인어로 먼저 풀어 봐요. 스페인어로 먼저 생각하게 두세요. 민호가 가진 힘이에요 (Moll, 삶의 지식).",
+     "name": "민호",
+     "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.",
+     "persona_id": "diego_ell",
+     "target_label": "이해 확인과 기다려 주기 (한국어를 배우는 학생)",
+     "win_moves": [
+      "wait",
+      "revoice",
+      "elicit",
+      "extend",
+      "connect"
+     ]
+    },
+    "arrangement": "ushape6",
+    "backdrop": "",
+    "format": "discussion",
+    "id": "discussion_fractions",
+    "objectives": [
+     "Keep attention at 65%+",
+     "Finish with composure at 50%+",
+     "At most 2 disruptions",
+     "Call on every student (6)",
+     "Use wait time at least 3 times"
+    ],
+    "story_hook": "Desks in a U, everyone can see everyone. Whose ideas get heard depends on how long you wait and who you call on.",
+    "title": "Fraction Talk  -  Group Discussion (U-shape)"
+   },
+   "scenario_id": "discussion_fractions",
+   "session_id": "m1",
+   "target_behavior": "elicit_student_thinking",
+   "teacher_move": {
+    "input_mode": "menu",
+    "menu_tag": "revoice",
+    "raw_wait_time_ms": 0,
+    "wait_time_ms": 0
+   },
+   "win_moves": [
+    "wait",
+    "revoice",
+    "elicit",
+    "extend",
+    "connect"
+   ]
+  },
+  "latency_ms": 828,
+  "status": 200,
+  "response": {
+   "session_id": "m1",
+   "judge": {
+    "move_tags": [
+     "revoice"
+    ],
+    "targets_misconception": true,
+    "feedback_type": "none",
+    "wait_time_ok": false
+   },
+   "meter_deltas": {
+    "understanding": 0.04,
+    "trust": 0.1,
+    "engagement": 0.05,
+    "order": 0,
+    "composure": 0
+   },
+   "student_utterance": {
+    "speaker": "민호",
+    "text": "아니 그게요… 그림으로 먼저 보여줘도 돼요?",
+    "emotion_shown": "shy"
+   },
+   "coach_tip": "되말하기로 아이 생각이 모두에게 보이게 됐어요."
+  }
+ }
+]
