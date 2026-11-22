@@ -98,3 +98,37 @@ Screens: `docs/qa/korean-hosted/ko_diego_ell_m*.png`, `ko_noah_g5_fractions_m*.p
    Every fallback point now logs one JSON line, `{"evt":"llm_fallback","where":...,"reason":...}` (student, student_rejected, coach, coach_rejected, classifier, openrouter-truncated). After the next deploy, `wrangler tail` or the Workers logs show the cause directly.
 
 Stub tests: `node --test cloudflare/test/locale.test.mjs`, 18 cases, no network.
+
+
+## Re-check 3 with diag (Worker ae110882 from main 66cbd40; 2026-11-22, 8 calls, `CC_DIAG=1`, UTC)
+Same allow-list. Both runs reported `NETWORK blocked=0`, with no retries by the runner. The dry run first confirmed 4 `POST /turn` per sequence. The "shown" column was checked exactly, as before. Full `diag`, including rejected texts, is in `korean-hosted/ko5_*_calls.json`.
+
+| call | time (UTC) | move | latency | student line (verbatim) | student diag | shown | coach tip (verbatim) | coach diag |
+|---|---|---|---|---|---|---|---|---|
+| 민호 #1 | 2026-11-22T10:55:07Z | elicit | 1449 ms | 음... 그림으로 먼저 보여줘도 돼요? | model / repaired:too_long / attempts 1 | yes | 좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요. | fallback / parse_error / attempts 2 |
+| 민호 #2 | 2026-11-22T10:55:27Z | revoice | 1194 ms | 네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요. | model / attempts 1 | yes | 되말하기로 아이 생각이 모두에게 보이게 됐어요. | fallback / parse_error / attempts 2 |
+| 민호 #3 | 2026-11-22T10:55:47Z | extend | 1378 ms | 음... 그림으로 보여주면 더 쉬울 것 같아요. | model / repaired:too_long / attempts 1 | yes | 잘 더 물었어요. 아이가 스스로 따져 보고 있어요. | fallback / parse_error / attempts 2 |
+| 민호 #4 | 2026-11-22T10:56:07Z | praise | 663 ms | 네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요. | model / repaired:too_long / attempts 1 | yes | 아이의 생각을 칭찬으로만 마무리하면, 더 깊은 생각을 이끌어내기 어려울 수 있어요. 다음에는 아이의 생각을 '더 묻기'로 연결해 보면 어떨까요? | model / attempts 1 |
+| 도윤 #1 | 2026-11-22T10:56:54Z | elicit | 690 ms | 8이 4보다 더 크니까 8분의 1이 더 커요. | model / attempts 1 | yes | 아이의 생각을 물어봤어요. 이제 아이가 말할 시간을 충분히 줄까요? | model / attempts 1 |
+| 도윤 #2 | 2026-11-22T10:57:14Z | extend | 588 ms | 근데... 8분의 1이랑 4분의 1이랑 똑같이 1인데, 왜 8분의 1이 더 커요? | model / repaired:too_long / attempts 1 | yes | 아이의 생각을 더 깊게 탐색하기 위해 '더 묻기'를 사용했네요. 이제 아이가 스스로 답을 찾도록 3~5초 정도 기다려 주는 건 어떨까요? | model / attempts 1 |
+| 도윤 #3 | 2026-11-22T10:57:34Z | revoice | 615 ms | 음... 8이 4보다 더 크니까 8분의 1이 더 커요. | model / repaired:too_long / attempts 1 | yes | 되말하기로 아이의 생각이 모두에게 보이게 됐어요. 이제 아이가 스스로 답을 찾도록 3~5초 기다려 줘요. | model / attempts 1 |
+| 도윤 #4 | 2026-11-22T10:57:54Z | praise | 1002 ms | 네, 8이 4보다 크니까 8분의 1이 더 커요. | retry / repeat / attempts 2 | yes | 아이의 생각을 다시 한번 되짚어 주는 건 어떨까요? 그러면 아이가 더 깊이 생각할 기회를 얻을 수 있을 거예요. | model / attempts 1 |
+
+**Students pass.**
+- 8/8 from the model: 7 first try, 1 `retry`.
+- All shown on screen as sent. No rule fallbacks, and no upstream errors.
+- 도윤 #4: the first attempt was a `parse_error` and the second was soft `repeat`, kept (rule working as designed).
+
+**Coach fails on a bug of ours, not the model: 5/8.** All 3 fallbacks (민호 #1–#3) are `parse_error`.
+- The rejected texts show good tips as valid JSON followed by trailing junk, e.g. `{"coach_tip": "아이에게 생각 묻기를 잘 했어요. 이제 3-5초 정도 기다려 주면서…"}
+}`.
+- Our parser slices from the first `{` to the **last** `}`, so the junk breaks it.
+- The same happened to 도윤 #4's first student attempt.
+- **Fix:** parse the first balanced JSON object and ignore what follows. That would have made all 3 coach tips model-written: 8/8 here.
+
+**Second bug: `repaired: too_long` on short lines.** The sentence count treats "..." as three sentence ends, so 5 short replies were marked repaired. The lines shown are intact, but the count should treat an ellipsis as one mark (or none).
+
+**Repetition.**
+- 민호 moves on, though narrowly; every turn is about drawing.
+- 도윤 states "8이 4보다 크니까 8분의 1이 더 커요" on #1, #3 (after a revoice, allowed) and #4 (kept after one retry). #2 is a real move ("왜 8분의 1이 더 커요?").
+- The prompt rule alone does not stop 도윤 restating after a revoice or praise.
