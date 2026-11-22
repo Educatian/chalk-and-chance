@@ -1,0 +1,182 @@
+[
+ {
+  "utc": "2026-11-22T11:19:39Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/?public_demo=1",
+  "status": 200,
+  "bytes": 5734
+ },
+ {
+  "utc": "2026-11-22T11:19:39Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.png",
+  "status": 200,
+  "bytes": 4293
+ },
+ {
+  "utc": "2026-11-22T11:19:39Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.js",
+  "status": 200,
+  "bytes": 279815
+ },
+ {
+  "utc": "2026-11-22T11:19:40Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.pck",
+  "status": 200,
+  "bytes": 13081732
+ },
+ {
+  "utc": "2026-11-22T11:19:40Z",
+  "method": "GET",
+  "url": "https://educatian.github.io/chalk-and-chance-play/index.wasm",
+  "status": 200,
+  "bytes": 39514754
+ },
+ {
+  "utc": "2026-11-22T11:20:03Z",
+  "method": "POST",
+  "url": "https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon",
+  "body": {
+   "anon_id": "a_1795346397_510900",
+   "events": [
+    {
+     "anon_id": "a_1795346397_510900",
+     "client": {
+      "lang": "en-US",
+      "locale": "en_US",
+      "platform": "Web",
+      "referrer": "",
+      "screen": "1280x720",
+      "tz": "America/Chicago",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36",
+      "url": "https://educatian.github.io/chalk-and-chance-play/?public_demo=1"
+     },
+     "engine": "4.7.2-stable (official)",
+     "event": "session_start",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 522,
+     "unix": 1795346397.969
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "event": "input_mouse_motion",
+     "position": {
+      "x": 866.249938964844,
+      "y": 26.2499980926514
+     },
+     "relative": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 2694,
+     "unix": 1795346400.141
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "button_index": 1,
+     "event": "input_mouse_button",
+     "position": {
+      "x": 866.249938964844,
+      "y": 26.2499980926514
+     },
+     "pressed": true,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 2694,
+     "unix": 1795346400.141
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "button_index": 1,
+     "event": "input_mouse_button",
+     "position": {
+      "x": 866.249938964844,
+      "y": 26.2499980926514
+     },
+     "pressed": false,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 2695,
+     "unix": 1795346400.142
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "disabled": false,
+     "event": "ui_button_pressed",
+     "path": "/root/Main/SceneStack/Login/@Button@24",
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 2718,
+     "text": "한국어",
+     "unix": 1795346400.165
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "echo": false,
+     "event": "input_key",
+     "key_label": "Enter",
+     "keycode": 4194309,
+     "physical_keycode": 4194309,
+     "pressed": true,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 5803,
+     "unicode": 0,
+     "unix": 1795346403.25
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "echo": false,
+     "event": "input_key",
+     "key_label": "Enter",
+     "keycode": 4194309,
+     "physical_keycode": 4194309,
+     "pressed": false,
+     "scene": "res://scenes/ui/Login.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 5803,
+     "unicode": 0,
+     "unix": 1795346403.25
+    },
+    {
+     "anon_id": "a_1795346397_510900",
+     "disabled": false,
+     "event": "ui_button_pressed",
+     "path": "/root/Main/SceneStack/@Control@48/@VBoxContainer@56/@Button@58",
+     "scene": "res://scenes/ui/Hub.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 5965,
+     "text": "Play",
+     "unix": 1795346403.412
+    }
+   ]
+  },
+  "status": 200,
+  "bytes": 12
+ },
+ {
+  "utc": "2026-11-22T11:20:27Z",
+  "method": "POST",
+  "url": "https://chalk-and-chance-api.jewoong-moon.workers.dev/telemetry_anon",
+  "body": {
+   "anon_id": "a_1795346397_510900",
+   "events": [
+    {
+     "anon_id": "a_1795346397_510900",
+     "elapsed_s": 29,
+     "event": "heartbeat",
+     "scene": "res://scenes/ui/Hub.tscn",
+     "session_id": "sess_1795346397_10900",
+     "t_ms": 30000,
+     "unix": 1795346427.447
+    }
+   ]
+  },
+  "status": 200,
+  "bytes": 12
+ }
+]

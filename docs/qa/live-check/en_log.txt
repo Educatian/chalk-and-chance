@@ -1,0 +1,7 @@
+[  20.94s] wait 3
+[  21.07s] shot title
+[  21.58s] key Enter
+[  25.59s] wait 4
+[  25.68s] shot hub
+[  45.69s] wait 20
+NETWORK blocked=0 hosts=[]

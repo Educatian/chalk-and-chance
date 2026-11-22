@@ -1,0 +1,10 @@
+[  20.96s] wait 3
+[  21.07s] shot title_en
+[  21.12s] click 1155 35
+[  24.12s] wait 3
+[  24.18s] shot title
+[  24.69s] key Enter
+[  28.69s] wait 4
+[  28.77s] shot hub
+[  48.78s] wait 20
+NETWORK blocked=0 hosts=[]
