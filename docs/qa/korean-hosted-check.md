@@ -81,3 +81,20 @@ So the repetition is real, not only an artifact of the first set. The teacher li
    - Worth a native-reader look.
 
 Screens: `docs/qa/korean-hosted/ko_diego_ell_m*.png`, `ko_noah_g5_fractions_m*.png`, `en_noah_m*.png`. Raw request and response bodies: `docs/qa/korean-hosted/*_calls.json`.
+
+## Prompt-quality fixes after this check (PR #9, not deployed)
+1. **Repetition.** `dialogue_tail` and `move_history` do reach the prompts in both languages.
+   - The student prompt now requires moving on from its own previous line.
+   - A reply too similar to that line is rejected and retried (bigram similarity ≥ 0.80).
+   - The client now sends the teacher's lines in the player's language.
+2. **Copied example.** The Korean rule describes hesitation instead of quoting "아니 그게요…", and a reply that opens with the previous line's first two words is rejected.
+3. **Coach.** Model tips are given the move actually made (by its game name), the fixed tips' voice (아이, plain 해요체) and a limit of two short sentences. `validateCoach` enforces this with one retry, then the fixed tip.
+4. **Fallback rate.** Causes found by reading the code, most plausible first:
+   - **(a) Coach replies cut off at `max_tokens=120`.** A Korean tip of 60–90 syllables plus the JSON wrapper sits at or over the limit. A cut-off reply has no closing `}`, so `JSON.parse` throws and the fixed tip is returned silently. Reproduced with a stub; the limit is now 220 and `finish_reason: "length"` is logged.
+   - **(b) Upstream errors.** OpenRouter 429 rate limits or provider 5xx errors fail fast. The English #2 call (211 ms, student and coach both fixed lines) looks like this.
+   - **(c) Reject filters.** Before these fixes the coach had none, so this was not a cause then. The new voice filter will add some fallbacks; they are logged as `coach_rejected`.
+   - **(d) Timeouts.** No explicit fetch timeout; the client gives up at 12 s. Not seen in the second set (607–901 ms).
+
+   Every fallback point now logs one JSON line, `{"evt":"llm_fallback","where":...,"reason":...}` (student, student_rejected, coach, coach_rejected, classifier, openrouter-truncated). After the next deploy, `wrangler tail` or the Workers logs show the cause directly.
+
+Stub tests: `node --test cloudflare/test/locale.test.mjs`, 18 cases, no network.

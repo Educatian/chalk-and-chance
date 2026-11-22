@@ -149,3 +149,41 @@ test("Korean coach: wrong move name, 학생, or 주셨어요 is rejected (fixed 
     assert.equal(out.coach_tip, "'잘했어'보다 무엇을 잘했는지 짚어 줘요.");
   }
 });
+
+// Capture the Worker's console.log fallback lines during one call.
+async function withLogs(fn) {
+  const lines = [];
+  const orig = console.log;
+  console.log = (s) => { lines.push(String(s)); };
+  try { await fn(); } finally { console.log = orig; }
+  return lines.filter((l) => l.includes('"llm_fallback"')).map((l) => JSON.parse(l));
+}
+
+test("a coach reply cut off at max_tokens: logged as truncated, parse failure logged, fixed tip", async () => {
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    const sys = body.messages[0].content;
+    const coach = sys.includes("coach_tip");
+    const content = coach ? '{"coach_tip": "아이 생각을 끝까지 들어 준 다음에 한 번 더 물어보면 아이가 스스로' : '{"text":"새 대답이에요.","emotion_shown":"thinking"}';
+    return { ok: true, json: async () => ({ choices: [{ finish_reason: coach ? "length" : "stop", message: { content } }] }) };
+  };
+  let out;
+  const logs = await withLogs(async () => { out = await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" }); });
+  assert.ok(logs.some((l) => l.where === "openrouter" && l.reason.includes("truncated")));
+  assert.ok(logs.some((l) => l.where === "coach"));
+  assert.equal(out.coach_tip, "좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요.");
+});
+
+test("an upstream error (e.g. 429) is logged with its status for student and coach", async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => "rate limited" });
+  const logs = await withLogs(async () => { await handleTurn(req(turnBody({ locale: "en" })), { OPENROUTER_API_KEY: "test" }); });
+  assert.ok(logs.some((l) => l.where === "student" && l.reason.includes("429")));
+  assert.ok(logs.some((l) => l.where === "coach" && l.reason.includes("429")));
+});
+
+test("the coach token budget is enough for a Korean tip", async () => {
+  const calls = stubFetch({ student: ["새 대답이에요."], coach: "생각 묻기로 아이 생각이 드러났어요." });
+  await handleTurn(req(turnBody({ locale: "ko" })), { OPENROUTER_API_KEY: "test" });
+  const coachCall = calls.find((c) => c.messages[0].content.includes("coach_tip"));
+  assert.ok(coachCall.max_tokens >= 200);
+});

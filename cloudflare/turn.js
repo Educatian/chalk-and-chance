@@ -52,6 +52,12 @@ function judge(move, winMoves) {
 }
 
 // --- OpenRouter call ---------------------------------------------------------
+// Every fallback logs one JSON line with its reason (visible in `wrangler tail` and the
+// Workers logs), so a high fallback rate can be traced to its cause.
+export function logFallback(where, reason, extra = {}) {
+  console.log(JSON.stringify({ evt: "llm_fallback", where, reason: String(reason).slice(0, 300), ...extra }));
+}
+
 async function callOpenRouter(messages, key, model, temperature, maxTokens) {
   const r = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -60,9 +66,18 @@ async function callOpenRouter(messages, key, model, temperature, maxTokens) {
     body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens,
       response_format: { type: "json_object" } }),
   });
-  if (!r.ok) throw new Error(`openrouter ${r.status}`);
+  if (!r.ok) {
+    let body = "";
+    try { body = (await r.text()).slice(0, 200); } catch (_e) { /* no body */ }
+    throw new Error(`openrouter ${r.status} ${body}`);
+  }
   const d = await r.json();
-  return d.choices[0].message.content;
+  const choice = (d.choices || [])[0] || {};
+  if (choice.finish_reason === "length") {
+    // Cut off at max_tokens: the JSON is usually unclosed and will not parse.
+    logFallback("openrouter", "truncated at max_tokens", { maxTokens });
+  }
+  return (choice.message || {}).content || "";
 }
 
 // --- free-text classifier ----------------------------------------------------
@@ -92,7 +107,8 @@ async function classifyMove(text, key, ko = false) {
       key, "google/gemini-2.5-flash-lite", 0.0, 20);
     const tag = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).tag || "").trim().toLowerCase();
     return MOVE_TAGS.includes(tag) ? tag : fallback();
-  } catch (_e) {
+  } catch (e) {
+    logFallback("classifier", e && e.message || e, { ko });
     return fallback();
   }
 }
@@ -226,9 +242,13 @@ async function generateStudent(req, persona, verdict, key, ko = false) {
     let out;
     try {
       out = parseStudent(await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200));
-    } catch (_e) { break; }
+    } catch (e) {
+      logFallback("student", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
+      break;
+    }
     const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko, prev);
     if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
+    logFallback("student_rejected", why, { ko, temp });
     messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
   }
   return cannedStudent(verdict, name, req, ko);
@@ -270,14 +290,17 @@ async function makeCoach(req, persona, verdict, key, ko = false) {
     let messages = [{ role: "system", content: sys },
       { role: "user", content: "Give your one coaching note now. JSON only." }];
     for (const temp of [0.4, 0.2]) {      // one retry if the voice or the move name is off
-      const raw = await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 120);
+      // 220 tokens: a Korean tip of ~90 syllables plus the JSON wrapper did not fit in 120.
+      const raw = await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 220);
       const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
       const [ok, why] = validateCoach(tip, ko, tag);
       if (ok) return tip;
+      logFallback("coach_rejected", why, { ko, temp });
       messages = [...messages, { role: "system", content: `That note was rejected: ${why}. One or two short sentences. JSON only.` }];
     }
     return coachTip(verdict, ko);
-  } catch (_e) {
+  } catch (e) {
+    logFallback("coach", e && e.message || e, { ko, move: verdict.move_tags[0] || "" });
     return coachTip(verdict, ko);
   }
 }
