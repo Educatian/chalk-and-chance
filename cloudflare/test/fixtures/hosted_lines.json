@@ -1,0 +1,249 @@
+[
+ {
+  "set": "set1",
+  "persona": "diego_ell",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "선생님… 그림으로 먼저 보여줘도 돼요?",
+    "student_source": "model",
+    "coach": "학생의 생각을 물어보는 좋은 시작이에요! 다음에는 조금 더 기다려 주면 학생이 더 편안하게 답할 수 있을 거예요.",
+    "coach_source": "model",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 2,
+    "move": "revoice",
+    "student": "아니 그게요… 제가 생각한 거랑 좀 다른데요. 음… 그림으로 그려볼게요.",
+    "student_source": "model",
+    "coach": "되말하기로 아이 생각이 모두에게 보이게 됐어요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 3,
+    "move": "extend",
+    "student": "아니 그게요… 그림으로 먼저 보여줘도 돼요? 말로 설명하기가 좀 어려워서요.",
+    "student_source": "model",
+    "coach": "잘 더 물었어요. 아이가 스스로 따져 보고 있어요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 4,
+    "move": "praise",
+    "student": "음… 제가 그림으로 보여드려도 돼요? 아직 한국어로 어떻게 설명해야 할지 잘 모르겠어요.",
+    "student_source": "model",
+    "coach": "'잘했어'보다 무엇을 잘했는지 짚어 줘요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   }
+  ]
+ },
+ {
+  "set": "set1",
+  "persona": "noah_g5_fractions",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "8이 4보다 더 크니까 8분의 1이 더 커요.",
+    "student_source": "model",
+    "coach": "좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요.",
+    "coach_source": "fallback",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 2,
+    "move": "extend",
+    "student": "음… 8분의 1이 더 커요. 왜냐면 8이 4보다 더 크니까요.",
+    "student_source": "model",
+    "coach": "잘 더 물었어요. 아이가 스스로 따져 보고 있어요.",
+    "coach_source": "fallback",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 3,
+    "move": "revoice",
+    "student": "음… 선생님, 8분의 1이 더 큰 거 아니에요? 분모가 더 크면 더 큰 거 아닌가요?",
+    "student_source": "model",
+    "coach": "되말하기로 아이 생각이 모두에게 보이게 됐어요.",
+    "coach_source": "fallback",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 4,
+    "move": "praise",
+    "student": "아… 8분의 1이 더 커요. 왜냐면 8이 4보다 더 크니까요.",
+    "student_source": "model",
+    "coach": "지금 학생의 생각을 잘 되짚어 주셨어요. 다음엔 학생의 말을 되짚어 준 후에, 그 생각에 대해 더 깊이 탐색할 수 있도록 '더 묻기'를 활용해 보면 어떨까요?",
+    "coach_source": "model",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   }
+  ]
+ },
+ {
+  "set": "set2",
+  "persona": "diego_ell",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "아니 그게요… 그림으로 먼저 보여줘도 돼요?",
+    "student_source": "model",
+    "coach": "학생의 생각을 묻는 좋은 시작이에요. 다음에는 조금 더 기다려 주면서 학생이 답을 생각해 볼 시간을 더 주는 건 어떨까요?",
+    "coach_source": "model",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 2,
+    "move": "revoice",
+    "student": "아니 그게요… 그림으로 먼저 보여줘도 돼요?",
+    "student_source": "model",
+    "coach": "되말하기로 아이 생각이 모두에게 보이게 됐어요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   }
+  ]
+ },
+ {
+  "set": "set2",
+  "persona": "noah_g5_fractions",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "음… 8이 4보다 크니까 8분의 1이 더 큰 거 아니에요?",
+    "student_source": "model",
+    "coach": "학생의 생각을 잘 이끌어냈어요. 다음엔 조금 더 기다려 줄까요?",
+    "coach_source": "model",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 2,
+    "move": "extend",
+    "student": "8이 4보다 더 크니까 8분의 1이 더 큰 거 아니에요?",
+    "student_source": "model",
+    "coach": "잘 더 물었어요. 아이가 스스로 따져 보고 있어요.",
+    "coach_source": "fallback",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   }
+  ]
+ },
+ {
+  "set": "set3",
+  "persona": "diego_ell",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "제 생각은요, 답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.",
+    "student_source": "fallback",
+    "coach": "좋은 생각 묻기예요. 아이 생각에서 흔들리는 부분을 더 짚어 봐요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 2,
+    "move": "revoice",
+    "student": "네, 맞아요. 그림으로 보여줘도 돼요?",
+    "student_source": "model",
+    "coach": "되말하기로 아이 생각이 모두에게 보이게 됐어요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 3,
+    "move": "extend",
+    "student": "네, 그림으로 보여줄게요. 이걸로 설명할 수 있어요.",
+    "student_source": "model",
+    "coach": "잘 더 물었어요. 아이가 스스로 따져 보고 있어요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   },
+   {
+    "turn": 4,
+    "move": "praise",
+    "student": "네, 이 그림으로 설명할 수 있어요. 이 조각이 더 커요.",
+    "student_source": "model",
+    "coach": "'잘했어'보다 무엇을 잘했는지 짚어 줘요.",
+    "coach_source": "fallback",
+    "opening_line": "답 알아요. 한국어로 말하는 데 시간이 조금 필요해요."
+   }
+  ]
+ },
+ {
+  "set": "set3",
+  "persona": "noah_g5_fractions",
+  "locale": "ko",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "8분의 1이 4분의 1보다 더 커요. 분모가 더 크면 더 큰 거잖아요.",
+    "student_source": "model",
+    "coach": "아이의 생각을 묻는 발문 좋았어요. 다음엔 3-5초 정도 기다려 주면 아이가 더 깊이 생각할 시간을 줄 수 있을 거예요.",
+    "coach_source": "model",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 2,
+    "move": "extend",
+    "student": "더 크게 하려면 분모를 더 크게 해야 하는 거 아니에요?",
+    "student_source": "model",
+    "coach": "아이의 생각을 더 깊게 탐색하기 위해 '더 묻기'를 사용했네요. 이제 아이가 스스로 답을 찾을 수 있도록 잠시 기다려 주는 건 어떨까요?",
+    "coach_source": "model",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 3,
+    "move": "revoice",
+    "student": "제 생각은요, 8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요.",
+    "student_source": "fallback",
+    "coach": "되말하기로 아이 생각이 모두에게 보이게 됐어요.",
+    "coach_source": "fallback",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   },
+   {
+    "turn": 4,
+    "move": "praise",
+    "student": "근데 8분의 1이 더 얇아 보이긴 해요.",
+    "student_source": "model",
+    "coach": "아이의 생각을 칭찬으로 마무리했네요. 이제 아이의 생각을 더 깊게 탐색해 볼까요?",
+    "coach_source": "model",
+    "opening_line": "8분의 1이랑 4분의 1 중에 뭐가 더 크냐고요? …8분의 1이요. 8이 4보다 크잖아요."
+   }
+  ]
+ },
+ {
+  "set": "en",
+  "persona": "noah_g5_fractions",
+  "locale": "en",
+  "calls": [
+   {
+    "turn": 1,
+    "move": "elicit",
+    "student": "Well, eight is a bigger number than four. So, I think one eighth is bigger.",
+    "student_source": "model",
+    "coach": "You asked the student to explain their thinking, which is a great start for eliciting. What's one way you could encourage them to elaborate further on that initial thought?",
+    "coach_source": "model",
+    "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth. 'Cause eight's more than four."
+   },
+   {
+    "turn": 2,
+    "move": "extend",
+    "student": "Wait... when you put it that way, I'm not so sure my first answer was right.",
+    "student_source": "fallback",
+    "coach": "Nice press. He is reasoning it through himself.",
+    "coach_source": "fallback",
+    "opening_line": "Which is bigger, one eighth or one fourth? ...One eighth. 'Cause eight's more than four."
+   }
+  ]
+ }
+]

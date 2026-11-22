@@ -29,20 +29,21 @@ export const MOVE_NAMES_KO = {
 };
 export const coachRulesKo = (tag) => COACH_KO_RULES.split("[[MOVE_KO]]").join(MOVE_NAMES_KO[tag] || "가르치는 수");
 
-// Model-written coach tips must sound like the fixed ones and name the move actually made.
+// Coach tips. Returns [ok, reason, hard]: hard problems (empty, mostly English) fall back to
+// the fixed tip; style problems (학생, honorific endings, a little long) get one retry and
+// then the model's tip is kept. A tip may name OTHER moves: the coach prompt asks for the
+// next step, so "다음엔 기다려 주기" is wanted, not a misnamed move.
 export function validateCoach(tip, ko, tag) {
   const t = String(tip || "").trim();
-  if (!t) return [false, "empty"];
-  if ((t.match(/[.!?](\s|$)/g) || []).length > 2 || t.length > (ko ? 140 : 240)) return [false, "longer than two short sentences"];
+  if (!t) return [false, "empty", true];
   if (ko) {
-    if (/[A-Za-z]{3,}/.test(t)) return [false, "English words"];
-    if (t.includes("학생")) return [false, "say 아이, not 학생"];
-    if (/(주셨|하셨|드려요|드립니다|습니다)/.test(t)) return [false, "plain 해요체, no honorific endings"];
-    const own = MOVE_NAMES_KO[tag];
-    const others = Object.entries(MOVE_NAMES_KO).filter(([k]) => k !== tag).map(([, v]) => v);
-    if (own && !t.includes(own) && others.some((o) => t.includes(o))) return [false, "named a different move; this turn's move is " + own];
+    const latin = (t.match(/[A-Za-z]/g) || []).length;
+    if (latin > 0.15 * t.replace(/\s/g, "").length) return [false, "mostly English", true];
   }
-  return [true, "ok"];
+  if ((t.match(/[.!?](\s|$)/g) || []).length > 3 || t.length > (ko ? 180 : 300)) return [false, "keep it to one or two short sentences", false];
+  if (ko && t.includes("학생")) return [false, "say 아이, not 학생", false];
+  if (ko && /(주셨|하셨|드려요|드립니다|습니다)/.test(t)) return [false, "plain 해요체, no honorific endings", false];
+  return [true, "ok", false];
 }
 export const groupRulesKo = () => STUDENT_KO_RULES.split("Your name is [[KO_NAME]]. ").join("Use the speaker's name as given. ");
 export const lectureRulesKo = () =>
@@ -50,8 +51,13 @@ export const lectureRulesKo = () =>
   "Students speak 존댓말 to the teacher. No translationese, no English words. Keep the JSON keys in English.";
 
 // The resolution must not leak in Korean either.
+// Giving in out loud: a leak for every persona.
 export const LEAK_PATTERNS_KO = [
   /이제 알겠어/, /이제 이해했/, /제가 틀렸/, /선생님 말이 맞/, /그러니까 답은/,
+];
+// The fractions answer itself: a leak only for personas whose misconception IS the fractions
+// (도윤), not for one who already knows it and struggles to say it (민호).
+export const CONTENT_LEAK_PATTERNS_KO = [
   /4분의\s*1이 더 (커|크)/, /조각이 많을수록.*작/, /분모가 클수록.*작/,
 ];
 
