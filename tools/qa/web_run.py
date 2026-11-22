@@ -11,6 +11,7 @@ steps: ["click",x,y] ["key","Enter"] ["hold","ArrowDown",ms] ["wait",s] ["shot",
        ["expect","marker",s]     wait up to s (default 12) until the current scene path or a
                                  visible text contains marker; otherwise exit 4 and save
                                  nothing more, so a wrong screen never becomes a "shot"
+       ["key_until","o","marker",n] press the key until the marker shows (a toast may have toggled it)
        ["expect_not","marker"]   exit 4 if marker is visible now ("a|b" = either marker)
 """
 import json
@@ -62,6 +63,14 @@ def main():
                 pg.mouse.click(st[1], st[2])
             elif op == "key":
                 pg.keyboard.press(st[1])
+                time.sleep(0.5)   # the probe republishes every 0.4 s: an expect must not read pre-key state
+            elif op == "key_until":   # ["key_until","o","marker",tries]: toggle until the marker shows
+                for _ in range(st[3] if len(st) > 3 else 3):
+                    s = json.loads(pg.evaluate("JSON.stringify(window.__cc_state || {})"))
+                    if any(m in s.get("text", "") for m in st[2].split("|")):
+                        break
+                    pg.keyboard.press(st[1])
+                    time.sleep(0.9)
             elif op == "hold":
                 pg.keyboard.down(st[1])
                 time.sleep(st[2] / 1000)

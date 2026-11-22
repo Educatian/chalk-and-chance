@@ -182,6 +182,11 @@ func _probe_tick() -> void:
 	var cur = SceneRouter._current
 	var st := {"scene": str(cur.scene_file_path) if cur != null else "", "rotate": _rotate_layer.visible,
 		"text": "\n".join(texts).left(60000)}
+	var fo := get_viewport().gui_get_focus_owner()
+	st["focus"] = str(fo.get_path()) if fo != null else ""
+	if cur != null and "input_locked" in cur:
+		st["room"] = {"locked": cur.input_locked, "over": cur._lesson_over, "objectives_open": cur._objectives_open,
+			"overlay": cur._overlay != null and is_instance_valid(cur._overlay)}
 	JavaScriptBridge.eval("window.__cc_state = %s;" % JSON.stringify(st))
 
 func _shown(c: Control, t: String) -> String:

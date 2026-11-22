@@ -124,6 +124,12 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_root.add_child(none)
 		_sections.append(none)
+		y += 48.0
+		# Something to do with that: one good first move and how to say it.
+		_sections.append(_section(Vector2(230, y), "A GOOD FIRST MOVE", "Elicit  ·  ask how they got it",
+			tr("Ask one student how they got their answer, then wait. You learn what they think before you decide what to teach."),
+			"How did you get that?", Color(0.98, 0.82, 0.30)))
+		y += 118.0
 	else:
 		var glow: Dictionary = fb.get("glow", {})
 		if not glow.is_empty():
@@ -150,22 +156,26 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 			var pat := _para(pattern, Vector2(230, y), 660.0, 13, Color(0.98, 0.62, 0.45))
 			_root.add_child(pat)
 			_sections.append(pat)
+			y += 44.0
 
+	# The card is as tall as what it has to say: focus and buttons follow the content
+	# (never above the portrait), then the whole card is centred on screen.
+	y = maxf(y, 214.0)
 	var focus: Dictionary = fb.get("focus", {})
 	var focus_box := Panel.new()
-	focus_box.position = Vector2(56, 404)
+	focus_box.position = Vector2(56, y + 6)
 	focus_box.size = Vector2(848, 40)
 	focus_box.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.10, 0.16, 0.20, 0.95), Color(0.30, 0.92, 0.86, 0.8)))
 	_root.add_child(focus_box)
 	var ftext := tr("NEXT ROUND FOCUS:  ") + tr(str(focus.get("text", "")) if not focus.is_empty() else "Do what worked again, on purpose.")
-	var fl := _label(ftext, Vector2(70, 414), Vector2(820, 22), 14, Color(0.70, 1.0, 0.94))
+	var fl := _label(ftext, Vector2(70, y + 16), Vector2(820, 22), 14, Color(0.70, 1.0, 0.94))
 	_root.add_child(fl)
 	_sections.append(focus_box)
 	_sections.append(fl)
 
 	var rehearse := Button.new()
 	rehearse.text = "Try again with this focus"
-	rehearse.position = Vector2(56, 456)
+	rehearse.position = Vector2(56, y + 58)
 	rehearse.size = Vector2(420, 40)
 	rehearse.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(rehearse, true)
@@ -183,7 +193,7 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 	_root.add_child(rehearse)
 	var cont := Button.new()
 	cont.text = "Continue"
-	cont.position = Vector2(488, 456)
+	cont.position = Vector2(488, y + 58)
 	cont.size = Vector2(416, 40)
 	cont.add_theme_font_size_override("font_size", UiText.fs(14))
 	HubUi.apply_button_style(cont, false)
@@ -192,6 +202,11 @@ func _build(moves: Array, scenario_id: String, on_rehearse: Callable, on_continu
 		queue_free()
 		on_continue.call())
 	_root.add_child(cont)
+	panel.size.y = y + 58 + 40 + 18 - panel.position.y
+	var dy := floorf((VP.y - panel.size.y) * 0.5) - panel.position.y
+	for c in _root.get_children():
+		if c != dim:
+			c.position.y += dy
 	rehearse.grab_focus()
 	Telemetry.log_event({"event": "coach_card", "scenario_id": scenario_id,
 		"grow_tag": str(fb.get("grow", {}).get("tag", "")), "focus_tag": str(focus.get("tag", "")),
@@ -234,7 +249,7 @@ func _section(pos: Vector2, kicker: String, head: String, body: String, starter:
 		q.size = Vector2(640, 26)
 		q.add_theme_stylebox_override("panel", HubUi.plate_style(Color(0.14, 0.13, 0.08, 0.9), Color(accent, 0.5)))
 		box.add_child(q)
-		var ql := _label("Try saying:  " + starter, Vector2(22, 86), Vector2(620, 20), 13, Color(1.0, 0.92, 0.70))
+		var ql := _label(tr("Try saying:  ") + tr(starter), Vector2(22, 86), Vector2(620, 20), 13, Color(1.0, 0.92, 0.70))
 		box.add_child(ql)
 	return box
 
@@ -266,8 +281,6 @@ func _label(text: String, pos: Vector2, size: Vector2, fs: int, color: Color) ->
 	return l
 
 func _tex(path: String, fallback: String) -> Texture2D:
-	if ResourceLoader.exists(path):
-		return load(path)
-	if ResourceLoader.exists(fallback):
-		return load(fallback)
-	return null
+	var Art = load("res://scripts/Art.gd")   # v2 portrait first
+	var t: Texture2D = Art.tex(path)
+	return t if t != null else Art.tex(fallback)

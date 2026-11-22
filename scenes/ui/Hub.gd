@@ -311,8 +311,7 @@ func _open_mission_briefing(id: String) -> void:
 	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	var v2_img := Art.tex("res://assets/v2/thumbs/%s.png" % id)   # the mission's own v2 room
-	image.texture = v2_img if v2_img != null else Art.tex(Art.scenario_backdrop_path(cfg, id, false))
+	image.texture = Art.tex(Art.scenario_backdrop_path(cfg, id, false))   # the mission's own room, current look
 	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay.add_child(image)
 
@@ -473,8 +472,7 @@ func _add_mission_card(parent: VBoxContainer, id: String, cfg: Dictionary, earne
 	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	thumb.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var v2_thumb := Art.tex("res://assets/v2/thumbs/%s.png" % id)
-	thumb.texture = v2_thumb if v2_thumb != null else Art.tex(Art.scenario_backdrop_path(cfg, id, true))
+	thumb.texture = Art.tex(Art.scenario_backdrop_path(cfg, id, true))
 	if locked:
 		thumb.modulate = Color(0.45, 0.48, 0.56)
 	row.add_child(thumb)
@@ -599,7 +597,7 @@ func _mission_reward_text(badge: String, earned: bool) -> String:
 	var reward_bits := ["+%d XP" % GameState.badge_xp(badge)]
 	var items: Dictionary = Items.BADGE_REWARDS.get(badge, {})
 	for id in items.keys():
-		reward_bits.append("%s x%d" % [Items.short_name_for(str(id)), int(items[id])])
+		reward_bits.append(tr("%s x%d") % [Items.short_name_for(str(id)), int(items[id])])
 	return ("Collected: " if earned else "Reward: ") + ", ".join(reward_bits)
 
 func _go_import() -> void:
@@ -1005,7 +1003,7 @@ func _add_evidence_row(overlay: Control, row: Dictionary, anchor: String, y: flo
 	overlay.add_child(fill)
 
 	var stat := Label.new()
-	stat.text = tr("%3d%%  %02d moves  +-%.2f") % [pct, n, unc]
+	stat.text = tr("%d%%  ·  %d moves  ·  ±%.2f") % [pct, n, unc]
 	stat.position = Vector2(430, y)
 	stat.size = Vector2(152, 22)
 	stat.add_theme_font_size_override("font_size", UiText.fs(10))
@@ -1144,8 +1142,10 @@ func _open_leaderboard() -> void:
 			_add_leaderboard_row(overlay, rows[i], i + 1, y)
 			y += 38.0
 
-	var class_dash := _footer_button("Class", Vector2(140, 432), _open_class_dashboard)
-	overlay.add_child(class_dash)
+	# The class dashboard is for instructors only (learners and the public demo never see it).
+	if Auth.is_instructor():
+		var class_dash := _footer_button("Class", Vector2(140, 432), _open_class_dashboard)
+		overlay.add_child(class_dash)
 	# Internal QA reports stay available in the editor only; players never see them.
 	if OS.has_feature("editor"):
 		var quality := _footer_button("Quality", Vector2(278, 432), _open_quality_report)
@@ -1177,7 +1177,7 @@ func _add_leaderboard_row(overlay: Control, rec: Dictionary, pos: int, y: float)
 	overlay.add_child(row_bg)
 
 	var label := Label.new()
-	label.text = "#%d  %s   %03d   %s" % [
+	label.text = tr("#%d  %s   %03d   %s") % [
 		pos,
 		str(rec.get("rank", "-")),
 		int(rec.get("score", 0)),
@@ -1360,6 +1360,9 @@ func _open_text_report(title_text: String, body_text: String, node_name: String)
 	return body
 
 func _open_class_dashboard() -> void:
+	# Instructors only; the editor keeps it for content audits (never in an export).
+	if not (Auth.is_instructor() or OS.has_feature("editor")):
+		return
 	var overlay := Control.new()
 	overlay.name = "ClassDashboardOverlay"
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1461,7 +1464,7 @@ func _draw_equipped_items(pos: Vector2) -> void:
 		var slot := Panel.new()
 		slot.position = Vector2(x, pos.y - 4)
 		slot.size = Vector2(34, 34)
-		slot.tooltip_text = "%s x%d" % [Items.name_for(str(id)), GameState.item_count(str(id))]
+		slot.tooltip_text = tr("%s x%d") % [Items.name_for(str(id)), GameState.item_count(str(id))]
 		add_child(slot)
 		if tex != null:
 			PixelUi.add_centered_icon(slot, tex, 3.0)
@@ -1544,7 +1547,7 @@ func _add_item_row(overlay: Control, id: String, x: float, y: float) -> void:
 		overlay.add_child(icon_slot)
 		PixelUi.add_centered_icon(icon_slot, tex, 3.0)
 	var label := Label.new()
-	label.text = "%s  x%d" % [Items.name_for(id), count]
+	label.text = tr("%s  x%d") % [Items.name_for(id), count]
 	label.position = Vector2(x + 48, y + 3)
 	label.size = Vector2(196, 24)
 	label.add_theme_font_size_override("font_size", UiText.fs(12))

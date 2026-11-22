@@ -76,7 +76,5 @@
     }
   ],
   "badge": "routine",
-  "backdrop": "res://assets/backdrops/independent_fractions.png",
-  "backdrop_thumb": "res://assets/backdrops/independent_fractions_thumb.png",
   "story_hook": "The rows look calm. That doesn't mean anyone's working. You'll only find out by walking them."
 }

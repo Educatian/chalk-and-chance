@@ -22,7 +22,17 @@ func _ready() -> void:
 
 	var path := Game.scenario_path(id)
 	print("RELOAD path=%s exists=%s" % [path, str(FileAccess.file_exists(path))])
-	if seats_ok and FileAccess.file_exists(path):
+	# Korean plan: format, length, subject and topic room come through; the id is unique.
+	var kf := FileAccess.open("res://tools/sample_lesson_plan_ko.md", FileAccess.READ)
+	var ks := LessonImport.plan_to_scenario(kf.get_as_text())
+	kf.close()
+	var ko_ok: bool = str(ks["format"]) == "discussion" and int(ks["period_seconds"]) == 100 \
+		and str(ks["title"]).begins_with("소수의 크기 비교") and str(ks.get("art_from", "")) == "custom_comparing_decimals" \
+		and str(ks["id"]).begins_with("custom_lesson_") and str(ks["id"]) != "custom_lesson"
+	print("KOREAN_PLAN fmt=%s period=%d id=%s art=%s ok=%s" % [ks["format"], int(ks["period_seconds"]), ks["id"], ks.get("art_from", ""), str(ko_ok)])
+	var exported := FileAccess.get_file_as_string("res://export_presets.cfg").contains("tools/sample_lesson_plan_ko.md")
+	print("SAMPLES_EXPORTED=%s" % str(exported))
+	if seats_ok and FileAccess.file_exists(path) and ko_ok and exported:
 		print("IMPORT TEST: PASS")
 	else:
 		print("IMPORT TEST: FAIL")

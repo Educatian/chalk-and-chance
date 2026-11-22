@@ -47,3 +47,24 @@ or build a small dashboard later.
   fine — the game just calls this Worker API cross-origin (CORS is open in worker.js).
 - Passwords are PBKDF2-SHA256 hashed in the Worker; the JWT is HMAC-signed with WORKER_SECRET.
 - Offline / not-signed-in still works: telemetry falls back to local `user://telemetry`.
+
+## Korean students (locale) — owner deploys
+
+The game sends `"locale": "ko"` (or `"en"`) in every `/turn`, `/group_turn` and `/lecture_turn`
+body. In this repo the Worker already reads it (`cloudflare/locale.js`):
+- Korean persona overlays (`data/i18n/ko/persona_library`) are merged over the English persona;
+- Korean rules are appended to the student, coach and group prompts (`tools/student_prompt_ko.txt`,
+  `tools/coach_prompt_ko.txt`): child voice, 존댓말 해요체 to the teacher, no translationese;
+- Korean replies with English words or a leaked answer are rejected and retried; the fallback
+  lines and coach tips are Korean.
+A missing `locale` (older clients) keeps today's English behaviour.
+
+**Until this is deployed, the hosted students keep answering in English.** To ship it:
+```bash
+python cloudflare/build_gamedata.py   # already run in the PR; re-run after editing personas/prompts
+node --test cloudflare/test/          # local stub, no network
+cd cloudflare && wrangler deploy
+```
+No secrets, D1 schema or bindings change. The web game must also be rebuilt from this branch so
+it sends `locale` (the Worker change is harmless without it; the client change is harmless
+without the Worker change).

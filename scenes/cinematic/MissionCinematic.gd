@@ -1,8 +1,10 @@
 extends Control
 const UiText = preload("res://scripts/UiText.gd")
 ## Chapter intro cinematic played before every mission. Data: data/narrative/chapters.json.
-## Letterboxed Ken Burns backdrop -> chapter card + "today's class" roster -> dialogue
-## beats with portraits and typewriter text -> hands off to the mission scene.
+## Letterboxed, one composed frame per beat (tools/art/cinematic_frames.py: the title, each
+## story beat, the outro; both classroom looks) crossfading as the story moves -> chapter
+## title on a solid band -> dialogue and narration on the same band, never over a face ->
+## hands off to the mission scene.
 ## Click / Space / Enter advances; Esc or the Skip button jumps straight to the mission.
 
 const Art = preload("res://scripts/Art.gd")
@@ -27,6 +29,7 @@ var _won := true
 var _end_card_up := false
 
 var _backdrop: TextureRect
+var _backdrop_next: TextureRect   # crossfade target for the next beat's frame
 var _shade: ColorRect
 var _top_bar: ColorRect
 var _bottom_bar: ColorRect
@@ -67,17 +70,17 @@ func _build() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
-	_backdrop = TextureRect.new()
-	_backdrop.texture = _trim_border(Art.tex(Art.scenario_backdrop_path(_cfg)))
-	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_backdrop.size = _vp
-	_backdrop.pivot_offset = _vp * 0.5
+	_backdrop = _frame_rect()
+	_backdrop.texture = _frame_tex("outro" if _outro else "title")
 	_backdrop.modulate = Color(1, 1, 1, 0)
 	add_child(_backdrop)
+	_backdrop_next = _frame_rect()
+	_backdrop_next.modulate = Color(1, 1, 1, 0)
+	add_child(_backdrop_next)
 
+	# The frames are composed with the text band in mind, so only a light shade is needed.
 	_shade = ColorRect.new()
-	_shade.color = Color(0.02, 0.03, 0.07, 0.55)
+	_shade.color = Color(0.02, 0.03, 0.07, 0.12)
 	_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_shade)
 	add_child(_vignette())
@@ -108,7 +111,7 @@ func _build() -> void:
 	add_child(_caption)
 
 	_hint = Label.new()
-	_hint.text = "Click / Space  ▸"
+	_hint.text = "Click / Space  »"
 	_hint.position = Vector2(_vp.x - 190, _vp.y - 22)
 	_hint.size = Vector2(170, 18)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -118,7 +121,7 @@ func _build() -> void:
 	add_child(_hint)
 
 	var skip := Button.new()
-	skip.text = "Skip ▸▸"
+	skip.text = "Skip »"
 	skip.position = Vector2(_vp.x - 104, 14)
 	skip.size = Vector2(88, 28)
 	skip.focus_mode = Control.FOCUS_NONE
@@ -132,12 +135,21 @@ func _build_card() -> Control:
 	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.modulate.a = 0.0
+	var band_y := _vp.y - BAR_H - 146.0
+	var band := Panel.new()
+	band.position = Vector2(24, band_y)
+	band.size = Vector2(_vp.x - 48, 138)
+	var bsb := HubUi.plate_style(Color(0.05, 0.06, 0.12, 0.94), Color(0.98, 0.82, 0.30, 0.85))
+	bsb.set_border_width_all(2)
+	band.add_theme_stylebox_override("panel", bsb)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(band)
 	var kicker := _label("CHAPTER %d  ·  %s" % [int(_chapter.get("chapter", 0)), str(_chapter.get("month", ""))],
-		Vector2(0, 150), Vector2(_vp.x, 20), 12, Color(0.98, 0.82, 0.30))
+		Vector2(0, band_y + 12), Vector2(_vp.x, 20), 12, Color(0.98, 0.82, 0.30))
 	kicker.name = "Kicker"
 	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(kicker)
-	var title := _label("", Vector2(40, 180), Vector2(_vp.x - 80, 60), 22, Color(0.98, 0.96, 0.88))
+	var title := _label("", Vector2(40, band_y + 34), Vector2(_vp.x - 80, 44), 22, Color(0.98, 0.96, 0.88))
 	title.name = "Title"
 	title.add_theme_font_override("font", load(PIXEL_FONT))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -145,35 +157,14 @@ func _build_card() -> Control:
 	title.add_theme_constant_override("outline_size", 8)
 	title.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07))
 	card.add_child(title)
-	var region := _label(str(_chapter.get("region", "")).to_upper(), Vector2(0, 246), Vector2(_vp.x, 18), 11, Color(0.62, 0.88, 0.95))
+	var region := _label(str(_chapter.get("region", "")).to_upper(), Vector2(0, band_y + 84), Vector2(_vp.x, 18), 11, Color(0.62, 0.88, 0.95))
 	region.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(region)
-	var mission := _label(str(_cfg.get("title", "")), Vector2(0, 268), Vector2(_vp.x, 18), 12, Color(0.80, 0.84, 0.92))
+	var mission := _label(str(_cfg.get("title", "")), Vector2(0, band_y + 106), Vector2(_vp.x, 18), 12, Color(0.80, 0.84, 0.92))
 	mission.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	card.add_child(mission)
 
-	var roster: Array = _cfg.get("roster", [])
-	var n := mini(roster.size(), 8)
-	var slot := 64.0
-	var x0 := (_vp.x - n * slot) * 0.5
-	var strip := Control.new()
-	strip.name = "Roster"
-	card.add_child(strip)
-	for i in range(n):
-		var r: Dictionary = roster[i]
-		var p := TextureRect.new()
-		p.texture = Art.tex("res://assets/portraits/%s_neutral.png" % str(r.get("id", "")))
-		p.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		p.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		p.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		p.position = Vector2(x0 + i * slot + 4, 318)
-		p.size = Vector2(56, 56)
-		p.modulate.a = 0.0
-		strip.add_child(p)
-		var nm := _label(str(r.get("name", "")), Vector2(x0 + i * slot, 376), Vector2(slot, 14), 9, Color(0.86, 0.88, 0.94))
-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nm.modulate.a = 0.0
-		strip.add_child(nm)
+	# Today's class is in the title frame itself, seated, at full size.
 	return card
 
 func _build_dialogue_box() -> Control:
@@ -228,12 +219,7 @@ func _run() -> void:
 	t.tween_property(_top_bar, "position:y", 0.0, 0.6 if not _reduced else 0.01).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_property(_bottom_bar, "position:y", _vp.y - BAR_H, 0.6 if not _reduced else 0.01).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	t.tween_property(_backdrop, "modulate:a", 1.0, 1.2)
-	if not _reduced:
-		_backdrop.scale = Vector2(1.04, 1.04)
-		var push := create_tween().set_parallel(true)
-		var total := 6.0 + 4.5 * _beats.size()
-		push.tween_property(_backdrop, "scale", Vector2(1.18, 1.18), total).set_trans(Tween.TRANS_SINE)
-		push.tween_property(_backdrop, "position", Vector2(-26, -12), total).set_trans(Tween.TRANS_SINE)
+	_drift(_backdrop)
 	Sfx.play("whoosh", -4.0)
 	await get_tree().create_timer(0.5).timeout
 	if _finished:
@@ -259,22 +245,7 @@ func _play_card() -> void:
 			Sfx.blip("type")
 		if not _reduced:
 			await get_tree().create_timer(0.045).timeout
-	var strip: Control = _card.get_node("Roster")
-	var kids := strip.get_children()
-	for i in range(0, kids.size(), 2):
-		if _finished:
-			return
-		var p: TextureRect = kids[i]
-		var nm: Label = kids[i + 1]
-		var y0 := p.position.y
-		p.position.y += 16
-		var pt := create_tween().set_parallel(true)
-		pt.tween_property(p, "modulate:a", 1.0, 0.18)
-		pt.tween_property(p, "position:y", y0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		pt.tween_property(nm, "modulate:a", 1.0, 0.18)
-		Sfx.play("tick", -6.0, 0.9 + 0.05 * i)
-		await get_tree().create_timer(0.07 if not _reduced else 0.0).timeout
-	await get_tree().create_timer(1.6 if not _reduced else 0.6).timeout
+	await get_tree().create_timer(1.8 if not _reduced else 0.6).timeout
 	if _finished:
 		return
 	var out := create_tween()
@@ -292,11 +263,11 @@ func _next_beat() -> void:
 	var beat: Dictionary = _beats[_beat]
 	var who := str(beat.get("speaker", "narrator"))
 	var line := Narrative.line_text(beat, _cfg)
-	if who == "narrator":
-		_show_caption(line)
-		return
+	_show_frame(_frame_tex("outro" if _outro else str(_beat)))
 	_caption.visible = false
-	var info := Narrative.speaker(who, _cfg, str(beat.get("mood", "neutral")))
+	# Narration uses the same band as dialogue: no name, no portrait, italic.
+	var info: Dictionary = {"name": "", "color": Color.WHITE, "texture": null} if who == "narrator" \
+		else Narrative.speaker(who, _cfg, str(beat.get("mood", "neutral")))
 	var was_hidden := _box.modulate.a < 0.5
 	if was_hidden:
 		var bt := create_tween()
@@ -318,7 +289,7 @@ func _next_beat() -> void:
 			var pt := create_tween().set_parallel(true)
 			pt.tween_property(_portrait_frame, "position:x", 40.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 			pt.tween_property(_portrait_frame, "modulate:a", 1.0, 0.16)
-	var body := ("[i]%s[/i]" % line) if who == "you" else line
+	var body := ("[i]%s[/i]" % line) if who == "you" or who == "narrator" else line
 	_type_into(_text, body, who)
 
 func _show_caption(line: String) -> void:
@@ -396,6 +367,49 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		get_viewport().set_input_as_handled()
 		_advance()
+
+# --- frames ----------------------------------------------------------------------
+
+func _frame_rect() -> TextureRect:
+	var r := TextureRect.new()
+	r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	r.size = _vp
+	r.pivot_offset = _vp * 0.5
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+## This beat's composed frame in the current classroom look; a mission without frames
+## (an imported lesson) falls back to its room picture.
+func _frame_tex(name: String) -> Texture2D:
+	var sid := str(_cfg.get("id", ""))
+	var kr := bool(GameState.get_setting("korean_classroom", false))
+	for suf in (["_kr", ""] if kr else [""]):
+		var t: Texture2D = Art.tex("res://assets/v2/cinematic/%s/%s%s.png" % [sid, name, suf])
+		if t != null:
+			return t
+	return Art.tex(Art.scenario_backdrop_path(_cfg))
+
+func _show_frame(tex: Texture2D) -> void:
+	if tex == null or tex == _backdrop.texture:
+		return
+	_backdrop_next.texture = tex
+	_backdrop_next.scale = Vector2.ONE
+	var t := create_tween()
+	t.tween_property(_backdrop_next, "modulate:a", 1.0, 0.01 if _reduced else 0.35)
+	t.tween_callback(func():
+		_backdrop.texture = tex
+		_backdrop.scale = _backdrop_next.scale
+		_backdrop_next.modulate.a = 0.0
+		_drift(_backdrop))
+
+## A slow, small push on the current frame (the composition holds: 3% over a beat).
+func _drift(r: TextureRect) -> void:
+	if _reduced:
+		return
+	r.scale = Vector2.ONE
+	create_tween().tween_property(r, "scale", Vector2(1.03, 1.03), 6.0).set_trans(Tween.TRANS_SINE)
 
 ## Outro end card: chapter result + a teaser for the next chapter.
 func _show_end_card() -> void:

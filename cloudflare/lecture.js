@@ -2,6 +2,8 @@
 // Scoring stays in Godot; this endpoint only generates the visible class/student
 // reaction and Coach Vee's pacing feedback.
 
+import { isKorean, lectureRulesKo } from "./locale.js";
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const MOVE_DESC = {
@@ -97,7 +99,7 @@ function lectureMessages(body, tag) {
     "The player is learning how to begin a lesson, what each move does, and how lecture pacing becomes evidence of student thinking.",
     "Coach Vee should name the teaching concept in plain English: chunking, wait time, check-for-understanding, responsive re-explanation, or whole-class accountability.",
     "Rules: keep the reaction lesson-specific, do not teach or imply the final content answer, and do not change scores. If the teacher is over-presenting, make attention/comprehension concerns visible. If they check understanding well, show the class becoming more accountable. The student may repeat a starting misconception, hesitate, or describe confusion, but must not resolve the misconception for the player.",
-  ].join("\n");
+  ].join("\n") + (isKorean(body) ? lectureRulesKo() : "");
   const user = active.name
     ? `Generate the next classroom reaction. If appropriate, let ${active.name} speak.`
     : "Generate the next classroom reaction.";

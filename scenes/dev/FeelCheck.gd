@@ -40,6 +40,8 @@ func _ready() -> void:
 	_check_roster_safe_lines()
 	_check_net_guard()
 	_check_korean_catalogue()
+	await _check_objectives_toggle()
+	await _check_instructor_panels()
 	print("FEEL %s" % ("PASS" if fails == 0 else "FAIL %d" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -305,3 +307,68 @@ func _check_grid_path() -> void:
 	walls[Vector2i(2, 2)] = true
 	_ok("walled-off goal gives no path", InputFeel.grid_path(Vector2i(0, 0), Vector2i(4, 0), walkable).is_empty())
 	_ok("start == goal is a zero-step path", InputFeel.grid_path(Vector2i(1, 1), Vector2i(1, 1), walkable) == [Vector2i(1, 1)])
+
+## O (objectives) must do what the player asked even while the objective count is
+## changing: the auto-open toast used to reopen a panel the player had just closed, so O
+## looked ignored (worst in the independent-work room, where attention hovers at the bar).
+func _check_objectives_toggle() -> void:
+	Game.current_scenario_id = "independent_fractions"
+	var ow: Node = load("res://scenes/overworld/Overworld.tscn").instantiate()
+	add_child(ow)
+	for i in 3:
+		await get_tree().process_frame
+	ow._next_interrupt = 9999.0
+	var flips := 0
+	for trial in 10:
+		ow._unhandled_key_input(_key(KEY_O))          # open
+		await get_tree().process_frame
+		ow._unhandled_key_input(_key(KEY_O))          # close
+		ow._last_objectives_met += 1                  # an objective flips right after
+		for i in 3:
+			await get_tree().process_frame
+		if ow._objectives_open:
+			flips += 1
+	_ok("O closes the objectives panel and it stays closed when an objective flips (10 tries)", flips == 0)
+	ow._set_objectives_open(false, false)
+	ow._unhandled_key_input(_key(KEY_O))
+	await get_tree().process_frame
+	_ok("O still opens the panel", ow._objectives_open)
+	ow._unhandled_key_input(_key(KEY_ESCAPE))   # leave prompt over an open panel
+	await get_tree().process_frame
+	_ok("Esc leave prompt closes the objectives panel instead of sitting under it", not ow._objectives_open and ow._overlay != null)
+	ow._close_overlay()
+	ow._resolve_interrupt({"dcomp": -2.0, "dnoise": 0.0, "ddis": 0, "coach": "COACH-OUTCOME-LINE"})
+	for i in 5:
+		await get_tree().process_frame
+	_ok("an interrupt's coaching line stays on screen (not overwritten by the room hint)", str(ow._coach_hint.text).contains("COACH-OUTCOME-LINE"))
+	ow.queue_free()
+	await get_tree().process_frame
+
+## Instructor panels: only a signed-in account whose server-issued role is
+## "instructor" sees the Class dashboard button; learners and the public demo do not.
+func _check_instructor_panels() -> void:
+	var A = load("res://autoload/Auth.gd")
+	_ok("role: not signed in (public demo) -> no instructor panels", not A.instructor_role(false, "instructor"))
+	_ok("role: signed-in learner -> no instructor panels", not A.instructor_role(true, "learner"))
+	_ok("role: signed-in, empty role -> no instructor panels", not A.instructor_role(true, ""))
+	_ok("role: signed-in instructor -> instructor panels", A.instructor_role(true, "instructor"))
+	var saved := [Auth.token, Auth.role]
+	for case in [["", "", false], ["t", "learner", false], ["t", "instructor", true]]:
+		Auth.token = case[0]
+		Auth.role = case[1]
+		var hub: Node = load("res://scenes/ui/Hub.tscn").instantiate()
+		add_child(hub)
+		await get_tree().process_frame
+		hub._open_leaderboard()
+		await get_tree().process_frame
+		var lb: Node = hub.get_node_or_null("LeaderboardOverlay")
+		var has_class := false
+		if lb != null:
+			for c in lb.get_children():
+				if c is Button and (c as Button).text == "Class":
+					has_class = true
+		_ok("leaderboard Class button for %s: %s" % [case[1] if case[1] != "" else "public demo", "shown" if case[2] else "hidden"], has_class == case[2])
+		hub.queue_free()
+		await get_tree().process_frame
+	Auth.token = saved[0]
+	Auth.role = saved[1]

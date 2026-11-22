@@ -29,6 +29,15 @@ func configured() -> bool:
 func signed_in() -> bool:
 	return token != ""
 
+## Instructor-only panels (class dashboard). The role is the one the Worker put in the
+## login response for this signed-in account (learners.role in D1; new accounts are
+## "learner"). Not signed in, the public demo and learners all get false.
+func is_instructor() -> bool:
+	return instructor_role(signed_in(), role)
+
+static func instructor_role(is_signed_in: bool, p_role: String) -> bool:
+	return is_signed_in and p_role == "instructor"
+
 func login(p_class: String, p_name: String, p_password: String) -> void:
 	if not configured():
 		login_failed.emit("Sign-in isn't set up yet.")

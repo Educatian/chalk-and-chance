@@ -2,6 +2,8 @@
 // real Gemini students (judge-before-generate + frozen-persona anti-sycophancy + adaptive
 // coach). OpenRouter key is a Worker secret (OPENROUTER_API_KEY); never reaches the client.
 import { RUBRIC, PERSONAS, STUDENT_PROMPT, COACH_PROMPT } from "./gamedata.js";
+import { isKorean, personaFor, studentRulesKo, coachRulesKo, LEAK_PATTERNS_KO, CANNED_STUDENT_KO,
+  COACH_TIPS_KO, heuristicClassifyKo } from "./locale.js";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MOVE_TAGS = ["elicit", "extend", "revoice", "tell", "praise", "redirect", "wait", "connect"];
@@ -76,26 +78,27 @@ function heuristicClassify(text) {
   if (/(the answer is|actually it|here's how|let me show|because the)/.test(t)) return "tell";
   return "elicit";
 }
-async function classifyMove(text, key) {
-  if (!key) return heuristicClassify(text);
+async function classifyMove(text, key, ko = false) {
+  const fallback = () => (ko && heuristicClassifyKo(text)) || heuristicClassify(text);
+  if (!key) return fallback();
   try {
     const sys = "You label a teacher's utterance to a student with EXACTLY ONE move tag from: " +
       "elicit, extend, revoice, tell, praise, redirect, wait, connect. " +
       'elicit=asks how/why they think; extend=pushes their idea further; revoice=restates their thinking; ' +
       'tell=states the answer/explains directly; praise=praises; redirect=manages behavior; wait=silence; ' +
-      'connect=asks about their life/interests. Return ONLY JSON {"tag":"<one tag>"}.';
+      'connect=asks about their life/interests. The utterance may be in English or Korean. Return ONLY JSON {"tag":"<one tag>"}.';
     const raw = await callOpenRouter(
       [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 500) }],
       key, "google/gemini-2.5-flash-lite", 0.0, 20);
     const tag = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).tag || "").trim().toLowerCase();
-    return MOVE_TAGS.includes(tag) ? tag : heuristicClassify(text);
+    return MOVE_TAGS.includes(tag) ? tag : fallback();
   } catch (_e) {
-    return heuristicClassify(text);
+    return fallback();
   }
 }
 
 // --- student generation (frozen persona, anti-sycophancy) --------------------
-function studentMessages(req, persona, verdict) {
+function studentMessages(req, persona, verdict, ko = false) {
   const ks = persona.knowledge_state || {};
   const bt = persona.behavior_tendencies || {};
   const rs = req.runtime_state || {};
@@ -128,6 +131,7 @@ function studentMessages(req, persona, verdict) {
   let sys = STUDENT_PROMPT;
   for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
   sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse this context to make your reply fit the current lesson. If misconception_resolved is false, stay inside your starting idea or behavior; do not reveal the final correct reasoning.`;
+  if (ko) sys += "\n" + studentRulesKo(persona.display_name);
   return [{ role: "system", content: sys },
     { role: "user", content: "Respond now as the student, in character. JSON only." }];
 }
@@ -137,15 +141,17 @@ const LEAK_PATTERNS = [
   /\bsmaller (piece|share)s? .* (bigger|larger)\b/, /\b1\/4 is (bigger|larger)\b/,
   /\bmore pieces .* smaller\b/, /\byou'?re right\b/, /\bi was wrong\b/,
 ];
-function validateStudent(text, persona, resolved, grade) {
+function validateStudent(text, persona, resolved, grade, ko = false) {
   const t = (text || "").trim();
   if (!t) return [false, "empty"];
   const cap = (grade.includes("grade_5") || grade.includes("grade_4")) ? 220 : 280;
   const sentences = (t.match(/[.!?]/g) || []).length;
   if (t.length > cap || sentences > 3) return [false, "too long for grade band"];
+  if (ko && /[A-Za-z]{3,}/.test(t)) return [false, "English words in a Korean reply"];
   if (!resolved) {
     const low = t.toLowerCase();
     for (const p of LEAK_PATTERNS) if (p.test(low)) return [false, "leaked resolution"];
+    if (ko) for (const p of LEAK_PATTERNS_KO) if (p.test(t)) return [false, "leaked resolution"];
     const win = String(persona.win_line || "").toLowerCase();
     if (win.length > 20 && low.includes(win.slice(0, 25))) return [false, "echoed win_line"];
   }
@@ -162,9 +168,15 @@ function scenarioStartingIdea(req) {
   const active = sc.active_student || {};
   return String(active.opening_line || "").trim();
 }
-function cannedStudent(verdict, name, req = {}) {
+function cannedStudent(verdict, name, req = {}, ko = false) {
   const tag = verdict.move_tags[0] || "";
   const idea = scenarioStartingIdea(req);
+  if (ko) {
+    const k = CANNED_STUDENT_KO;
+    let text = tag === "wait" ? (verdict.wait_time_ok ? k.wait_ok : k.wait) : (k[tag] || "…");
+    if (idea && (tag === "elicit" || tag === "revoice")) text = k.idea(idea);
+    return { speaker: name, text, emotion_shown: "guarded" };
+  }
   const m = { elicit: "Um... okay. Let me try to explain how I was thinking about it.",
     extend: "Wait... when you put it that way, I'm not so sure my first answer was right.",
     revoice: "Yeah... that's what I meant.", tell: "Oh. Okay, I guess.", praise: "...thanks.",
@@ -174,27 +186,28 @@ function cannedStudent(verdict, name, req = {}) {
   }
   return { speaker: name, text: m[tag] || "...", emotion_shown: "guarded" };
 }
-async function generateStudent(req, persona, verdict, key) {
+async function generateStudent(req, persona, verdict, key, ko = false) {
   const name = persona.display_name || "Student";
-  if (!key) return cannedStudent(verdict, name, req);
+  if (!key) return cannedStudent(verdict, name, req, ko);
   const resolved = !!(req.runtime_state || {}).misconception_resolved;
   const grade = String(persona.grade_band || "");
-  let messages = studentMessages(req, persona, verdict);
+  let messages = studentMessages(req, persona, verdict, ko);
   for (const temp of [0.75, 0.4]) {
     let out;
     try {
       out = parseStudent(await callOpenRouter(messages, key, "google/gemini-2.5-flash-lite", temp, 200));
     } catch (_e) { break; }
-    const [ok, why] = validateStudent(out.text, persona, resolved, grade);
+    const [ok, why] = validateStudent(out.text, persona, resolved, grade, ko);
     if (ok) return { speaker: name, text: out.text, emotion_shown: out.emotion_shown };
-    messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences. JSON only.` }];
+    messages = [...messages, { role: "system", content: `That reply was rejected: ${why}. Stay in your misconception, grade-band, 1-2 short sentences.${ko ? " Natural Korean 해요체 only." : ""} JSON only.` }];
   }
-  return cannedStudent(verdict, name, req);
+  return cannedStudent(verdict, name, req, ko);
 }
 
 // --- adaptive coach ----------------------------------------------------------
-function coachTip(verdict) {
+function coachTip(verdict, ko = false) {
   const tag = verdict.move_tags[0] || "";
+  if (ko) return COACH_TIPS_KO[tag] || "가르치는 수를 하나 골라요.";
   const tips = { elicit: "Good eliciting move. Press on the crack in his reasoning.",
     extend: "Nice press. He is reasoning it through himself.", revoice: "Revoicing makes his thinking public.",
     tell: "You took over the thinking; engagement dropped. Try eliciting first.",
@@ -202,8 +215,8 @@ function coachTip(verdict) {
     wait: "Hold the pause 3 to 5 seconds; let him fill the silence." };
   return tips[tag] || "Pick a teaching move.";
 }
-async function makeCoach(req, persona, verdict, key) {
-  if (!key) return coachTip(verdict);
+async function makeCoach(req, persona, verdict, key, ko = false) {
+  if (!key) return coachTip(verdict, ko);
   try {
     const rs = req.runtime_state || {};
     const tag = verdict.move_tags[0] || "";
@@ -223,12 +236,13 @@ async function makeCoach(req, persona, verdict, key) {
     let sys = COACH_PROMPT;
     for (const [k, v] of Object.entries(repl)) sys = sys.split(k).join(v);
     sys += `\n\n# SCENARIO-SPECIFIC LESSON CONTEXT\n${scenarioBrief(req)}\nUse the scenario context to coach the teacher's move, but do not reveal the content answer or final resolution.`;
+    if (ko) sys += "\n" + coachRulesKo();
     const raw = await callOpenRouter([{ role: "system", content: sys },
       { role: "user", content: "Give your one coaching note now. JSON only." }], key, "google/gemini-2.5-flash-lite", 0.4, 120);
     const tip = String(JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)).coach_tip || "").trim();
-    return tip || coachTip(verdict);
+    return tip || coachTip(verdict, ko);
   } catch (_e) {
-    return coachTip(verdict);
+    return coachTip(verdict, ko);
   }
 }
 
@@ -237,9 +251,10 @@ export async function handleTurn(req, env) {
   const body = await req.json();
   const key = (env.OPENROUTER_API_KEY || "").trim();
   const move = body.teacher_move || {};
+  const ko = isKorean(body);
   let classified = "";
   if (move.input_mode === "free_text" && (move.text || "").trim()) {
-    classified = await classifyMove(move.text, key);
+    classified = await classifyMove(move.text, key, ko);
     move.menu_tag = classified;
   }
   const verdict = judge(move, body.win_moves || []);
@@ -249,10 +264,10 @@ export async function handleTurn(req, env) {
     understanding: row.understanding || 0.0, trust: row.trust || 0.0, engagement: row.engagement || 0.0,
     order: row.order || 0.0, composure: row.composure || 0.0,
   };
-  const persona = PERSONAS[body.active_persona_id] || body.frozen_persona || {};
+  const persona = personaFor(body.active_persona_id, PERSONAS[body.active_persona_id] || body.frozen_persona || {}, ko);
   const [student, coach] = await Promise.all([
-    generateStudent(body, persona, verdict, key),
-    makeCoach(body, persona, verdict, key),
+    generateStudent(body, persona, verdict, key, ko),
+    makeCoach(body, persona, verdict, key, ko),
   ]);
   return { session_id: body.session_id || "web", judge: verdict, meter_deltas: deltas,
     student_utterance: student, coach_tip: coach };

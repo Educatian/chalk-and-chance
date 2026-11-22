@@ -151,12 +151,14 @@ var _player: Node2D = null
 var _attention_fill: ColorRect = null
 var _disrupt_label: Label = null
 var _equity_label: Label = null
-var _objective_label: Label = null
+var _objective_label: RichTextLabel = null   # BBCode table: wrapped lines keep their indent
 var _objective_toggle: Button = null
 var _hud: Node2D = null
 var _objective_plate: Panel = null
 var _objectives_open := false
 var _objective_toast_left := 0.0
+var _objective_quiet_left := 0.0
+var _coach_hold_left := 0.0       # an interrupt's coaching line stays up this long before room hints resume   # after the player toggles the panel, no auto-open toasts
 var _last_objectives_met := -1
 var _room_cue := ""
 var _interact_label: Label = null
@@ -846,6 +848,11 @@ func _hud_node() -> Node2D:
 const HUD_ATT_W := 150.0
 const HUD_COMP_W := 120.0
 const OBJ_TOAST_SECONDS := 3.0
+const COACH_HOLD_SECONDS := 6.0
+## The player's own O press / tap wins: objective-change toasts stay quiet this long after
+## it, so the panel never reopens right after they closed it (attention hovering at an
+## objective's bar flips the met count every few seconds).
+const OBJ_PLAYER_QUIET_SECONDS := 8.0
 
 ## Classroom HUD lives in two bands that never cover a student: the front wall row
 ## (top, y 0-40) and the back wall row + empty aisle (bottom). Seats are rows 3-10.
@@ -882,15 +889,29 @@ func _build_hud() -> void:
 	_objective_toggle.focus_mode = Control.FOCUS_NONE
 	UiKit.style_button(_objective_toggle, 14 + GameState.ui_font_delta())
 	_objective_toggle.z_index = 60
-	_objective_toggle.pressed.connect(func(): _set_objectives_open(not _objectives_open, false))
+	_objective_toggle.pressed.connect(_toggle_objectives_by_player)
 	_hud_node().add_child(_objective_toggle)
 
 	# Expanded objectives: over the left wall columns, clear of every seat.
-	_objective_plate = _hud_plate(Vector2(4, ROOM_ORIGIN.y - 30), Vector2(ROOM_ORIGIN.x + 3 * TILE, 300))
-	_objective_label = _hud_text("", Vector2(18, ROOM_ORIGIN.y - 18), UiText.HUD, Color("f2eedd"))
-	_objective_label.size = Vector2(ROOM_ORIGIN.x + 3 * TILE - 28, 276)
-	_objective_label.clip_text = true
-	_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_objective_plate = _hud_plate(Vector2(4, ROOM_ORIGIN.y - 30), Vector2(OBJ_PANEL_W, 300))
+	# Each objective is a two-column row (mark | skill, count and rule), so a line that
+	# wraps stays under its own text instead of falling back to the left edge.
+	_objective_label = RichTextLabel.new()
+	_objective_label.bbcode_enabled = true
+	_objective_label.scroll_active = false
+	_objective_label.clip_contents = true
+	_objective_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objective_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED   # built from tr() parts
+	_objective_label.position = Vector2(18, ROOM_ORIGIN.y - 18)
+	_objective_label.size = Vector2(OBJ_PANEL_W - 28, 276)
+	_objective_label.fit_content = true   # the plate follows the text (see _fit_objective_plate)
+	_objective_label.add_theme_font_size_override("normal_font_size", UiText.fs(12))
+	_objective_label.add_theme_font_size_override("bold_font_size", UiText.fs(12))
+	_objective_label.add_theme_color_override("default_color", Color("f2eedd"))
+	_objective_label.add_theme_constant_override("table_h_separation", 6)
+	_objective_label.add_theme_constant_override("line_separation", 1)
+	_objective_label.z_index = 60
+	_hud_node().add_child(_objective_label)
 	_set_objectives_open(false, false)
 
 	var vee_tex := Art.tex("res://assets/portraits/coach_vee_neutral.png")
@@ -957,6 +978,18 @@ func _hud_fill(pos: Vector2, size: Vector2, color: Color) -> ColorRect:
 
 ## Collapsed: one line in the top band. Open: list on the left wall. `toast` = auto-open
 ## for a few seconds (an objective changed), then close again unless the player opened it.
+## Wide enough that a rule wraps to two lines at most, tall enough for every row: the
+## plate is sized from the text so nothing is clipped in either language.
+const OBJ_PANEL_W := 236.0
+
+func _fit_objective_plate() -> void:
+	if _objective_plate != null and _objective_label != null:
+		_objective_plate.size.y = maxf(60.0, _objective_label.get_content_height() + 24.0)
+
+func _toggle_objectives_by_player() -> void:
+	_set_objectives_open(not _objectives_open, false)
+	_objective_quiet_left = OBJ_PLAYER_QUIET_SECONDS
+
 func _set_objectives_open(open: bool, toast: bool) -> void:
 	_objectives_open = open
 	_objective_toast_left = OBJ_TOAST_SECONDS if (open and toast) else 0.0
@@ -1068,19 +1101,22 @@ func _process(delta: float) -> void:
 		if _objective_label != null:
 			var attention_now := 100.0 - total / float(_npcs.size())
 			_objective_label.text = _objectives_status(attention_now)
+			_fit_objective_plate()
 			var met := _objectives_met_count(attention_now)
 			if met != _last_objectives_met:
 				var first := _last_objectives_met < 0
 				_last_objectives_met = met
-				if not first and not _objectives_open:
+				if not first and not _objectives_open and _objective_quiet_left <= 0.0:
 					_set_objectives_open(true, true)
 				_refresh_objective_toggle()
+			_objective_quiet_left = maxf(0.0, _objective_quiet_left - delta)
 			if _objective_toast_left > 0.0:
 				_objective_toast_left -= delta
 				if _objective_toast_left <= 0.0:
 					_set_objectives_open(false, false)
 
-		if _coach_hint != null:
+		_coach_hold_left = maxf(0.0, _coach_hold_left - delta)
+		if _coach_hint != null and _coach_hold_left <= 0.0:
 			if facing_up and worst > 30.0:
 				_coach_hint.text = "Coach Vee: turn around. They drift when your back is to them."
 			elif worst >= 60.0 and not _room_names_shown():
@@ -1112,6 +1148,7 @@ const LADDER_CHIP_COLOR := Color("4a5a72")
 ## step, so the vocabulary is taught without the order giving the answer away.
 func _show_ladder_card(ev: Dictionary) -> void:
 	input_locked = true
+	_set_objectives_open(false, false)
 	_overlay = Control.new()
 	_overlay.position = -ROOM_ORIGIN
 	_overlay.size = DESIGN
@@ -1263,6 +1300,7 @@ func _resolve_interrupt(opt: Dictionary) -> void:
 		_composure_fill.size = Vector2(HUD_COMP_W * _composure / GameState.max_composure(), 8)
 	if _coach_hint != null:
 		_coach_hint.text = "Coach Vee: " + str(opt.get("coach", ""))
+		_coach_hold_left = COACH_HOLD_SECONDS   # the per-frame room hint used to overwrite it at once
 	var ptile: Vector2i = _player.current_tile() if _player != null else Vector2i.ZERO
 	Telemetry.log_event({
 		"event": "interrupt_resolved", "scenario_id": str(Game.current_scenario_id),
@@ -1563,7 +1601,8 @@ const OBJ_SKILL := {
 func _objectives_status(attention: float) -> String:
 	if _objectives.is_empty():
 		return ""
-	var lines := [tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()]]
+	var lines := [_bb(tr("Objectives  %d/%d") % [_objectives_met_count(attention), _objectives.size()])]
+	var rows: Array = []
 	for o in _objectives:
 		var metric := str(o.get("metric", ""))
 		var target := int(o.get("target", 0))
@@ -1582,11 +1621,16 @@ func _objectives_status(attention: float) -> String:
 			"connect_min":
 				current = _connect_count()
 		var ok := _objective_met(o, attention)
-		var mark := "OK" if ok else "  "
 		# A2: each objective names the teaching skill it practises, then the rule and count.
-		var focus_tag := tr("RETRY FOCUS  ") if bool(o.get("retry", false)) else ""
-		lines.append(focus_tag + "[%s] %s  %d/%d\n      %s" % [mark, tr(str(OBJ_SKILL.get(metric, "Practice"))), current, target, tr(str(o.get("label", metric)))])
-	return "\n".join(lines)
+		var focus_tag := ("[color=#f2c14e]%s[/color]" % _bb(tr("RETRY FOCUS  "))) if bool(o.get("retry", false)) else ""
+		rows.append("[cell]%s[/cell][cell]%s%s  %d/%d\n[color=#b9b7a8]%s[/color][/cell]" % [
+			"[color=#7fd08a][lb]OK[rb][/color]" if ok else "[lb]    [rb]", focus_tag,
+			_bb(tr(str(OBJ_SKILL.get(metric, "Practice")))), current, target, _bb(tr(str(o.get("label", metric))))])
+	return "\n".join(lines) + "\n[table=2]" + "".join(rows) + "[/table]"
+
+## Literal text inside the objectives BBCode ("[OK]", a "[" in a label) must not parse as tags.
+static func _bb(t: String) -> String:
+	return t.replace("[", "[lb]")
 
 func _objectives_met_count(attention: float) -> int:
 	var n := 0
@@ -1613,6 +1657,7 @@ func _objective_short_label(o: Dictionary) -> String:
 
 func _show_overlay(text: String, options: Array) -> void:
 	input_locked = true
+	_set_objectives_open(false, false)   # a modal never sits under the open objectives panel
 	_overlay = Control.new()
 	_overlay.position = -ROOM_ORIGIN
 	_overlay.size = DESIGN
@@ -1738,7 +1783,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	if event.keycode == KEY_O and not input_locked and not _lesson_over:
-		_set_objectives_open(not _objectives_open, false)
+		_toggle_objectives_by_player()
 		get_viewport().set_input_as_handled()
 		return
 	if event.keycode != KEY_ESCAPE and event.keycode != KEY_BACKSPACE:

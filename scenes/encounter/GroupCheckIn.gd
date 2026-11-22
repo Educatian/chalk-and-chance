@@ -118,6 +118,7 @@ func _on_move(tag: String) -> void:
 		"group_state": {"understanding": understanding, "participation_balance": participation, "revealed": revealed},
 		"teacher_move": {"menu_tag": tag},
 		"model_profile": "openrouter_gemini",
+		"locale": LLMClient.locale(),
 	}
 	var ep := LLMClient.endpoint.replace("/turn", "/group_turn")
 	var err := ERR_UNAVAILABLE if not NetGuard.allowed(ep) else _http.request(ep, PackedStringArray(["Content-Type: application/json"]),

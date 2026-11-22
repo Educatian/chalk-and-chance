@@ -22,7 +22,7 @@ const UI_SCALE := 2.0
 const WIN_U := 0.80
 const MOVES := [
 	["Elicit", "elicit"], ["Extend", "extend"], ["Revoice", "revoice"],
-	["Tell", "tell"], ["Praise", "praise"], ["Redir.", "redirect"], ["Wait", "wait"],
+	["Tell", "tell"], ["Praise", "praise"], ["Redirect", "redirect"], ["Wait", "wait"],
 ]
 
 var scenario: Dictionary = {}
@@ -107,6 +107,10 @@ func setup(data: Dictionary) -> void:
 	_build_ui()
 	_arm_turn()
 	_refresh()
+	# Open on the selected student's own words, not an empty dialogue panel.
+	var s0: Dictionary = students[sel]
+	if _dialogue != null and _dialogue.text == "" and str(s0.get("opening_line", "")) != "":
+		_dialogue.text = "%s: \"%s\"" % [s0["name"], tr(str(s0["opening_line"]))]
 	_bars_live = true
 	var all_moves: Array = []
 	for st in students:
@@ -318,7 +322,7 @@ func _build_item_row() -> void:
 		b.position = Vector2(x, y)
 		b.size = Vector2(34, 34)
 		b.set_meta("item_id", item_id)
-		b.tooltip_text = "%s x%d\n%s" % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
+		b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(item_id), GameState.item_count(item_id), Items.desc_for(item_id)]
 		b.disabled = not GameState.can_use_item(item_id, "gym")
 		CompactButtonStyle.apply(b, UiText.S_CAPTION)
 		b.pressed.connect(_use_item.bind(item_id))
@@ -337,7 +341,7 @@ func _refresh_item_buttons() -> void:
 		var id := str(b.get_meta("item_id", ""))
 		if id != "":
 			b.disabled = not GameState.can_use_item(id, "gym") or _over
-			b.tooltip_text = "%s x%d\n%s" % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
+			b.tooltip_text = tr("%s x%d\n%s") % [Items.name_for(id), GameState.item_count(id), Items.desc_for(id)]
 
 func _use_item(id: String) -> void:
 	if _over:

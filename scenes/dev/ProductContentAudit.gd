@@ -108,11 +108,14 @@ func _ready() -> void:
 			"Focus",
 			"TRACE",
 			"Trace",
-			"Class",
 			"Quality",
 			"TeacherSim",
 			"Cloud Log",
 		])
+		# Not signed in as an instructor (this audit runs as a learner / demo): no Class button.
+		for c in leaderboard.get_children():
+			if c is Button and (c as Button).text == "Class":
+				_issue("Leaderboard shows the instructor Class button to a non-instructor")
 		leaderboard.queue_free()
 	await _frames(1)
 
