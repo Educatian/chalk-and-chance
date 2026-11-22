@@ -1,0 +1,163 @@
+[   4.98s] expect Encounter 40
+[   7.00s] wait 2
+[   7.02s] eval: ["민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\" || 민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\""]
+[   7.02s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[   9.04s] wait 2
+[   9.07s] eval: ["민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\" || 민호: \"답 알아요. 한국어로 말하는 데 시간이 조금 필요해요.\""]
+[   9.07s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  10.25s] HOSTED call 1/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 1449ms
+[  10.30s] console: LLM diag: {"coach":{"attempts":2.0,"rejected":["{\"coach_tip\": \"아이의 생각을 물어봤으니, 이제 3~5초 정도 기다려 주세요. 아이가 스스로 답을 생각할 시간을 주는 거예요.\"}\n}","{\"coach_tip\": \"아이에게 생
+[  11.09s] wait 2
+[  11.11s] eval: []
+[  11.12s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  13.14s] wait 2
+[  13.17s] eval: []
+[  13.17s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  15.20s] wait 2
+[  15.25s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  15.25s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  17.29s] wait 2
+[  17.33s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  17.33s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  19.35s] wait 2
+[  19.42s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  19.42s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  21.43s] wait 2
+[  21.45s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  21.45s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  23.50s] wait 2
+[  23.54s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  23.54s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  25.55s] wait 2
+[  25.63s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  25.63s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  26.01s] shot m0
+[  28.03s] wait 2
+[  28.03s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  28.03s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  30.02s] HOSTED call 2/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 1194ms
+[  30.04s] wait 2
+[  30.05s] eval: ["민호: \"음... 그림으로 먼저 보여줘도 돼요?\" || 민호: \"음... 그림으로 먼저 보여줘도 돼요?\""]
+[  30.05s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  30.09s] console: LLM diag: {"coach":{"attempts":2.0,"rejected":["{\"coach_tip\": \"되말하기로 아이 생각이 모두에게 보이게 됐어요. 이제 아이가 스스로 답을 찾도록 3~5초 기다려 줘요.\"}\n요.\"}\n.\"}\n줘 봐요.\"}\n}","{\"co
+[  32.06s] wait 2
+[  32.10s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  32.10s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  34.15s] wait 2
+[  34.19s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  34.19s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  36.20s] wait 2
+[  36.23s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  36.23s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  38.25s] wait 2
+[  38.27s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  38.27s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  40.30s] wait 2
+[  40.32s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  40.32s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  42.35s] wait 2
+[  42.37s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  42.37s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  44.38s] wait 2
+[  44.41s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  44.41s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  46.42s] wait 2
+[  46.45s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  46.45s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  46.63s] shot m1
+[  48.65s] wait 2
+[  48.65s] eval: ["민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\" || 민호: \"네, 선생님. 그림으로 먼저 보여줄게요. 이게 더 쉬워요.\""]
+[  48.65s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  50.20s] HOSTED call 3/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 1378ms
+[  50.25s] console: LLM diag: {"coach":{"attempts":2.0,"rejected":["{\"coach_tip\": \"아이에게 그림으로 먼저 보여주겠다고 말할 기회를 주었으니, 이제 그 아이의 생각을 더 깊이 파고들어 볼까요?\"}\n수 있겠어요.\"}\n어요. 아이가 스스로 답을 찾도
+[  50.68s] wait 2
+[  50.70s] eval: []
+[  50.70s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  52.72s] wait 2
+[  52.78s] eval: []
+[  52.78s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  54.82s] wait 2
+[  54.85s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  54.85s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  56.86s] wait 2
+[  56.90s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  56.90s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  58.93s] wait 2
+[  58.98s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  58.98s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  60.99s] wait 2
+[  61.06s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  61.06s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  63.10s] wait 2
+[  63.16s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  63.16s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  65.21s] wait 2
+[  65.23s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  65.23s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  67.24s] wait 2
+[  67.25s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  67.25s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  67.50s] shot m2
+[  69.45s] HOSTED call 4/4 https://chalk-and-chance-api.jewoong-moon.workers.dev/turn 663ms
+[  69.55s] wait 2
+[  69.59s] eval: ["민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\" || 민호: \"음... 그림으로 보여주면 더 쉬울 것 같아요.\""]
+[  69.59s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  71.60s] wait 2
+[  71.60s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  71.60s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  73.65s] wait 2
+[  73.69s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  73.69s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  75.72s] wait 2
+[  75.78s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  75.78s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  77.95s] wait 2
+[  77.95s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  77.95s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  79.96s] wait 2
+[  80.00s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  80.00s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  82.03s] wait 2
+[  82.04s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  82.04s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  84.05s] wait 2
+[  84.05s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  84.05s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  86.06s] wait 2
+[  86.07s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  86.07s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  88.08s] wait 2
+[  88.08s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  88.08s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  88.16s] shot m3
+[  90.16s] wait 2
+[  90.17s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  90.17s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  92.18s] wait 2
+[  92.18s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  92.18s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  94.19s] wait 2
+[  94.19s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  94.19s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  96.20s] wait 2
+[  96.21s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  96.21s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[  98.22s] wait 2
+[  98.23s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[  98.23s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 100.23s] wait 2
+[ 100.23s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[ 100.23s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 102.25s] wait 2
+[ 102.25s] eval: ["민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\" || 민호: \"네... 그림으로 보여드리는 게 더 편해요. 말로 설명하려면 좀 어려워요.\""]
+[ 102.25s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 104.26s] wait 2
+[ 104.27s] eval: []
+[ 104.27s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 106.28s] wait 2
+[ 106.29s] eval: []
+[ 106.29s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+[ 108.29s] wait 2
+[ 108.30s] eval: []
+[ 108.30s] eval (()=>{const t=(window.__cc_state||{}).text||'';const names=[String.fromCharCode(0xBBFC,0xD638),String.fromCharCode(0xB3C4,0xC724)];return JSON.stringify(t.split(String.fromCharCode(10)).filter(l=>names.some(n=>l.startsWith(n+': '))))})()
+NETWORK blocked=0 hosts=[]
