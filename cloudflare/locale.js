@@ -40,7 +40,7 @@ export function validateCoach(tip, ko, tag) {
   const letters = (t.match(/[A-Za-z\uAC00-\uD7A3]/g) || []).length;
   if (ko && letters && (t.match(/[A-Za-z]/g) || []).length / letters > 0.5) return [false, "english_mostly", true, null];
   let fixed = null;
-  if ((t.match(/[.!?](\s|$)/g) || []).length > 2 || t.length > (ko ? 180 : 300)) {
+  if ((t.match(/[.!?…]+(\s|$)/g) || []).length > 2 || t.length > (ko ? 180 : 300)) {
     fixed = truncateAtSentence(t, ko ? 180 : 300, 2);
     t = fixed;
   }
