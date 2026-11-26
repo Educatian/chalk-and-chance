@@ -92,7 +92,7 @@ try {
       $output.Contains("Cannot call")
     $ok = $result.ExitCode -eq 0
     if ($expect -ne "") {
-      $ok = $output.Contains($expect) -and (-not $fatal)
+      $ok = $ok -and $output.Contains($expect) -and (-not $fatal)
     }
     $lines += if ($ok) { "PASS" } else { "FAIL" }
     $lines += $output.Trim()
